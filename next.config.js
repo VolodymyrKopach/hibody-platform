@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['html-to-image']
-  },
+  serverExternalPackages: ['html-to-image'],
   eslint: {
     ignoreDuringBuilds: true,
   },
