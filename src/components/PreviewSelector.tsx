@@ -82,8 +82,8 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
 
         try {
           const thumbnailUrl = await generateSlideThumbnail(slide.htmlContent, {
-            maxWidth: 320,
-            maxHeight: 240,
+            width: 320,
+            height: 240,
             quality: 0.85,
             background: '#ffffff'
           });
@@ -100,7 +100,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
         } catch (error) {
           console.error(`Помилка генерації превью для слайду ${slide.id}:`, error);
           
-          const fallbackUrl = generateFallbackPreview(slide.id);
+          const fallbackUrl = generateFallbackPreview();
           
           setPreviews(prev => ({
             ...prev,

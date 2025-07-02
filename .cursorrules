@@ -1,0 +1,318 @@
+# Cursor Rules для hibody-platform
+
+Цей файл містить правила та рекомендації для розробки на проекті hibody-platform з використанням Next.js 14+ та TypeScript.
+
+## SOLID Принципи
+
+### 1. Single Responsibility Principle (SRP)
+- Кожен компонент повинен мати одну відповідальність
+- Розділяйте великі компоненти на менші, більш спеціалізовані
+- Виносьте логіку в окремі хуки (custom hooks) або утиліти
+- Приклад: компонент `ChatInterface` відповідає тільки за UI чату, логіка обробки повідомлень винесена в сервіси
+
+### 2. Open/Closed Principle (OCP)
+- Компоненти повинні бути відкритими для розширення, але закритими для модифікації
+- Використовуйте композицію замість наслідування
+- Застосовуйте паттерн Strategy для різних алгоритмів (наприклад, різні провайдери AI)
+- Приклад: `IntentDetectionService` можна розширити новими провайдерами без зміни основного коду
+
+### 3. Liskov Substitution Principle (LSP)
+- Інтерфейси повинні бути замінними
+- Всі реалізації інтерфейсу повинні працювати однаково
+- Приклад: `IIntentDetectionService` може бути замінений на `ClaudeIntentDetectionService` або `KeywordIntentDetectionService`
+
+### 4. Interface Segregation Principle (ISP)
+- Створюйте специфічні інтерфейси замість монолітних
+- Компоненти не повинні залежати від інтерфейсів, які вони не використовують
+- Приклад: розділяйте `LessonService` на `LessonReader`, `LessonWriter`, `LessonValidator`
+
+### 5. Dependency Inversion Principle (DIP)
+- Залежьте від абстракцій, а не від конкретних реалізацій
+- Використовуйте dependency injection через props або контекст
+- Приклад: компоненти залежать від `IChatService`, а не від конкретної реалізації
+
+## Next.js Best Practices
+
+### Структура проекту
+```
+src/
+├── app/                 # App Router (Next.js 13+)
+│   ├── (routes)/       # Route groups
+│   ├── api/            # API routes
+│   └── globals.css     # Global styles
+├── components/         # Reusable UI components
+│   ├── ui/            # Base UI components
+│   ├── layout/        # Layout components
+│   └── feature/       # Feature-specific components
+├── services/          # Business logic services
+├── utils/             # Utility functions
+├── types/             # TypeScript type definitions
+├── hooks/             # Custom React hooks
+└── providers/         # React context providers
+```
+
+### Компоненти
+
+#### Найменування
+- Використовуйте PascalCase для компонентів: `ChatInterface`, `SlidePreview`
+- Використовуйте camelCase для функцій та змінних: `handleSendMessage`, `isLoading`
+- Використовуйте SCREAMING_SNAKE_CASE для констант: `API_ENDPOINTS`, `DEFAULT_CONFIG`
+
+#### Типізація
+```typescript
+// ✅ Добре - явна типізація props
+interface ChatMessageProps {
+  message: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
+  onReply?: (message: string) => void;
+}
+
+// ✅ Добре - використання React.FC з типами
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, sender, timestamp, onReply }) => {
+  // ...
+};
+
+// ❌ Погано - відсутність типів
+const ChatMessage = ({ message, sender, timestamp, onReply }) => {
+  // ...
+};
+```
+
+#### Хуки та стан
+```typescript
+// ✅ Добре - кастомні хуки для логіки
+const useChat = (lessonId?: string) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const sendMessage = useCallback(async (text: string) => {
+    // логіка відправки
+  }, []);
+  
+  return { messages, isLoading, sendMessage };
+};
+
+// ✅ Добре - мемоізація дорогих операцій
+const expensiveValue = useMemo(() => {
+  return computeExpensiveValue(data);
+}, [data]);
+```
+
+### API Routes
+
+#### Структура API
+```typescript
+// app/api/lessons/route.ts
+export async function GET(request: Request) {
+  try {
+    // логіка
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+#### Валідація
+```typescript
+// ✅ Добре - валідація з zod
+import { z } from 'zod';
+
+const CreateLessonSchema = z.object({
+  title: z.string().min(1).max(100),
+  description: z.string().max(500),
+  ageGroup: z.enum(['3-5', '6-7', '8-9', '10-11', '12-13', '14-15', '16-18']),
+});
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  const result = CreateLessonSchema.safeParse(body);
+  
+  if (!result.success) {
+    return NextResponse.json(
+      { success: false, error: result.error.message },
+      { status: 400 }
+    );
+  }
+  
+  // використовуємо result.data
+}
+```
+
+### Performance
+
+#### Оптимізація рендерингу
+```typescript
+// ✅ Добре - React.memo для компонентів без частих змін
+const SlidePreview = React.memo<SlidePreviewProps>(({ slide, onSelect }) => {
+  return (
+    <div onClick={() => onSelect(slide.id)}>
+      {slide.title}
+    </div>
+  );
+});
+
+// ✅ Добре - useCallback для стабільних функцій
+const handleSlideSelect = useCallback((slideId: string) => {
+  setSelectedSlide(slideId);
+}, []);
+```
+
+#### Lazy Loading
+```typescript
+// ✅ Добре - динамічні імпорти для великих компонентів
+const SlideEditor = dynamic(() => import('@/components/SlideEditor'), {
+  loading: () => <div>Loading editor...</div>,
+  ssr: false
+});
+```
+
+### Стилізація
+
+#### Material-UI
+```typescript
+// ✅ Добре - використання theme
+const theme = useTheme();
+
+const styles = {
+  container: {
+    backgroundColor: theme.palette.background.paper,
+    padding: theme.spacing(2),
+    borderRadius: theme.shape.borderRadius,
+  }
+};
+
+// ✅ Добре - responsive дизайн
+<Box sx={{
+  display: 'flex',
+  flexDirection: { xs: 'column', md: 'row' },
+  gap: { xs: 1, md: 2 }
+}}>
+```
+
+### Error Handling
+
+#### Граничні випадки
+```typescript
+// ✅ Добре - Error Boundary
+class SlideErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Slide error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div>Щось пішло не так при завантаженні слайду.</div>;
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+#### Async/Await
+```typescript
+// ✅ Добре - обробка помилок
+const handleGenerateSlide = async () => {
+  try {
+    setIsLoading(true);
+    const slide = await slideService.generateSlide(prompt);
+    setSlides(prev => [...prev, slide]);
+  } catch (error) {
+    console.error('Failed to generate slide:', error);
+    setError('Не вдалося згенерувати слайд. Спробуйте ще раз.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+```
+
+### Testing
+
+#### Unit тести
+```typescript
+// ✅ Добре - тестування компонентів
+import { render, screen, fireEvent } from '@testing-library/react';
+import ChatMessage from './ChatMessage';
+
+test('renders message content', () => {
+  render(
+    <ChatMessage 
+      message="Hello world" 
+      sender="user" 
+      timestamp={new Date()} 
+    />
+  );
+  
+  expect(screen.getByText('Hello world')).toBeInTheDocument();
+});
+```
+
+### Security
+
+#### Санітизація
+```typescript
+// ✅ Добре - санітизація HTML
+import DOMPurify from 'dompurify';
+
+const SafeHtmlRenderer = ({ htmlContent }: { htmlContent: string }) => {
+  const sanitizedHtml = DOMPurify.sanitize(htmlContent);
+  return <div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />;
+};
+```
+
+### Accessibility
+
+#### ARIA та семантика
+```typescript
+// ✅ Добре - доступність
+<button
+  aria-label="Відправити повідомлення"
+  aria-disabled={isLoading}
+  onClick={handleSend}
+>
+  <Send aria-hidden="true" />
+</button>
+```
+
+## Загальні правила
+
+1. **Завжди типізуйте** - використовуйте TypeScript повною мірою
+2. **Коментарі** - пишіть коментарі для складної логіки
+3. **Консистентність** - дотримуйтесь єдиного стилю в проекті
+4. **Performance** - оптимізуйте тільки після виявлення проблем
+5. **Тестування** - покривайте критичну логіку тестами
+6. **Документація** - оновлюйте README та документацію
+7. **Git** - робіть атомарні коміти з описовими повідомленнями
+
+## Заборонено
+
+- ❌ `any` тип без крайньої необхідності
+- ❌ Пропуск обробки помилок в async функціях
+- ❌ Прямі мутації стану
+- ❌ Використання `dangerouslySetInnerHTML` без санітизації
+- ❌ Hardcode значень (використовуйте константи)
+- ❌ Великі компоненти (>300 рядків)
+- ❌ Копіювання коду (виносьте в утиліти)
+
+## Рекомендовані бібліотеки
+
+- **UI**: Material-UI, Headless UI
+- **Валідація**: Zod, Yup
+- **Стан**: React Context, Zustand (для складного стану)
+- **Тестування**: Jest, React Testing Library
+- **Лінтинг**: ESLint, Prettier
+- **Type checking**: TypeScript strict mode 
