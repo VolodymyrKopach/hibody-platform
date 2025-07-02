@@ -11,21 +11,28 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { Send, Paperclip } from 'lucide-react';
 
 interface ChatInputProps {
-  inputValue: string;
-  isTyping: boolean;
-  onInputChange: (value: string) => void;
-  onSendMessage: () => void;
-  onKeyPress: (e: React.KeyboardEvent<HTMLDivElement>) => void;
+  value: string;
+  onChange: (value: string) => void;
+  onSend: () => void;
+  isLoading: boolean;
+  disabled: boolean;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
-  inputValue,
-  isTyping,
-  onInputChange,
-  onSendMessage,
-  onKeyPress
+  value,
+  onChange,
+  onSend,
+  isLoading,
+  disabled
 }) => {
   const theme = useTheme();
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      onSend();
+    }
+  };
 
   return (
     <Paper
@@ -42,9 +49,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
           fullWidth
           multiline
           maxRows={4}
-          value={inputValue}
-          onChange={(e) => onInputChange(e.target.value)}
-          onKeyPress={onKeyPress}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyPress={handleKeyPress}
+          disabled={disabled}
           placeholder="Напишіть про який урок ви мрієте (предмет, вік дітей, тема)..."
           variant="outlined"
           sx={{
@@ -62,7 +70,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         />
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Tooltip title="Прикріпити файл">
-            <IconButton color="primary" size="large">
+            <IconButton color="primary" size="large" disabled={disabled}>
               <Paperclip size={20} />
             </IconButton>
           </Tooltip>
@@ -70,9 +78,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
             variant="contained"
             onClick={(e) => {
               e.preventDefault();
-              onSendMessage();
+              onSend();
             }}
-            disabled={!inputValue.trim() || isTyping}
+            disabled={!value?.trim() || isLoading || disabled}
             sx={{
               minWidth: 56,
               height: 56,
