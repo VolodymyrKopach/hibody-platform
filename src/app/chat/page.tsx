@@ -73,7 +73,7 @@ const ChatInterface: React.FC = () => {
         text: `❌ **Помилка збереження**\n\n${error instanceof Error ? error.message : 'Невідома помилка'}`,
         sender: 'ai',
         timestamp: new Date(),
-        status: 'error',
+        status: 'sent',
         feedback: null
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -171,10 +171,9 @@ const ChatInterface: React.FC = () => {
       {/* Діалог збереження уроку */}
       <SaveLessonDialog
         open={slideUIState.saveDialogOpen}
-        data={saveDialogData}
-        selectedSlides={slideUIState.selectedSlides}
-        slides={slideUIState.currentLesson?.slides || []}
-        slidePreviews={slidePreviews}
+        dialogData={saveDialogData}
+        selectedSlides={slideUIState.currentLesson?.slides.filter(slide => slideUIState.selectedSlides.has(slide.id)) || []}
+        cachedPreviews={slidePreviews}
         onClose={closeSaveDialog}
         onSave={handleSaveLesson}
         onDataChange={updateSaveDialogData}
