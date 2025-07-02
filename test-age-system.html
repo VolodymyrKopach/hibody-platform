@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест системи вікових груп</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+        .step {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .test-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .age-group {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .toddlers { background: #ffeaa7; color: #2d3436; }
+        .preschool { background: #fd79a8; color: white; }
+        .early { background: #74b9ff; color: white; }
+        .middle { background: #00b894; color: white; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Тестування системи вікових груп</h1>
+        <p>Перевірка роботи нової системи адаптивної генерації контенту</p>
+    </div>
+
+    <div class="test-container">
+        <div class="step">
+            <h3>📋 Крок 1: Тест створення уроку з віком</h3>
+            <p>Тестуємо створення уроку для різних вікових груп</p>
+            
+            <div>
+                <button class="test-btn" onclick="testLessonCreation(3)">
+                    <span class="age-group toddlers">3 роки - Малюки</span>
+                </button>
+                <button class="test-btn" onclick="testLessonCreation(5)">
+                    <span class="age-group preschool">5 років - Дошкільнята</span>
+                </button>
+                <button class="test-btn" onclick="testLessonCreation(7)">
+                    <span class="age-group early">7 років - Молодші школярі</span>
+                </button>
+                <button class="test-btn" onclick="testLessonCreation(9)">
+                    <span class="age-group middle">9 років - Старші школярі</span>
+                </button>
+            </div>
+            
+            <div id="step1Result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <div class="step">
+            <h3>🎮 Крок 2: Тест генерації слайдів без віку</h3>
+            <p>Перевіряємо чи система запитає вік при відсутності інформації</p>
+            
+            <button class="test-btn" onclick="testSlideWithoutAge()">
+                Створити слайд без віку
+            </button>
+            
+            <div id="step2Result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <div class="step">
+            <h3>✨ Крок 3: Тест покращення слайдів</h3>
+            <p>Тестуємо покращення існуючих слайдів з урахуванням віку</p>
+            
+            <button class="test-btn" onclick="testSlideImprovement()">
+                Покращити слайд
+            </button>
+            
+            <div id="step3Result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <div class="step">
+            <h3>📊 Результати тестування</h3>
+            <div id="finalResults"></div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+        
+        async function testLessonCreation(age) {
+            const resultDiv = document.getElementById('step1Result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Створюємо урок...';
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: `Створи урок про тварин для дітей ${age} років`,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        ✅ <strong>Успіх для ${age} років!</strong><br>
+                        💬 ${data.message}<br>
+                        🎯 Дії: ${data.actions?.length || 0}<br>
+                        📝 Статус: ${data.conversationHistory?.step || 'N/A'}
+                    `;
+                    
+                    testResults.push({
+                        test: `Урок для ${age} років`,
+                        success: true,
+                        message: data.message
+                    });
+                } else {
+                    throw new Error(data.message || 'Невідома помилка');
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ <strong>Помилка:</strong> ${error.message}`;
+                
+                testResults.push({
+                    test: `Урок для ${age} років`,
+                    success: false,
+                    error: error.message
+                });
+            }
+            
+            updateFinalResults();
+        }
+        
+        async function testSlideWithoutAge() {
+            const resultDiv = document.getElementById('step2Result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Створюємо слайд без віку...';
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'Створи слайд про космос',
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.message && data.message.includes('вік')) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        ✅ <strong>Система правильно запитала вік!</strong><br>
+                        💬 ${data.message.substring(0, 200)}...
+                    `;
+                    
+                    testResults.push({
+                        test: 'Запит віку',
+                        success: true,
+                        message: 'Система коректно запитала вік'
+                    });
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        ❌ <strong>Система не запитала вік</strong><br>
+                        💬 ${data.message}
+                    `;
+                    
+                    testResults.push({
+                        test: 'Запит віку',
+                        success: false,
+                        message: 'Система не запитала вік'
+                    });
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ <strong>Помилка:</strong> ${error.message}`;
+                
+                testResults.push({
+                    test: 'Запит віку',
+                    success: false,
+                    error: error.message
+                });
+            }
+            
+            updateFinalResults();
+        }
+        
+        async function testSlideImprovement() {
+            const resultDiv = document.getElementById('step3Result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Покращуємо слайд...';
+            
+            // Спочатку створимо урок
+            try {
+                const createResponse = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'Створи урок про математику для дітей 6 років',
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                const createData = await createResponse.json();
+                
+                if (createData.success && createData.conversationHistory) {
+                    // Тепер створимо слайд
+                    const slideResponse = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: 'Генерувати перший слайд',
+                            conversationHistory: createData.conversationHistory,
+                            action: 'approve_plan',
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+                    
+                    const slideData = await slideResponse.json();
+                    
+                    if (slideData.success && slideData.conversationHistory) {
+                        // Тепер покращимо слайд
+                        const improveResponse = await fetch('/api/chat', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                message: 'Покращ слайд',
+                                conversationHistory: slideData.conversationHistory,
+                                timestamp: new Date().toISOString()
+                            })
+                        });
+                        
+                        const improveData = await improveResponse.json();
+                        
+                        if (improveData.success) {
+                            resultDiv.className = 'result success';
+                            resultDiv.innerHTML = `
+                                ✅ <strong>Покращення пройшло успішно!</strong><br>
+                                💬 ${improveData.message}<br>
+                                🎯 Дії: ${improveData.actions?.length || 0}
+                            `;
+                            
+                            testResults.push({
+                                test: 'Покращення слайду',
+                                success: true,
+                                message: 'Слайд успішно покращений з урахуванням віку'
+                            });
+                        } else {
+                            throw new Error(improveData.message);
+                        }
+                    } else {
+                        throw new Error('Не вдалося створити слайд');
+                    }
+                } else {
+                    throw new Error('Не вдалося створити урок');
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ <strong>Помилка:</strong> ${error.message}`;
+                
+                testResults.push({
+                    test: 'Покращення слайду',
+                    success: false,
+                    error: error.message
+                });
+            }
+            
+            updateFinalResults();
+        }
+        
+        function updateFinalResults() {
+            const finalDiv = document.getElementById('finalResults');
+            const successful = testResults.filter(r => r.success).length;
+            const total = testResults.length;
+            
+            let html = `
+                <h4>📈 Загальна статистика: ${successful}/${total} тестів пройдено</h4>
+                <div style="margin: 20px 0;">
+            `;
+            
+            testResults.forEach(result => {
+                const icon = result.success ? '✅' : '❌';
+                const status = result.success ? 'success' : 'error';
+                html += `
+                    <div class="result ${status}" style="margin: 10px 0;">
+                        ${icon} <strong>${result.test}:</strong> 
+                        ${result.success ? result.message : result.error}
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            if (total > 0) {
+                const percentage = Math.round((successful / total) * 100);
+                html += `
+                    <div class="result ${percentage >= 80 ? 'success' : 'error'}">
+                        <strong>Загальний результат: ${percentage}%</strong>
+                        ${percentage >= 80 ? '🎉 Система працює відмінно!' : '⚠️ Потрібні доопрацювання'}
+                    </div>
+                `;
+            }
+            
+            finalDiv.innerHTML = html;
+        }
+        
+        // Автоматичний тест при завантаженні
+        window.addEventListener('load', function() {
+            console.log('🧪 Система тестування готова');
+            console.log('📋 Доступні тести:');
+            console.log('1. Створення уроків для різних вікових груп');
+            console.log('2. Перевірка запиту віку');
+            console.log('3. Покращення слайдів');
+        });
+    </script>
+</body>
+</html> 

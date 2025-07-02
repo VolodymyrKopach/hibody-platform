@@ -1,36 +1,204 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HiBody Platform
 
-## Getting Started
+Платформа для створення інтерактивних освітніх матеріалів для дітей з використанням AI.
 
-First, run the development server:
+## 🚀 Основні можливості
+
+- **AI-генерація контенту** з Claude Sonnet 4 (найновіша модель)
+- **AI-генерація зображень** з FLUX.1 [schnell] (швидко і якісно)
+- **Інтерактивні уроки** з HTML/CSS/JavaScript
+- **Багатокроковий процес** створення матеріалів
+- **Адаптивний дизайн** для всіх пристроїв
+- **Система прогресу** і геймифікація
+
+## 🤖 AI Моделі
+
+### **Claude Sonnet 4** (`claude-sonnet-4-20250514`)
+- Висока продуктивність і якість генерації
+- Покращена генерація HTML/CSS/JavaScript
+- Кращі здібності в розумінні освітніх потреб
+- Оптимізована для інтерактивного контенту
+
+### **FLUX.1 [schnell]** (Black Forest Labs)
+- Швидка генерація зображень (2-4 секунди)
+- Високоякісні освітні ілюстрації
+- Оптимізовано для дітей і безпечного контенту
+- Економічна ціна (~$0.003 за зображення)
+
+## 🎯 Цільова аудиторія
+
+- **Діти 4-12 років** - основна аудиторія
+- **Вчителі та педагоги** - створювачі контенту
+- **Батьки** - домашнє навчання
+
+## 🛠 Технічний стек
+
+- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Material-UI
+- **AI Text**: Claude Sonnet 4 API (Anthropic)
+- **AI Images**: FLUX.1 schnell API (Together AI)
+- **Hosting**: Vercel (рекомендовано)
+
+## 📦 Встановлення
 
 ```bash
+# Клонування репозиторію
+git clone <repository-url>
+cd hibody-platform
+
+# Встановлення залежностей
+npm install
+
+# Налаштування змінних середовища
+cp .env.example .env.local
+
+# Додайте ваші API ключі
+ANTHROPIC_API_KEY=your_claude_api_key_here
+TOGETHER_API_KEY=your_together_api_key_here
+
+# Запуск в режимі розробки
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔧 Конфігурація
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Основні налаштування в `src/app/api/chat/route.ts`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```typescript
+const claudePayload = {
+  model: 'claude-sonnet-4-20250514', // Найновіша модель
+  max_tokens: 16000, // Збільшено для кращої генерації HTML
+  temperature: 0.4,  // Зменшено для більш точного коду
+  // ...
+};
+```
 
-## Learn More
+## 🎨 Особливості генерації
 
-To learn more about Next.js, take a look at the following resources:
+### HTML Слайди
+- **Glassmorphism дизайн** з професійними ефектами
+- **60fps анімації** для плавної взаємодії
+- **Адаптивний дизайн** (mobile-first)
+- **Система балів** і прогрес-індикатори
+- **Звукові ефекти** (емуляція)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Інтерактивність
+- 8+ інтерактивних елементів на слайд
+- Ігрові механіки
+- Візуальний і звуковий фідбек
+- Персоналізований досвід навчання
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📱 Підтримувані пристрої
 
-## Deploy on Vercel
+- **Desktop**: Chrome, Firefox, Safari, Edge
+- **Mobile**: iOS Safari, Android Chrome
+- **Tablet**: iPad, Android tablets
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔍 API Endpoints
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### POST /api/chat
+Основний endpoint для генерації контенту
+
+**Параметри:**
+```json
+{
+  "message": "створи урок про динозаврів",
+  "conversationId": "uuid",
+  "generateImages": true,
+  "imagePrompts": ["динозаври", "тиранозавр"]
+}
+```
+
+**Відповідь:**
+```json
+{
+  "message": "🎉 Готовий інтерактивний урок...",
+  "conversationId": "uuid",
+  "step": "direct_html_creation",
+  "htmlContent": "<!DOCTYPE html>...",
+  "generatedImages": [
+    {
+      "prompt": "динозаври",
+      "image": "base64_string",
+      "success": true
+    }
+  ],
+  "model": "claude-sonnet-4-20250514"
+}
+```
+
+### POST /api/images
+Генерація зображень FLUX.1
+
+**Параметри:**
+```json
+{
+  "prompt": "Educational children illustration about dinosaurs",
+  "width": 1024,
+  "height": 768
+}
+```
+
+### POST /api/images/slide
+Спеціалізована генерація для слайдів
+
+**Параметри:**
+```json
+{
+  "topic": "Динозаври",
+  "ageGroup": "6-12",
+  "style": "cartoon",
+  "imageType": "illustration"
+}
+```
+
+## 🎯 Типи уроків
+
+- **Природничі науки**: тварини, рослини, космос
+- **Математика**: рахунок, геометрія, логіка
+- **Мови**: алфавіт, слова, граматика
+- **Історія**: видатні особистості, події
+- **Мистецтво**: кольори, форми, творчість
+
+## 🔄 Процес створення уроку
+
+1. **Планування** - структура уроку
+2. **Створення слайдів** - текстовий контент
+3. **HTML генерація** - інтерактивні елементи
+4. **Оптимізація** - покращення якості
+5. **Фінальна версія** - готовий урок
+
+## 🌟 Нові можливості Claude Sonnet 4
+
+- **Кращі HTML/CSS стилі** з сучасними ефектами
+- **Складніша інтерактивність** та ігрові елементи
+- **Оптимізована продуктивність** коду
+- **Покращена accessibility** з ARIA атрибутами
+- **Професійні анімації** і переходи
+
+## 🚀 Розгортання
+
+### Vercel (рекомендовано)
+```bash
+npm run build
+vercel --prod
+```
+
+### Docker
+```bash
+docker build -t hibody-platform .
+docker run -p 3000:3000 hibody-platform
+```
+
+## 📞 Підтримка
+
+- **GitHub Issues**: для багів та запитів функціональності
+- **Документація**: в папці `/docs`
+- **Приклади**: в папці `/examples`
+
+## 📄 Ліцензія
+
+MIT License - див. файл `LICENSE`
+
+---
+
+**Створено з ❤️ для освіти дітей**

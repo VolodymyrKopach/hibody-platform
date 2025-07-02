@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест обробки зображень</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: white;
+        }
+        .slide {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        .image-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 3px solid white;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <h1>🖼️ Тест обробки зображень</h1>
+        <p>Цей слайд містить різні типи зображень для тестування превью:</p>
+        
+        <div class="image-container">
+            <!-- Зовнішнє зображення (має бути замінене на placeholder) -->
+            <img src="https://picsum.photos/200/200?random=1" alt="Зовнішнє зображення 1">
+            
+            <!-- Ще одне зовнішнє зображення -->
+            <img src="https://unsplash.com/photos/200x200/?random=2" alt="Зовнішнє зображення 2">
+            
+            <!-- Зображення без src (має бути замінене) -->
+            <img alt="Порожнє зображення">
+            
+            <!-- Data URL зображення (має залишитися) -->
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23ff6b9d'/%3E%3Ctext x='100' y='100' text-anchor='middle' dy='0.3em' fill='white' font-size='30'%3E🎨%3C/text%3E%3C/svg%3E" alt="SVG зображення">
+        </div>
+        
+        <p>🎯 Очікувані результати:</p>
+        <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
+            <li>Перші два зображення мають стати градієнтними placeholder'ами з іконкою 🖼️</li>
+            <li>Порожнє зображення також стане placeholder'ом</li>
+            <li>SVG зображення (data URL) має залишитися як є</li>
+        </ul>
+    </div>
+</body>
+</html> 

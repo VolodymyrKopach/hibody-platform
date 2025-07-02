@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Демонстрація адаптивних слайдів за віком</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .age-groups {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .age-group {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .age-group:hover {
+            transform: translateY(-5px);
+        }
+        
+        .age-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .toddlers .age-header {
+            background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+            color: #2d3436;
+        }
+        
+        .preschool .age-header {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            color: white;
+        }
+        
+        .early .age-header {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+        }
+        
+        .middle .age-header {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+        }
+        
+        .feature {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .demo-button {
+            width: 100%;
+            border: none;
+            border-radius: 15px;
+            padding: 15px;
+            cursor: pointer;
+            margin: 10px 0;
+            font-family: inherit;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .toddlers .demo-button {
+            background: linear-gradient(145deg, #ff6b6b, #4ecdc4);
+            color: white;
+            font-size: 24px;
+            padding: 25px;
+            min-height: 80px;
+        }
+        
+        .preschool .demo-button {
+            background: linear-gradient(145deg, #feca57, #ff9ff3);
+            color: #2d3436;
+            font-size: 20px;
+            border-radius: 20px;
+        }
+        
+        .early .demo-button {
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+            font-size: 18px;
+        }
+        
+        .middle .demo-button {
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            font-size: 16px;
+            border-radius: 10px;
+        }
+        
+        .demo-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        
+        .interactive-area {
+            background: #f1f2f6;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .floating-element {
+            position: absolute;
+            font-size: 20px;
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.3;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .progress-demo {
+            width: 100%;
+            height: 15px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 1s ease;
+            border-radius: 10px;
+        }
+        
+        .toddlers .progress-fill {
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+        }
+        
+        .preschool .progress-fill {
+            background: linear-gradient(90deg, #feca57, #ff9ff3);
+        }
+        
+        .early .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .middle .progress-fill {
+            background: linear-gradient(90deg, #2c3e50, #34495e);
+        }
+        
+        .score-display {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #2d3436;
+            margin: 10px 0;
+        }
+        
+        .characteristics {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .characteristics h4 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+        
+        .characteristics ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .characteristics li {
+            padding: 5px 0;
+            border-bottom: 1px solid #e1f5fe;
+        }
+        
+        .characteristics li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Адаптивні слайди за віковими групами</h1>
+            <p>Демонстрація того, як система адаптує інтерактивні елементи під різні вікові групи дітей</p>
+        </div>
+        
+        <div class="age-groups">
+            <!-- Малюки 3-4 роки -->
+            <div class="age-group toddlers">
+                <div class="age-header">
+                    🐣 Малюки (3-4 роки)
+                </div>
+                
+                <div class="characteristics">
+                    <h4>Характеристики:</h4>
+                    <ul>
+                        <li>Короткий період уваги (3-5 хвилин)</li>
+                        <li>Великі яскраві елементи</li>
+                        <li>Прості дії (клік, торкання)</li>
+                        <li>Звуки та анімації</li>
+                    </ul>
+                </div>
+                
+                <button class="demo-button" onclick="handleToddlerClick(this)">
+                    🎈 Великі кнопки!
+                </button>
+                
+                <div class="interactive-area">
+                    <div class="floating-elements">
+                        <div class="floating-element" style="top: 20%; left: 20%;">🐱</div>
+                        <div class="floating-element" style="top: 60%; right: 20%;">🐶</div>
+                        <div class="floating-element" style="bottom: 20%; left: 50%;">🦋</div>
+                    </div>
+                    <div class="score-display" id="toddlerScore">Бали: 0</div>
+                </div>
+                
+                <div class="progress-demo">
+                    <div class="progress-fill" id="toddlerProgress"></div>
+                </div>
+            </div>
+            
+            <!-- Дошкільнята 5-6 років -->
+            <div class="age-group preschool">
+                <div class="age-header">
+                    🎨 Дошкільнята (5-6 років)
+                </div>
+                
+                <div class="characteristics">
+                    <h4>Характеристики:</h4>
+                    <ul>
+                        <li>Період уваги 5-10 хвилин</li>
+                        <li>Персонажі та історії</li>
+                        <li>Прості завдання</li>
+                        <li>Кольори та форми</li>
+                    </ul>
+                </div>
+                
+                <button class="demo-button" onclick="handlePreschoolClick(this)">
+                    🌟 Персонажі та ігри
+                </button>
+                
+                <div class="interactive-area">
+                    <div class="floating-elements">
+                        <div class="floating-element" style="top: 30%; left: 10%;">⭐</div>
+                        <div class="floating-element" style="top: 20%; right: 30%;">🌈</div>
+                        <div class="floating-element" style="bottom: 40%; left: 60%;">🎨</div>
+                    </div>
+                    <div class="score-display" id="preschoolScore">⭐ Зірочки: 0</div>
+                </div>
+                
+                <div class="progress-demo">
+                    <div class="progress-fill" id="preschoolProgress"></div>
+                </div>
+            </div>
+            
+            <!-- Молодші школярі 7-8 років -->
+            <div class="age-group early">
+                <div class="age-header">
+                    📚 Молодші школярі (7-8 років)
+                </div>
+                
+                <div class="characteristics">
+                    <h4>Характеристики:</h4>
+                    <ul>
+                        <li>Період уваги 10-15 хвилин</li>
+                        <li>Читають прості слова</li>
+                        <li>Послідовні дії</li>
+                        <li>Цікавляться досягненнями</li>
+                    </ul>
+                </div>
+                
+                <button class="demo-button" onclick="handleEarlyClick(this)">
+                    🎮 Навчальні ігри з прогресом
+                </button>
+                
+                <div class="interactive-area">
+                    <div class="floating-elements">
+                        <div class="floating-element" style="top: 25%; left: 15%;">📚</div>
+                        <div class="floating-element" style="top: 50%; right: 20%;">🧮</div>
+                        <div class="floating-element" style="bottom: 30%; left: 70%;">✏️</div>
+                    </div>
+                    <div class="score-display" id="earlyScore">🏆 Досягнення: 0/10</div>
+                </div>
+                
+                <div class="progress-demo">
+                    <div class="progress-fill" id="earlyProgress"></div>
+                </div>
+            </div>
+            
+            <!-- Старші школярі 9-10 років -->
+            <div class="age-group middle">
+                <div class="age-header">
+                    🎯 Старші школярі (9-10 років)
+                </div>
+                
+                <div class="characteristics">
+                    <h4>Характеристики:</h4>
+                    <ul>
+                        <li>Період уваги 15-20 хвилин</li>
+                        <li>Добре читають</li>
+                        <li>Складні завдання</li>
+                        <li>Цікавляться деталями</li>
+                    </ul>
+                </div>
+                
+                <button class="demo-button" onclick="handleMiddleClick(this)">
+                    🔬 Інтерактивні експерименти
+                </button>
+                
+                <div class="interactive-area">
+                    <div class="floating-elements">
+                        <div class="floating-element" style="top: 20%; left: 25%;">🔬</div>
+                        <div class="floating-element" style="top: 60%; right: 15%;">⚗️</div>
+                        <div class="floating-element" style="bottom: 25%; left: 55%;">🧪</div>
+                    </div>
+                    <div class="score-display" id="middleScore">📊 Експерименти: 0 | Точність: 0%</div>
+                </div>
+                
+                <div class="progress-demo">
+                    <div class="progress-fill" id="middleProgress"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let scores = {
+            toddler: 0,
+            preschool: 0,
+            early: 0,
+            middle: 0
+        };
+        
+        let progress = {
+            toddler: 0,
+            preschool: 0,
+            early: 0,
+            middle: 0
+        };
+        
+        function handleToddlerClick(button) {
+            // Дуже простий відгук для малюків
+            scores.toddler += 1;
+            progress.toddler += 20;
+            
+            document.getElementById('toddlerScore').textContent = `Бали: ${scores.toddler}`;
+            document.getElementById('toddlerProgress').style.width = Math.min(progress.toddler, 100) + '%';
+            
+            // Великі анімації
+            button.style.transform = 'scale(1.2)';
+            button.style.background = 'linear-gradient(145deg, #ff9ff3, #54a0ff)';
+            
+            setTimeout(() => {
+                button.style.transform = '';
+                button.style.background = '';
+            }, 300);
+            
+            // Звуковий ефект (симуляція)
+            showFeedback('🎉 Молодець!', button);
+        }
+        
+        function handlePreschoolClick(button) {
+            // Персонажі та історії для дошкільнят
+            scores.preschool += 1;
+            progress.preschool += 15;
+            
+            const phrases = ['⭐ Супер!', '🌟 Чудово!', '🎨 Красиво!', '🦋 Легко!'];
+            const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+            
+            document.getElementById('preschoolScore').textContent = `⭐ Зірочки: ${scores.preschool}`;
+            document.getElementById('preschoolProgress').style.width = Math.min(progress.preschool, 100) + '%';
+            
+            button.style.animation = 'bounce 0.6s ease';
+            setTimeout(() => {
+                button.style.animation = '';
+            }, 600);
+            
+            showFeedback(randomPhrase, button);
+        }
+        
+        function handleEarlyClick(button) {
+            // Навчальні ігри з системою досягнень
+            scores.early += 1;
+            progress.early += 10;
+            
+            document.getElementById('earlyScore').textContent = `🏆 Досягнення: ${scores.early}/10`;
+            document.getElementById('earlyProgress').style.width = Math.min(progress.early, 100) + '%';
+            
+            button.style.transform = 'translateY(-5px)';
+            button.style.boxShadow = '0 10px 25px rgba(0,0,0,0.3)';
+            
+            setTimeout(() => {
+                button.style.transform = '';
+                button.style.boxShadow = '';
+            }, 200);
+            
+            if (scores.early >= 10) {
+                showFeedback('🎊 Всі досягнення розблоковані!', button);
+            } else {
+                showFeedback(`📈 Прогрес: ${scores.early}/10`, button);
+            }
+        }
+        
+        function handleMiddleClick(button) {
+            // Складні експерименти та статистика
+            scores.middle += 1;
+            progress.middle += 8;
+            
+            const accuracy = Math.min(95, 60 + (scores.middle * 3));
+            
+            document.getElementById('middleScore').textContent = 
+                `📊 Експерименти: ${scores.middle} | Точність: ${accuracy}%`;
+            document.getElementById('middleProgress').style.width = Math.min(progress.middle, 100) + '%';
+            
+            button.style.background = 'linear-gradient(145deg, #00b894, #00a085)';
+            button.style.transform = 'scale(0.98)';
+            
+            setTimeout(() => {
+                button.style.background = '';
+                button.style.transform = '';
+            }, 150);
+            
+            showFeedback(`🔬 Експеримент ${scores.middle} завершено. Точність: ${accuracy}%`, button);
+        }
+        
+        function showFeedback(message, button) {
+            const feedback = document.createElement('div');
+            feedback.textContent = message;
+            feedback.style.cssText = `
+                position: absolute;
+                top: -50px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(45deg, #ff6b6b, #feca57);
+                color: white;
+                padding: 10px 15px;
+                border-radius: 10px;
+                font-size: 14px;
+                z-index: 1000;
+                animation: feedbackPop 2s ease;
+                white-space: nowrap;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            `;
+            
+            button.parentElement.style.position = 'relative';
+            button.parentElement.appendChild(feedback);
+            
+            setTimeout(() => {
+                feedback.remove();
+            }, 2000);
+        }
+        
+        // Анімація для відгуку
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes feedbackPop {
+                0% { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.8); }
+                20% { opacity: 1; transform: translateX(-50%) translateY(-10px) scale(1.1); }
+                80% { opacity: 1; transform: translateX(-50%) translateY(-10px) scale(1); }
+                100% { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.9); }
+            }
+            
+            @keyframes bounce {
+                0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+                40% { transform: translateY(-10px); }
+                60% { transform: translateY(-5px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Автоматичні анімації фонових елементів
+        document.querySelectorAll('.floating-element').forEach((element, index) => {
+            element.style.animationDelay = (index * 0.5) + 's';
+        });
+        
+        console.log('🎯 Демонстрація вікових груп готова!');
+        console.log('🧠 Кожна група має унікальні інтерактивні елементи:');
+        console.log('👶 Малюки: Великі кнопки, прості анімації');
+        console.log('🎨 Дошкільнята: Персонажі, фрази, середня складність');
+        console.log('📚 Молодші: Система досягнень, прогрес-бари');
+        console.log('🎯 Старші: Статистика, точність, складна інтерактивність');
+    </script>
+</body>
+</html> 
