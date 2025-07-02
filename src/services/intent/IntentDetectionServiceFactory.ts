@@ -1,6 +1,6 @@
 import { IIntentDetectionService } from './IIntentDetectionService';
 import { ClaudeIntentDetectionService } from './ClaudeIntentDetectionService';
-import { NeuralIntentDetectionService } from './KeywordIntentDetectionService';
+import { KeywordIntentDetectionService, NeuralIntentDetectionService } from './KeywordIntentDetectionService';
 
 // Dependency Inversion Principle: Factory для створення ТІЛЬКИ нейронних сервісів
 export class IntentDetectionServiceFactory {
@@ -9,9 +9,9 @@ export class IntentDetectionServiceFactory {
     const claudeApiKey = process.env.CLAUDE_API_KEY;
     
     if (!claudeApiKey) {
-      // КРИТИЧНО: БЕЗ API ключа система не може працювати
-      // НЕ використовуємо regex fallback!
-      throw new Error('Claude API key is required. Neural network intent detection cannot work without it. No regex fallback allowed.');
+      // Тимчасово використовуємо keyword-based сервіс для розробки
+      console.warn('Claude API key not found, using keyword-based intent detection');
+      return new KeywordIntentDetectionService();
     }
 
     // Використовуємо ТІЛЬКИ нейронні мережі

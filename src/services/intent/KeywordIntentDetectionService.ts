@@ -1,6 +1,96 @@
 import { IIntentDetectionService, IntentDetectionResult, UserIntent, IntentParameters } from './IIntentDetectionService';
 
-// Single Responsibility: AI-based реалізація через нейронку, БЕЗ regex patterns
+// Keyword-based fallback service for development
+export class KeywordIntentDetectionService implements IIntentDetectionService {
+  
+  async detectIntent(message: string): Promise<IntentDetectionResult> {
+    const lowerMessage = message.toLowerCase();
+    
+    // Keyword patterns for different intents
+    const patterns: Record<UserIntent, string[]> = {
+      [UserIntent.CREATE_LESSON]: [
+        'створ', 'зроб', 'урок', 'lesson', 'create', 'make',
+        'про', 'about', 'тема', 'topic', 'для дітей', 'for children'
+      ],
+      [UserIntent.HELP]: [
+        'допомог', 'help', 'як', 'how', 'що', 'what', 'поясни', 'explain'
+      ],
+      [UserIntent.FREE_CHAT]: [
+        'привіт', 'hello', 'hi', 'дякую', 'thank', 'ок', 'ok'
+      ],
+      // Add defaults for other intents
+      [UserIntent.GENERATE_PLAN]: [],
+      [UserIntent.CREATE_SLIDE]: [],
+      [UserIntent.CREATE_NEW_SLIDE]: [],
+      [UserIntent.REGENERATE_SLIDE]: [],
+      [UserIntent.EDIT_HTML_INLINE]: [],
+      [UserIntent.EDIT_SLIDE]: [],
+      [UserIntent.IMPROVE_HTML]: [],
+      [UserIntent.EXPORT]: [],
+      [UserIntent.PREVIEW]: []
+    };
+
+    // Determine intent based on keywords
+    let detectedIntent: UserIntent = UserIntent.FREE_CHAT;
+    let confidence = 0.5;
+
+    for (const [intent, keywords] of Object.entries(patterns)) {
+      const matchCount = keywords.filter(keyword => lowerMessage.includes(keyword)).length;
+      if (matchCount > 0) {
+        detectedIntent = intent as UserIntent;
+        confidence = Math.min(0.9, 0.6 + (matchCount * 0.1));
+        break;
+      }
+    }
+
+    // Extract parameters
+    const parameters: IntentParameters = {
+      rawMessage: message,
+      keywords: this.extractKeywords(lowerMessage)
+    };
+
+    // Extract topic if creating lesson
+    if (detectedIntent === UserIntent.CREATE_LESSON) {
+      const topicMatch = message.match(/про\s+([^,\.!?]+)|about\s+([^,\.!?]+)/i);
+      if (topicMatch) {
+        parameters.topic = topicMatch[1] || topicMatch[2];
+      }
+      
+      // Extract age
+      const ageMatch = message.match(/(\d+)[\s-]*(\d*)\s*(рік|років|year|old)/i);
+      if (ageMatch) {
+        parameters.age = ageMatch[0];
+      }
+    }
+
+    return {
+      intent: detectedIntent,
+      confidence,
+      parameters,
+      language: this.detectLanguage(message),
+      reasoning: 'Keyword-based pattern matching'
+    };
+  }
+
+  private extractKeywords(message: string): string[] {
+    const words = message.split(/\s+/);
+    return words.filter(word => word.length > 2);
+  }
+
+  private detectLanguage(message: string): 'uk' | 'en' | 'ru' | 'other' {
+    const ukKeywords = ['урок', 'для', 'дітей', 'створ', 'про', 'років'];
+    const enKeywords = ['lesson', 'for', 'children', 'create', 'about', 'years'];
+    
+    const ukMatches = ukKeywords.filter(keyword => message.toLowerCase().includes(keyword)).length;
+    const enMatches = enKeywords.filter(keyword => message.toLowerCase().includes(keyword)).length;
+    
+    if (ukMatches > enMatches) return 'uk';
+    if (enMatches > ukMatches) return 'en';
+    return 'other';
+  }
+}
+
+// Neural-based service that requires API key
 export class NeuralIntentDetectionService implements IIntentDetectionService {
   
   async detectIntent(message: string): Promise<IntentDetectionResult> {
