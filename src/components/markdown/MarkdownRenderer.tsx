@@ -49,8 +49,15 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
       // Emojis
       .replace(/📋|📝|🎮|📊|🎉|🤔|🦖|👥|⭐|🦕|🦴|🏃|🥚|🔍|🌟|🎯|🔹|❓|🚀/g, '<span class="emoji">$&</span>')
       
-      // Paragraphs
+      // Paragraphs and line breaks
       .replace(/\n\n/g, '</p><p>')
+      // Видаляємо br теги після заголовків та елементів блоків
+      .replace(/(<\/h[1-6]>)\n/g, '$1')
+      .replace(/(<\/hr>)\n/g, '$1')
+      .replace(/(<\/ul>)\n/g, '$1')
+      .replace(/(<\/div>)\n/g, '$1')
+      .replace(/(<\/blockquote>)\n/g, '$1')
+      // Заміняємо решту нових рядків на br
       .replace(/\n/g, '<br>');
   };
 
@@ -75,6 +82,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           margin: '24px 0 12px 0',
           color: theme.palette.primary.main,
           '&:first-child': { marginTop: 0 },
+          '& + br': { display: 'none' },
         },
         '& h2': {
           fontSize: '1.125rem',
@@ -82,6 +90,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           margin: '20px 0 10px 0',
           color: theme.palette.primary.main,
           '&:first-child': { marginTop: 0 },
+          '& + br': { display: 'none' },
         },
         '& h3': {
           fontSize: '1rem',
@@ -89,6 +98,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           margin: '16px 0 8px 0',
           color: theme.palette.primary.main,
           '&:first-child': { marginTop: 0 },
+          '& + br': { display: 'none' },
         },
         
         // Paragraphs
@@ -108,6 +118,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             margin: '4px 0',
             lineHeight: 1.5,
           },
+          '& + br': { display: 'none' },
         },
         
         // Emoji items
@@ -161,6 +172,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           border: 'none',
           borderTop: '1px solid #e0e0e0',
           margin: '20px 0',
+          '& + br': { display: 'none' },
         },
         
         // Emojis
