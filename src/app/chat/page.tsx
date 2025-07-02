@@ -1,8 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Container, Paper, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+
+// Layout
+import Layout from '@/components/layout/Layout';
 
 // Нові модульні компоненти
 import ChatHeader from '@/components/chat/ChatHeader';
@@ -81,106 +84,130 @@ const ChatInterface: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ height: '100vh', py: 2 }}>
-      <Box sx={{ display: 'flex', height: '100%', gap: 2 }}>
-        {/* Основна область чату */}
-        <Paper 
-          elevation={3} 
-          sx={{ 
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            borderRadius: 2,
-            overflow: 'hidden',
-            backgroundColor: theme.palette.background.paper
-          }}
-        >
-          {/* Заголовок чату */}
-          <ChatHeader 
-            isTyping={isTyping}
-            onToggleSlidePanel={toggleSlidePanelOpen}
-            slideCount={slideUIState.currentLesson?.slides.length || 0}
-          />
-
-          {/* Область повідомлень */}
+    <Layout 
+      title="Чат з ШІ" 
+      breadcrumbs={[{ label: 'Головна', href: '/' }, { label: 'Чат' }]}
+      noPadding={true}
+    >
+            <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          {/* Основна область чату */}
           <Box 
             sx={{ 
-              flex: 1, 
-              p: 2, 
-              overflowY: 'auto',
+              flex: 1,
               display: 'flex',
               flexDirection: 'column',
-              gap: 2
+              overflow: 'hidden',
+              backgroundColor: theme.palette.background.default
             }}
           >
-            {messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                message={message}
-                onRegenerate={regenerateMessage}
-                onFeedback={provideFeedback}
-                onLessonCreate={updateCurrentLesson}
-              />
-            ))}
-            
-            {/* Індикатор друку */}
-            {isTyping && <TypingIndicator />}
+            {/* Заголовок чату */}
+            <ChatHeader 
+              slidePanelOpen={slideUIState.slidePanelOpen}
+              hasSlides={(slideUIState.currentLesson?.slides.length || 0) > 0}
+              onToggleSlidePanel={toggleSlidePanelOpen}
+            />
+
+            {/* Область повідомлень */}
+            <Box 
+              sx={{ 
+                flex: 1, 
+                p: 3, 
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+              }}
+            >
+              <Box sx={{
+                maxWidth: '1200px',
+                mx: 'auto',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+              }}>
+                {messages.map((message) => (
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    onRegenerate={regenerateMessage}
+                    onFeedback={provideFeedback}
+                    onLessonCreate={updateCurrentLesson}
+                  />
+                ))}
+                
+                {/* Індикатор друку */}
+                {isTyping && <TypingIndicator isTyping={isTyping} />}
+              </Box>
+            </Box>
+
+            {/* Поле введення */}
+            <Box sx={{ 
+              p: 3, 
+              backgroundColor: theme.palette.background.paper,
+              borderTop: `1px solid ${theme.palette.divider}`,
+            }}>
+              <Box sx={{ 
+                maxWidth: '1200px',
+                mx: 'auto',
+                width: '100%'
+              }}>
+                <ChatInput
+                  value={inputText}
+                  onChange={setInputText}
+                  onSend={sendMessage}
+                  isLoading={isLoading}
+                  disabled={isTyping}
+                />
+              </Box>
+            </Box>
           </Box>
 
-          {/* Поле введення */}
-          <ChatInput
-            value={inputText}
-            onChange={setInputText}
-            onSend={sendMessage}
-            isLoading={isLoading}
-            disabled={isTyping}
-          />
-        </Paper>
+          {/* Панель слайдів */}
+          {slideUIState.slidePanelOpen && (
+            <SlidePanel
+              currentLesson={slideUIState.currentLesson}
+              selectedSlides={slideUIState.selectedSlides}
+              slidePreviews={slidePreviews}
+              previewsUpdating={previewsUpdating}
+              isSavingLesson={slideUIState.isSavingLesson}
+              onToggleSlideSelection={toggleSlideSelection}
+              onSelectAllSlides={selectAllSlides}
+              onDeselectAllSlides={deselectAllSlides}
+              onOpenSlideDialog={openSlideDialog}
+              onRegenerateSlidePreview={regenerateSlidePreview}
+              onOpenSaveDialog={openSaveDialog}
+              onCloseSidePanel={toggleSlidePanelOpen}
+              onExportLesson={exportLesson}
+            />
+          )}
+        </Box>
 
-        {/* Панель слайдів */}
-        {slideUIState.slidePanelOpen && (
-          <SlidePanel
-            lesson={slideUIState.currentLesson}
-            selectedSlides={slideUIState.selectedSlides}
-            slidePreviews={slidePreviews}
-            previewsUpdating={previewsUpdating}
-            onSlideSelect={toggleSlideSelection}
-            onSelectAll={selectAllSlides}
-            onDeselectAll={deselectAllSlides}
-            onSlideView={openSlideDialog}
-            onRegeneratePreview={regenerateSlidePreview}
-            onSaveLesson={openSaveDialog}
-            onExport={exportLesson}
-            onClose={toggleSlidePanelOpen}
-            isGenerating={slideUIState.isGenerating}
-            isSaving={slideUIState.isSavingLesson}
-          />
-        )}
+        {/* Діалог перегляду слайдів */}
+        <SlideDialog
+          open={slideUIState.slideDialogOpen}
+          currentLesson={slideUIState.currentLesson}
+          currentSlideIndex={slideUIState.currentSlideIndex}
+          onClose={closeSlideDialog}
+          onNextSlide={goToNextSlide}
+          onPrevSlide={goToPrevSlide}
+        />
+
+        {/* Діалог збереження уроку */}
+        <SaveLessonDialog
+          open={slideUIState.saveDialogOpen}
+          dialogData={saveDialogData}
+          selectedSlides={slideUIState.currentLesson?.slides.filter(slide => slideUIState.selectedSlides.has(slide.id)) || []}
+          cachedPreviews={slidePreviews}
+          onClose={closeSaveDialog}
+          onSave={handleSaveLesson}
+          onDataChange={updateSaveDialogData}
+          onPreviewSelect={handlePreviewSelect}
+          isSaving={slideUIState.isSavingLesson}
+        />
       </Box>
-
-      {/* Діалог перегляду слайдів */}
-      <SlideDialog
-        open={slideUIState.slideDialogOpen}
-        slides={slideUIState.currentLesson?.slides || []}
-        currentIndex={slideUIState.currentSlideIndex}
-        onClose={closeSlideDialog}
-        onNext={goToNextSlide}
-        onPrev={goToPrevSlide}
-      />
-
-      {/* Діалог збереження уроку */}
-      <SaveLessonDialog
-        open={slideUIState.saveDialogOpen}
-        dialogData={saveDialogData}
-        selectedSlides={slideUIState.currentLesson?.slides.filter(slide => slideUIState.selectedSlides.has(slide.id)) || []}
-        cachedPreviews={slidePreviews}
-        onClose={closeSaveDialog}
-        onSave={handleSaveLesson}
-        onDataChange={updateSaveDialogData}
-        onPreviewSelect={handlePreviewSelect}
-        isSaving={slideUIState.isSavingLesson}
-      />
-    </Container>
+    </Layout>
   );
 };
 
