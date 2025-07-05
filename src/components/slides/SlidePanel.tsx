@@ -284,11 +284,26 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
           {/* Список слайдів */}
           <Box sx={{ 
             flex: 1, 
-            overflow: 'auto',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', // Автоматична сітка з мінімальною шириною 300px
-            gap: 1.5,             // Зменшено відступи між картками
-            alignContent: 'start' // Вирівнювання по верху
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1.5,
+            paddingRight: 0.5, // Невеликий відступ для скролбару
+            '&::-webkit-scrollbar': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-track': {
+              backgroundColor: alpha(theme.palette.grey[300], 0.2),
+              borderRadius: '3px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: alpha(theme.palette.grey[400], 0.6),
+              borderRadius: '3px',
+              '&:hover': {
+                backgroundColor: alpha(theme.palette.grey[500], 0.8),
+              },
+            },
           }}>
             {currentLesson.slides.map((slide, index) => (
               <SlideCard
