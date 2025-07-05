@@ -103,7 +103,7 @@ export function createEducationalImagePrompt(
 // Функція для визначення оптимальних розмірів зображення для освітнього контенту
 export function getOptimalImageSize(purpose: 'slide' | 'thumbnail' | 'hero' | 'activity') {
   const sizes = {
-    slide: { width: 1024, height: 768 }, // 4:3 для слайдів
+    slide: { width: 1024, height: 768 }, // стандартний розмір для слайдів
     thumbnail: { width: 512, height: 512 }, // квадратне для мініатюр
     hero: { width: 1200, height: 630 }, // широкий формат для заголовків
     activity: { width: 800, height: 600 } // для інтерактивних завдань

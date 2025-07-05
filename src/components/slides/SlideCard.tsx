@@ -64,7 +64,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
       <Box sx={{ 
         position: 'relative',
         width: '100%',        // Займаємо всю ширину картки
-        aspectRatio: '4/3',   // Встановлюємо правильні пропорції 4:3
+        aspectRatio: '4/3',   // Встановлюємо пропорції для превью
         overflow: 'hidden',
         backgroundColor: alpha(theme.palette.grey[100], 0.3),
         display: 'flex',

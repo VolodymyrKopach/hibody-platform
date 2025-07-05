@@ -385,7 +385,7 @@ export interface ImageGenerationRequest {
   prompt: string;
   width?: number;
   height?: number;
-  aspectRatio?: '1:1' | '4:3' | '16:9' | '3:4' | '9:16';
+  aspectRatio?: '1:1' | '16:9' | '3:4' | '9:16';
   style?: 'cartoon' | 'realistic' | 'illustration';
   ageGroup?: string;
   topic?: string;

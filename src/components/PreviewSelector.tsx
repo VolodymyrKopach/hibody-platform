@@ -82,8 +82,8 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
 
         try {
           const thumbnailUrl = await generateSlideThumbnail(slide.htmlContent, {
-            width: 640,        // Збільшено на 25% (512 * 1.25 = 640)
-            height: 480,       // Збільшено на 25% (384 * 1.25 = 480) - пропорції 4:3
+            width: 640,        // Стандартна ширина для превью
+            height: 480,       // Стандартна висота для превью
             quality: 0.85,
             background: '#ffffff'
           });
@@ -208,7 +208,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
       }}>
         <Box sx={{ 
           width: '100%',
-          aspectRatio: '4/3',  // Встановлюємо правильні пропорції 4:3
+          aspectRatio: '4/3',  // Встановлюємо пропорції для превью
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

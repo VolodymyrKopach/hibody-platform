@@ -2,6 +2,7 @@ import { IIntentDetectionService } from '../intent/IIntentDetectionService';
 import { IntentDetectionServiceFactory } from '../intent/IntentDetectionServiceFactory';
 import { IIntentHandler } from './handlers/IIntentHandler';
 import { ClaudeSonnetContentService } from '../content/ClaudeSonnetContentService';
+import { SimpleEditService } from '../content/SimpleEditService';
 import { FallbackHandler } from './handlers/FallbackHandler';
 import { EditPlanHandler } from './handlers/EditPlanHandler';
 import { EnhancedCreateLessonHandler } from './handlers/EnhancedCreateLessonHandler';
@@ -17,6 +18,7 @@ export class ChatService {
   private intentDetectionService: IIntentDetectionService;
   private handlers: IIntentHandler[];
   private contentService: ClaudeSonnetContentService;
+  private simpleEditService: SimpleEditService;
 
   constructor() {
     // Dependency Inversion: залежимо від абстракцій, не від конкретних класів
@@ -37,6 +39,7 @@ export class ChatService {
       throw new Error('Claude API key not found in environment variables (CLAUDE_API_KEY)');
     }
     this.contentService = new ClaudeSonnetContentService(claudeApiKey);
+    this.simpleEditService = new SimpleEditService(claudeApiKey);
   }
 
   async processMessage(
@@ -549,31 +552,32 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
       };
     }
     
-    console.log(`✏️ Editing slide ${slideNumberToEdit} using Claude Sonnet...`);
+          console.log(`🔧 Performing simple edit on slide ${slideNumberToEdit}...`);
     
     try {
       // Отримуємо поточний слайд
       const currentSlide = conversationHistory.currentLesson.slides[slideNumberToEdit - 1];
       const editInstruction = intentResult?.parameters?.rawMessage || 'Покращити слайд';
       
-      // Генеруємо покращений HTML слайд через Claude Sonnet
-      const improvedSlideHTML = await this.contentService.generateSlideContent(
-        `Покращити існуючий слайд з урахуванням інструкції: "${editInstruction}". 
-        
-Поточний контент слайду: ${currentSlide.content}
-
-Створіть покращену версію слайду з урахуванням інструкції користувача.`,
+      // Використовуємо простий підхід - надсилаємо HTML до Claude
+      const editedSlideHTML = await this.simpleEditService.editSlide(
+        currentSlide.htmlContent || currentSlide.content,
+        editInstruction,
         conversationHistory.lessonTopic || 'урок',
         conversationHistory.lessonAge || '6-8 років'
       );
 
-      console.log('✅ Slide HTML improved successfully, length:', improvedSlideHTML.length);
+      console.log('✅ Simple slide edit completed, length:', editedSlideHTML.length);
 
       // Зберігаємо ID слайду який треба оновити
       const slideId = currentSlide.id;
 
       // Аналізуємо зміни між старим та новим слайдом
-      const detectedChanges = this.analyzeSlideChanges(currentSlide, improvedSlideHTML, editInstruction);
+      const detectedChanges = this.simpleEditService.analyzeChanges(
+        currentSlide.htmlContent || currentSlide.content,
+        editedSlideHTML,
+        editInstruction
+      );
 
       // Оновлюємо поточний слайд (ЗАМІНЮЄМО, а не створюємо новий)
       const updatedLesson = {
@@ -582,8 +586,8 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
           index === slideNumberToEdit - 1 ? {
             ...slide,
             id: slideId, // ЗБЕРІГАЄМО той же ID!
-            htmlContent: improvedSlideHTML,
-            content: `Слайд ${slideNumberToEdit} покращено згідно з інструкцією: ${editInstruction}`,
+            htmlContent: editedSlideHTML,
+            content: `Слайд ${slideNumberToEdit} відредаговано: ${editInstruction}`,
             updatedAt: new Date()
           } : slide
         )
@@ -596,7 +600,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
           slide.id === slideNumberToEdit ? { 
             ...slide, 
             id: slideNumberToEdit, // Зберігаємо numberic ID
-            html: improvedSlideHTML 
+            html: editedSlideHTML 
           } : slide
         ),
         currentLesson: updatedLesson,
@@ -605,14 +609,19 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
 
       return {
         success: true,
-        message: `✏️ **Слайд ${slideNumberToEdit} покращено!**
+        message: `🔧 **Слайд ${slideNumberToEdit} відредаговано!**
 
-Слайд оновлено з використанням Claude Sonnet згідно з вашою інструкцією та **замінено** попередній слайд в правій панелі.
+Слайд оновлено згідно з вашою інструкцією. Слайд **замінено** в правій панелі.
 
 📋 **Детальний звіт про зміни:**
-${detectedChanges.map(change => `• ${change}`).join('\n')}
+${detectedChanges.map((change: string) => `• ${change}`).join('\n')}
 
-🎯 **Ваша інструкція:** "${editInstruction}"`,
+🎯 **Ваша інструкція:** "${editInstruction}"
+
+✨ **Простий підхід редагування:**
+• Claude отримує весь HTML слайду
+• Виконує інструкцію користувача
+• Повертає оновлений слайд`,
         conversationHistory: newConversationHistory,
         actions: [
           {
@@ -629,7 +638,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
         lesson: updatedLesson
       };
     } catch (error) {
-      console.error('❌ Error editing slide with Claude:', error);
+      console.error('❌ Error with simple slide editing:', error);
       
       return {
         success: false,
@@ -777,7 +786,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
       };
     }
     
-    console.log(`📝 Inline editing slide ${slideNumberToEdit} using Claude Sonnet...`);
+          console.log(`🔧 Performing simple inline edit on slide ${slideNumberToEdit}...`);
     
     try {
       // Отримуємо поточний слайд
@@ -786,39 +795,33 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
       const targetText = intentResult?.parameters?.targetText || '';
       const newText = intentResult?.parameters?.newText || '';
       
-      let prompt = '';
+      // Формуємо інструкцію для точкового редагування
+      let finalInstruction = '';
       if (targetText && newText) {
-        // Конкретна заміна тексту
-        prompt = `Виконайте точну заміну тексту в слайді: замініть "${targetText}" на "${newText}".
-        
-Поточний HTML контент слайду:
-${currentSlide.htmlContent}
-
-Виконайте заміну та поверніть оновлений HTML, зберігши всю структуру та стилі.`;
+        finalInstruction = `Замініть "${targetText}" на "${newText}"`;
       } else {
-        // Загальне редагування
-        prompt = `Виконайте редагування слайду згідно з інструкцією: "${editInstruction}".
-        
-Поточний HTML контент слайду:
-${currentSlide.htmlContent}
-
-Внесіть мінімальні зміни згідно з інструкцією, зберігши основну структуру.`;
+        finalInstruction = editInstruction;
       }
       
-      // Генеруємо відредагований HTML слайд через Claude Sonnet
-      const editedSlideHTML = await this.contentService.generateSlideContent(
-        prompt,
+      // Використовуємо простий підхід редагування
+      const editedSlideHTML = await this.simpleEditService.editSlide(
+        currentSlide.htmlContent || currentSlide.content,
+        finalInstruction,
         conversationHistory.lessonTopic || 'урок',
         conversationHistory.lessonAge || '6-8 років'
       );
 
-      console.log('✅ Slide HTML edited successfully, length:', editedSlideHTML.length);
+      console.log('✅ Simple inline edit completed, length:', editedSlideHTML.length);
 
       // Зберігаємо ID слайду який треба оновити
       const slideId = currentSlide.id;
 
       // Аналізуємо зміни між старим та новим слайдом
-      const detectedChanges = this.analyzeSlideChanges(currentSlide, editedSlideHTML, editInstruction);
+      const detectedChanges = this.simpleEditService.analyzeChanges(
+        currentSlide.htmlContent || currentSlide.content,
+        editedSlideHTML,
+        finalInstruction
+      );
 
       // Оновлюємо поточний слайд (ЗАМІНЮЄМО, а не створюємо новий)
       const updatedLesson = {
@@ -855,14 +858,19 @@ ${currentSlide.htmlContent}
 
       return {
         success: true,
-        message: `📝 **Слайд ${slideNumberToEdit} відредаговано!**
+        message: `🔧 **Слайд ${slideNumberToEdit} відредаговано!**
 
-Зміни внесено до слайду та **замінено** попередній слайд в правій панелі.
+Слайд оновлено згідно з інструкцією. Слайд **замінено** в правій панелі.
 
 📋 **Детальний звіт про редагування:**
-${detectedChanges.map(change => `• ${change}`).join('\n')}
+${detectedChanges.map((change: string) => `• ${change}`).join('\n')}
 
-🎯 **Ваша інструкція:** "${changeDescription}"`,
+🎯 **Ваша інструкція:** "${changeDescription}"
+
+✨ **Простий підхід редагування:**
+• Claude отримує весь HTML слайду
+• Виконує інструкцію користувача  
+• Повертає оновлений слайд`,
         conversationHistory: newConversationHistory,
         actions: [
           {
@@ -879,7 +887,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
         lesson: updatedLesson
       };
     } catch (error) {
-      console.error('❌ Error inline editing slide with Claude:', error);
+      console.error('❌ Error simple inline editing slide:', error);
       
       return {
         success: false,

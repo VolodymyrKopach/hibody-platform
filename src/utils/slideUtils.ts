@@ -438,29 +438,26 @@ function extractDescription(htmlContent: string): string {
   return 'Опис слайду';
 }
 
-// 4:3 Aspect Ratio Constants
-export const SLIDE_ASPECT_RATIO = {
-  RATIO: '4:3',
-  WIDTH_TO_HEIGHT: 4/3,
+// Responsive slide constants
+export const SLIDE_DEFAULTS = {
   STANDARD_RESOLUTIONS: [
-    { width: 1024, height: 768, label: 'XGA' },
-    { width: 1280, height: 960, label: 'SXGA-' },
-    { width: 1400, height: 1050, label: 'SXGA+' },
-    { width: 1600, height: 1200, label: 'UXGA' }
+    { width: 1024, height: 768, label: 'Standard' },
+    { width: 1280, height: 720, label: 'HD' },
+    { width: 1920, height: 1080, label: 'Full HD' },
+    { width: 1600, height: 900, label: 'Wide' }
   ],
   DEFAULT_RESOLUTION: { width: 1024, height: 768 }
 } as const;
 
 /**
- * Генерує CSS стилі для забезпечення співвідношення сторін 4:3
+ * Генерує CSS стилі для responsive слайдів
  */
-export function generate43AspectRatioStyles(): string {
+export function generateResponsiveSlideStyles(): string {
   return `
-    /* 4:3 Aspect Ratio Container */
-    .slide-container-4-3 {
+    /* Responsive Slide Container */
+    .slide-container {
       width: 100%;
       max-width: 1024px;
-      aspect-ratio: 4/3;
       margin: 0 auto;
       background: #fff;
       border-radius: 8px;
@@ -468,42 +465,40 @@ export function generate43AspectRatioStyles(): string {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     
-    /* Responsive 4:3 viewport */
+    /* Responsive viewport */
     @media (max-width: 1024px) {
-      .slide-container-4-3 {
+      .slide-container {
         max-width: 90vw;
-        height: calc(90vw * 3 / 4);
       }
     }
     
     @media (max-width: 768px) {
-      .slide-container-4-3 {
+      .slide-container {
         max-width: 95vw;
-        height: calc(95vw * 3 / 4);
       }
     }
   `;
 }
 
 /**
- * Генерує viewport meta tag оптимізований для 4:3 слайдів
+ * Генерує viewport meta tag для responsive слайдів
  */
-export function generate43ViewportMeta(): string {
+export function generateResponsiveViewportMeta(): string {
   return `<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">`;
 }
 
 /**
- * Генерує базовий HTML template для слайду з співвідношенням 4:3
+ * Генерує базовий HTML template для responsive слайду
  */
-export function generate43SlideTemplate(title: string, content: string): string {
+export function generateResponsiveSlideTemplate(title: string, content: string): string {
   return `<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    ${generate43ViewportMeta()}
+    ${generateResponsiveViewportMeta()}
     <title>${title}</title>
     <style>
-        ${generate43AspectRatioStyles()}
+        ${generateResponsiveSlideStyles()}
         
         body {
             margin: 0;
@@ -518,7 +513,6 @@ export function generate43SlideTemplate(title: string, content: string): string 
         
         .slide-content {
             padding: 40px;
-            height: calc(100% - 80px);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -526,12 +520,12 @@ export function generate43SlideTemplate(title: string, content: string): string 
             text-align: center;
         }
         
-        /* Responsive typography for 4:3 format */
+        /* Responsive typography */
         h1 { font-size: min(4vw, 3rem); }
         h2 { font-size: min(3vw, 2.5rem); }
         p { font-size: min(2.5vw, 1.5rem); }
         
-        /* Interactive elements optimized for 4:3 */
+        /* Interactive elements */
         .interactive-button {
             padding: min(2vw, 20px) min(4vw, 40px);
             font-size: min(2.5vw, 1.2rem);
@@ -550,7 +544,7 @@ export function generate43SlideTemplate(title: string, content: string): string 
     </style>
 </head>
 <body>
-    <div class="slide-container-4-3">
+    <div class="slide-container">
         <div class="slide-content">
             ${content}
         </div>
