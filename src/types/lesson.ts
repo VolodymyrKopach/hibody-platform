@@ -1,6 +1,16 @@
 // Slide-Oriented User Interface Types
 // Користувач бачить слайди, під капотом - файли
 
+export interface SlideImageInfo {
+  prompt: string;
+  width: number;
+  height: number;
+  base64Image: string;
+  model: string;
+  success: boolean;
+  generatedAt: Date;
+}
+
 export interface LessonSlide {
   id: string;
   number: number;
@@ -14,6 +24,10 @@ export interface LessonSlide {
   preview: string;
   thumbnailUrl?: string;
   
+  // Інформація про згенеровані зображення
+  images?: SlideImageInfo[];
+  imageProcessingErrors?: string[];
+  
   // Внутрішні дані (користувач не бачить)
   _internal: {
     filename: string;
@@ -23,6 +37,9 @@ export interface LessonSlide {
     dependencies: string[];
     lastModified: Date;
     version: number;
+    // Мета-дані про обробку зображень
+    imageProcessingCompleted?: boolean;
+    imageProcessingTime?: number; // в мілісекундах
   };
   
   createdAt: Date;

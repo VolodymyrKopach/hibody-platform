@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест інтеграції генерації зображень в слайди</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: transform 0.3s ease;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        button:disabled {
+            opacity: 0.6;
+            transform: none;
+            cursor: not-allowed;
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .success { border-left: 4px solid #4caf50; }
+        .error { border-left: 4px solid #f44336; }
+        .warning { border-left: 4px solid #ff9800; }
+        .image-preview {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Тест інтеграції генерації зображень в слайди</h1>
+    
+    <div class="test-section">
+        <h2>📋 Етап 1: Тест парсингу IMAGE_PROMPT коментарів</h2>
+        <p>Перевіряємо чи правильно парситься HTML з IMAGE_PROMPT коментарями:</p>
+        
+        <div class="code-block">
+HTML з коментарями:
+&lt;!-- IMAGE_PROMPT: "A colorful cartoon cat teaching math to children" WIDTH: 512 HEIGHT: 384 --&gt;
+&lt;!-- IMAGE_PROMPT: "Simple geometric shapes for kids education" WIDTH: 640 HEIGHT: 480 --&gt;
+        </div>
+        
+        <button onclick="testImagePromptParsing()">🔍 Тест парсингу</button>
+        <div id="parsing-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Етап 2: Тест генерації зображення через FLUX</h2>
+        <p>Перевіряємо чи працює генерація одного зображення:</p>
+        
+        <button onclick="testSingleImageGeneration()" id="single-image-btn">📸 Генерувати зображення</button>
+        <div id="single-image-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 Етап 3: Тест повної інтеграції</h2>
+        <p>Перевіряємо всю систему: парсинг → генерація → заміна коментарів:</p>
+        
+        <button onclick="testFullIntegration()" id="full-integration-btn">🎨 Повний тест</button>
+        <div id="full-integration-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Результати</h2>
+        <ul id="test-results">
+            <li>⏳ Тести ще не запущені</li>
+        </ul>
+    </div>
+
+    <script>
+        const results = [];
+        
+        function updateResults() {
+            const resultsList = document.getElementById('test-results');
+            resultsList.innerHTML = results.map(result => 
+                `<li class="${result.status}">${result.message}</li>`
+            ).join('');
+        }
+        
+        function addResult(message, status = 'info') {
+            results.push({ message, status, timestamp: new Date() });
+            updateResults();
+        }
+
+        async function testImagePromptParsing() {
+            const resultDiv = document.getElementById('parsing-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Тестування парсингу...';
+            
+            try {
+                const testHtml = `
+                <div>
+                    <!-- IMAGE_PROMPT: "A colorful cartoon cat teaching math to children" WIDTH: 512 HEIGHT: 384 -->
+                    <h1>Математика для дітей</h1>
+                    <!-- IMAGE_PROMPT: "Simple geometric shapes for kids education" WIDTH: 640 HEIGHT: 480 -->
+                    <p>Контент слайду</p>
+                </div>`;
+                
+                // Симулюємо парсинг (в реальності це буде через API)
+                const imageCommentRegex = /<!--\s*IMAGE_PROMPT:\s*"([^"]+)"\s+WIDTH:\s*(\d+)\s+HEIGHT:\s*(\d+)\s*-->/gi;
+                const matches = [...testHtml.matchAll(imageCommentRegex)];
+                
+                if (matches.length > 0) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Знайдено ${matches.length} коментарів:
+                            ${matches.map((match, i) => `
+                                <br/><strong>Коментар ${i + 1}:</strong>
+                                <br/>Промпт: "${match[1]}"
+                                <br/>Розміри: ${match[2]}x${match[3]}
+                            `).join('')}
+                        </div>`;
+                    addResult(`✅ Парсинг коментарів: знайдено ${matches.length} коментарів`, 'success');
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ Коментарі не знайдені</div>';
+                    addResult('❌ Парсинг коментарів: провалено', 'error');
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Помилка: ${error.message}</div>`;
+                addResult(`❌ Парсинг коментарів: помилка - ${error.message}`, 'error');
+            }
+        }
+
+        async function testSingleImageGeneration() {
+            const button = document.getElementById('single-image-btn');
+            const resultDiv = document.getElementById('single-image-result');
+            
+            button.disabled = true;
+            button.textContent = '⏳ Генерація...';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Генеруємо зображення через FLUX API...';
+            
+            try {
+                const response = await fetch('/api/images', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: "A colorful cartoon cat teaching mathematics to children, educational style, bright colors, friendly, safe for kids",
+                        width: 512,
+                        height: 384
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.image) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Зображення згенеровано успішно!
+                            <br/><strong>Модель:</strong> ${data.model}
+                            <br/><strong>Розмір:</strong> ~${Math.round(data.image.length / 1024)}KB
+                            <img src="data:image/webp;base64,${data.image}" 
+                                 alt="${data.prompt}" 
+                                 class="image-preview" 
+                                 style="max-width: 300px;" />
+                        </div>`;
+                    addResult('✅ Генерація зображення: успішно', 'success');
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Помилка генерації: ${data.error}</div>`;
+                    addResult(`❌ Генерація зображення: ${data.error}`, 'error');
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Помилка запиту: ${error.message}</div>`;
+                addResult(`❌ Генерація зображення: помилка запиту - ${error.message}`, 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = '📸 Генерувати зображення';
+            }
+        }
+
+        async function testFullIntegration() {
+            const button = document.getElementById('full-integration-btn');
+            const resultDiv = document.getElementById('full-integration-result');
+            
+            button.disabled = true;
+            button.textContent = '⏳ Тестування...';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Запускаємо повний тест інтеграції...';
+            
+            try {
+                // Симулюємо генерацію слайду з Claude
+                resultDiv.innerHTML += '<br/>🎯 Генеруємо слайд з Claude...';
+                
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: "Створи слайд про кота який вчить математику дітей віком 6-8 років",
+                        action: "generate_next_slide"
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Повна інтеграція успішна!
+                            <br/><strong>Повідомлення:</strong> ${data.message}
+                            <br/><strong>Дії:</strong> ${data.actions?.length || 0}
+                            ${data.lesson ? `<br/><strong>Слайдів у уроці:</strong> ${data.lesson.slides?.length || 0}` : ''}
+                        </div>`;
+                    addResult('✅ Повна інтеграція: успішно', 'success');
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Помилка інтеграції: ${data.error}</div>`;
+                    addResult(`❌ Повна інтеграція: ${data.error}`, 'error');
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Помилка тесту: ${error.message}</div>`;
+                addResult(`❌ Повна інтеграція: помилка - ${error.message}`, 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = '🎨 Повний тест';
+            }
+        }
+
+        // Автоматично запускаємо тест парсингу при завантаженні
+        window.addEventListener('load', () => {
+            addResult('🚀 Тестова сторінка завантажена', 'info');
+        });
+    </script>
+</body>
+</html> 

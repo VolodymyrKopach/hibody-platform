@@ -9,7 +9,7 @@ export class ClaudeIntentDetectionService implements IIntentDetectionService {
     this.apiKey = apiKey;
   }
 
-  async detectIntent(message: string): Promise<IntentDetectionResult> {
+  async detectIntent(message: string, conversationHistory?: any): Promise<IntentDetectionResult> {
     if (!this.apiKey) {
       throw new Error('Claude API key not configured');
     }
@@ -56,8 +56,8 @@ export class ClaudeIntentDetectionService implements IIntentDetectionService {
 INTENTS:
 1. CREATE_LESSON - "створи урок", "create lesson", "сделай урок"
 2. GENERATE_PLAN - "створи план", "make plan", "составь план"  
-3. CREATE_SLIDE - "створи слайд", "create slide", "сделай слайд"
-4. CREATE_NEW_SLIDE - "додай слайд", "add slide", "добавь слайд"
+3. CREATE_SLIDE - "створи слайд" (only when no lesson context exists)
+4. CREATE_NEW_SLIDE - "додай слайд", "add slide", "добавь слайд", "створи ще слайд" (when lesson already exists)
 5. REGENERATE_SLIDE - "перегенеруй слайд N", "regenerate slide N"
 6. EDIT_HTML_INLINE - "заміни X на Y", "replace X with Y"
 7. EDIT_SLIDE - "покращ слайд N", "improve slide N"
@@ -66,6 +66,11 @@ INTENTS:
 10. HELP - "допоможи", "help"
 11. EXPORT - "експортуй", "download"
 12. PREVIEW - "покажи", "preview"
+
+IMPORTANT RULES:
+- Use CREATE_NEW_SLIDE for adding slides to existing lessons ("додай слайд", "ще один слайд")
+- Use CREATE_SLIDE only for standalone slide creation (without lesson context)
+- Both CREATE_SLIDE and CREATE_NEW_SLIDE should extract slideSubject from the message
 
 Extract: slideNumber, topic, age, targetText/newText, slideSubject
 Languages: uk, en, ru, other

@@ -438,4 +438,125 @@ function extractDescription(htmlContent: string): string {
   return 'Опис слайду';
 }
 
+// 4:3 Aspect Ratio Constants
+export const SLIDE_ASPECT_RATIO = {
+  RATIO: '4:3',
+  WIDTH_TO_HEIGHT: 4/3,
+  STANDARD_RESOLUTIONS: [
+    { width: 1024, height: 768, label: 'XGA' },
+    { width: 1280, height: 960, label: 'SXGA-' },
+    { width: 1400, height: 1050, label: 'SXGA+' },
+    { width: 1600, height: 1200, label: 'UXGA' }
+  ],
+  DEFAULT_RESOLUTION: { width: 1024, height: 768 }
+} as const;
+
+/**
+ * Генерує CSS стилі для забезпечення співвідношення сторін 4:3
+ */
+export function generate43AspectRatioStyles(): string {
+  return `
+    /* 4:3 Aspect Ratio Container */
+    .slide-container-4-3 {
+      width: 100%;
+      max-width: 1024px;
+      aspect-ratio: 4/3;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Responsive 4:3 viewport */
+    @media (max-width: 1024px) {
+      .slide-container-4-3 {
+        max-width: 90vw;
+        height: calc(90vw * 3 / 4);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .slide-container-4-3 {
+        max-width: 95vw;
+        height: calc(95vw * 3 / 4);
+      }
+    }
+  `;
+}
+
+/**
+ * Генерує viewport meta tag оптимізований для 4:3 слайдів
+ */
+export function generate43ViewportMeta(): string {
+  return `<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">`;
+}
+
+/**
+ * Генерує базовий HTML template для слайду з співвідношенням 4:3
+ */
+export function generate43SlideTemplate(title: string, content: string): string {
+  return `<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    ${generate43ViewportMeta()}
+    <title>${title}</title>
+    <style>
+        ${generate43AspectRatioStyles()}
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .slide-content {
+            padding: 40px;
+            height: calc(100% - 80px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        /* Responsive typography for 4:3 format */
+        h1 { font-size: min(4vw, 3rem); }
+        h2 { font-size: min(3vw, 2.5rem); }
+        p { font-size: min(2.5vw, 1.5rem); }
+        
+        /* Interactive elements optimized for 4:3 */
+        .interactive-button {
+            padding: min(2vw, 20px) min(4vw, 40px);
+            font-size: min(2.5vw, 1.2rem);
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin: 10px;
+        }
+        
+        .interactive-button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container-4-3">
+        <div class="slide-content">
+            ${content}
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
 export default slideUtils;

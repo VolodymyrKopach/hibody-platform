@@ -4,8 +4,6 @@ import {
   Typography,
   Paper,
   Checkbox,
-  IconButton,
-  Tooltip,
   CircularProgress
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -29,7 +27,6 @@ interface SlideCardProps {
   previewUrl?: string;
   onToggleSelection: (slideId: string) => void;
   onOpenDialog: (index: number) => void;
-  onRegeneratePreview: (slideId: string) => void;
 }
 
 const SlideCard: React.FC<SlideCardProps> = ({
@@ -39,8 +36,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
   isUpdating,
   previewUrl,
   onToggleSelection,
-  onOpenDialog,
-  onRegeneratePreview
+  onOpenDialog
 }) => {
   const theme = useTheme();
 
@@ -48,7 +44,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
     <Paper
       elevation={0}
       sx={{
-        mb: 3,
+        width: '100%',       // Залишаємо гнучкість для менших екранів
         border: `1px solid ${isSelected ? theme.palette.primary.main : alpha(theme.palette.divider, 0.1)}`,
         borderRadius: '12px',
         overflow: 'hidden',
@@ -67,13 +63,14 @@ const SlideCard: React.FC<SlideCardProps> = ({
       {/* Превью слайду */}
       <Box sx={{ 
         position: 'relative',
-        height: 160, 
+        width: '100%',        // Займаємо всю ширину картки
+        aspectRatio: '4/3',   // Встановлюємо правильні пропорції 4:3
         overflow: 'hidden',
         backgroundColor: alpha(theme.palette.grey[100], 0.3),
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+        borderRadius: '12px 12px 0 0'   // Округлені кути тільки зверху
       }}>
         {/* Реальне превью слайду */}
         {previewUrl && !isUpdating ? (
@@ -117,33 +114,16 @@ const SlideCard: React.FC<SlideCardProps> = ({
           </Box>
         )}
         
-        {/* Номер слайду */}
-        <Typography 
-          variant="caption" 
-          sx={{ 
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            backgroundColor: alpha(theme.palette.primary.main, 0.8),
-            color: 'white',
-            px: 1,
-            py: 0.5,
-            borderRadius: 1,
-            fontSize: '0.7rem',
-            fontWeight: 600
-          }}
-        >
-          {index + 1}
-        </Typography>
+
 
         {/* Статус індикатор */}
         <Box
           sx={{
             position: 'absolute',
-            top: 8,
-            left: 8,
-            width: 8,
-            height: 8,
+            top: 4,              // Зменшено з 8 до 4
+            left: 4,             // Зменшено з 8 до 4
+            width: 6,            // Зменшено з 8 до 6
+            height: 6,           // Зменшено з 8 до 6
             borderRadius: '50%',
             backgroundColor: slide.status === 'completed' 
               ? theme.palette.success.main 
@@ -152,42 +132,11 @@ const SlideCard: React.FC<SlideCardProps> = ({
           }}
         />
 
-        {/* Кнопка оновлення превью */}
-        {previewUrl && (
-          <Tooltip title={isUpdating ? "Оновлюється..." : "Оновити превью"}>
-            <IconButton
-              size="small"
-              disabled={isUpdating}
-              onClick={(e) => {
-                e.stopPropagation();
-                onRegeneratePreview(slide.id);
-              }}
-              sx={{
-                position: 'absolute',
-                bottom: 8,
-                right: 8,
-                backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                width: 24,
-                height: 24,
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                },
-                '&:disabled': {
-                  opacity: 0.5
-                }
-              }}
-            >
-              {isUpdating ? (
-                <CircularProgress size={12} />
-              ) : (
-                <Box component="span" sx={{ fontSize: '12px' }}>🔄</Box>
-              )}
-            </IconButton>
-          </Tooltip>
-        )}
+
         
-        {/* Ховер ефект */}
+        {/* Кнопка перегляду по центру */}
         <Box
+          onClick={() => onOpenDialog(index)}
           sx={{
             position: 'absolute',
             top: 0,
@@ -200,6 +149,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
             justifyContent: 'center',
             opacity: 0,
             transition: 'opacity 0.2s ease',
+            cursor: 'pointer',
             '&:hover': {
               opacity: 1,
               background: alpha(theme.palette.primary.main, 0.1),
@@ -229,8 +179,8 @@ const SlideCard: React.FC<SlideCardProps> = ({
       </Box>
 
       {/* Інформація про слайд */}
-      <Box sx={{ p: 2.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+      <Box sx={{ p: 1.5 }}>    {/* Зменшено з 2.5 до 1.5 */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>   {/* Зменшено mb з 1.5 до 1 */}
           {/* Checkbox для вибору слайду */}
           <Checkbox
             checked={isSelected}
@@ -252,47 +202,12 @@ const SlideCard: React.FC<SlideCardProps> = ({
             sx={{ 
               fontWeight: 600, 
               flex: 1,
-              cursor: 'pointer',
               fontSize: '0.9rem'
             }}
-            onClick={() => onOpenDialog(index)}
           >
             {slide.title}
           </Typography>
-          {/* Кнопка перегляду */}
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenDialog(index);
-            }}
-            sx={{ 
-              color: 'text.secondary',
-              '&:hover': {
-                color: 'primary.main',
-                backgroundColor: alpha(theme.palette.primary.main, 0.1)
-              }
-            }}
-          >
-            <Maximize2 size={14} />
-          </IconButton>
         </Box>
-        <Typography 
-          variant="caption" 
-          color="text.secondary" 
-          sx={{ 
-            lineHeight: 1.4,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: 'vertical',
-            ml: 3, // Відступ від checkbox
-            fontSize: '0.75rem'
-          }}
-        >
-          {slide.content}
-        </Typography>
       </Box>
     </Paper>
   );

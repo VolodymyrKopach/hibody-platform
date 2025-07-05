@@ -1,4 +1,5 @@
-import { IIntentHandler, ChatHandlerResult, ConversationHistory } from './IIntentHandler';
+import { IIntentHandler } from './IIntentHandler';
+import { ConversationHistory, ChatResponse } from '../types';
 import { IntentDetectionResult, UserIntent } from '../../intent/IIntentDetectionService';
 
 // Single Responsibility: Обробка запитів допомоги
@@ -8,7 +9,7 @@ export class HelpHandler implements IIntentHandler {
     return intent.intent === UserIntent.HELP;
   }
 
-  async handle(intent: IntentDetectionResult, conversationHistory?: ConversationHistory): Promise<ChatHandlerResult> {
+  async handle(intent: IntentDetectionResult, conversationHistory?: ConversationHistory): Promise<ChatResponse> {
     const helpMessage = this.generateHelpMessage(intent.language);
 
     return {

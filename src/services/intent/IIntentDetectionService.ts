@@ -1,6 +1,6 @@
 // Single Responsibility Principle: Інтерфейс для визначення намірів
 export interface IIntentDetectionService {
-  detectIntent(message: string): Promise<IntentDetectionResult>;
+  detectIntent(message: string, conversationHistory?: any): Promise<IntentDetectionResult>;
 }
 
 // Open/Closed Principle: Базовий результат, який можна розширювати
@@ -31,6 +31,7 @@ export interface IntentParameters {
 export enum UserIntent {
   CREATE_LESSON = 'create_lesson',
   GENERATE_PLAN = 'generate_plan',
+  EDIT_PLAN = 'edit_plan',
   CREATE_SLIDE = 'create_slide',
   CREATE_NEW_SLIDE = 'create_new_slide',
   REGENERATE_SLIDE = 'regenerate_slide',

@@ -114,13 +114,13 @@ RESPONSE FORMAT (JSON only):
 Analyze this message and return only valid JSON:
 `;
 
-export async function detectIntentWithAI(message: string): Promise<IntentDetectionResult> {
+export async function detectIntentWithAI(message: string, conversationHistory?: any): Promise<IntentDetectionResult> {
   // ТІЛЬКИ нейронна мережа - НІЯКИХ fallback функцій!
-  return await detectIntentDirectly(message);
+  return await detectIntentDirectly(message, conversationHistory);
 }
 
 // Direct Claude API call for intent detection
-async function detectIntentDirectly(message: string): Promise<IntentDetectionResult> {
+async function detectIntentDirectly(message: string, conversationHistory?: any): Promise<IntentDetectionResult> {
   const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
   const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -128,7 +128,18 @@ async function detectIntentDirectly(message: string): Promise<IntentDetectionRes
     throw new Error('Claude API key required - no regex fallback allowed');
   }
 
-  const prompt = `${INTENT_DETECTION_PROMPT}
+  const prompt = conversationHistory 
+    ? `${INTENT_DETECTION_PROMPT}
+
+Context:
+- Current step: ${conversationHistory.step || 'unknown'}
+- Active lesson: ${conversationHistory.currentLesson ? 'YES' : 'NO'}
+- Lesson topic: ${conversationHistory.lessonTopic || 'none'}
+- User age: ${conversationHistory.age || 'none'}
+- Generated slides: ${conversationHistory.slidesCount || 0}
+
+Message to analyze: "${message}"`
+    : `${INTENT_DETECTION_PROMPT}
 
 Message to analyze: "${message}"`;
 

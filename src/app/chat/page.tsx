@@ -22,6 +22,7 @@ import useSlideManagement from '@/hooks/useSlideManagement';
 
 // Типи
 import { Message } from '@/types/chat';
+import { generateMessageId } from '@/utils/messageUtils';
 
 const ChatInterface: React.FC = () => {
   const theme = useTheme();
@@ -36,7 +37,8 @@ const ChatInterface: React.FC = () => {
     isLoading,
     sendMessage,
     regenerateMessage,
-    handleFeedback: provideFeedback
+    handleFeedback: provideFeedback,
+    handleActionClick
   } = useChatLogic();
 
   // Управління слайдами
@@ -59,6 +61,7 @@ const ChatInterface: React.FC = () => {
     saveSelectedSlides,
     generateSlidePreview,
     regenerateSlidePreview,
+    forceRefreshAllPreviews,
     updateCurrentLesson,
     toggleSlidePanelOpen,
     exportLesson
@@ -72,7 +75,7 @@ const ChatInterface: React.FC = () => {
     } catch (error) {
       console.error('Помилка збереження уроку:', error);
       const errorMessage: Message = {
-        id: messages.length + 1,
+        id: generateMessageId(),
         text: `❌ **Помилка збереження**\n\n${error instanceof Error ? error.message : 'Невідома помилка'}`,
         sender: 'ai',
         timestamp: new Date(),
@@ -134,6 +137,7 @@ const ChatInterface: React.FC = () => {
                     onRegenerate={regenerateMessage}
                     onFeedback={provideFeedback}
                     onLessonCreate={updateCurrentLesson}
+                    onActionClick={handleActionClick}
                   />
                 ))}
                 
@@ -166,21 +170,27 @@ const ChatInterface: React.FC = () => {
 
           {/* Панель слайдів */}
           {slideUIState.slidePanelOpen && (
-            <SlidePanel
-              currentLesson={slideUIState.currentLesson}
-              selectedSlides={slideUIState.selectedSlides}
-              slidePreviews={slidePreviews}
-              previewsUpdating={previewsUpdating}
-              isSavingLesson={slideUIState.isSavingLesson}
-              onToggleSlideSelection={toggleSlideSelection}
-              onSelectAllSlides={selectAllSlides}
-              onDeselectAllSlides={deselectAllSlides}
-              onOpenSlideDialog={openSlideDialog}
-              onRegenerateSlidePreview={regenerateSlidePreview}
-              onOpenSaveDialog={openSaveDialog}
-              onCloseSidePanel={toggleSlidePanelOpen}
-              onExportLesson={exportLesson}
-            />
+            <Box sx={{ 
+              width: 400,          // Оптимальна ширина для карток 300px + відступи
+              flexShrink: 0,       // Не зменшувати ширину
+              borderLeft: `1px solid ${theme.palette.divider}`,
+              backgroundColor: theme.palette.background.paper
+            }}>
+              <SlidePanel
+                currentLesson={slideUIState.currentLesson}
+                selectedSlides={slideUIState.selectedSlides}
+                slidePreviews={slidePreviews}
+                previewsUpdating={previewsUpdating}
+                isSavingLesson={slideUIState.isSavingLesson}
+                onToggleSlideSelection={toggleSlideSelection}
+                onSelectAllSlides={selectAllSlides}
+                onDeselectAllSlides={deselectAllSlides}
+                onOpenSlideDialog={openSlideDialog}
+                onOpenSaveDialog={openSaveDialog}
+                onCloseSidePanel={toggleSlidePanelOpen}
+                onExportLesson={exportLesson}
+              />
+            </Box>
           )}
         </Box>
 

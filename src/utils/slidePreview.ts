@@ -17,8 +17,8 @@ export async function generateSlidePreview(
   options: SlidePreviewOptions = {}
 ): Promise<string> {
   const {
-    width = 1024,
-    height = 768,
+    width = 1600,        // Ширина для 4:3 формату
+    height = 1200,       // Висота для співвідношення 4:3 (1600/1200 = 1.33)
     quality = 0.8,
     scale = 1,
     background = '#ffffff'
@@ -123,8 +123,8 @@ export async function generateSlidePreviewAlt(
   options: SlidePreviewOptions = {}
 ): Promise<string> {
   const {
-    width = 1024,
-    height = 768,
+    width = 1600,        // Ширина для 4:3 формату
+    height = 1200,       // Висота для співвідношення 4:3 (1600/1200 = 1.33)
     quality = 0.8,
     scale = 1,
     background = '#ffffff'
@@ -287,8 +287,8 @@ export async function generateLessonPreviews(
  */
 export function generateFallbackPreview(options: SlidePreviewOptions = {}): string {
   const {
-    width = 1024,
-    height = 768,
+    width = 640,         // Збільшено на 25% (512 * 1.25 = 640)
+    height = 480,        // Збільшено на 25% (384 * 1.25 = 480) - пропорції 4:3
     background = '#ffffff'
   } = options;
   

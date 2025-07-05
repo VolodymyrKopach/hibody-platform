@@ -13,9 +13,38 @@ export interface ImageGenerationResponse {
   error?: string;
 }
 
+// Функція для отримання базового URL
+function getBaseUrl(): string {
+  // Якщо ми в браузері, використовуємо window.location
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  
+  // Якщо ми на сервері, використовуємо змінні середовища або localhost
+  const vercelUrl = process.env.VERCEL_URL;
+  const nextPublicUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  
+  if (vercelUrl) {
+    return `https://${vercelUrl}`;
+  }
+  
+  if (nextPublicUrl) {
+    return nextPublicUrl;
+  }
+  
+  // Fallback для локальної розробки
+  return 'http://localhost:3000';
+}
+
 export async function generateImage(params: ImageGenerationRequest): Promise<ImageGenerationResponse> {
   try {
-    const response = await fetch('/api/images', {
+    const baseUrl = getBaseUrl();
+    const apiUrl = `${baseUrl}/api/images`;
+    
+    console.log(`🔗 Generating image via: ${apiUrl}`);
+    console.log(`📝 Request params:`, JSON.stringify(params, null, 2));
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -23,11 +52,23 @@ export async function generateImage(params: ImageGenerationRequest): Promise<Ima
       body: JSON.stringify(params),
     });
 
+    console.log(`📥 Response status: ${response.status} ${response.statusText}`);
+    console.log(`📥 Response headers:`, Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      const errorData = await response.json();
+      let errorMessage = 'Failed to generate image';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch (parseError) {
+        // Якщо не можемо парсити JSON, використовуємо status text
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        console.error('Failed to parse error response as JSON:', parseError);
+      }
+      
       return {
         success: false,
-        error: errorData.error || 'Failed to generate image'
+        error: errorMessage
       };
     }
 

@@ -5,6 +5,7 @@ const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 
 interface IntentDetectionRequest {
   message: string;
+  conversationHistory?: any;
 }
 
 const INTENT_DETECTION_SYSTEM_PROMPT = `Fast intent detection for HiBody educational platform. Analyze user messages and return JSON only.
@@ -12,8 +13,8 @@ const INTENT_DETECTION_SYSTEM_PROMPT = `Fast intent detection for HiBody educati
 INTENTS:
 1. CREATE_LESSON - "створи урок", "create lesson", "сделай урок"
 2. GENERATE_PLAN - "створи план", "make plan", "составь план"  
-3. CREATE_SLIDE - "створи слайд", "create slide", "сделай слайд"
-4. CREATE_NEW_SLIDE - "додай слайд", "add slide", "добавь слайд"
+3. CREATE_SLIDE - "створи слайд" (only when no lesson context exists)
+4. CREATE_NEW_SLIDE - "додай слайд", "add slide", "добавь слайд", "створи ще слайд" (when lesson already exists)
 5. REGENERATE_SLIDE - "перегенеруй слайд N", "regenerate slide N"
 6. EDIT_HTML_INLINE - "заміни X на Y", "replace X with Y"
 7. EDIT_SLIDE - "покращ слайд N", "improve slide N"
@@ -22,6 +23,11 @@ INTENTS:
 10. HELP - "допоможи", "help"
 11. EXPORT - "експортуй", "download"
 12. PREVIEW - "покажи", "preview"
+
+IMPORTANT RULES:
+- Use CREATE_NEW_SLIDE for adding slides to existing lessons ("додай слайд", "ще один слайд")
+- Use CREATE_SLIDE only for standalone slide creation (without lesson context)
+- Both CREATE_SLIDE and CREATE_NEW_SLIDE should extract slideSubject from the message
 
 Extract: slideNumber, topic, age, targetText/newText, slideSubject
 Languages: uk, en, ru, other
@@ -48,7 +54,7 @@ Return JSON:
 
 export async function POST(request: NextRequest) {
   try {
-    const { message }: IntentDetectionRequest = await request.json();
+    const { message, conversationHistory }: IntentDetectionRequest = await request.json();
 
     if (!message) {
       return NextResponse.json(
@@ -81,7 +87,18 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'user',
-            content: `Analyze this message for intent: "${message}"`
+            content: conversationHistory 
+              ? `Analyze this message for intent with context:
+                
+Message: "${message}"
+
+Context:
+- Current step: ${conversationHistory.step || 'unknown'}
+- Active lesson: ${conversationHistory.currentLesson ? 'YES' : 'NO'}
+- Lesson topic: ${conversationHistory.lessonTopic || 'none'}
+- User age: ${conversationHistory.age || 'none'}
+- Generated slides: ${conversationHistory.slidesCount || 0}`
+              : `Analyze this message for intent: "${message}"`
           }
         ],
       }),

@@ -23,7 +23,6 @@ interface SlidePanelProps {
   onSelectAllSlides: () => void;
   onDeselectAllSlides: () => void;
   onOpenSlideDialog: (index: number) => void;
-  onRegenerateSlidePreview: (slideId: string) => void;
   onOpenSaveDialog: () => void;
   onCloseSidePanel: () => void;
   onExportLesson: () => void;
@@ -39,7 +38,6 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
   onSelectAllSlides,
   onDeselectAllSlides,
   onOpenSlideDialog,
-  onRegenerateSlidePreview,
   onOpenSaveDialog,
   onCloseSidePanel,
   onExportLesson
@@ -51,31 +49,54 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
     if (!currentLesson) return null;
 
     return (
-      <Paper elevation={0} sx={{ p: 2, mb: 3, backgroundColor: alpha(theme.palette.primary.main, 0.04), borderRadius: 2 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'primary.main', mb: 1 }}>
+      <Paper elevation={0} sx={{ 
+        p: 1, 
+        mb: 1.5, 
+        backgroundColor: alpha(theme.palette.primary.main, 0.03), 
+        borderRadius: 1.5 
+      }}>
+        <Typography variant="subtitle2" sx={{ 
+          fontWeight: 600, 
+          color: 'primary.main', 
+          mb: 0.5,
+          fontSize: '0.85rem',
+          lineHeight: 1.2
+        }}>
           {currentLesson.title}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {currentLesson.description}
-        </Typography>
         
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
           <Chip
             label={currentLesson.subject} 
             size="small"
             color="primary"
             variant="outlined"
+            sx={{ 
+              height: 20, 
+              fontSize: '0.65rem',
+              '& .MuiChip-label': { px: 0.5 }
+            }}
           />
           <Chip 
             label={currentLesson.ageGroup} 
             size="small" 
             color="secondary" 
             variant="outlined"
+            sx={{ 
+              height: 20, 
+              fontSize: '0.65rem',
+              '& .MuiChip-label': { px: 0.5 }
+            }}
           />
           <Chip 
             label={`${currentLesson.duration} хв`} 
             size="small" 
             variant="outlined"
+            sx={{ 
+              height: 20, 
+              fontSize: '0.65rem',
+              '& .MuiChip-label': { px: 0.5 }
+            }}
           />
         </Box>
       </Paper>
@@ -87,55 +108,96 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
     if (!currentLesson) return null;
 
     return (
-      <Paper elevation={0} sx={{ p: 2, mb: 2, backgroundColor: alpha(theme.palette.grey[50], 0.5), borderRadius: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            Вибрано: <strong>{selectedSlides.size}</strong> з <strong>{currentLesson.slides.length}</strong> слайдів
+      <Paper elevation={0} sx={{ 
+        p: 1, 
+        mb: 1.5, 
+        backgroundColor: alpha(theme.palette.grey[50], 0.3), 
+        borderRadius: 1.5 
+      }}>
+        {/* Компактний рядок з усіма елементами */}
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1
+        }}>
+          {/* Лічильник */}
+          <Typography variant="caption" color="text.secondary" sx={{ 
+            fontSize: '0.75rem',
+            minWidth: 'fit-content',
+            whiteSpace: 'nowrap'
+          }}>
+            <strong>{selectedSlides.size}</strong>/{currentLesson.slides.length}
           </Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          
+          {/* Кнопки управління */}
+          <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
             <Button
               size="small"
-              variant="outlined"
+              variant="text"
               onClick={onSelectAllSlides}
               disabled={selectedSlides.size === currentLesson.slides.length}
-            >
-              Вибрати всі
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={onDeselectAllSlides}
-              disabled={selectedSlides.size === 0}
-            >
-              Очистити
-            </Button>
-          </Box>
-        </Box>
-        
-        {/* Кнопка збереження */}
-        {selectedSlides.size > 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-            <Button
-              variant="contained"
-              onClick={onOpenSaveDialog}
-              disabled={isSavingLesson}
-              sx={{
-                px: 4,
-                py: 1,
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                borderRadius: 2,
+              sx={{ 
+                minWidth: 'auto',
+                px: 1,
+                py: 0.25,
+                fontSize: '0.7rem',
                 textTransform: 'none',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                color: 'text.secondary',
                 '&:hover': {
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+                  backgroundColor: alpha(theme.palette.primary.main, 0.04)
                 }
               }}
             >
-              {isSavingLesson ? 'Збереження...' : `Зберегти урок (${selectedSlides.size} слайдів)`}
+              Всі
             </Button>
+            <Button
+              size="small"
+              variant="text"
+              onClick={onDeselectAllSlides}
+              disabled={selectedSlides.size === 0}
+              sx={{ 
+                minWidth: 'auto',
+                px: 1,
+                py: 0.25,
+                fontSize: '0.7rem',
+                textTransform: 'none',
+                color: 'text.secondary',
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.04)
+                }
+              }}
+            >
+              Очистити
+            </Button>
+            
+            {/* Кнопка збереження */}
+            {selectedSlides.size > 0 && (
+              <Button
+                variant="contained"
+                onClick={onOpenSaveDialog}
+                disabled={isSavingLesson}
+                size="small"
+                sx={{
+                  px: 1.5,
+                  py: 0.25,
+                  fontSize: '0.7rem',
+                  fontWeight: 500,
+                  borderRadius: 1,
+                  textTransform: 'none',
+                  minHeight: 'auto',
+                  boxShadow: 'none',
+                  '&:hover': {
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  }
+                }}
+              >
+                {isSavingLesson ? 'Збереження...' : `Зберегти (${selectedSlides.size})`}
+              </Button>
+            )}
           </Box>
-        )}
+        </Box>
       </Paper>
     );
   };
@@ -186,10 +248,10 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
   );
 
   return (
-    <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Заголовок панелі */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem' }}>
           Слайди уроку
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -220,7 +282,14 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
           <SelectionControls />
           
           {/* Список слайдів */}
-          <Box sx={{ flex: 1, overflow: 'auto' }}>
+          <Box sx={{ 
+            flex: 1, 
+            overflow: 'auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', // Автоматична сітка з мінімальною шириною 300px
+            gap: 1.5,             // Зменшено відступи між картками
+            alignContent: 'start' // Вирівнювання по верху
+          }}>
             {currentLesson.slides.map((slide, index) => (
               <SlideCard
                 key={slide.id}
@@ -231,7 +300,6 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
                 previewUrl={slidePreviews[slide.id]}
                 onToggleSelection={onToggleSlideSelection}
                 onOpenDialog={onOpenSlideDialog}
-                onRegeneratePreview={onRegenerateSlidePreview}
               />
             ))}
           </Box>

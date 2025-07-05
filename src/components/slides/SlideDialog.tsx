@@ -27,16 +27,18 @@ const SlideContent = React.memo(({ htmlContent }: { htmlContent: string }) => {
   
   // Debug logging to see what content we're receiving
   useEffect(() => {
-    console.log('SlideContent received htmlContent:', {
+    console.log('🔍 SlideContent received htmlContent:', {
       content: htmlContent,
       length: htmlContent?.length,
       isValidHTML: htmlContent?.includes('<html') || htmlContent?.includes('<!DOCTYPE'),
-      preview: htmlContent?.substring(0, 200) + '...'
+      preview: htmlContent?.substring(0, 200) + '...',
+      isDefaultMessage: htmlContent?.includes('Слайд генерується'),
     });
   }, [htmlContent]);
   
   useEffect(() => {
     if (iframeRef.current) {
+      console.log('🎯 Setting iframe srcdoc to:', htmlContent?.substring(0, 100) + '...');
       iframeRef.current.srcdoc = htmlContent;
     }
   }, [htmlContent]);
@@ -177,18 +179,13 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
   onNextSlide,
   onPrevSlide
 }) => {
-  if (!currentLesson || !open) return null;
-
-  const currentSlide = currentLesson.slides[currentSlideIndex];
-  if (!currentSlide) return null;
-  
-  const hasNext = currentSlideIndex < currentLesson.slides.length - 1;
-  const hasPrev = currentSlideIndex > 0;
-
-  // Обробка клавіш для навігації
+  // Обробка клавіш для навігації (переносимо перед ранні return)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (open) {
+      if (open && currentLesson && currentLesson.slides[currentSlideIndex]) {
+        const hasNext = currentSlideIndex < currentLesson.slides.length - 1;
+        const hasPrev = currentSlideIndex > 0;
+        
         if (event.key === 'ArrowLeft') {
           event.preventDefault();
           if (hasPrev) onPrevSlide();
@@ -204,7 +201,15 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, hasNext, hasPrev, onNextSlide, onPrevSlide, onClose]);
+  }, [open, currentLesson, currentSlideIndex, onNextSlide, onPrevSlide, onClose]);
+
+  if (!currentLesson || !open) return null;
+
+  const currentSlide = currentLesson.slides[currentSlideIndex];
+  if (!currentSlide) return null;
+  
+  const hasNext = currentSlideIndex < currentLesson.slides.length - 1;
+  const hasPrev = currentSlideIndex > 0;
 
   return (
     <Dialog

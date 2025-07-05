@@ -10,6 +10,7 @@ export interface Message {
     label: string;
     description: string;
   }>;
+  lesson?: SimpleLesson;
 }
 
 export interface SimpleSlide {
@@ -20,6 +21,7 @@ export interface SimpleSlide {
   type: 'title' | 'content' | 'interactive' | 'summary';
   status: 'completed' | 'draft';
   previewUrl?: string;
+  updatedAt?: Date;
 }
 
 export interface SimpleLesson {
