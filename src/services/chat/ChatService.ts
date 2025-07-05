@@ -11,7 +11,7 @@ import { DataCollectionHandler } from './handlers/DataCollectionHandler';
 import { type ConversationHistory, type ChatResponse } from './types';
 import { type SimpleSlide } from '@/types/chat';
 import { type SlideImageInfo } from '@/types/lesson';
-import { type ProcessedSlideData, extractImagePrompts } from '@/utils/slideImageProcessor';
+import { type ProcessedSlideData, extractImagePrompts, processSlideWithImages } from '@/utils/slideImageProcessor';
 
 // Single Responsibility: Координує роботу чату через dependency injection
 export class ChatService {
@@ -569,13 +569,34 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
 
       console.log('✅ Simple slide edit completed, length:', editedSlideHTML.length);
 
+      // ВАЖЛИВО: Обробляємо зображення після редагування
+      console.log('🎨 Processing images after slide editing...');
+      const imageProcessingResult: ProcessedSlideData = await processSlideWithImages(editedSlideHTML);
+      
+      // Використовуємо HTML з обробленими зображеннями
+      const finalSlideHTML = imageProcessingResult.htmlWithImages;
+      
+      // Логуємо результати обробки зображень
+      if (imageProcessingResult.generatedImages.length > 0) {
+        const successful = imageProcessingResult.generatedImages.filter(img => img.success).length;
+        const failed = imageProcessingResult.generatedImages.length - successful;
+        console.log(`📸 Image processing after edit: ${successful} successful, ${failed} failed`);
+      }
+      
+      // Виводимо помилки якщо є
+      if (imageProcessingResult.processingErrors.length > 0) {
+        console.warn('⚠️ Image processing errors after edit:', imageProcessingResult.processingErrors);
+      }
+
+      console.log('✅ Final slide with images ready after edit, length:', finalSlideHTML.length);
+
       // Зберігаємо ID слайду який треба оновити
       const slideId = currentSlide.id;
 
       // Аналізуємо зміни між старим та новим слайдом
       const detectedChanges = this.simpleEditService.analyzeChanges(
         currentSlide.htmlContent || currentSlide.content,
-        editedSlideHTML,
+        finalSlideHTML,
         editInstruction
       );
 
@@ -586,7 +607,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
           index === slideNumberToEdit - 1 ? {
             ...slide,
             id: slideId, // ЗБЕРІГАЄМО той же ID!
-            htmlContent: editedSlideHTML,
+            htmlContent: finalSlideHTML,
             content: `Слайд ${slideNumberToEdit} відредаговано: ${editInstruction}`,
             updatedAt: new Date()
           } : slide
@@ -600,7 +621,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
           slide.id === slideNumberToEdit ? { 
             ...slide, 
             id: slideNumberToEdit, // Зберігаємо numberic ID
-            html: editedSlideHTML 
+            html: finalSlideHTML 
           } : slide
         ),
         currentLesson: updatedLesson,
@@ -813,13 +834,34 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
 
       console.log('✅ Simple inline edit completed, length:', editedSlideHTML.length);
 
+      // ВАЖЛИВО: Обробляємо зображення після inline редагування
+      console.log('🎨 Processing images after inline slide editing...');
+      const imageProcessingResult: ProcessedSlideData = await processSlideWithImages(editedSlideHTML);
+      
+      // Використовуємо HTML з обробленими зображеннями
+      const finalSlideHTML = imageProcessingResult.htmlWithImages;
+      
+      // Логуємо результати обробки зображень
+      if (imageProcessingResult.generatedImages.length > 0) {
+        const successful = imageProcessingResult.generatedImages.filter(img => img.success).length;
+        const failed = imageProcessingResult.generatedImages.length - successful;
+        console.log(`📸 Image processing after inline edit: ${successful} successful, ${failed} failed`);
+      }
+      
+      // Виводимо помилки якщо є
+      if (imageProcessingResult.processingErrors.length > 0) {
+        console.warn('⚠️ Image processing errors after inline edit:', imageProcessingResult.processingErrors);
+      }
+
+      console.log('✅ Final slide with images ready after inline edit, length:', finalSlideHTML.length);
+
       // Зберігаємо ID слайду який треба оновити
       const slideId = currentSlide.id;
 
       // Аналізуємо зміни між старим та новим слайдом
       const detectedChanges = this.simpleEditService.analyzeChanges(
         currentSlide.htmlContent || currentSlide.content,
-        editedSlideHTML,
+        finalSlideHTML,
         finalInstruction
       );
 
@@ -830,7 +872,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
           index === slideNumberToEdit - 1 ? {
             ...slide,
             id: slideId, // ЗБЕРІГАЄМО той же ID!
-            htmlContent: editedSlideHTML,
+            htmlContent: finalSlideHTML,
             content: targetText && newText 
               ? `Слайд ${slideNumberToEdit}: замінено "${targetText}" на "${newText}"`
               : `Слайд ${slideNumberToEdit} відредаговано: ${editInstruction}`,
@@ -846,7 +888,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
           slide.id === slideNumberToEdit ? { 
             ...slide, 
             id: slideNumberToEdit, // Зберігаємо numberic ID
-            html: editedSlideHTML 
+            html: finalSlideHTML 
           } : slide
         ),
         currentLesson: updatedLesson
