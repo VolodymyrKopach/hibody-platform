@@ -45,6 +45,9 @@ const SlideCard: React.FC<SlideCardProps> = ({
       elevation={0}
       sx={{
         width: '100%',       // Залишаємо гнучкість для менших екранів
+        minHeight: '140px',  // Зменшено з 200px до 140px через менше превью
+        height: 'auto',      // Автоматична висота залежно від контенту
+        flexShrink: 0,       // Не дозволяємо картці стискатися
         border: `1px solid ${isSelected ? theme.palette.primary.main : alpha(theme.palette.divider, 0.1)}`,
         borderRadius: '12px',
         overflow: 'hidden',
@@ -64,7 +67,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
       <Box sx={{ 
         position: 'relative',
         width: '100%',        // Займаємо всю ширину картки
-        aspectRatio: '4/3',   // Встановлюємо пропорції для превью
+        aspectRatio: '2/1',   // Ще більш компактне відображення
         overflow: 'hidden',
         backgroundColor: alpha(theme.palette.grey[100], 0.3),
         display: 'flex',

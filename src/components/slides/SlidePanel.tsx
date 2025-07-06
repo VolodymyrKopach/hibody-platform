@@ -290,6 +290,8 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
             flexDirection: 'column',
             gap: 1.5,
             paddingRight: 0.5, // Невеликий відступ для скролбару
+            paddingBottom: 1,   // Додатковий відступ знизу
+            minHeight: 0,       // Дозволяє flex контейнеру стискатися
             '&::-webkit-scrollbar': {
               width: '6px',
             },
