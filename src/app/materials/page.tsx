@@ -170,17 +170,8 @@ const MyMaterials = () => {
 
   // Центральна функція синхронізації з localStorage
   const syncWithLocalStorage = () => {
-    console.log('=== ПОЧАТОК СИНХРОНІЗАЦІЇ З LOCALSTORAGE ===');
-    
     const lessons = LessonStorage.getAllLessons();
     const foldersData = FolderStorage.getAllFolders();
-    
-    console.log('Syncing with localStorage:', { 
-      lessonsCount: lessons.length, 
-      foldersCount: foldersData.length,
-      lessonsData: lessons.map(l => ({ id: l.id, title: l.title })),
-      foldersData: foldersData.map(f => ({ id: f.id, name: f.name, materialIds: f.materialIds }))
-    });
     
     // Конвертуємо папки
     const convertedFolders: Folder[] = foldersData.map(folder => ({
@@ -192,35 +183,17 @@ const MyMaterials = () => {
       materialsCount: folder.materialIds.length,
       parentId: folder.parentId
     }));
-    console.log('Converted folders:', convertedFolders.length);
     setFolders(convertedFolders);
 
     // Конвертуємо матеріали
     const materials = convertLessonsToMaterials(lessons, foldersData);
-    
-    console.log('Converted materials:', materials.map(m => ({ 
-      id: m.id, 
-      title: m.title, 
-      lessonId: m.lessonId, 
-      folderId: m.folderId 
-    })));
-    
     setMaterials(materials);
-    
-    console.log('=== СИНХРОНІЗАЦІЯ ЗАВЕРШЕНА ===');
-    console.log('Final state:', {
-      foldersCount: convertedFolders.length,
-      materialsCount: materials.length
-    });
     
     return { lessons, folders: foldersData, materials };
   };
 
   // Функція для перетворення lessons в materials
   const convertLessonsToMaterials = (lessons: SavedLesson[], foldersData: SavedFolder[]): Material[] => {
-    console.log('=== КОНВЕРТАЦІЯ LESSONS В MATERIALS ===');
-    console.log('Input lessons:', lessons.map(l => ({ id: l.id, title: l.title })));
-    
     // Створюємо карту для швидкого пошуку папки за ID матеріалу
     const materialToFolderMap = new Map<string, string>();
     foldersData.forEach(folder => {
@@ -229,45 +202,28 @@ const MyMaterials = () => {
       });
     });
     
-    console.log('Material to folder map:', Array.from(materialToFolderMap.entries()));
-    
-    const materials = lessons.map((lesson, index) => {
-      const material = {
-        id: parseInt(lesson.id.replace('lesson_', '')) || index + 1,
-        title: lesson.title,
-        description: lesson.description,
-        type: 'lesson',
-        subject: lesson.subject.toLowerCase(),
-        ageGroup: cleanAgeGroup(lesson.ageGroup),
-        createdAt: new Date(lesson.createdAt).toLocaleDateString('uk-UA'),
-        lastModified: new Date(lesson.updatedAt).toLocaleDateString('uk-UA'),
-        status: lesson.status,
-        views: lesson.views,
-        rating: lesson.rating,
-        duration: `${lesson.duration} хв`,
-        thumbnail: lesson.thumbnail,
-        tags: lesson.tags,
-        difficulty: lesson.difficulty,
-        completionRate: lesson.completionRate,
-        // Додаємо оригінальний lesson.id для надійного зв'язку
-        lessonId: lesson.id,
-        // Встановлюємо folderId якщо матеріал належить до папки
-        folderId: materialToFolderMap.get(lesson.id)
-      };
-      
-      console.log(`Converted lesson ${lesson.id} to material:`, {
-        originalId: lesson.id,
-        materialId: material.id,
-        lessonId: material.lessonId,
-        title: material.title,
-        folderId: material.folderId
-      });
-      
-      return material;
-    });
-    
-    console.log('=== КОНВЕРТАЦІЯ ЗАВЕРШЕНА ===');
-    return materials;
+    return lessons.map((lesson, index) => ({
+      id: parseInt(lesson.id.replace('lesson_', '')) || index + 1,
+      title: lesson.title,
+      description: lesson.description,
+      type: 'lesson',
+      subject: lesson.subject.toLowerCase(),
+      ageGroup: cleanAgeGroup(lesson.ageGroup),
+      createdAt: new Date(lesson.createdAt).toLocaleDateString('uk-UA'),
+      lastModified: new Date(lesson.updatedAt).toLocaleDateString('uk-UA'),
+      status: lesson.status,
+      views: lesson.views,
+      rating: lesson.rating,
+      duration: `${lesson.duration} хв`,
+      thumbnail: lesson.thumbnail,
+      tags: lesson.tags,
+      difficulty: lesson.difficulty,
+      completionRate: lesson.completionRate,
+      // Додаємо оригінальний lesson.id для надійного зв'язку
+      lessonId: lesson.id,
+      // Встановлюємо folderId якщо матеріал належить до папки
+      folderId: materialToFolderMap.get(lesson.id)
+    }));
   };
 
   // Завантажуємо дані з localStorage при монтуванні компонента
@@ -400,18 +356,10 @@ const MyMaterials = () => {
 
   const handleDeleteConfirm = () => {
     if (materialToDelete) {
-      console.log('=== ПОЧАТОК ВИДАЛЕННЯ МАТЕРІАЛУ ===');
-      console.log('Attempting to delete material:', materialToDelete);
-      
-      // Використовуємо lessonId для надійного пошуку
       const lessonId = materialToDelete.lessonId;
-      
-      console.log('LessonId extracted:', lessonId);
-      console.log('LessonId type:', typeof lessonId);
       
       if (!lessonId) {
         console.error('No lessonId found in material');
-        console.log('Material object keys:', Object.keys(materialToDelete));
         alert('Помилка: не знайдено ID уроку для видалення');
         setDeleteDialogOpen(false);
         setMaterialToDelete(null);
@@ -420,7 +368,6 @@ const MyMaterials = () => {
       
       // Перевіряємо чи існує урок перед видаленням
       const existingLesson = LessonStorage.getLessonById(lessonId);
-      console.log('Existing lesson found:', existingLesson);
       
       if (!existingLesson) {
         console.error('Lesson not found in localStorage');
@@ -430,32 +377,18 @@ const MyMaterials = () => {
         return;
       }
       
-      // Показуємо всі уроки перед видаленням
-      const allLessons = LessonStorage.getAllLessons();
-      console.log('All lessons before deletion:', allLessons.map(l => ({ id: l.id, title: l.title })));
-      
       const deleteSuccess = LessonStorage.deleteLesson(lessonId);
-      console.log('Delete operation result:', deleteSuccess);
       
       if (deleteSuccess) {
-        // Перевіряємо чи дійсно видалено
-        const lessonsAfterDeletion = LessonStorage.getAllLessons();
-        console.log('All lessons after deletion:', lessonsAfterDeletion.map(l => ({ id: l.id, title: l.title })));
-        
         // Видаляємо матеріал з усіх папок
-        const folderRemovalResult = FolderStorage.removeMaterialFromAllFolders(lessonId);
-        console.log('Folder removal result:', folderRemovalResult);
+        FolderStorage.removeMaterialFromAllFolders(lessonId);
         
         // Синхронізуємо з localStorage
-        console.log('Syncing with localStorage...');
         syncWithLocalStorage();
-        
-        console.log('=== УСПІШНЕ ВИДАЛЕННЯ ===');
         
         // Показуємо успішне повідомлення
         alert('Урок успішно видалено!');
       } else {
-        console.error('=== ПОМИЛКА ВИДАЛЕННЯ ===');
         console.error('Failed to delete lesson from localStorage');
         alert('Помилка при видаленні уроку');
       }
@@ -1519,75 +1452,6 @@ const MyMaterials = () => {
                   <MenuItem value="title">За назвою</MenuItem>
                 </Select>
               </FormControl>
-            </Box>
-            
-            {/* Debug buttons - remove in production */}
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => {
-                  console.log('=== DEBUG INFO ===');
-                  console.log('Current materials:', materials);
-                  console.log('Current folders:', folders);
-                  console.log('localStorage lessons:', LessonStorage.getAllLessons());
-                  console.log('localStorage folders:', FolderStorage.getAllFolders());
-                }}
-                sx={{ textTransform: 'none' }}
-              >
-                Debug Info
-              </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                color="warning"
-                onClick={() => {
-                  const confirmed = window.confirm('Створити тестовий урок для перевірки видалення?');
-                  if (confirmed) {
-                    const testLesson = {
-                      id: `lesson_${Date.now()}`,
-                      title: 'Тестовий урок для видалення',
-                      description: 'Це тестовий урок для перевірки функціональності видалення',
-                      subject: 'Математика',
-                      ageGroup: '8-9 років',
-                      duration: 30,
-                      slides: [
-                        {
-                          id: `slide_${Date.now()}`,
-                          title: 'Тестовий слайд',
-                          content: 'Тестовий контент',
-                          htmlContent: '<h1>Тестовий слайд</h1><p>Тестовий контент</p>',
-                          type: 'content' as const,
-                          status: 'completed' as const
-                        }
-                      ],
-                      createdAt: new Date().toISOString(),
-                      updatedAt: new Date().toISOString(),
-                      authorId: 'test_user',
-                      thumbnail: '',
-                      tags: ['тест'],
-                      difficulty: 'easy' as const,
-                      views: 0,
-                      rating: 0,
-                      status: 'draft' as const,
-                      completionRate: 0
-                    };
-                    
-                    const success = LessonStorage.saveLesson(testLesson);
-                    if (success) {
-                      console.log('Тестовий урок створено:', testLesson);
-                      syncWithLocalStorage();
-                      alert('Тестовий урок створено!');
-                    } else {
-                      console.error('Помилка створення тестового уроку');
-                      alert('Помилка створення тестового уроку');
-                    }
-                  }
-                }}
-                sx={{ textTransform: 'none' }}
-              >
-                Створити тест
-              </Button>
             </Box>
 
           </Box>
