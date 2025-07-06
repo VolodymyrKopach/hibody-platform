@@ -108,6 +108,7 @@ const MyMaterials = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [materialToDelete, setMaterialToDelete] = useState<Material | null>(null);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -169,7 +170,7 @@ const MyMaterials = () => {
 
   // Центральна функція синхронізації з localStorage
   const syncWithLocalStorage = () => {
-    console.log('Starting syncWithLocalStorage');
+    console.log('=== ПОЧАТОК СИНХРОНІЗАЦІЇ З LOCALSTORAGE ===');
     
     const lessons = LessonStorage.getAllLessons();
     const foldersData = FolderStorage.getAllFolders();
@@ -177,6 +178,7 @@ const MyMaterials = () => {
     console.log('Syncing with localStorage:', { 
       lessonsCount: lessons.length, 
       foldersCount: foldersData.length,
+      lessonsData: lessons.map(l => ({ id: l.id, title: l.title })),
       foldersData: foldersData.map(f => ({ id: f.id, name: f.name, materialIds: f.materialIds }))
     });
     
@@ -190,6 +192,7 @@ const MyMaterials = () => {
       materialsCount: folder.materialIds.length,
       parentId: folder.parentId
     }));
+    console.log('Converted folders:', convertedFolders.length);
     setFolders(convertedFolders);
 
     // Конвертуємо матеріали
@@ -204,13 +207,20 @@ const MyMaterials = () => {
     
     setMaterials(materials);
     
-    console.log('syncWithLocalStorage completed');
+    console.log('=== СИНХРОНІЗАЦІЯ ЗАВЕРШЕНА ===');
+    console.log('Final state:', {
+      foldersCount: convertedFolders.length,
+      materialsCount: materials.length
+    });
     
     return { lessons, folders: foldersData, materials };
   };
 
   // Функція для перетворення lessons в materials
   const convertLessonsToMaterials = (lessons: SavedLesson[], foldersData: SavedFolder[]): Material[] => {
+    console.log('=== КОНВЕРТАЦІЯ LESSONS В MATERIALS ===');
+    console.log('Input lessons:', lessons.map(l => ({ id: l.id, title: l.title })));
+    
     // Створюємо карту для швидкого пошуку папки за ID матеріалу
     const materialToFolderMap = new Map<string, string>();
     foldersData.forEach(folder => {
@@ -219,28 +229,45 @@ const MyMaterials = () => {
       });
     });
     
-    return lessons.map((lesson, index) => ({
-      id: parseInt(lesson.id.replace('lesson_', '')) || index + 1,
-      title: lesson.title,
-      description: lesson.description,
-      type: 'lesson',
-      subject: lesson.subject.toLowerCase(),
-      ageGroup: cleanAgeGroup(lesson.ageGroup),
-      createdAt: new Date(lesson.createdAt).toLocaleDateString('uk-UA'),
-      lastModified: new Date(lesson.updatedAt).toLocaleDateString('uk-UA'),
-      status: lesson.status,
-      views: lesson.views,
-      rating: lesson.rating,
-      duration: `${lesson.duration} хв`,
-      thumbnail: lesson.thumbnail,
-      tags: lesson.tags,
-      difficulty: lesson.difficulty,
-      completionRate: lesson.completionRate,
-      // Додаємо оригінальний lesson.id для надійного зв'язку
-      lessonId: lesson.id,
-      // Встановлюємо folderId якщо матеріал належить до папки
-      folderId: materialToFolderMap.get(lesson.id)
-    }));
+    console.log('Material to folder map:', Array.from(materialToFolderMap.entries()));
+    
+    const materials = lessons.map((lesson, index) => {
+      const material = {
+        id: parseInt(lesson.id.replace('lesson_', '')) || index + 1,
+        title: lesson.title,
+        description: lesson.description,
+        type: 'lesson',
+        subject: lesson.subject.toLowerCase(),
+        ageGroup: cleanAgeGroup(lesson.ageGroup),
+        createdAt: new Date(lesson.createdAt).toLocaleDateString('uk-UA'),
+        lastModified: new Date(lesson.updatedAt).toLocaleDateString('uk-UA'),
+        status: lesson.status,
+        views: lesson.views,
+        rating: lesson.rating,
+        duration: `${lesson.duration} хв`,
+        thumbnail: lesson.thumbnail,
+        tags: lesson.tags,
+        difficulty: lesson.difficulty,
+        completionRate: lesson.completionRate,
+        // Додаємо оригінальний lesson.id для надійного зв'язку
+        lessonId: lesson.id,
+        // Встановлюємо folderId якщо матеріал належить до папки
+        folderId: materialToFolderMap.get(lesson.id)
+      };
+      
+      console.log(`Converted lesson ${lesson.id} to material:`, {
+        originalId: lesson.id,
+        materialId: material.id,
+        lessonId: material.lessonId,
+        title: material.title,
+        folderId: material.folderId
+      });
+      
+      return material;
+    });
+    
+    console.log('=== КОНВЕРТАЦІЯ ЗАВЕРШЕНА ===');
+    return materials;
   };
 
   // Завантажуємо дані з localStorage при монтуванні компонента
@@ -364,46 +391,79 @@ const MyMaterials = () => {
   };
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true);
-    handleMenuClose();
+    if (selectedMaterial) {
+      setMaterialToDelete(selectedMaterial);
+      setDeleteDialogOpen(true);
+      handleMenuClose();
+    }
   };
 
   const handleDeleteConfirm = () => {
-    if (selectedMaterial) {
-      console.log('Attempting to delete material:', selectedMaterial);
+    if (materialToDelete) {
+      console.log('=== ПОЧАТОК ВИДАЛЕННЯ МАТЕРІАЛУ ===');
+      console.log('Attempting to delete material:', materialToDelete);
       
       // Використовуємо lessonId для надійного пошуку
-      const lessonId = selectedMaterial.lessonId;
+      const lessonId = materialToDelete.lessonId;
+      
+      console.log('LessonId extracted:', lessonId);
+      console.log('LessonId type:', typeof lessonId);
       
       if (!lessonId) {
         console.error('No lessonId found in material');
+        console.log('Material object keys:', Object.keys(materialToDelete));
         alert('Помилка: не знайдено ID уроку для видалення');
         setDeleteDialogOpen(false);
-        setSelectedMaterial(null);
+        setMaterialToDelete(null);
         return;
       }
+      
+      // Перевіряємо чи існує урок перед видаленням
+      const existingLesson = LessonStorage.getLessonById(lessonId);
+      console.log('Existing lesson found:', existingLesson);
+      
+      if (!existingLesson) {
+        console.error('Lesson not found in localStorage');
+        alert('Помилка: урок не знайдено в сховищі');
+        setDeleteDialogOpen(false);
+        setMaterialToDelete(null);
+        return;
+      }
+      
+      // Показуємо всі уроки перед видаленням
+      const allLessons = LessonStorage.getAllLessons();
+      console.log('All lessons before deletion:', allLessons.map(l => ({ id: l.id, title: l.title })));
       
       const deleteSuccess = LessonStorage.deleteLesson(lessonId);
       console.log('Delete operation result:', deleteSuccess);
       
       if (deleteSuccess) {
+        // Перевіряємо чи дійсно видалено
+        const lessonsAfterDeletion = LessonStorage.getAllLessons();
+        console.log('All lessons after deletion:', lessonsAfterDeletion.map(l => ({ id: l.id, title: l.title })));
+        
         // Видаляємо матеріал з усіх папок
-        FolderStorage.removeMaterialFromAllFolders(lessonId);
+        const folderRemovalResult = FolderStorage.removeMaterialFromAllFolders(lessonId);
+        console.log('Folder removal result:', folderRemovalResult);
         
         // Синхронізуємо з localStorage
+        console.log('Syncing with localStorage...');
         syncWithLocalStorage();
         
-        console.log('Material deleted successfully');
+        console.log('=== УСПІШНЕ ВИДАЛЕННЯ ===');
         
         // Показуємо успішне повідомлення
         alert('Урок успішно видалено!');
       } else {
+        console.error('=== ПОМИЛКА ВИДАЛЕННЯ ===');
         console.error('Failed to delete lesson from localStorage');
         alert('Помилка при видаленні уроку');
       }
+    } else {
+      console.error('No material to delete');
     }
     setDeleteDialogOpen(false);
-    setSelectedMaterial(null);
+    setMaterialToDelete(null);
   };
 
   // Функції редагування метаданих
@@ -1461,6 +1521,74 @@ const MyMaterials = () => {
               </FormControl>
             </Box>
             
+            {/* Debug buttons - remove in production */}
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  console.log('=== DEBUG INFO ===');
+                  console.log('Current materials:', materials);
+                  console.log('Current folders:', folders);
+                  console.log('localStorage lessons:', LessonStorage.getAllLessons());
+                  console.log('localStorage folders:', FolderStorage.getAllFolders());
+                }}
+                sx={{ textTransform: 'none' }}
+              >
+                Debug Info
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                color="warning"
+                onClick={() => {
+                  const confirmed = window.confirm('Створити тестовий урок для перевірки видалення?');
+                  if (confirmed) {
+                    const testLesson = {
+                      id: `lesson_${Date.now()}`,
+                      title: 'Тестовий урок для видалення',
+                      description: 'Це тестовий урок для перевірки функціональності видалення',
+                      subject: 'Математика',
+                      ageGroup: '8-9 років',
+                      duration: 30,
+                      slides: [
+                        {
+                          id: `slide_${Date.now()}`,
+                          title: 'Тестовий слайд',
+                          content: 'Тестовий контент',
+                          htmlContent: '<h1>Тестовий слайд</h1><p>Тестовий контент</p>',
+                          type: 'content' as const,
+                          status: 'completed' as const
+                        }
+                      ],
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString(),
+                      authorId: 'test_user',
+                      thumbnail: '',
+                      tags: ['тест'],
+                      difficulty: 'easy' as const,
+                      views: 0,
+                      rating: 0,
+                      status: 'draft' as const,
+                      completionRate: 0
+                    };
+                    
+                    const success = LessonStorage.saveLesson(testLesson);
+                    if (success) {
+                      console.log('Тестовий урок створено:', testLesson);
+                      syncWithLocalStorage();
+                      alert('Тестовий урок створено!');
+                    } else {
+                      console.error('Помилка створення тестового уроку');
+                      alert('Помилка створення тестового уроку');
+                    }
+                  }
+                }}
+                sx={{ textTransform: 'none' }}
+              >
+                Створити тест
+              </Button>
+            </Box>
 
           </Box>
         </Paper>
@@ -1710,7 +1838,10 @@ const MyMaterials = () => {
         {/* Delete Confirmation Dialog */}
         <Dialog
           open={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
+          onClose={() => {
+            setDeleteDialogOpen(false);
+            setMaterialToDelete(null);
+          }}
           PaperProps={{
             sx: { borderRadius: '16px' }
           }}
@@ -1718,11 +1849,17 @@ const MyMaterials = () => {
           <DialogTitle>Видалити матеріал?</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Ви впевнені, що хочете видалити "{selectedMaterial?.title}"? Цю дію неможливо скасувати.
+              Ви впевнені, що хочете видалити "{materialToDelete?.title}"? Цю дію неможливо скасувати.
             </DialogContentText>
           </DialogContent>
           <DialogActions sx={{ p: 3, pt: 1 }}>
-            <Button onClick={() => setDeleteDialogOpen(false)} sx={{ textTransform: 'none' }}>
+            <Button 
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setMaterialToDelete(null);
+              }} 
+              sx={{ textTransform: 'none' }}
+            >
               Скасувати
             </Button>
             <Button 
