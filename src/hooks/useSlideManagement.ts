@@ -175,13 +175,19 @@ const useSlideManagement = (
         
         // Генеруємо превью тільки якщо:
         // 1. Немає превью зовсім І слайд ще не обробляли
-        // 2. Слайд був оновлений після останнього превью (протягом останніх 60 секунд)
+        // 2. Слайд був оновлений після останнього превью (протягом останніх 30 секунд)
         // 3. Не генерується зараз
         const shouldGenerate = (!hasPreview && !wasProcessed) || 
-          (slideUpdateTime > lastUpdateTime && slideUpdateTime > Date.now() - 60000);
+          (slideUpdateTime > lastUpdateTime && slideUpdateTime > Date.now() - 30000); // Зменшено з 60 до 30 секунд
 
         if (shouldGenerate && !isCurrentlyGenerating) {
-          console.log(`🚀 Генерація превью для ${hasPreview ? 'оновленого' : 'нового'} слайду ${slide.id}`);
+          console.log(`🚀 Генерація превью для ${hasPreview ? 'оновленого' : 'нового'} слайду ${slide.id}`, {
+            hasPreview,
+            wasProcessed,
+            slideUpdateTime: slideUpdateTime ? new Date(slideUpdateTime).toISOString() : 'none',
+            lastUpdateTime: lastUpdateTime ? new Date(lastUpdateTime).toISOString() : 'none',
+            timeDiff: slideUpdateTime - lastUpdateTime
+          });
           
           // Позначаємо слайд як оброблений
           processedSlidesRef.current.add(slide.id);
@@ -190,6 +196,15 @@ const useSlideManagement = (
           setTimeout(() => {
             generateSlidePreview(slide, hasPreview);
           }, 100);
+        } else {
+          console.log(`⏭️ Пропускаємо генерацію для слайду ${slide.id}:`, {
+            hasPreview,
+            wasProcessed,
+            isCurrentlyGenerating,
+            shouldGenerate,
+            slideUpdateTime: slideUpdateTime ? new Date(slideUpdateTime).toISOString() : 'none',
+            lastUpdateTime: lastUpdateTime ? new Date(lastUpdateTime).toISOString() : 'none'
+          });
         }
       }
     };
@@ -214,25 +229,31 @@ const useSlideManagement = (
     }
   }, [slideUIState.currentLesson?.slides?.length, slideUIState.slidePanelOpen]);
 
-  // Функція для повторної генерації превью
+  // Функція для повторної генерації превью ТІЛЬКИ конкретного слайду
   const regenerateSlidePreview = useCallback((slideId: string) => {
     const slide = slideUIState.currentLesson?.slides.find(s => s.id === slideId);
     if (slide) {
-      console.log(`🔄 Примусова регенерація превью для слайду ${slideId}`);
+      console.log(`🔄 Примусова регенерація превью ТІЛЬКИ для слайду ${slideId}`);
       
-      // Очищаємо кеш превью та час оновлення
+      // Очищаємо кеш превью та час оновлення ТІЛЬКИ для цього слайду
       setSlidePreviews(prev => {
         const newPreviews = { ...prev };
+        console.log(`🗑️ Видаляємо превью для слайду ${slideId}`);
         delete newPreviews[slideId];
         return newPreviews;
       });
       
+      // Очищаємо час оновлення та processed flag ТІЛЬКИ для цього слайду
       delete lastUpdateTimeRef.current[slideId];
-      
-      // Видаляємо з processed slides щоб можна було регенерувати
       processedSlidesRef.current.delete(slideId);
       
-      // Генеруємо нове превью
+      console.log(`📊 Кеш після очищення:`, {
+        totalPreviewsLeft: Object.keys(slidePreviewsRef.current).length,
+        processedSlidesLeft: processedSlidesRef.current.size,
+        clearedSlideId: slideId
+      });
+      
+      // Генеруємо нове превью тільки для цього слайду
       setTimeout(() => {
         generateSlidePreview(slide, true);
       }, 100);
@@ -601,29 +622,46 @@ const useSlideManagement = (
         console.log('📊 Previous slides count:', prev.currentLesson.slides?.length || 0);
         console.log('📊 New slides count:', lesson.slides?.length || 0);
         
-        // Перевіряємо чи є оновлені слайди та очищаємо їх кеш
+        // Перевіряємо чи є ДІЙСНО оновлені слайди (зміна HTML контенту)
         const updatedSlides = lesson.slides?.filter(newSlide => {
           const oldSlide = prev.currentLesson?.slides.find(s => s.id === newSlide.id);
-          const isUpdated = oldSlide && newSlide.updatedAt && oldSlide.updatedAt && newSlide.updatedAt > oldSlide.updatedAt;
-          const isNewlyUpdated = newSlide.updatedAt && newSlide.updatedAt > new Date(Date.now() - 30000); // Останні 30 секунд
-          return isUpdated || isNewlyUpdated;
+          if (!oldSlide) return false; // Новий слайд, не оновлений
+          
+          // Перевіряємо чи змінився HTML контент (основна ознака редагування/регенерації)
+          const htmlChanged = oldSlide.htmlContent !== newSlide.htmlContent;
+          
+          // Перевіряємо чи updatedAt дійсно новіший (не більше 10 секунд тому, щоб уникнути помилкових спрацювань)
+          const isRecentlyUpdated = newSlide.updatedAt && oldSlide.updatedAt && 
+            newSlide.updatedAt > oldSlide.updatedAt &&
+            newSlide.updatedAt > new Date(Date.now() - 10000); // Тільки останні 10 секунд
+          
+          return htmlChanged && isRecentlyUpdated;
         }) || [];
         
-        console.log('🔄 Updated slides detected:', updatedSlides.map(s => ({ id: s.id, updatedAt: s.updatedAt })));
+        console.log('🔄 Actually updated slides detected:', updatedSlides.map(s => ({ 
+          id: s.id, 
+          updatedAt: s.updatedAt,
+          htmlContentLength: s.htmlContent?.length || 0
+        })));
         
-        // Якщо є оновлені слайди, очищаємо їх кеш (превью буде згенеровано автоматично useEffect)
+        // Якщо є ДІЙСНО оновлені слайди, очищаємо ТІЛЬКИ їх кеш
         if (updatedSlides.length > 0) {
-          console.log('🎯 Clearing cache for updated slides');
+          console.log('🎯 Clearing cache for updated slides ONLY:', updatedSlides.map(s => s.id));
           
-          // Очищаємо кеш превью та час оновлення для оновлених слайдів
+          // Очищаємо кеш превью та час оновлення ТІЛЬКИ для оновлених слайдів
           setSlidePreviews(prevPreviews => {
             const newPreviews = { ...prevPreviews };
             updatedSlides.forEach(slide => {
+              console.log(`🗑️ Clearing preview cache for slide ${slide.id}`);
               delete newPreviews[slide.id];
               delete lastUpdateTimeRef.current[slide.id];
+              // ВАЖЛИВО: також очищаємо з processedSlidesRef
+              processedSlidesRef.current.delete(slide.id);
             });
             return newPreviews;
           });
+        } else {
+          console.log('✅ No slides actually updated, keeping all preview cache');
         }
         
         return {
