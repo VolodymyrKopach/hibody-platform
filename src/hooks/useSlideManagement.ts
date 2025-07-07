@@ -119,11 +119,21 @@ const useSlideManagement = (
       console.log(`🎉 Успішно згенеровано превью для слайду ${slide.id}`);
       console.log(`📊 Розмір thumbnail: ${Math.round(thumbnailUrl.length / 1024)}KB`);
 
-      // Кешуємо превью
-      setSlidePreviews(prev => ({
-        ...prev,
-        [slide.id]: thumbnailUrl
-      }));
+      // Кешуємо превью ТІЛЬКИ якщо воно змінилося
+      setSlidePreviews(prev => {
+        if (prev[slide.id] === thumbnailUrl) {
+          console.log(`⏭️ Превью для слайду ${slide.id} не змінилося, не оновлюємо стейт`);
+          return prev; // НЕ ОНОВЛЮЄМО стейт, щоб уникнути зайвих рендерів
+        }
+        console.log(`✅ Кешуємо нове превью для слайду ${slide.id}`);
+        return {
+          ...prev,
+          [slide.id]: thumbnailUrl
+        };
+      });
+
+      // Синхронізуємо ref з новим превью
+      slidePreviewsRef.current[slide.id] = thumbnailUrl;
 
       // Оновлюємо час останнього оновлення
       lastUpdateTimeRef.current[slide.id] = Date.now();
@@ -136,11 +146,21 @@ const useSlideManagement = (
       console.log(`🎨 Генеруємо fallback превью для слайду ${slide.id}...`);
       const fallbackUrl = generateFallbackPreview();
       
-      // Кешуємо fallback превью
-      setSlidePreviews(prev => ({
-        ...prev,
-        [slide.id]: fallbackUrl
-      }));
+      // Кешуємо fallback превью ТІЛЬКИ якщо воно змінилося
+      setSlidePreviews(prev => {
+        if (prev[slide.id] === fallbackUrl) {
+          console.log(`⏭️ Fallback превью для слайду ${slide.id} не змінилося, не оновлюємо стейт`);
+          return prev; // НЕ ОНОВЛЮЄМО стейт, щоб уникнути зайвих рендерів
+        }
+        console.log(`✅ Кешуємо fallback превью для слайду ${slide.id}`);
+        return {
+          ...prev,
+          [slide.id]: fallbackUrl
+        };
+      });
+
+      // Синхронізуємо ref з fallback превью
+      slidePreviewsRef.current[slide.id] = fallbackUrl;
 
       console.log(`✅ Fallback превью згенеровано для слайду ${slide.id}`);
       return fallbackUrl;
@@ -158,12 +178,38 @@ const useSlideManagement = (
   // Ref для відстеження останньої обробленої версії слайдів
   const processedSlidesRef = useRef<Set<string>>(new Set());
 
-  // Оптимізований useEffect для автоматичного генерування превью
+  // Ref для відстеження попереднього масиву слайдів для запобігання зайвим викликам
+  const previousSlidesRef = useRef<SimpleSlide[]>([]);
+
+  // Оптимізований useEffect для автоматичного генерування превью (БЕЗ НЕСКІНЧЕННИХ ЦИКЛІВ)
   useEffect(() => {
     if (!slideUIState.currentLesson?.slides) return;
 
+    const currentSlides = slideUIState.currentLesson.slides;
+    const previousSlides = previousSlidesRef.current;
+
+    // Перевіряємо чи дійсно змінилися слайди (за ID та updatedAt)
+    const slidesActuallyChanged = currentSlides.length !== previousSlides.length ||
+      currentSlides.some((slide, index) => {
+        const prevSlide = previousSlides[index];
+        return !prevSlide || 
+               slide.id !== prevSlide.id ||
+               slide.htmlContent !== prevSlide.htmlContent ||
+               (slide.updatedAt?.getTime() || 0) !== (prevSlide.updatedAt?.getTime() || 0);
+      });
+
+    if (!slidesActuallyChanged) {
+      console.log('⏭️ Слайди не змінилися, пропускаємо генерацію превью');
+      return;
+    }
+
+    console.log('🔄 Слайди змінилися, перевіряємо необхідність генерації превью');
+    
+    // Оновлюємо reference попередніх слайдів
+    previousSlidesRef.current = [...currentSlides];
+
     const generatePreviewsForSlides = async () => {
-      for (const slide of slideUIState.currentLesson!.slides) {
+      for (const slide of currentSlides) {
         // Перевіряємо чи потрібно генерувати превью
         const isCurrentlyGenerating = previewGenerationRef.current.has(slide.id);
         const lastUpdateTime = lastUpdateTimeRef.current[slide.id] || 0;
@@ -175,10 +221,10 @@ const useSlideManagement = (
         
         // Генеруємо превью тільки якщо:
         // 1. Немає превью зовсім І слайд ще не обробляли
-        // 2. Слайд був оновлений після останнього превью (протягом останніх 30 секунд)
+        // 2. Слайд був оновлений після останнього превью (протягом останніх 20 секунд) - зменшено ще більше
         // 3. Не генерується зараз
         const shouldGenerate = (!hasPreview && !wasProcessed) || 
-          (slideUpdateTime > lastUpdateTime && slideUpdateTime > Date.now() - 30000); // Зменшено з 60 до 30 секунд
+          (slideUpdateTime > lastUpdateTime && slideUpdateTime > Date.now() - 20000); // Зменшено з 30 до 20 секунд
 
         if (shouldGenerate && !isCurrentlyGenerating) {
           console.log(`🚀 Генерація превью для ${hasPreview ? 'оновленого' : 'нового'} слайду ${slide.id}`, {
@@ -237,9 +283,14 @@ const useSlideManagement = (
       
       // Очищаємо кеш превью та час оновлення ТІЛЬКИ для цього слайду
       setSlidePreviews(prev => {
+        if (!prev[slideId]) {
+          console.log(`⏭️ Превью для слайду ${slideId} вже відсутнє, не оновлюємо стейт`);
+          return prev; // НЕ ОНОВЛЮЄМО стейт, щоб уникнути зайвих рендерів
+        }
         const newPreviews = { ...prev };
         console.log(`🗑️ Видаляємо превью для слайду ${slideId}`);
         delete newPreviews[slideId];
+        delete slidePreviewsRef.current[slideId]; // Також очищаємо ref
         return newPreviews;
       });
       
@@ -664,10 +715,24 @@ const useSlideManagement = (
           console.log('✅ No slides actually updated, keeping all preview cache');
         }
         
-        return {
-          ...prev,
-          currentLesson: lesson  // Заміщуємо повністю, оскільки lesson вже містить всі слайди
-        };
+        // ВАЖЛИВО: Оновлюємо ТІЛЬКИ якщо є реальні зміни в слайдах
+        const shouldUpdateLesson = lesson.slides?.some(newSlide => {
+          const oldSlide = prev.currentLesson?.slides.find(s => s.id === newSlide.id);
+          return !oldSlide || 
+                 oldSlide.htmlContent !== newSlide.htmlContent ||
+                 (oldSlide.updatedAt?.getTime() || 0) !== (newSlide.updatedAt?.getTime() || 0);
+        }) || lesson.slides?.length !== prev.currentLesson?.slides?.length;
+
+        if (shouldUpdateLesson) {
+          console.log('🔄 Дійсні зміни в слайдах виявлені, оновлюємо урок');
+          return {
+            ...prev,
+            currentLesson: lesson  // Заміщуємо повністю, оскільки lesson вже містить всі слайди
+          };
+        } else {
+          console.log('⏭️ Жодних змін у слайдах не виявлено, залишаємо поточний урок');
+          return prev; // НЕ ОНОВЛЮЄМО, щоб уникнути зайвих перерендерів
+        }
       }
       
       // Інакше це новий урок
