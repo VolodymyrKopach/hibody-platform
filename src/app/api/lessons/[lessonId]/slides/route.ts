@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { LessonSlide } from '../../../../../types/lesson';
+import { createClient } from '@/lib/supabase/server';
+import { slideService, lessonService } from '@/services/database';
+import { SlideInsert, SlideUpdate } from '@/types/database';
 import { 
   CreateSlideRequest, 
   CreateSlideResponse,
@@ -7,14 +9,42 @@ import {
   UpdateSlideResponse,
   DeleteSlideRequest,
   DeleteSlideResponse
-} from '../../../../../types/api';
+} from '@/types/api';
+import { LessonSlide } from '@/types/lesson';
 
-// Імпортуємо уроки з основного API (в продакшні це буде база даних)
-// Тимчасово дублюємо сховище
-let lessons: Map<string, any> = new Map();
+// Функція для отримання користувача з аутентифікації
+async function getAuthenticatedUser(request: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error || !user) {
+    throw new Error('Користувач не аутентифікований');
+  }
+  
+  return user;
+}
 
-function generateId(): string {
-  return Math.random().toString(36).substr(2, 9);
+// Функція для конвертації слайду з БД в legacy формат
+function convertToLegacySlide(dbSlide: any): LessonSlide {
+  return {
+    id: dbSlide.id,
+    number: dbSlide.slide_number,
+    title: dbSlide.title,
+    description: dbSlide.description || '',
+    type: dbSlide.type,
+    icon: dbSlide.icon,
+    status: dbSlide.status as any,
+    preview: dbSlide.preview_text || dbSlide.description || '',
+    _internal: {
+      filename: `slide_${dbSlide.slide_number}_${dbSlide.title.toLowerCase().replace(/\s+/g, '_')}.html`,
+      htmlContent: dbSlide.html_content || '',
+      dependencies: dbSlide.dependencies || [],
+      lastModified: new Date(dbSlide.updated_at),
+      version: 1
+    },
+    createdAt: new Date(dbSlide.created_at),
+    updatedAt: new Date(dbSlide.updated_at)
+  };
 }
 
 // GET /api/lessons/[lessonId]/slides - отримати слайди уроку
@@ -23,9 +53,11 @@ export async function GET(
   { params }: { params: { lessonId: string } }
 ) {
   try {
+    const user = await getAuthenticatedUser(request);
     const { lessonId } = await params;
     
-    const lesson = lessons.get(lessonId);
+    // Перевіряємо, чи існує урок і чи має користувач доступ
+    const lesson = await lessonService.getLessonById(lessonId);
     if (!lesson) {
       return NextResponse.json({
         success: false,
@@ -36,9 +68,24 @@ export async function GET(
       }, { status: 404 });
     }
 
+    // Перевіряємо права доступу (власник або публічний урок)
+    if (lesson.user_id !== user.id && !(lesson.is_public && lesson.status === 'published')) {
+      return NextResponse.json({
+        success: false,
+        error: { 
+          message: 'Немає доступу до цього уроку',
+          code: 'FORBIDDEN'
+        }
+      }, { status: 403 });
+    }
+
+    // Отримуємо слайди
+    const slides = await slideService.getLessonSlides(lessonId);
+    const legacySlides = slides.map(convertToLegacySlide);
+
     return NextResponse.json({
-      slides: lesson.slides || [],
-      total: lesson.slides?.length || 0,
+      slides: legacySlides,
+      total: legacySlides.length,
       lessonTitle: lesson.title,
       success: true,
       message: 'Слайди завантажено'
@@ -46,6 +93,17 @@ export async function GET(
 
   } catch (error) {
     console.error('Помилка при отриманні слайдів:', error);
+    
+    if (error instanceof Error && error.message.includes('аутентифікований')) {
+      return NextResponse.json({
+        success: false,
+        error: { 
+          message: 'Необхідна аутентифікація',
+          code: 'AUTHENTICATION_REQUIRED'
+        }
+      }, { status: 401 });
+    }
+
     return NextResponse.json({
       success: false,
       error: { 
@@ -62,10 +120,12 @@ export async function POST(
   { params }: { params: { lessonId: string } }
 ) {
   try {
+    const user = await getAuthenticatedUser(request);
     const { lessonId } = await params;
     const body: CreateSlideRequest = await request.json();
     
-    const lesson = lessons.get(lessonId);
+    // Перевіряємо, чи існує урок і чи належить він користувачу
+    const lesson = await lessonService.getLessonById(lessonId);
     if (!lesson) {
       return NextResponse.json({
         success: false,
@@ -74,6 +134,16 @@ export async function POST(
           code: 'LESSON_NOT_FOUND'
         }
       }, { status: 404 });
+    }
+
+    if (lesson.user_id !== user.id) {
+      return NextResponse.json({
+        success: false,
+        error: { 
+          message: 'Немає прав для редагування цього уроку',
+          code: 'FORBIDDEN'
+        }
+      }, { status: 403 });
     }
 
     // Валідація
@@ -87,55 +157,47 @@ export async function POST(
       }, { status: 400 });
     }
 
-    const slideId = generateId();
-    const now = new Date();
-    
-    // Визначаємо позицію нового слайду
-    const currentSlides = lesson.slides || [];
-    const slideNumber = body.position !== undefined 
+    // Отримуємо поточні слайди для визначення позиції
+    const currentSlides = await slideService.getLessonSlides(lessonId);
+    let slideNumber = body.position !== undefined 
       ? body.position 
       : currentSlides.length + 1;
 
-    // Оновлюємо номери існуючих слайдів якщо потрібно
+    // Якщо вставляємо слайд в середину, оновлюємо номери існуючих слайдів
     if (body.position !== undefined && body.position <= currentSlides.length) {
-      currentSlides.forEach(slide => {
-        if (slide.number >= body.position) {
-          slide.number += 1;
+      for (const slide of currentSlides) {
+        if (slide.slide_number >= body.position) {
+          await slideService.updateSlide(slide.id, {
+            slide_number: slide.slide_number + 1
+          });
         }
-      });
+      }
     }
 
-    const newSlide: LessonSlide = {
-      id: slideId,
-      number: slideNumber,
+    // Створюємо новий слайд
+    const slideData: SlideInsert = {
+      lesson_id: lessonId,
       title: body.slide.title.trim(),
-      description: body.slide.description?.trim() || '',
+      description: body.slide.description?.trim() || null,
       type: body.slide.type || 'content',
       icon: body.slide.icon || '📄',
+      slide_number: slideNumber,
       status: 'draft',
-      preview: body.slide.description?.trim() || 'Попередній перегляд недоступний',
-      _internal: {
-        filename: `slide_${slideNumber}_${body.slide.title.toLowerCase().replace(/\s+/g, '_')}.html`,
-        htmlContent: body.generateContent ? generateBasicHTML(body.slide) : '',
-        dependencies: [],
-        lastModified: now,
-        version: 1
-      },
-      createdAt: now,
-      updatedAt: now
+      preview_text: body.slide.description?.trim() || 'Попередній перегляд недоступний',
+      html_content: body.generateContent ? generateBasicHTML(body.slide) : null,
+      metadata: {
+        generatedContent: body.generateContent || false,
+        originalRequest: body.slide
+      }
     };
 
-    // Додаємо новий слайд до уроку
-    const updatedSlides = [...currentSlides, newSlide].sort((a, b) => a.number - b.number);
-    lesson.slides = updatedSlides;
-    lesson.updatedAt = now;
-    
-    lessons.set(lessonId, lesson);
+    const newSlide = await slideService.createSlide(slideData);
+    const legacySlide = convertToLegacySlide(newSlide);
 
     const response: CreateSlideResponse = {
-      slide: newSlide,
-      htmlFile: newSlide._internal.filename,
-      preview: newSlide.preview,
+      slide: legacySlide,
+      htmlFile: legacySlide._internal.filename,
+      preview: legacySlide.preview,
       success: true,
       message: 'Слайд створено'
     };
@@ -144,6 +206,17 @@ export async function POST(
 
   } catch (error) {
     console.error('Помилка при створенні слайду:', error);
+    
+    if (error instanceof Error && error.message.includes('аутентифікований')) {
+      return NextResponse.json({
+        success: false,
+        error: { 
+          message: 'Необхідна аутентифікація',
+          code: 'AUTHENTICATION_REQUIRED'
+        }
+      }, { status: 401 });
+    }
+
     return NextResponse.json({
       success: false,
       error: { 
@@ -160,10 +233,12 @@ export async function PUT(
   { params }: { params: { lessonId: string } }
 ) {
   try {
+    const user = await getAuthenticatedUser(request);
     const { lessonId } = await params;
     const body: UpdateSlideRequest = await request.json();
     
-    const lesson = lessons.get(lessonId);
+    // Перевіряємо, чи існує урок і чи належить він користувачу
+    const lesson = await lessonService.getLessonById(lessonId);
     if (!lesson) {
       return NextResponse.json({
         success: false,
@@ -174,8 +249,19 @@ export async function PUT(
       }, { status: 404 });
     }
 
-    const slideIndex = lesson.slides?.findIndex(s => s.id === body.slideId);
-    if (slideIndex === -1 || slideIndex === undefined) {
+    if (lesson.user_id !== user.id) {
+      return NextResponse.json({
+        success: false,
+        error: { 
+          message: 'Немає прав для редагування цього уроку',
+          code: 'FORBIDDEN'
+        }
+      }, { status: 403 });
+    }
+
+    // Перевіряємо, чи існує слайд
+    const currentSlide = await slideService.getSlideById(body.slideId);
+    if (!currentSlide || currentSlide.lesson_id !== lessonId) {
       return NextResponse.json({
         success: false,
         error: { 
@@ -185,37 +271,36 @@ export async function PUT(
       }, { status: 404 });
     }
 
-    const currentSlide = lesson.slides[slideIndex];
-    const now = new Date();
-
-    // Оновлюємо слайд
-    const updatedSlide: LessonSlide = {
-      ...currentSlide,
-      ...body.updates,
-      id: body.slideId, // Захищаємо від зміни ID
-      updatedAt: now,
-      _internal: {
-        ...currentSlide._internal,
-        ...body.updates._internal,
-        lastModified: now,
-        version: currentSlide._internal.version + 1
-      }
-    };
-
-    // Якщо потрібно регенерувати файли
-    if (body.regenerateFiles) {
-      updatedSlide._internal.htmlContent = generateBasicHTML(updatedSlide);
-      updatedSlide.preview = updatedSlide.description;
+    // Підготовка даних для оновлення
+    const updateData: SlideUpdate = {};
+    
+    if (body.updates.title !== undefined) {
+      updateData.title = body.updates.title;
+    }
+    if (body.updates.description !== undefined) {
+      updateData.description = body.updates.description;
+    }
+    if (body.updates.type !== undefined) {
+      updateData.type = body.updates.type;
+    }
+    if (body.updates.icon !== undefined) {
+      updateData.icon = body.updates.icon;
+    }
+    if (body.updates.status !== undefined) {
+      updateData.status = body.updates.status as any;
+    }
+    if (body.updates._internal?.htmlContent !== undefined) {
+      updateData.html_content = body.updates._internal.htmlContent;
     }
 
-    lesson.slides[slideIndex] = updatedSlide;
-    lesson.updatedAt = now;
-    lessons.set(lessonId, lesson);
+    // Оновлюємо слайд
+    const updatedSlide = await slideService.updateSlide(body.slideId, updateData);
+    const legacySlide = convertToLegacySlide(updatedSlide);
 
     const response: UpdateSlideResponse = {
-      slide: updatedSlide,
-      updatedFiles: [updatedSlide._internal.filename],
-      preview: updatedSlide.preview,
+      slide: legacySlide,
+      updatedFiles: [legacySlide._internal.filename],
+      preview: legacySlide.preview,
       success: true,
       message: 'Слайд оновлено'
     };
@@ -224,6 +309,17 @@ export async function PUT(
 
   } catch (error) {
     console.error('Помилка при оновленні слайду:', error);
+    
+    if (error instanceof Error && error.message.includes('аутентифікований')) {
+      return NextResponse.json({
+        success: false,
+        error: { 
+          message: 'Необхідна аутентифікація',
+          code: 'AUTHENTICATION_REQUIRED'
+        }
+      }, { status: 401 });
+    }
+
     return NextResponse.json({
       success: false,
       error: { 
@@ -240,10 +336,10 @@ export async function DELETE(
   { params }: { params: { lessonId: string } }
 ) {
   try {
-    const lessonId = params.lessonId;
+    const user = await getAuthenticatedUser(request);
+    const { lessonId } = await params;
     const url = new URL(request.url);
     const slideId = url.searchParams.get('slideId');
-    const deleteFiles = url.searchParams.get('deleteFiles') === 'true';
 
     if (!slideId) {
       return NextResponse.json({
@@ -254,8 +350,9 @@ export async function DELETE(
         }
       }, { status: 400 });
     }
-    
-    const lesson = lessons.get(lessonId);
+
+    // Перевіряємо, чи існує урок і чи належить він користувачу
+    const lesson = await lessonService.getLessonById(lessonId);
     if (!lesson) {
       return NextResponse.json({
         success: false,
@@ -266,8 +363,19 @@ export async function DELETE(
       }, { status: 404 });
     }
 
-    const slideIndex = lesson.slides?.findIndex(s => s.id === slideId);
-    if (slideIndex === -1 || slideIndex === undefined) {
+    if (lesson.user_id !== user.id) {
+      return NextResponse.json({
+        success: false,
+        error: { 
+          message: 'Немає прав для редагування цього уроку',
+          code: 'FORBIDDEN'
+        }
+      }, { status: 403 });
+    }
+
+    // Перевіряємо, чи існує слайд
+    const slideToDelete = await slideService.getSlideById(slideId);
+    if (!slideToDelete || slideToDelete.lesson_id !== lessonId) {
       return NextResponse.json({
         success: false,
         error: { 
@@ -277,23 +385,21 @@ export async function DELETE(
       }, { status: 404 });
     }
 
-    const deletedSlide = lesson.slides[slideIndex];
-    const deletedFiles = deleteFiles ? [deletedSlide._internal.filename] : [];
-
     // Видаляємо слайд
-    lesson.slides.splice(slideIndex, 1);
+    await slideService.deleteSlide(slideId);
 
-    // Оновлюємо номери решти слайдів
-    lesson.slides.forEach((slide, index) => {
-      slide.number = index + 1;
-    });
-
-    lesson.updatedAt = new Date();
-    lessons.set(lessonId, lesson);
+    // Оновлюємо номери слайдів, які йдуть після видаленого
+    const remainingSlides = await slideService.getLessonSlides(lessonId);
+    for (const slide of remainingSlides) {
+      if (slide.slide_number > slideToDelete.slide_number) {
+        await slideService.updateSlide(slide.id, {
+          slide_number: slide.slide_number - 1
+        });
+      }
+    }
 
     const response: DeleteSlideResponse = {
       deletedSlideId: slideId,
-      deletedFiles,
       success: true,
       message: 'Слайд видалено'
     };
@@ -302,6 +408,17 @@ export async function DELETE(
 
   } catch (error) {
     console.error('Помилка при видаленні слайду:', error);
+    
+    if (error instanceof Error && error.message.includes('аутентифікований')) {
+      return NextResponse.json({
+        success: false,
+        error: { 
+          message: 'Необхідна аутентифікація',
+          code: 'AUTHENTICATION_REQUIRED'
+        }
+      }, { status: 401 });
+    }
+
     return NextResponse.json({
       success: false,
       error: { 
@@ -317,53 +434,53 @@ function generateBasicHTML(slide: Partial<LessonSlide>): string {
   return `<!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${slide.title || 'Слайд'}</title>
-  <style>
-    body {
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      margin: 0;
-      padding: 20px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-    .slide-container {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 40px;
-      max-width: 800px;
-      text-align: center;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    }
-    h1 {
-      font-size: 3em;
-      margin: 0 0 20px 0;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    }
-    p {
-      font-size: 1.5em;
-      line-height: 1.6;
-      margin: 20px 0;
-    }
-    .icon {
-      font-size: 4em;
-      margin-bottom: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${slide.title || 'Слайд'}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .slide-container {
+            background: white;
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            max-width: 800px;
+            text-align: center;
+        }
+        .slide-icon {
+            font-size: 4rem;
+            margin-bottom: 30px;
+        }
+        .slide-title {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        .slide-content {
+            font-size: 1.2rem;
+            color: #666;
+            line-height: 1.6;
+        }
+    </style>
 </head>
 <body>
-  <div class="slide-container">
-    <div class="icon">${slide.icon || '📄'}</div>
-    <h1>${slide.title || 'Заголовок слайду'}</h1>
-    <p>${slide.description || 'Опис слайду'}</p>
-  </div>
+    <div class="slide-container">
+        <div class="slide-icon">${slide.icon || '📄'}</div>
+        <h1 class="slide-title">${slide.title || 'Заголовок слайду'}</h1>
+        <div class="slide-content">
+            <p>${slide.description || 'Тут буде контент слайду...'}</p>
+        </div>
+    </div>
 </body>
 </html>`;
 }

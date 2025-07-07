@@ -307,7 +307,7 @@ const Dashboard = () => {
                   startIcon={<Sparkles size={20} />}
                   sx={{
                     background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.light} 100%)`,
-                    color: 'white',
+                    color: '#ffffff',
                     borderRadius: '16px',
                     px: 4,
                     py: 1.5,
@@ -394,7 +394,7 @@ const Dashboard = () => {
                             boxShadow: `0 8px 24px ${alpha(stat.color, 0.3)}`,
                           }}
                         >
-                          <stat.icon size={24} color="white" />
+                          <stat.icon size={24} color="#ffffff" />
                         </Box>
                         <Chip
                           label={`+${stat.percentage}%`}

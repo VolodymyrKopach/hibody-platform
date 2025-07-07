@@ -36,7 +36,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ isTyping }) => {
             sx={{
               p: 2.5,
               borderRadius: '16px',
-              backgroundColor: 'white',
+              backgroundColor: '#ffffff',
               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
               boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
             }}

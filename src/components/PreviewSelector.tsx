@@ -94,7 +94,8 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
           }));
 
           // Set first slide as default preview if no preview is selected
-          if (slide.id === memoizedSlides[0]?.id && !selectedPreviewId && isInitialGeneration) {
+          if (slide.id === memoizedSlides[0]?.id && !selectedPreviewId) {
+            console.log('🎯 PREVIEW SELECTOR: Auto-selecting first slide preview:', slide.id);
             onPreviewSelect(slide.id, thumbnailUrl);
           }
         } catch (error) {
@@ -108,7 +109,8 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
           }));
 
           // Set fallback as default if it's the first slide and no preview is selected
-          if (slide.id === memoizedSlides[0]?.id && !selectedPreviewId && isInitialGeneration) {
+          if (slide.id === memoizedSlides[0]?.id && !selectedPreviewId) {
+            console.log('🎯 PREVIEW SELECTOR: Auto-selecting first slide fallback:', slide.id);
             onPreviewSelect(slide.id, fallbackUrl);
           }
         }
@@ -118,7 +120,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
     };
 
     generatePreviews();
-  }, [memoizedSlides, cachedPreviews, onPreviewSelect, selectedPreviewId, isInitialGeneration, previews]); // Include all dependencies
+  }, [memoizedSlides, cachedPreviews]); // Видалили залежності, що можуть спричинити циклічну генерацію
 
 
 

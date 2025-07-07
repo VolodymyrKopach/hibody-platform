@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { SlideUIState, SimpleLesson, SimpleSlide, SaveLessonDialogData, Message } from '@/types/chat';
-import { LessonStorage, SavedLesson } from '@/utils/localStorage';
 import { generateSlideThumbnail, generateFallbackPreview } from '@/utils/slidePreview';
 import { generateMessageId } from '@/utils/messageUtils';
 
@@ -79,18 +78,26 @@ const useSlideManagement = (
   // Ref для відстеження чи панель була відкрита користувачем вручну
   const panelOpenedManuallyRef = useRef<boolean>(false);
 
+  // Додаємо ref для зберігання поточних превью
+  const slidePreviewsRef = useRef<Record<string, string>>({});
+  
+  // Синхронізуємо ref з state
+  useEffect(() => {
+    slidePreviewsRef.current = slidePreviews;
+  }, [slidePreviews]);
+
   // Функція для генерації превью слайду (оптимізована)
   const generateSlidePreview = useCallback(async (slide: SimpleSlide, forceRegenerate = false): Promise<string> => {
     // Перевіряємо чи вже генерується превью для цього слайду
     if (previewGenerationRef.current.has(slide.id) && !forceRegenerate) {
       console.log(`⏳ Превью для слайду ${slide.id} вже генерується, пропускаємо...`);
-      return slidePreviews[slide.id] || '';
+      return slidePreviewsRef.current[slide.id] || '';
     }
 
     // Якщо превью вже існує і не потрібно регенерувати, повертаємо його
-    if (slidePreviews[slide.id] && !forceRegenerate) {
+    if (slidePreviewsRef.current[slide.id] && !forceRegenerate) {
       console.log(`♻️ Використовую кешоване превью для слайду ${slide.id}`);
-      return slidePreviews[slide.id];
+      return slidePreviewsRef.current[slide.id];
     }
 
     // Додаємо слайд до списку тих, що генеруються
@@ -146,7 +153,10 @@ const useSlideManagement = (
         return newSet;
       });
     }
-  }, [slidePreviews]);
+  }, []);
+
+  // Ref для відстеження останньої обробленої версії слайдів
+  const processedSlidesRef = useRef<Set<string>>(new Set());
 
   // Оптимізований useEffect для автоматичного генерування превью
   useEffect(() => {
@@ -155,20 +165,26 @@ const useSlideManagement = (
     const generatePreviewsForSlides = async () => {
       for (const slide of slideUIState.currentLesson!.slides) {
         // Перевіряємо чи потрібно генерувати превью
-        const hasPreview = !!slidePreviews[slide.id];
         const isCurrentlyGenerating = previewGenerationRef.current.has(slide.id);
         const lastUpdateTime = lastUpdateTimeRef.current[slide.id] || 0;
         const slideUpdateTime = slide.updatedAt?.getTime() || 0;
         
+        // Отримуємо поточне превью з ref (не з state!)
+        const hasPreview = !!slidePreviewsRef.current[slide.id];
+        const wasProcessed = processedSlidesRef.current.has(slide.id);
+        
         // Генеруємо превью тільки якщо:
-        // 1. Немає превью зовсім
-        // 2. Слайд був оновлений після останнього превью
+        // 1. Немає превью зовсім І слайд ще не обробляли
+        // 2. Слайд був оновлений після останнього превью (протягом останніх 60 секунд)
         // 3. Не генерується зараз
-        const shouldGenerate = !hasPreview || 
-          (slideUpdateTime > lastUpdateTime && slideUpdateTime > Date.now() - 60000); // Останні 60 секунд
+        const shouldGenerate = (!hasPreview && !wasProcessed) || 
+          (slideUpdateTime > lastUpdateTime && slideUpdateTime > Date.now() - 60000);
 
         if (shouldGenerate && !isCurrentlyGenerating) {
           console.log(`🚀 Генерація превью для ${hasPreview ? 'оновленого' : 'нового'} слайду ${slide.id}`);
+          
+          // Позначаємо слайд як оброблений
+          processedSlidesRef.current.add(slide.id);
           
           // Генеруємо превью з невеликою затримкою для запобігання перевантаженню
           setTimeout(() => {
@@ -179,7 +195,7 @@ const useSlideManagement = (
     };
 
     generatePreviewsForSlides();
-  }, [slideUIState.currentLesson?.slides, generateSlidePreview]); // Видалили slidePreviews з залежностей
+  }, [slideUIState.currentLesson?.slides]);
 
   // Автоматичне відкриття панелі слайдів при створенні першого слайду
   useEffect(() => {
@@ -213,12 +229,15 @@ const useSlideManagement = (
       
       delete lastUpdateTimeRef.current[slideId];
       
+      // Видаляємо з processed slides щоб можна було регенерувати
+      processedSlidesRef.current.delete(slideId);
+      
       // Генеруємо нове превью
       setTimeout(() => {
         generateSlidePreview(slide, true);
       }, 100);
     }
-  }, [slideUIState.currentLesson?.slides, generateSlidePreview]);
+  }, [slideUIState.currentLesson?.slides]);
 
   // Функція для примусового оновлення превью всіх слайдів
   const forceRefreshAllPreviews = useCallback(() => {
@@ -229,6 +248,9 @@ const useSlideManagement = (
       setSlidePreviews({});
       lastUpdateTimeRef.current = {};
       
+      // Очищаємо processed slides щоб можна було регенерувати всі
+      processedSlidesRef.current.clear();
+      
       // Регенеруємо всі превью з затримкою
       slideUIState.currentLesson.slides.forEach((slide, index) => {
         setTimeout(() => {
@@ -236,7 +258,7 @@ const useSlideManagement = (
         }, index * 200); // Затримка між слайдами
       });
     }
-  }, [slideUIState.currentLesson?.slides, generateSlidePreview]);
+  }, [slideUIState.currentLesson?.slides]);
 
   // Функції для роботи з діалогом слайдів
   const openSlideDialog = useCallback((slideIndex: number) => {
@@ -317,18 +339,28 @@ const useSlideManagement = (
       return;
     }
 
+    console.log('💾 OPEN SAVE DIALOG: Dialog opening with lesson data:', {
+      lessonTitle: slideUIState.currentLesson.title,
+      lessonSubject: slideUIState.currentLesson.subject,
+      lessonAgeGroup: slideUIState.currentLesson.ageGroup,
+      selectedSlidesCount: slideUIState.selectedSlides.size,
+      currentSlidePreviewsCount: Object.keys(slidePreviews).length,
+      availablePreviews: Object.keys(slidePreviews),
+      firstSlideId: slideUIState.currentLesson.slides?.[0]?.id
+    });
+
     // Заповнюємо початкові дані з поточного уроку
     setSaveDialogData({
       title: slideUIState.currentLesson.title || 'Новий урок',
       description: slideUIState.currentLesson.description || `Урок створений з ${slideUIState.selectedSlides.size} слайдів`,
       subject: slideUIState.currentLesson.subject || 'Загальне навчання',
-      ageGroup: slideUIState.currentLesson.ageGroup || '6-12 років',
+      ageGroup: slideUIState.currentLesson.ageGroup || '8-9 років',
       selectedPreviewId: null,
       previewUrl: null
     });
 
     setSlideUIState(prev => ({ ...prev, saveDialogOpen: true }));
-  }, [slideUIState.currentLesson, slideUIState.selectedSlides]);
+  }, [slideUIState.currentLesson, slideUIState.selectedSlides, slidePreviews]);
 
   // Закриття діалогу збереження
   const closeSaveDialog = useCallback(() => {
@@ -351,9 +383,29 @@ const useSlideManagement = (
 
   // Функція збереження уроку після підтвердження в діалозі
   const saveSelectedSlides = useCallback(async (dialogData: SaveLessonDialogData): Promise<Message> => {
+    console.log('💾 SAVE LESSON: Starting save process...');
+    console.log('📋 SAVE LESSON: Dialog data received:', {
+      title: dialogData.title,
+      description: dialogData.description,
+      subject: dialogData.subject,
+      ageGroup: dialogData.ageGroup,
+      selectedPreviewId: dialogData.selectedPreviewId,
+      hasPreviewUrl: !!dialogData.previewUrl,
+      previewUrlType: dialogData.previewUrl?.startsWith('data:image/') ? 'base64' : 'url'
+    });
+
     if (!slideUIState.currentLesson || slideUIState.selectedSlides.size === 0) {
+      console.error('❌ SAVE LESSON: No lesson or selected slides');
       throw new Error('Немає уроку або вибраних слайдів');
     }
+
+    console.log('📊 SAVE LESSON: Current lesson state:', {
+      lessonId: slideUIState.currentLesson.id,
+      lessonTitle: slideUIState.currentLesson.title,
+      totalSlides: slideUIState.currentLesson.slides.length,
+      selectedSlidesCount: slideUIState.selectedSlides.size,
+      selectedSlideIds: Array.from(slideUIState.selectedSlides)
+    });
 
     setSlideUIState(prev => ({ ...prev, isSavingLesson: true }));
 
@@ -362,92 +414,166 @@ const useSlideManagement = (
         slide => slideUIState.selectedSlides.has(slide.id)
       );
 
+      console.log('🎯 SAVE LESSON: Selected slides for saving:', selectedSlides.map(slide => ({
+        id: slide.id,
+        title: slide.title,
+        type: slide.type,
+        hasContent: !!slide.content,
+        hasHtmlContent: !!slide.htmlContent,
+        contentLength: slide.content?.length || 0,
+        htmlContentLength: slide.htmlContent?.length || 0
+      })));
+
       const newLessonId = `lesson_${Date.now()}`;
       let savedPreviewUrl = dialogData.previewUrl || '/images/default-lesson.png';
 
+      console.log('🆔 SAVE LESSON: Generated lesson ID:', newLessonId);
+      console.log('🖼️ SAVE LESSON: Initial preview URL:', savedPreviewUrl);
+      console.log('🔍 SAVE LESSON: Preview URL analysis:', {
+        hasPreviewUrl: !!dialogData.previewUrl,
+        isDataUrl: dialogData.previewUrl?.startsWith('data:image/'),
+        previewUrlLength: dialogData.previewUrl?.length || 0,
+        selectedPreviewId: dialogData.selectedPreviewId,
+        hasSelectedPreviewId: !!dialogData.selectedPreviewId
+      });
+
       // Якщо є превью, зберігаємо його як файл
       if (dialogData.previewUrl && dialogData.previewUrl.startsWith('data:image/')) {
+        console.log('📸 SAVE LESSON: Saving preview image as file...');
+        console.log('📏 SAVE LESSON: Preview data size:', Math.round(dialogData.previewUrl.length / 1024), 'KB');
+        
         try {
+          const previewRequestData = {
+            imageData: dialogData.previewUrl,
+            lessonId: newLessonId,
+            slideId: dialogData.selectedPreviewId || 'main',
+            type: 'lesson-thumbnail'
+          };
+          
+          console.log('📤 SAVE LESSON: Sending preview save request:', {
+            lessonId: previewRequestData.lessonId,
+            slideId: previewRequestData.slideId,
+            type: previewRequestData.type,
+            imageDataSize: Math.round(previewRequestData.imageData.length / 1024) + 'KB'
+          });
+
           const previewResponse = await fetch('/api/images/preview', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              imageData: dialogData.previewUrl,
-              lessonId: newLessonId,
-              slideId: dialogData.selectedPreviewId || 'main',
-              type: 'lesson-thumbnail'
-            })
+            body: JSON.stringify(previewRequestData)
           });
 
           if (previewResponse.ok) {
             const previewResult = await previewResponse.json();
             savedPreviewUrl = previewResult.imagePath;
-            console.log('✅ Preview saved as file:', savedPreviewUrl);
+            console.log('✅ SAVE LESSON: Preview saved as file:', savedPreviewUrl);
           } else {
-            console.warn('Failed to save preview as file, using base64');
+            const errorText = await previewResponse.text();
+            console.warn('⚠️ SAVE LESSON: Failed to save preview as file:', {
+              status: previewResponse.status,
+              statusText: previewResponse.statusText,
+              error: errorText
+            });
+            console.warn('📋 SAVE LESSON: Using base64 preview instead');
           }
         } catch (error) {
-          console.error('Error saving preview:', error);
+          console.error('❌ SAVE LESSON: Error saving preview:', error);
         }
       }
 
-      // Створюємо урок для localStorage з даними з діалогу
-      const newLesson: SavedLesson = {
-        id: newLessonId,
+      // Підготовка даних для API
+      const lessonRequestData = {
         title: dialogData.title.trim(),
         description: dialogData.description.trim(),
         subject: dialogData.subject.trim(),
-        ageGroup: dialogData.ageGroup.trim(),
+        targetAge: dialogData.ageGroup.trim(),
         duration: slideUIState.currentLesson.duration,
-        slides: selectedSlides.map(slide => ({
-          id: slide.id,
+        thumbnail_url: savedPreviewUrl,
+        slides: selectedSlides.map((slide, index) => ({
           title: slide.title,
-          content: slide.content,
+          description: slide.content,
           htmlContent: slide.htmlContent,
           type: slide.type,
-          status: slide.status
-        })),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        authorId: 'current-user',
-        thumbnail: savedPreviewUrl,
-        tags: ['створений-в-чаті', 'інтерактивний'],
-        difficulty: 'easy' as const,
-        views: 0,
-        rating: 0,
-        status: 'published' as const,
-        completionRate: 0
+          slideNumber: index + 1
+        }))
       };
 
-      // Зберігаємо в localStorage
-      const success = LessonStorage.saveLesson(newLesson);
-      
-      if (success) {
-        // Очищаємо вибір після збереження і закриваємо діалог
-        setSlideUIState(prev => ({
-          ...prev,
-          selectedSlides: new Set<string>(),
-          saveDialogOpen: false
-        }));
+      console.log('📤 SAVE LESSON: Sending lesson save request to API:', {
+        title: lessonRequestData.title,
+        description: lessonRequestData.description,
+        subject: lessonRequestData.subject,
+        targetAge: lessonRequestData.targetAge,
+        duration: lessonRequestData.duration,
+        thumbnail_url: lessonRequestData.thumbnail_url,
+        slidesCount: lessonRequestData.slides.length,
+        slidesData: lessonRequestData.slides.map(slide => ({
+          title: slide.title,
+          type: slide.type,
+          slideNumber: slide.slideNumber,
+          hasDescription: !!slide.description,
+          hasHtmlContent: !!slide.htmlContent,
+          descriptionLength: slide.description?.length || 0,
+          htmlContentLength: slide.htmlContent?.length || 0
+        }))
+      });
 
-        return {
-          id: generateMessageId(),
-          text: `✅ **Урок збережено!**\n\n📚 **"${newLesson.title}"** успішно додано до ваших матеріалів.\n\n📊 **Збережено слайдів:** ${selectedSlides.length}\n\n🎯 Ви можете знайти урок на сторінці [Мої матеріали](/materials).`,
-          sender: 'ai' as const,
-          timestamp: new Date(),
-          status: 'sent' as const,
-          feedback: null
-        };
-      } else {
-        throw new Error('Помилка збереження в localStorage');
+      // Створюємо урок через API (база даних)
+      const lessonResponse = await fetch('/api/lessons', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(lessonRequestData)
+      });
+
+      console.log('📡 SAVE LESSON: API response status:', lessonResponse.status, lessonResponse.statusText);
+
+      if (!lessonResponse.ok) {
+        const errorData = await lessonResponse.json();
+        console.error('❌ SAVE LESSON: API error:', {
+          status: lessonResponse.status,
+          statusText: lessonResponse.statusText,
+          errorData
+        });
+        throw new Error(errorData.error?.message || 'Помилка збереження уроку');
       }
+
+      const result = await lessonResponse.json();
+      console.log('✅ SAVE LESSON: Lesson saved to database successfully!');
+      console.log('📊 SAVE LESSON: API response:', {
+        success: result.success,
+        message: result.message,
+        lessonId: result.lesson?.id,
+        lessonTitle: result.lesson?.title,
+        slidesCount: result.lesson?.slides?.length || 0
+      });
+
+      // Очищаємо вибір після збереження і закриваємо діалог
+      setSlideUIState(prev => ({
+        ...prev,
+        selectedSlides: new Set<string>(),
+        saveDialogOpen: false
+      }));
+
+      console.log('🎉 SAVE LESSON: Process completed successfully');
+
+      return {
+        id: generateMessageId(),
+        text: `✅ **Урок збережено в базу даних!**\n\n📚 **"${dialogData.title}"** успішно додано до ваших матеріалів.\n\n📊 **Збережено слайдів:** ${selectedSlides.length}\n\n🎯 Ви можете знайти урок на сторінці [Мої матеріали](/materials).`,
+        sender: 'ai' as const,
+        timestamp: new Date(),
+        status: 'sent' as const,
+        feedback: null
+      };
+
     } catch (error) {
-      console.error('Помилка збереження уроку:', error);
+      console.error('❌ SAVE LESSON: Error during save process:', error);
       throw error;
     } finally {
       setSlideUIState(prev => ({ ...prev, isSavingLesson: false }));
+      console.log('🏁 SAVE LESSON: Cleanup completed');
     }
   }, [slideUIState.currentLesson, slideUIState.selectedSlides]);
 
@@ -520,7 +646,7 @@ const useSlideManagement = (
         currentLesson: lesson
       };
     });
-  }, [slideUIState.currentLesson]); // Видалили generateSlidePreview з залежностей
+  }, [slideUIState.currentLesson]);
 
   // Перемикання панелі слайдів
   const toggleSlidePanelOpen = useCallback(() => {

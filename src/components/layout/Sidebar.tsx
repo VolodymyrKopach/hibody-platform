@@ -158,7 +158,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
       sx={{
         width: isCollapsed ? 80 : 280,
         height: '100%',
-        backgroundColor: 'white',
+                    backgroundColor: '#ffffff',
         borderRight: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
         display: 'flex',
         flexDirection: 'column',

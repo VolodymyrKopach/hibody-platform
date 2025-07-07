@@ -9,6 +9,7 @@ export interface CreateLessonRequest {
   targetAge: string;
   subject: string;
   duration: number;
+  thumbnail_url?: string;
   initialSlides?: Partial<LessonSlide>[];
   slides?: Array<{
     title: string;

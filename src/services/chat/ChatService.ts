@@ -204,7 +204,7 @@ export class ChatService {
         title: conversationHistory.lessonTopic || 'Новий урок',
         description: `Урок про ${conversationHistory.lessonTopic} для дітей ${conversationHistory.lessonAge}`,
         subject: 'Загальне навчання',
-        ageGroup: conversationHistory.lessonAge || '6-12 років',
+        ageGroup: conversationHistory.lessonAge || '8-9 років',
         duration: 30,
         createdAt: new Date(),
         updatedAt: new Date(),

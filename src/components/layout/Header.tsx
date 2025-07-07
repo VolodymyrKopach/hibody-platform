@@ -33,6 +33,9 @@ import {
   MenuItem,
   ListItemIcon,
 } from '@mui/material';
+import { useAuth } from '@/providers/AuthProvider';
+import { AuthModal } from '@/components/auth';
+import { MigrationDialog } from '@/components/migration/MigrationDialog';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -50,8 +53,24 @@ const Header: React.FC<HeaderProps> = ({
   title = 'Дашборд' 
 }) => {
   const theme = useTheme();
+  const { user, profile, signOut, loading } = useAuth();
+
+  // Логи для відстеження стану в Header (можна видалити для production)
+  // React.useEffect(() => {
+  //   console.log('🎯 Header: User state in header:', user ? `${user.email} (${user.id})` : 'null')
+  // }, [user])
+
+  // React.useEffect(() => {
+  //   console.log('🎯 Header: Profile state in header:', profile ? `${profile.full_name}` : 'null')
+  // }, [profile])
+
+  // React.useEffect(() => {
+  //   console.log('🎯 Header: Loading state in header:', loading)
+  // }, [loading])
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [notificationsAnchor, setNotificationsAnchor] = useState<null | HTMLElement>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [migrationDialogOpen, setMigrationDialogOpen] = useState(false);
 
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setUserMenuAnchor(event.currentTarget);
@@ -67,6 +86,32 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleNotificationsClose = () => {
     setNotificationsAnchor(null);
+  };
+
+  const handleAuthModalOpen = () => {
+    setAuthModalOpen(true);
+  };
+
+  const handleAuthModalClose = () => {
+    setAuthModalOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      handleUserMenuClose();
+    } catch (error) {
+      console.error('❌ Header.handleSignOut: Error during logout:', error)
+    }
+  };
+
+  const handleMigrationDialogOpen = () => {
+    setMigrationDialogOpen(true);
+    handleUserMenuClose();
+  };
+
+  const handleMigrationDialogClose = () => {
+    setMigrationDialogOpen(false);
   };
 
   return (
@@ -187,64 +232,88 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Right Section */}
         <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1, justifyContent: 'flex-end' }}>
-          {/* Quick Actions */}
-          <Button
-            startIcon={<Sparkles size={18} />}
-            variant="contained"
-            size="small"
-            sx={{
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-              borderRadius: '12px',
-              textTransform: 'none',
-              boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-              '&:hover': {
-                background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
-                boxShadow: `0 6px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
-              },
-            }}
-          >
-            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-              Створити
-            </Box>
-          </Button>
-
-          {/* Notifications */}
-          <IconButton
-            onClick={handleNotificationsOpen}
-            sx={{
-              background: alpha(theme.palette.grey[500], 0.1),
-              '&:hover': {
-                background: alpha(theme.palette.grey[500], 0.2),
-              },
-            }}
-          >
-            <Badge badgeContent={2} color="error">
-              <Bell size={20} />
-            </Badge>
-          </IconButton>
-
-          {/* User Menu */}
-          <IconButton
-            onClick={handleUserMenuOpen}
-            sx={{
-              background: alpha(theme.palette.primary.main, 0.1),
-              '&:hover': {
-                background: alpha(theme.palette.primary.main, 0.2),
-              },
-            }}
-          >
-            <Avatar
+          {/* Quick Actions - показуємо тільки для авторизованих користувачів */}
+          {user && (
+            <Button
+              startIcon={<Sparkles size={18} />}
+              variant="contained"
+              size="small"
               sx={{
-                width: 32,
-                height: 32,
                 background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-                fontSize: '0.875rem',
-                fontWeight: 600,
+                borderRadius: '12px',
+                textTransform: 'none',
+                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                '&:hover': {
+                  background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+                  boxShadow: `0 6px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
+                },
               }}
             >
-              М
-            </Avatar>
-          </IconButton>
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                Створити
+              </Box>
+            </Button>
+          )}
+
+          {/* Notifications - показуємо тільки для авторизованих користувачів */}
+          {user && (
+            <IconButton
+              onClick={handleNotificationsOpen}
+              sx={{
+                background: alpha(theme.palette.grey[500], 0.1),
+                '&:hover': {
+                  background: alpha(theme.palette.grey[500], 0.2),
+                },
+              }}
+            >
+              <Badge badgeContent={2} color="error">
+                <Bell size={20} />
+              </Badge>
+            </IconButton>
+          )}
+
+          {/* User Menu або Login Button */}
+          {user ? (
+            <IconButton
+              onClick={handleUserMenuOpen}
+              sx={{
+                background: alpha(theme.palette.primary.main, 0.1),
+                '&:hover': {
+                  background: alpha(theme.palette.primary.main, 0.2),
+                },
+              }}
+            >
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                }}
+              >
+                {profile?.full_name ? profile.full_name[0].toUpperCase() : user.email?.[0].toUpperCase()}
+              </Avatar>
+            </IconButton>
+          ) : (
+            <Button
+              onClick={handleAuthModalOpen}
+              variant="contained"
+              size="small"
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                '&:hover': {
+                  background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+                  boxShadow: `0 6px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
+                },
+              }}
+            >
+              Увійти
+            </Button>
+          )}
         </Stack>
       </Toolbar>
 
@@ -346,24 +415,31 @@ const Header: React.FC<HeaderProps> = ({
                 fontWeight: 600,
               }}
             >
-              М
+              {profile?.full_name ? profile.full_name[0].toUpperCase() : user?.email?.[0].toUpperCase()}
             </Avatar>
             <Box>
               <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                Марія Петренко
+                {profile?.full_name || 'Користувач'}
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                maria@example.com
+                {user?.email}
               </Typography>
               <Chip
-                label="Professional"
+                label={profile?.subscription_type === 'free' ? 'Безкоштовний' : 
+                      profile?.subscription_type === 'professional' ? 'Професійний' : 'Преміум'}
                 size="small"
                 sx={{
                   mt: 0.5,
                   height: 20,
                   fontSize: '0.7rem',
-                  background: alpha(theme.palette.success.main, 0.1),
-                  color: theme.palette.success.main,
+                  background: alpha(
+                    profile?.subscription_type === 'free' ? theme.palette.grey[500] :
+                    profile?.subscription_type === 'professional' ? theme.palette.primary.main :
+                    theme.palette.success.main, 0.1
+                  ),
+                  color: profile?.subscription_type === 'free' ? theme.palette.grey[700] :
+                         profile?.subscription_type === 'professional' ? theme.palette.primary.main :
+                         theme.palette.success.main,
                 }}
               />
             </Box>
@@ -383,11 +459,17 @@ const Header: React.FC<HeaderProps> = ({
             </ListItemIcon>
             Налаштування
           </MenuItem>
+          <MenuItem onClick={handleMigrationDialogOpen} sx={{ borderRadius: '8px', mb: 0.5 }}>
+            <ListItemIcon>
+              <Settings size={18} />
+            </ListItemIcon>
+            Міграція даних
+          </MenuItem>
           
           <Divider sx={{ my: 1 }} />
           
           <MenuItem
-            onClick={handleUserMenuClose}
+            onClick={handleSignOut}
             sx={{
               borderRadius: '8px',
               color: 'error.main',
@@ -403,6 +485,23 @@ const Header: React.FC<HeaderProps> = ({
           </MenuItem>
         </Box>
       </MuiMenu>
+
+      {/* Auth Modal */}
+      <AuthModal
+        open={authModalOpen}
+        onClose={handleAuthModalClose}
+        onSuccess={handleAuthModalClose}
+      />
+
+      {/* Migration Dialog */}
+      <MigrationDialog
+        open={migrationDialogOpen}
+        onClose={handleMigrationDialogClose}
+        onMigrationComplete={(result) => {
+          console.log('Migration completed:', result);
+          // Можна додати сповіщення про результат
+        }}
+      />
     </AppBar>
   );
 };

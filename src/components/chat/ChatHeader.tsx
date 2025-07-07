@@ -34,7 +34,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         p: 3,
         borderRadius: 0,
         borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        backgroundColor: 'white',
+        backgroundColor: '#ffffff',
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -47,7 +47,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
             }}
           >
-            <Bot size={24} color="white" />
+            <Bot size={24} color="#ffffff" />
           </Avatar>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>

@@ -41,10 +41,33 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
   const theme = useTheme();
 
   const handleSave = () => {
+    console.log('🎯 SAVE DIALOG: Save button clicked');
+    console.log('📋 SAVE DIALOG: Current dialog data:', {
+      title: dialogData.title,
+      description: dialogData.description,
+      subject: dialogData.subject,
+      ageGroup: dialogData.ageGroup,
+      selectedPreviewId: dialogData.selectedPreviewId,
+      hasPreviewUrl: !!dialogData.previewUrl,
+      previewUrlLength: dialogData.previewUrl?.length || 0
+    });
+    console.log('🎨 SAVE DIALOG: Selected slides:', selectedSlides.map(slide => ({
+      id: slide.id,
+      title: slide.title,
+      type: slide.type,
+      hasHtmlContent: !!slide.htmlContent
+    })));
+    console.log('🖼️ SAVE DIALOG: Cached previews:', Object.keys(cachedPreviews).map(key => ({
+      slideId: key,
+      hasPreview: !!cachedPreviews[key],
+      previewSize: cachedPreviews[key]?.length || 0
+    })));
+    
     onSave(dialogData);
   };
 
   const handleInputChange = (field: keyof SaveLessonDialogData, value: string) => {
+    console.log(`📝 SAVE DIALOG: Field changed - ${field}:`, value);
     onDataChange({ [field]: value });
   };
 

@@ -6,6 +6,7 @@ import { useTheme } from '@mui/material/styles';
 
 // Layout
 import Layout from '@/components/layout/Layout';
+import { ProtectedPage } from '@/components/auth';
 
 // Нові модульні компоненти
 import ChatHeader from '@/components/chat/ChatHeader';
@@ -69,11 +70,15 @@ const ChatInterface: React.FC = () => {
 
   // Обробка збереження уроку з результатом
   const handleSaveLesson = async () => {
+    console.log('💾 CHAT PAGE: Save lesson triggered');
+    console.log('📋 CHAT PAGE: Save dialog data:', saveDialogData);
+    
     try {
       const resultMessage = await saveSelectedSlides(saveDialogData);
+      console.log('✅ CHAT PAGE: Save completed successfully, adding result message');
       setMessages(prev => [...prev, resultMessage]);
     } catch (error) {
-      console.error('Помилка збереження уроку:', error);
+      console.error('❌ CHAT PAGE: Save failed:', error);
       const errorMessage: Message = {
         id: generateMessageId(),
         text: `❌ **Помилка збереження**\n\n${error instanceof Error ? error.message : 'Невідома помилка'}`,
@@ -87,11 +92,12 @@ const ChatInterface: React.FC = () => {
   };
 
   return (
-    <Layout 
-      title="Чат з ШІ" 
-      breadcrumbs={[{ label: 'Головна', href: '/' }, { label: 'Чат' }]}
-      noPadding={true}
-    >
+    <ProtectedPage>
+      <Layout 
+        title="Чат з ШІ" 
+        breadcrumbs={[{ label: 'Головна', href: '/' }, { label: 'Чат' }]}
+        noPadding={true}
+      >
             <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           {/* Основна область чату */}
@@ -218,6 +224,7 @@ const ChatInterface: React.FC = () => {
         />
       </Box>
     </Layout>
+    </ProtectedPage>
   );
 };
 
