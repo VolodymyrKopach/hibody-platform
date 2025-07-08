@@ -4,19 +4,11 @@ import { createClient } from '@/lib/supabase/server'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { token, password } = body
+    const { password } = body
 
-    // Валідація вхідних даних
-    if (!token || typeof token !== 'string') {
-      return NextResponse.json({
-        success: false,
-        error: { 
-          message: 'Токен обов\'язковий',
-          code: 'MISSING_TOKEN'
-        }
-      }, { status: 400 })
-    }
+    console.log('Reset password API called')
 
+    // Валідація пароля
     if (!password || typeof password !== 'string') {
       return NextResponse.json({
         success: false,
@@ -27,7 +19,6 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Валідація пароля
     if (password.length < 6) {
       return NextResponse.json({
         success: false,
@@ -70,62 +61,58 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Спочатку верифікуємо OTP токен
-    const { data: sessionData, error: verifyError } = await supabase.auth.verifyOtp({
-      token_hash: token,
-      type: 'recovery'
-    })
-
-    if (verifyError || !sessionData.user) {
-      console.error('Error verifying reset token:', verifyError)
-      
-      if (verifyError?.message.includes('expired')) {
-        return NextResponse.json({
-          success: false,
-          error: { 
-            message: 'Токен для скидання пароля застарілий',
-            code: 'TOKEN_EXPIRED'
-          }
-        }, { status: 400 })
-      }
-
-      if (verifyError?.message.includes('invalid')) {
-        return NextResponse.json({
-          success: false,
-          error: { 
-            message: 'Недійсний токен для скидання пароля',
-            code: 'TOKEN_INVALID'
-          }
-        }, { status: 400 })
-      }
-
+    // Перевіряємо чи користувач автентифікований
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      console.log('User not authenticated for password reset')
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Помилка при верифікації токену',
-          code: 'TOKEN_VERIFICATION_ERROR'
+          message: 'Користувач не автентифікований. Перейдіть за посиланням з email ще раз.',
+          code: 'USER_NOT_AUTHENTICATED'
         }
-      }, { status: 400 })
+      }, { status: 401 })
     }
 
-    // Тепер оновлюємо пароль для верифікованого користувача
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: password
-    })
+    console.log('User authenticated for password reset:', user.email)
 
-    if (updateError) {
-      console.error('Error updating password:', updateError)
+    // Оновлюємо пароль для автентифікованого користувача
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password
+      })
 
-      if (updateError.message.includes('same as the old password')) {
+      if (updateError) {
+        console.error('Password update failed:', updateError)
+        
+        if (updateError.message.includes('same as the old password')) {
+          return NextResponse.json({
+            success: false,
+            error: { 
+              message: 'Новий пароль повинен відрізнятися від поточного',
+              code: 'SAME_PASSWORD'
+            }
+          }, { status: 400 })
+        }
+
         return NextResponse.json({
           success: false,
           error: { 
-            message: 'Новий пароль повинен відрізнятися від поточного',
-            code: 'SAME_PASSWORD'
+            message: 'Помилка при оновленні пароля: ' + updateError.message,
+            code: 'PASSWORD_UPDATE_ERROR'
           }
-        }, { status: 400 })
+        }, { status: 500 })
       }
 
+      console.log('Password reset successful for user:', user.email)
+      return NextResponse.json({
+        success: true,
+        message: 'Пароль успішно оновлено'
+      })
+
+    } catch (updateErr) {
+      console.error('Password update error:', updateErr)
       return NextResponse.json({
         success: false,
         error: { 
@@ -134,11 +121,6 @@ export async function POST(request: NextRequest) {
         }
       }, { status: 500 })
     }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Пароль успішно оновлено'
-    })
 
   } catch (error) {
     console.error('Error in reset-password POST:', error)

@@ -180,10 +180,10 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToLogin }
             py: 1.5,
             mb: 3,
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(129, 140, 248) 100%)',
+            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
             boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
             '&:hover': {
-              background: 'linear-gradient(135deg, rgb(79, 82, 221) 0%, rgb(109, 120, 228) 100%)',
+              background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
               boxShadow: `0 6px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
             },
           }}

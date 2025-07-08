@@ -31,9 +31,14 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
+    // Динамічно отримуємо host з request
+    const protocol = request.headers.get('x-forwarded-proto') || 'http'
+    const host = request.headers.get('host') || 'localhost:3000'
+    const baseUrl = `${protocol}://${host}`
+
     // Відправляємо запит на скидання пароля через Supabase
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset-password`,
+      redirectTo: `${baseUrl}/auth/reset-password`,
     })
 
     if (error) {

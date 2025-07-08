@@ -31,6 +31,8 @@ export async function updateSession(request: NextRequest) {
   const publicRoutes = [
     '/auth/login',
     '/auth/register',
+    '/auth/forgot-password',
+    '/auth/reset-password',
     '/test',
     '/api',
     '/_next',
