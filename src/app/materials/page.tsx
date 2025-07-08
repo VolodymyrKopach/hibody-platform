@@ -36,6 +36,7 @@ import {
 } from '@mui/material';
 import Layout from '@/components/layout/Layout';
 import { ProtectedPage } from '@/components/auth';
+import { useAuth } from '@/providers/AuthProvider';
 import { useSupabaseLessons, DatabaseLesson } from '@/hooks/useSupabaseLessons';
 import {
   Search,
@@ -55,7 +56,11 @@ import {
   Users,
   Heart,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
+import { SlideDialog } from '@/components/slides';
+import { SimpleLesson, SimpleSlide } from '@/types/chat';
 
 interface Material {
   id: number;
@@ -82,6 +87,7 @@ const MyMaterials = () => {
   
   const theme = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -91,8 +97,9 @@ const MyMaterials = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [materialToDelete, setMaterialToDelete] = useState<Material | null>(null);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
-  const [selectedLessonForPreview, setSelectedLessonForPreview] = useState<DatabaseLesson | null>(null);
+  const [selectedLessonForPreview, setSelectedLessonForPreview] = useState<SimpleLesson | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+
   
   // Стани для редагування метаданих
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -125,10 +132,37 @@ const MyMaterials = () => {
   
   // Додаємо стейт для відстеження ініціалізації
   const [isInitialized, setIsInitialized] = useState(false);
+  // Додаємо стейт для відстеження першого завантаження
+  const [hasStartedLoading, setHasStartedLoading] = useState(false);
 
   // Функція для очистки ageGroup від приставки "років"
   const cleanAgeGroup = (ageGroup: string): string => {
     return ageGroup.replace(/\s+років$/i, '').trim();
+  };
+
+  // Функція конвертації уроку з бази в формат SimpleLesson для SlideDialog
+  const convertToSimpleLesson = (dbLesson: any): SimpleLesson => {
+    const slides: SimpleSlide[] = (dbLesson.slides || []).map((slide: any) => ({
+      id: slide.id,
+      title: slide.title || 'Слайд без назви',
+      content: slide.description || '',
+      htmlContent: slide.html_content || '<div style="padding: 20px; text-align: center;">Контент слайду недоступний</div>',
+      type: slide.type || 'content',
+      status: slide.status || 'ready'
+    }));
+
+    return {
+      id: dbLesson.id,
+      title: dbLesson.title,
+      description: dbLesson.description || '',
+      subject: dbLesson.subject,
+      ageGroup: dbLesson.age_group,
+      duration: dbLesson.duration || 30,
+      slides,
+      createdAt: new Date(dbLesson.created_at),
+      updatedAt: new Date(dbLesson.updated_at),
+      authorId: dbLesson.user_id || 'unknown'
+    };
   };
 
   // Функція для перетворення database lessons в materials
@@ -186,15 +220,16 @@ const MyMaterials = () => {
     return convertedMaterials;
   };
 
+  // Відстежуємо початок завантаження
+  useEffect(() => {
+    if (isLoading && !hasStartedLoading) {
+      setHasStartedLoading(true);
+    }
+  }, [isLoading, hasStartedLoading]);
+
   // Оновлюємо materials коли змінюються dbLessons
   useEffect(() => {
     console.log('🔄 MATERIALS PAGE: useEffect triggered');
-    console.log('📡 Hook states:', {
-      isLoading,
-      dbError,
-      dbLessons_length: dbLessons.length,
-      isInitialized
-    });
     
     if (dbLessons.length > 0) {
       console.log('✅ Processing lessons from database...');
@@ -206,12 +241,12 @@ const MyMaterials = () => {
       setMaterials([]);
     }
     
-    // Позначаємо як ініціалізовано тільки після завершення першого завантаження
-    if (!isLoading && !isInitialized) {
+    // Позначаємо як ініціалізовано коли завантаження почалося і завершилося
+    if (hasStartedLoading && !isLoading && !isInitialized) {
       console.log('🚀 Setting page as initialized');
       setIsInitialized(true);
     }
-  }, [dbLessons, isLoading, dbError, isInitialized]);
+  }, [dbLessons, isLoading, dbError, isInitialized, hasStartedLoading, user]);
 
   // Додаємо таймаут для loading стану
   useEffect(() => {
@@ -420,15 +455,62 @@ const MyMaterials = () => {
     setEditFormData({ title: '', description: '', subject: '', ageGroup: '' });
   };
 
-  const handlePreviewLesson = (material: Material) => {
-    // Знаходимо відповідний урок в базі даних
-    const lesson = dbLessons.find(l => l.id === material.lessonId);
-    
-    if (lesson) {
-      setSelectedLessonForPreview(lesson);
+  const handlePreviewLesson = async (material: Material) => {
+    if (!material.lessonId) {
+      console.error('No lesson ID found for material:', material);
+      return;
+    }
+
+    try {
+      console.log('🔍 Loading lesson with slides for ID:', material.lessonId);
+      
+      // Завантажуємо урок зі слайдами через API
+      const response = await fetch(`/api/lessons?id=${material.lessonId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch lesson details');
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success || !data.lesson) {
+        throw new Error('Lesson not found');
+      }
+      
+      console.log('✅ Lesson loaded with slides:', {
+        id: data.lesson.id,
+        title: data.lesson.title,
+        slides_count: data.lesson.slides?.length || 0,
+        slides: data.lesson.slides?.map((slide: any, index: number) => ({
+          index: index,
+          id: slide.id,
+          title: slide.title,
+          has_html_content: !!slide.html_content,
+          html_content_length: slide.html_content?.length || 0,
+          slide_number: slide.slide_number
+        }))
+      });
+      
+      const simpleLesson = convertToSimpleLesson(data.lesson);
+      setSelectedLessonForPreview(simpleLesson);
       setCurrentSlideIndex(0);
       setPreviewDialogOpen(true);
+      
+      // Додаткове логування при відкритті діалогу
+      console.log('🔍 Dialog opened with lesson:', {
+        lessonTitle: simpleLesson.title,
+        slidesArray: simpleLesson.slides,
+        slidesLength: simpleLesson.slides?.length,
+        slidesType: typeof simpleLesson.slides,
+        isArray: Array.isArray(simpleLesson.slides),
+        firstSlide: simpleLesson.slides?.[0]
+      });
+      
       // TODO: Implement view increment in API
+    } catch (error) {
+      console.error('❌ Error loading lesson:', error);
+      // Показуємо повідомлення про помилку користувачу
+      // Тут можна додати показ snackbar або іншого повідомлення
     }
   };
 
@@ -479,7 +561,9 @@ const MyMaterials = () => {
     return (
       <Card
         key={material.id}
-        onClick={() => handlePreviewLesson(material)}
+        onClick={() => {
+          handlePreviewLesson(material);
+        }}
         sx={{
           borderRadius: '16px',
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
@@ -768,6 +852,8 @@ const MyMaterials = () => {
     );
   }
 
+
+
   return (
     <ProtectedPage>
       <Layout title="Мої матеріали" breadcrumbs={[{ label: 'Мої матеріали' }]}>
@@ -873,7 +959,7 @@ const MyMaterials = () => {
           </Paper>
 
           {/* Materials Grid */}
-          {isLoading && !isInitialized ? (
+          {!isInitialized ? (
             <Box sx={{ 
               display: 'flex', 
               flexDirection: 'column', 
@@ -1149,155 +1235,15 @@ const MyMaterials = () => {
             </DialogActions>
           </Dialog>
 
-          {/* Lesson Preview Dialog */}
-          <Dialog
+          {/* Lesson Preview Dialog - використовуємо SlideDialog як в чаті */}
+          <SlideDialog
             open={previewDialogOpen}
+            currentLesson={selectedLessonForPreview}
+            currentSlideIndex={currentSlideIndex}
             onClose={handleClosePreview}
-            maxWidth={false}
-            PaperProps={{
-              sx: { 
-                borderRadius: '16px',
-                maxHeight: '90vh',
-                width: '1100px',
-                maxWidth: '95vw',
-                margin: 'auto'
-              }
-            }}
-          >
-            <DialogTitle sx={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-              pb: 2
-            }}>
-              <Box>
-                <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                  {selectedLessonForPreview?.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  Слайд {currentSlideIndex + 1} з {selectedLessonForPreview?.slides?.length || 0}
-                </Typography>
-              </Box>
-              <IconButton onClick={handleClosePreview}>
-                <X size={24} />
-              </IconButton>
-            </DialogTitle>
-            
-            <DialogContent sx={{ p: 0 }}>
-              {selectedLessonForPreview && selectedLessonForPreview.slides && selectedLessonForPreview.slides.length > 0 ? (
-                <Box sx={{ 
-                  display: 'flex',
-                  flexDirection: 'column'
-                }}>
-                  {/* Slide Content */}
-                  <Box sx={{ 
-                    p: 3,
-                    backgroundColor: alpha(theme.palette.grey[50], 0.5),
-                    maxHeight: '70vh',
-                    overflow: 'auto'
-                  }}>
-                    <Paper 
-                      elevation={0}
-                      sx={{ 
-                        p: 4, 
-                        borderRadius: '12px',
-                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                        backgroundColor: '#ffffff'
-                      }}
-                    >
-                      <Box sx={{ 
-                        width: '100%', 
-                        height: '600px',
-                        overflow: 'auto',
-                        borderRadius: '8px',
-                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
-                      }}>
-                        <iframe
-                          srcDoc={selectedLessonForPreview.slides[currentSlideIndex]?.html_content || ''}
-                          style={{
-                            width: '1200px',
-                            height: '800px',
-                            border: 'none',
-                            borderRadius: '8px',
-                            transform: 'scale(0.83)',
-                            transformOrigin: 'top left',
-                          }}
-                          title={`Slide ${currentSlideIndex + 1}: ${selectedLessonForPreview.slides[currentSlideIndex]?.title}`}
-                          sandbox="allow-scripts allow-same-origin"
-                        />
-                      </Box>
-                    </Paper>
-                  </Box>
-                  
-                  {/* Navigation Controls */}
-                  <Box sx={{ 
-                    p: 3,
-                    borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                    backgroundColor: '#ffffff',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <Button
-                      startIcon={<X size={20} />}
-                      onClick={goToPrevSlide}
-                      disabled={currentSlideIndex === 0}
-                      sx={{ 
-                        textTransform: 'none',
-                        borderRadius: '8px'
-                      }}
-                    >
-                      Попередній
-                    </Button>
-                    
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                      {selectedLessonForPreview.slides.map((_, index) => (
-                        <Box
-                          key={index}
-                          onClick={() => setCurrentSlideIndex(index)}
-                          sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: '50%',
-                            backgroundColor: index === currentSlideIndex 
-                              ? theme.palette.primary.main 
-                              : alpha(theme.palette.grey[400], 0.5),
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                              backgroundColor: index === currentSlideIndex 
-                                ? theme.palette.primary.dark 
-                                : theme.palette.grey[400],
-                              transform: 'scale(1.2)'
-                            }
-                          }}
-                        />
-                      ))}
-                    </Box>
-                    
-                    <Button
-                      endIcon={<X size={20} />}
-                      onClick={goToNextSlide}
-                      disabled={!selectedLessonForPreview.slides || currentSlideIndex === selectedLessonForPreview.slides.length - 1}
-                      sx={{ 
-                        textTransform: 'none',
-                        borderRadius: '8px'
-                      }}
-                    >
-                      Наступний
-                    </Button>
-                  </Box>
-                </Box>
-              ) : (
-                <Box sx={{ p: 4, textAlign: 'center' }}>
-                  <Typography variant="h6" color="text.secondary">
-                    Слайди не знайдено
-                  </Typography>
-                </Box>
-              )}
-            </DialogContent>
-          </Dialog>
+            onNextSlide={goToNextSlide}
+            onPrevSlide={goToPrevSlide}
+          />
         </Box>
       </Layout>
     </ProtectedPage>
