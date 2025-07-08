@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   List,
@@ -15,21 +15,13 @@ import {
   Collapse,
   Drawer,
   IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
-  Home,
   MessageSquare,
   FileText,
-  BookTemplate,
-  BarChart,
   Settings,
   User,
-  ChevronDown,
-  ChevronRight,
-  Bookmark,
-  Search,
-  Plus,
-  Star,
   X
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -45,39 +37,17 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const theme = useTheme();
   const pathname = usePathname();
-  const [templatesExpanded, setTemplatesExpanded] = useState(false);
 
   const menuItems = [
-    {
-      label: 'Головна',
-      icon: Home,
-      href: '/',
-      exact: true
-    },
     {
       label: 'AI Чат',
       icon: MessageSquare,
       href: '/chat'
     },
     {
-      label: 'AI Зображення',
-      icon: Star,
-      href: '/images'
-    },
-    {
       label: 'Мої матеріали',
       icon: FileText,
       href: '/materials'
-    },
-    {
-      label: 'Шаблони',
-      icon: BookTemplate,
-      href: '/templates'
-    },
-    {
-      label: 'Аналітика',
-      icon: BarChart,
-      href: '/analytics'
     }
   ];
 
@@ -101,43 +71,42 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
     return pathname.startsWith(href);
   };
 
-  const handleTemplatesClick = () => {
-    setTemplatesExpanded(!templatesExpanded);
-  };
+
 
   const renderMenuItem = (item: any, index: number) => {
     const Icon = item.icon;
     const active = isActive(item.href, item.exact);
 
-    return (
-      <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-        <ListItemButton
-          component={Link}
-          href={item.href}
+    const menuButton = (
+      <ListItemButton
+        component={Link}
+        href={item.href}
+        sx={{
+          minHeight: 48,
+          px: isCollapsed ? 1.5 : 2.5,
+          borderRadius: '12px',
+          mx: 1,
+          mb: 0.5,
+          backgroundColor: active ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+          color: active ? theme.palette.primary.main : theme.palette.text.secondary,
+          justifyContent: isCollapsed ? 'center' : 'flex-start',
+          '&:hover': {
+            backgroundColor: alpha(theme.palette.primary.main, 0.05),
+            color: theme.palette.primary.main,
+          },
+        }}
+      >
+        <ListItemIcon
           sx={{
-            minHeight: 48,
-            px: 2.5,
-            borderRadius: '12px',
-            mx: 1,
-            mb: 0.5,
-            backgroundColor: active ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-            color: active ? theme.palette.primary.main : theme.palette.text.secondary,
-            '&:hover': {
-              backgroundColor: alpha(theme.palette.primary.main, 0.05),
-              color: theme.palette.primary.main,
-            },
+            minWidth: 0,
+            mr: isCollapsed ? 0 : 2,
+            justifyContent: 'center',
+            color: 'inherit',
           }}
         >
-          <ListItemIcon
-            sx={{
-              minWidth: 0,
-              mr: 2,
-              justifyContent: 'center',
-              color: 'inherit',
-            }}
-          >
-            <Icon size={20} />
-          </ListItemIcon>
+          <Icon size={20} />
+        </ListItemIcon>
+        {!isCollapsed && (
           <ListItemText 
             primary={item.label} 
             sx={{ 
@@ -148,7 +117,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
               }
             }} 
           />
-        </ListItemButton>
+        )}
+      </ListItemButton>
+    );
+
+    return (
+      <ListItem key={index} disablePadding sx={{ display: 'block' }}>
+        {isCollapsed ? (
+          <Tooltip title={item.label} placement="right" arrow>
+            {menuButton}
+          </Tooltip>
+        ) : (
+          menuButton
+        )}
       </ListItem>
     );
   };
@@ -169,7 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
       <Box
         sx={{
           display: { xs: 'flex', lg: 'none' },
-          justifyContent: 'flex-end',
+          justifyContent: isCollapsed ? 'center' : 'flex-end',
           p: 1,
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
         }}
@@ -198,7 +179,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
 
       {/* Bottom menu */}
       <Box sx={{ pb: 2 }}>
-        <Divider sx={{ mx: 2, mb: 2 }} />
+        <Divider sx={{ mx: isCollapsed ? 1 : 2, mb: 2 }} />
         <List>
           {bottomMenuItems.map((item, index) => renderMenuItem(item, index))}
         </List>
