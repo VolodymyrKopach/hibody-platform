@@ -17,6 +17,7 @@ interface SimpleSlide {
   type: 'title' | 'content' | 'interactive' | 'summary';
   status: 'completed' | 'draft';
   previewUrl?: string;
+  thumbnailUrl?: string; // Додаємо thumbnailUrl з бази даних
 }
 
 interface SlideCardProps {
@@ -76,9 +77,9 @@ const SlideCard: React.FC<SlideCardProps> = ({
         borderRadius: '12px 12px 0 0'   // Округлені кути тільки зверху
       }}>
         {/* Реальне превью слайду */}
-        {previewUrl && !isUpdating ? (
+        {(previewUrl || slide.thumbnailUrl) && !isUpdating ? (
           <img
-            src={previewUrl}
+            src={previewUrl || slide.thumbnailUrl}
             alt={`Превью слайду ${index + 1}`}
             style={{
               width: '100%',

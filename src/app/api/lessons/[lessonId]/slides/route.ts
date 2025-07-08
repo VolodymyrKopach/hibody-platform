@@ -35,6 +35,7 @@ function convertToLegacySlide(dbSlide: any): LessonSlide {
     icon: dbSlide.icon,
     status: dbSlide.status as any,
     preview: dbSlide.preview_text || dbSlide.description || '',
+
     _internal: {
       filename: `slide_${dbSlide.slide_number}_${dbSlide.title.toLowerCase().replace(/\s+/g, '_')}.html`,
       htmlContent: dbSlide.html_content || '',

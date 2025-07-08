@@ -1,16 +1,15 @@
--- Створення bucket для збереження ресурсів уроків
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-  'lesson-assets',
-  'lesson-assets',
-  true,
-  10485760, -- 10MB limit
-  ARRAY['image/png', 'image/jpeg', 'image/webp', 'image/gif']
-);
+-- Виправлення RLS політик для Supabase Storage
+-- Проблема: попередні політики очікували user_id як першу папку,
+-- але ми використовуємо lesson-thumbnails/ та lessons/
 
--- Політики доступу для bucket lesson-assets
--- Дозволяємо користувачам завантажувати файли в свої власні папки (по user_id) 
--- або в загальні папки для thumbnail'ів уроків
+-- Видаляємо старі політики
+DROP POLICY IF EXISTS "Users can upload their own lesson assets" ON storage.objects;
+DROP POLICY IF EXISTS "Users can view their own lesson assets" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own lesson assets" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own lesson assets" ON storage.objects;
+DROP POLICY IF EXISTS "Public access to lesson thumbnails" ON storage.objects;
+
+-- Створюємо нові політики з підтримкою lesson-thumbnails/ та lessons/
 CREATE POLICY "Users can upload lesson assets" ON storage.objects
 FOR INSERT WITH CHECK (
   bucket_id = 'lesson-assets' AND (
@@ -59,11 +58,11 @@ FOR DELETE USING (
   )
 );
 
--- Публічний доступ для читання всіх файлів уроків
+-- Публічний доступ для читання файлів уроків
 CREATE POLICY "Public access to lesson files" ON storage.objects
 FOR SELECT USING (
   bucket_id = 'lesson-assets' AND (
     (storage.foldername(name))[1] = 'lesson-thumbnails' OR
     (storage.foldername(name))[1] = 'lessons'
   )
-);
+); 

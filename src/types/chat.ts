@@ -21,6 +21,7 @@ export interface SimpleSlide {
   type: 'title' | 'content' | 'interactive' | 'summary';
   status: 'completed' | 'draft';
   previewUrl?: string;
+  thumbnailUrl?: string; // Додаємо thumbnailUrl з бази даних
   updatedAt?: Date;
 }
 

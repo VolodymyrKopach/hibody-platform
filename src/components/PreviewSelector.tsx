@@ -11,13 +11,14 @@ import {
   IconButton
 } from '@mui/material';
 import { Check, ImageIcon, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { generateSlideThumbnail, generateFallbackPreview } from '@/utils/slidePreview';
+import { generateFallbackPreview } from '@/utils/slidePreview';
 
 interface SlideData {
   id: string;
   title: string;
   htmlContent: string;
   type: string;
+  thumbnailUrl?: string; // Додаємо thumbnailUrl з бази даних
 }
 
 interface PreviewSelectorProps {
@@ -25,7 +26,7 @@ interface PreviewSelectorProps {
   selectedPreviewId: string | null;
   onPreviewSelect: (slideId: string, previewUrl: string) => void;
   disabled?: boolean;
-  cachedPreviews?: Record<string, string>; // Додаємо кешовані превью
+  cachedPreviews?: Record<string, string>; // Зовнішні кешовані превью
 }
 
 interface PreviewState {
@@ -43,88 +44,64 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
 }) => {
   const theme = useTheme();
   const [previews, setPreviews] = useState<Record<string, PreviewState>>({});
-  const [isInitialGeneration, setIsInitialGeneration] = useState(true);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   // Memoize slides to prevent unnecessary re-renders
   const memoizedSlides = useMemo(() => slides, [slides]);
 
-  // Generate previews once when slides change
+  // Спрощена логіка завантаження превью - використовуємо тільки кешовані/DB превью
   useEffect(() => {
-    const generatePreviews = async () => {
-      if (memoizedSlides.length === 0) return;
+    console.log('🎯 PREVIEW SELECTOR: Loading cached previews', {
+      slidesCount: memoizedSlides.length,
+      slideIds: memoizedSlides.map(s => s.id),
+      cachedPreviewsCount: Object.keys(cachedPreviews).length,
+      cachedPreviewIds: Object.keys(cachedPreviews),
+      selectedPreviewId,
+      timestamp: new Date().toISOString()
+    });
 
-      setIsInitialGeneration(true);
+    if (memoizedSlides.length === 0) {
+      console.log('❌ PREVIEW SELECTOR: No slides to process, exiting');
+      return;
+    }
+
+    // Ініціалізуємо превью з кешу або з thumbnailUrl слайдів
+    const initialPreviews: Record<string, PreviewState> = {};
+    
+    memoizedSlides.forEach(slide => {
+      let previewUrl = '';
       
-      // Initialize loading state for all slides
-      const initialPreviews = memoizedSlides.reduce((acc, slide) => {
-        // Використовуємо кешоване превью якщо воно існує
-        if (cachedPreviews[slide.id]) {
-          acc[slide.id] = { url: cachedPreviews[slide.id], loading: false, error: false };
-        }
-        // Keep existing preview if it exists and is not loading/error
-        else if (previews[slide.id] && !previews[slide.id].loading && !previews[slide.id].error) {
-          acc[slide.id] = previews[slide.id];
-        } else {
-          acc[slide.id] = { url: '', loading: true, error: false };
-        }
-        return acc;
-      }, {} as Record<string, PreviewState>);
-      
-      setPreviews(initialPreviews);
-
-      // Generate previews for slides that need them
-      for (const slide of memoizedSlides) {
-        // Skip if preview already exists (from cache or previous generation) and is valid
-        if (initialPreviews[slide.id].url && !initialPreviews[slide.id].loading && !initialPreviews[slide.id].error) {
-          continue;
-        }
-
-        try {
-          const thumbnailUrl = await generateSlideThumbnail(slide.htmlContent, {
-            width: 640,        // Стандартна ширина для превью
-            height: 480,       // Стандартна висота для превью
-            quality: 0.85,
-            background: '#ffffff'
-          });
-
-          setPreviews(prev => ({
-            ...prev,
-            [slide.id]: { url: thumbnailUrl, loading: false, error: false }
-          }));
-
-          // Set first slide as default preview if no preview is selected
-          if (slide.id === memoizedSlides[0]?.id && !selectedPreviewId) {
-            console.log('🎯 PREVIEW SELECTOR: Auto-selecting first slide preview:', slide.id);
-            onPreviewSelect(slide.id, thumbnailUrl);
-          }
-        } catch (error) {
-          console.error(`Помилка генерації превью для слайду ${slide.id}:`, error);
-          
-          const fallbackUrl = generateFallbackPreview();
-          
-          setPreviews(prev => ({
-            ...prev,
-            [slide.id]: { url: fallbackUrl, loading: false, error: true }
-          }));
-
-          // Set fallback as default if it's the first slide and no preview is selected
-          if (slide.id === memoizedSlides[0]?.id && !selectedPreviewId) {
-            console.log('🎯 PREVIEW SELECTOR: Auto-selecting first slide fallback:', slide.id);
-            onPreviewSelect(slide.id, fallbackUrl);
-          }
-        }
+      // Пріоритет: 1) cachedPreviews, 2) slide.thumbnailUrl, 3) fallback
+      if (cachedPreviews[slide.id]) {
+        previewUrl = cachedPreviews[slide.id];
+        console.log(`✅ PREVIEW SELECTOR: Using cached preview for slide ${slide.id}`);
+      } else if (slide.thumbnailUrl) {
+        previewUrl = slide.thumbnailUrl;
+        console.log(`💾 PREVIEW SELECTOR: Using database thumbnailUrl for slide ${slide.id}`);
+      } else {
+        previewUrl = generateFallbackPreview();
+        console.log(`🎨 PREVIEW SELECTOR: Using fallback preview for slide ${slide.id}`);
       }
+      
+      initialPreviews[slide.id] = {
+        url: previewUrl,
+        loading: false,
+        error: !previewUrl || previewUrl === generateFallbackPreview()
+      };
+    });
 
-      setIsInitialGeneration(false);
-    };
+    setPreviews(initialPreviews);
 
-    generatePreviews();
-  }, [memoizedSlides, cachedPreviews]); // Видалили залежності, що можуть спричинити циклічну генерацію
-
-
-
-
+    // Автоматично вибираємо перший слайд якщо нічого не вибрано
+    if (!selectedPreviewId && memoizedSlides.length > 0) {
+      const firstSlide = memoizedSlides[0];
+      const firstPreview = initialPreviews[firstSlide.id];
+      if (firstPreview?.url) {
+        console.log('🎯 PREVIEW SELECTOR: Auto-selecting first slide preview:', firstSlide.id);
+        onPreviewSelect(firstSlide.id, firstPreview.url);
+      }
+    }
+  }, [memoizedSlides, cachedPreviews, selectedPreviewId, onPreviewSelect]);
 
   const getSlideTypeIcon = useCallback((type: string) => {
     const icons = {
@@ -309,8 +286,6 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
             </IconButton>
           )}
 
-
-
           {/* Вибір поточного слайду */}
           <Box sx={{
             position: 'absolute',
@@ -374,8 +349,6 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
           ))}
         </Box>
       )}
-
-
 
       {/* Повідомлення про відсутність слайдів */}
       {memoizedSlides.length === 0 && (
