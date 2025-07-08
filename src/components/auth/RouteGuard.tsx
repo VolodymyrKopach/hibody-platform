@@ -18,7 +18,8 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
   const publicRoutes = [
     '/auth/login',
     '/auth/register', 
-    '/test'
+    '/test',
+    '/not-found'  // 404 сторінка доступна всім
   ];
 
   // Маршрути тільки для неавторизованих - авторизовані користувачі будуть перенаправлені
@@ -38,6 +39,9 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
   const isPublicRoute = publicRoutes.some(route => pathname?.startsWith(route));
   const isAuthOnlyRoute = authOnlyRoutes.some(route => pathname?.startsWith(route));
   const isProtectedRoute = protectedRoutes.some(route => pathname === route || pathname?.startsWith(route + '/'));
+  
+  // Перевіряємо чи це відома сторінка (не 404)
+  const isKnownRoute = isPublicRoute || isProtectedRoute;
 
   useEffect(() => {
     // Не робимо нічого поки йде завантаження
@@ -45,7 +49,20 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
 
     console.log(`🛡️ RouteGuard: Checking access to ${pathname}`);
     console.log(`🛡️ RouteGuard: User status: ${user ? `Authenticated (${user.email})` : 'Not authenticated'}`);
-    console.log(`🛡️ RouteGuard: Route type: ${isPublicRoute ? 'Public' : isProtectedRoute ? 'Protected' : 'Unknown'}`);
+    
+    // Визначаємо тип маршруту для логування
+    let routeType = 'Unknown';
+    if (isPublicRoute) routeType = 'Public';
+    else if (isProtectedRoute) routeType = 'Protected';
+    else if (!isKnownRoute) routeType = '404/Not Found';
+    
+    console.log(`🛡️ RouteGuard: Route type: ${routeType}`);
+
+    // Якщо це невідомий маршрут (404), дозволяємо показати сторінку 404
+    if (!isKnownRoute) {
+      console.log(`📄 RouteGuard: Unknown route, allowing 404 page to show`);
+      return;
+    }
 
     // Якщо користувач не авторизований і намагається потрапити на захищену сторінку
     if (!user && isProtectedRoute) {
@@ -72,7 +89,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     }
 
     console.log(`✅ RouteGuard: Access granted to ${pathname}`);
-  }, [user, loading, pathname, router, isPublicRoute, isAuthOnlyRoute, isProtectedRoute]);
+  }, [user, loading, pathname, router, isPublicRoute, isAuthOnlyRoute, isProtectedRoute, isKnownRoute]);
 
   // Показуємо loading screen поки йде перевірка авторизації
   if (loading) {
@@ -91,7 +108,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     return <LoadingScreen message="Перенаправлення..." />;
   }
 
-  // В інших випадках показуємо контент
+  // В інших випадках показуємо контент (включаючи 404)
   return <>{children}</>;
 };
 
