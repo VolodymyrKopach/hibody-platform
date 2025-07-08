@@ -143,7 +143,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
           onChange={handleChange}
           required
           disabled={loading}
-          sx={{ mb: 3 }}
+          sx={{ mb: 2 }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -163,6 +163,27 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
             ),
           }}
         />
+
+        {/* Посилання "Забули пароль?" */}
+        <Box sx={{ textAlign: 'right', mb: 3 }}>
+          <Link
+            component="button"
+            type="button"
+            onClick={() => router.push('/auth/forgot-password')}
+            sx={{
+              color: 'text.secondary',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              '&:hover': {
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+            disabled={loading}
+          >
+            Забули пароль?
+          </Link>
+        </Box>
 
         <Button
           type="submit"
