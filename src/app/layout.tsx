@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import MUIThemeProvider from '@/providers/theme-provider';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { RouteGuard } from '@/components/auth';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,7 +26,9 @@ export default function RootLayout({
       <body className={`${inter.variable} antialiased`}>
         <MUIThemeProvider>
           <AuthProvider>
-            {children}
+            <RouteGuard>
+              {children}
+            </RouteGuard>
           </AuthProvider>
         </MUIThemeProvider>
       </body>

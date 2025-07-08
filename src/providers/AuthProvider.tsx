@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { AuthContextType, UserProfile } from '@/types/auth'
 import { SessionManager } from '@/components/auth/SessionManager'
-import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -17,10 +16,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [initialized, setInitialized] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-
-  // Публічні маршрути - не потребують авторизації
-  const publicRoutes = ['/auth/login', '/auth/register', '/test']
-  const isPublicRoute = publicRoutes.some(route => pathname?.startsWith(route))
 
   useEffect(() => {
     let mounted = true
@@ -82,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn('Auth initialization timeout, forcing completion')
         completeInitialization()
       }
-    }, 2000) // Зменшуємо до 2 секунд
+    }, 1000) // Зменшуємо до 1 секунди для швидшого редиректу
 
     // Запускаємо ініціалізацію
     initializeAuth()
@@ -255,12 +250,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshSession,
   }
 
-  // Показуємо loading екран поки йде ініціалізація авторизації
-  // але тільки на захищених сторінках
-  if (loading && !isPublicRoute) {
-    return <LoadingScreen message="Перевірка авторизації..." />
-  }
-
+  // RouteGuard тепер обробляє loading screens та редиректи
+  // AuthProvider просто надає контекст авторизації
   return (
     <AuthContext.Provider value={value}>
       <SessionManager />

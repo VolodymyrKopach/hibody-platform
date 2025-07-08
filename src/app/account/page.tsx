@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import Layout from '@/components/layout/Layout';
-import ProtectedPage from '@/components/auth/ProtectedPage';
 import ProfileSection from '@/components/account/ProfileSection';
 import StatsSection from '@/components/account/StatsSection';
 import SecuritySection from '@/components/account/SecuritySection';
@@ -97,7 +96,6 @@ const AccountPage: React.FC = () => {
   };
 
   return (
-    <ProtectedPage>
       <Layout 
         title="Акаунт" 
         breadcrumbs={[{ label: 'Акаунт' }]}
@@ -227,7 +225,6 @@ const AccountPage: React.FC = () => {
           </Card>
         </Container>
       </Layout>
-    </ProtectedPage>
   );
 };
 

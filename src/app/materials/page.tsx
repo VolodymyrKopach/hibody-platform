@@ -35,7 +35,6 @@ import {
   CircularProgress,
 } from '@mui/material';
 import Layout from '@/components/layout/Layout';
-import { ProtectedPage } from '@/components/auth';
 import { useAuth } from '@/providers/AuthProvider';
 import { useSupabaseLessons, DatabaseLesson } from '@/hooks/useSupabaseLessons';
 import {
@@ -694,7 +693,7 @@ const MyMaterials = () => {
   // Loading state з таймаутом - показуємо тільки якщо не ініціалізовано
   if (isLoading && !loadingTimeout && !isInitialized) {
     return (
-      <ProtectedPage>
+      
         <Layout title="Мої матеріали" breadcrumbs={[{ label: 'Мої матеріали' }]}>
           <Box 
             sx={{ 
@@ -713,14 +712,14 @@ const MyMaterials = () => {
             </Typography>
           </Box>
         </Layout>
-      </ProtectedPage>
+      
     );
   }
 
   // Loading timeout state
   if (loadingTimeout) {
     return (
-      <ProtectedPage>
+      
         <Layout title="Мої матеріали" breadcrumbs={[{ label: 'Мої матеріали' }]}>
           <Box 
             sx={{ 
@@ -748,14 +747,14 @@ const MyMaterials = () => {
             </Button>
           </Box>
         </Layout>
-      </ProtectedPage>
+      
     );
   }
 
   // Error state
   if (dbError) {
     return (
-      <ProtectedPage>
+      
         <Layout title="Мої матеріали" breadcrumbs={[{ label: 'Мої матеріали' }]}>
           <Box 
             sx={{ 
@@ -783,14 +782,14 @@ const MyMaterials = () => {
             </Button>
           </Box>
         </Layout>
-      </ProtectedPage>
+      
     );
   }
 
 
 
   return (
-    <ProtectedPage>
+    
       <Layout title="Мої матеріали" breadcrumbs={[{ label: 'Мої матеріали' }]}>
         <Box sx={{ width: '100%', maxWidth: '1400px', mx: 'auto', p: 3 }}>
           {/* Header */}
@@ -1181,7 +1180,7 @@ const MyMaterials = () => {
           />
         </Box>
       </Layout>
-    </ProtectedPage>
+    
   );
 };
 

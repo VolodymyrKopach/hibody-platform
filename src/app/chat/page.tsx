@@ -6,7 +6,6 @@ import { useTheme } from '@mui/material/styles';
 
 // Layout
 import Layout from '@/components/layout/Layout';
-import { ProtectedPage } from '@/components/auth';
 
 // Нові модульні компоненти
 import ChatHeader from '@/components/chat/ChatHeader';
@@ -92,12 +91,11 @@ const ChatInterface: React.FC = () => {
   };
 
   return (
-    <ProtectedPage>
-      <Layout 
-        title="Чат з ШІ" 
-        breadcrumbs={[{ label: 'Головна', href: '/' }, { label: 'Чат' }]}
-        noPadding={true}
-      >
+    <Layout 
+      title="Чат з ШІ" 
+      breadcrumbs={[{ label: 'Головна', href: '/' }, { label: 'Чат' }]}
+      noPadding={true}
+    >
             <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           {/* Основна область чату */}
@@ -223,8 +221,7 @@ const ChatInterface: React.FC = () => {
           isSaving={slideUIState.isSavingLesson}
         />
       </Box>
-    </Layout>
-    </ProtectedPage>
+          </Layout>
   );
 };
 

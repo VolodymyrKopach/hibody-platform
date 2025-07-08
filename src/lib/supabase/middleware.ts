@@ -43,6 +43,9 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   )
 
+  // Логування для дебагу
+  console.log(`🔍 Middleware: ${request.nextUrl.pathname} (${isPublicRoute ? 'public' : 'protected'})`)
+
   try {
     // IMPORTANT: Avoid writing any logic between createServerClient and
     // supabase.auth.getUser(). A simple mistake could make it very hard to debug
@@ -52,15 +55,16 @@ export async function updateSession(request: NextRequest) {
       error
     } = await supabase.auth.getUser()
 
-    // Якщо є помилка з токеном, але це не критична помилка
-    if (error && error.message.includes('Invalid JWT')) {
-      console.log('Invalid JWT detected, user will be redirected to login')
-      // Не намагаємося оновити сесію, просто дозволяємо middleware обробити як неавторизованого
+    // Логування результату авторизації
+    if (error) {
+      console.log(`❌ Middleware: Auth error for ${request.nextUrl.pathname}:`, error.message)
+    } else {
+      console.log(`✅ Middleware: Auth check for ${request.nextUrl.pathname}: ${user ? `User ${user.email}` : 'No user'}`)
     }
 
     // Якщо користувач не авторизований і намагається потрапити на захищену сторінку
     if (!user && !isPublicRoute) {
-      console.log('Redirecting to login:', request.nextUrl.pathname)
+      console.log(`🔄 Middleware: Redirecting unauthorized user from ${request.nextUrl.pathname} to login`)
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
       // Зберігаємо оригінальний URL для редиректу після входу
@@ -70,7 +74,7 @@ export async function updateSession(request: NextRequest) {
 
     // Якщо користувач авторизований і намагається потрапити на сторінку логіну/реєстрації
     if (user && (request.nextUrl.pathname.startsWith('/auth/login') || request.nextUrl.pathname.startsWith('/auth/register'))) {
-      console.log('User authenticated, redirecting from auth page')
+      console.log(`🔄 Middleware: Redirecting authenticated user from ${request.nextUrl.pathname}`)
       const redirectTo = request.nextUrl.searchParams.get('redirectTo')
       const url = request.nextUrl.clone()
       
@@ -78,18 +82,23 @@ export async function updateSession(request: NextRequest) {
       if (redirectTo && redirectTo !== '/auth/login' && redirectTo !== '/auth/register') {
         url.pathname = redirectTo
         url.search = ''
+        console.log(`🎯 Middleware: Redirecting to saved URL: ${redirectTo}`)
       } else {
         url.pathname = '/'
         url.search = ''
+        console.log(`🎯 Middleware: Redirecting to home page`)
       }
       
       return NextResponse.redirect(url)
     }
 
+    console.log(`✅ Middleware: Access granted to ${request.nextUrl.pathname}`)
+
   } catch (error) {
-    console.error('Middleware error:', error)
+    console.error(`❌ Middleware: Unexpected error for ${request.nextUrl.pathname}:`, error)
     // У разі помилки, якщо це не публічний маршрут, редиректимо на логін
     if (!isPublicRoute) {
+      console.log(`🔄 Middleware: Error recovery - redirecting to login`)
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
       url.searchParams.set('redirectTo', request.nextUrl.pathname + request.nextUrl.search)
