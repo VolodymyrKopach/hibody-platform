@@ -206,12 +206,10 @@ const MyMaterials = () => {
       setMaterials([]);
     }
     
-    // Позначаємо як ініціалізовано після першого завантаження
-    if (dbLessons.length > 0 || (!isLoading && !dbError)) {
-      if (!isInitialized) {
-        console.log('🚀 Setting page as initialized');
-        setIsInitialized(true);
-      }
+    // Позначаємо як ініціалізовано тільки після завершення першого завантаження
+    if (!isLoading && !isInitialized) {
+      console.log('🚀 Setting page as initialized');
+      setIsInitialized(true);
     }
   }, [dbLessons, isLoading, dbError, isInitialized]);
 
@@ -875,7 +873,21 @@ const MyMaterials = () => {
           </Paper>
 
           {/* Materials Grid */}
-          {sortedMaterials.length > 0 ? (
+          {isLoading && !isInitialized ? (
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              minHeight: '400px',
+              gap: 3
+            }}>
+              <CircularProgress size={60} thickness={4} />
+              <Typography variant="h6" color="text.secondary">
+                Завантаження матеріалів...
+              </Typography>
+            </Box>
+          ) : sortedMaterials.length > 0 ? (
             <Box sx={{ 
               display: 'grid', 
               gridTemplateColumns: {
