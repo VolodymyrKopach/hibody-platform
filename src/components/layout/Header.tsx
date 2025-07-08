@@ -343,7 +343,10 @@ const Header: React.FC<HeaderProps> = ({
           
           <Divider sx={{ my: 1 }} />
           
-          <MenuItem onClick={handleUserMenuClose} sx={{ borderRadius: '8px', mb: 0.5 }}>
+          <MenuItem onClick={() => {
+            handleUserMenuClose();
+            router.push('/account');
+          }} sx={{ borderRadius: '8px', mb: 0.5 }}>
             <ListItemIcon>
               <User size={18} />
             </ListItemIcon>
