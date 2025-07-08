@@ -2,12 +2,10 @@ import React from 'react';
 import {
   Box,
   TextField,
-  Button,
-  IconButton,
-  Tooltip
+  Button
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
-import { Send, Paperclip } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 interface ChatInputProps {
   value: string;
@@ -59,11 +57,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
         }}
       />
       <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
-        <Tooltip title="Прикріпити файл">
-          <IconButton color="primary" size="large" disabled={disabled}>
-            <Paperclip size={20} />
-          </IconButton>
-        </Tooltip>
         <Button
           variant="contained"
           onClick={(e) => {

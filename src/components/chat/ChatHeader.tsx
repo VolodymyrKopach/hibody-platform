@@ -10,7 +10,6 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import {
   Bot,
-  Settings,
   Layers
 } from 'lucide-react';
 
@@ -95,11 +94,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             </Box>
           </Tooltip>
           
-          <Tooltip title="Налаштування">
-            <IconButton sx={{ color: 'text.secondary' }}>
-              <Settings size={18} />
-            </IconButton>
-          </Tooltip>
+
         </Box>
       </Box>
     </Paper>
