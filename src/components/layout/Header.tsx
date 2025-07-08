@@ -9,7 +9,6 @@ import {
   Settings, 
   LogOut,
   ChevronRight,
-  Bell,
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen
@@ -28,14 +27,13 @@ import {
   Divider,
   alpha,
   useTheme,
-  Badge,
   Menu as MuiMenu,
   MenuItem,
   ListItemIcon,
 } from '@mui/material';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { AuthModal } from '@/components/auth';
-import { MigrationDialog } from '@/components/migration/MigrationDialog';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -53,6 +51,7 @@ const Header: React.FC<HeaderProps> = ({
   title = 'Дашборд' 
 }) => {
   const theme = useTheme();
+  const router = useRouter();
   const { user, profile, signOut, loading } = useAuth();
 
   // Логи для відстеження стану в Header (можна видалити для production)
@@ -68,9 +67,7 @@ const Header: React.FC<HeaderProps> = ({
   //   console.log('🎯 Header: Loading state in header:', loading)
   // }, [loading])
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
-  const [notificationsAnchor, setNotificationsAnchor] = useState<null | HTMLElement>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [migrationDialogOpen, setMigrationDialogOpen] = useState(false);
 
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setUserMenuAnchor(event.currentTarget);
@@ -78,14 +75,6 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleUserMenuClose = () => {
     setUserMenuAnchor(null);
-  };
-
-  const handleNotificationsOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setNotificationsAnchor(event.currentTarget);
-  };
-
-  const handleNotificationsClose = () => {
-    setNotificationsAnchor(null);
   };
 
   const handleAuthModalOpen = () => {
@@ -105,13 +94,8 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const handleMigrationDialogOpen = () => {
-    setMigrationDialogOpen(true);
-    handleUserMenuClose();
-  };
-
-  const handleMigrationDialogClose = () => {
-    setMigrationDialogOpen(false);
+  const handleCreateClick = () => {
+    router.push('/chat');
   };
 
   return (
@@ -228,8 +212,6 @@ const Header: React.FC<HeaderProps> = ({
           )}
         </Stack>
 
-
-
         {/* Right Section */}
         <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1, justifyContent: 'flex-end' }}>
           {/* Quick Actions - показуємо тільки для авторизованих користувачів */}
@@ -238,6 +220,7 @@ const Header: React.FC<HeaderProps> = ({
               startIcon={<Sparkles size={18} />}
               variant="contained"
               size="small"
+              onClick={handleCreateClick}
               sx={{
                 background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
                 borderRadius: '12px',
@@ -253,23 +236,6 @@ const Header: React.FC<HeaderProps> = ({
                 Створити
               </Box>
             </Button>
-          )}
-
-          {/* Notifications - показуємо тільки для авторизованих користувачів */}
-          {user && (
-            <IconButton
-              onClick={handleNotificationsOpen}
-              sx={{
-                background: alpha(theme.palette.grey[500], 0.1),
-                '&:hover': {
-                  background: alpha(theme.palette.grey[500], 0.2),
-                },
-              }}
-            >
-              <Badge badgeContent={2} color="error">
-                <Bell size={20} />
-              </Badge>
-            </IconButton>
           )}
 
           {/* User Menu або Login Button */}
@@ -316,76 +282,6 @@ const Header: React.FC<HeaderProps> = ({
           )}
         </Stack>
       </Toolbar>
-
-      {/* Notifications Menu */}
-      <MuiMenu
-        anchorEl={notificationsAnchor}
-        open={Boolean(notificationsAnchor)}
-        onClose={handleNotificationsClose}
-        PaperProps={{
-          elevation: 0,
-          sx: {
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-            borderRadius: '16px',
-            minWidth: 320,
-            mt: 1,
-          },
-        }}
-      >
-        <Box sx={{ p: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-            Сповіщення
-          </Typography>
-          <Stack spacing={2}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                background: alpha(theme.palette.primary.main, 0.05),
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                borderRadius: '12px',
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-                Новий шаблон "Математика 1 клас" готовий
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                5 хвилин тому
-              </Typography>
-            </Paper>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                background: alpha(theme.palette.secondary.main, 0.05),
-                border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
-                borderRadius: '12px',
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-                Ваш урок отримав 12 лайків
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                1 година тому
-              </Typography>
-            </Paper>
-          </Stack>
-          <Divider sx={{ my: 2 }} />
-          <Button
-            fullWidth
-            variant="outlined"
-            size="small"
-            sx={{
-              borderRadius: '8px',
-              textTransform: 'none',
-            }}
-          >
-            Переглянути всі
-          </Button>
-        </Box>
-      </MuiMenu>
 
       {/* User Menu */}
       <MuiMenu
@@ -453,18 +349,6 @@ const Header: React.FC<HeaderProps> = ({
             </ListItemIcon>
             Профіль
           </MenuItem>
-          <MenuItem onClick={handleUserMenuClose} sx={{ borderRadius: '8px', mb: 0.5 }}>
-            <ListItemIcon>
-              <Settings size={18} />
-            </ListItemIcon>
-            Налаштування
-          </MenuItem>
-          <MenuItem onClick={handleMigrationDialogOpen} sx={{ borderRadius: '8px', mb: 0.5 }}>
-            <ListItemIcon>
-              <Settings size={18} />
-            </ListItemIcon>
-            Міграція даних
-          </MenuItem>
           
           <Divider sx={{ my: 1 }} />
           
@@ -491,16 +375,6 @@ const Header: React.FC<HeaderProps> = ({
         open={authModalOpen}
         onClose={handleAuthModalClose}
         onSuccess={handleAuthModalClose}
-      />
-
-      {/* Migration Dialog */}
-      <MigrationDialog
-        open={migrationDialogOpen}
-        onClose={handleMigrationDialogClose}
-        onMigrationComplete={(result) => {
-          console.log('Migration completed:', result);
-          // Можна додати сповіщення про результат
-        }}
       />
     </AppBar>
   );

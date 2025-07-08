@@ -20,8 +20,6 @@ import {
 import {
   MessageSquare,
   FileText,
-  Settings,
-  User,
   X
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -51,19 +49,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
     }
   ];
 
-  const bottomMenuItems = [
-    {
-      label: 'Налаштування',
-      icon: Settings,
-      href: '/settings'
-    },
-    {
-      label: 'Профіль',
-      icon: User,
-      href: '/profile'
-    }
-  ];
-
   const isActive = (href: string, exact = false) => {
     // Якщо це головна сторінка (/) і ми на /materials, показуємо materials як активний
     if (pathname === '/' && href === '/materials') {
@@ -75,8 +60,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
     }
     return pathname.startsWith(href);
   };
-
-
 
   const renderMenuItem = (item: any, index: number) => {
     const Icon = item.icon;
@@ -144,7 +127,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
       sx={{
         width: isCollapsed ? 80 : 280,
         height: '100%',
-                    backgroundColor: '#ffffff',
+        backgroundColor: '#ffffff',
         borderRight: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
         display: 'flex',
         flexDirection: 'column',
@@ -179,14 +162,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
       <Box sx={{ flexGrow: 1, py: 2 }}>
         <List>
           {menuItems.map((item, index) => renderMenuItem(item, index))}
-        </List>
-      </Box>
-
-      {/* Bottom menu */}
-      <Box sx={{ pb: 2 }}>
-        <Divider sx={{ mx: isCollapsed ? 1 : 2, mb: 2 }} />
-        <List>
-          {bottomMenuItems.map((item, index) => renderMenuItem(item, index))}
         </List>
       </Box>
     </Box>
