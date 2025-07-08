@@ -2,10 +2,11 @@
 
 import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Box, Container, Typography, CircularProgress } from '@mui/material'
+import { Box, Container, Typography } from '@mui/material'
 import { useTheme, alpha } from '@mui/material/styles'
 import { RegisterForm } from '@/components/auth'
 import { useAuth } from '@/providers/AuthProvider'
+import { LoadingScreen } from '@/components/ui'
 
 export default function RegisterPage() {
   const theme = useTheme()
@@ -28,18 +29,7 @@ export default function RegisterPage() {
   }
 
   if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <CircularProgress size={40} />
-      </Box>
-    )
+    return <LoadingScreen />
   }
 
   if (user) {

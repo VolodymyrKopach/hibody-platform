@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { LoadingScreen } from '@/components/ui';
 
 export default function HomePage() {
   const router = useRouter();
@@ -12,21 +12,5 @@ export default function HomePage() {
     router.replace('/materials');
   }, [router]);
 
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        gap: 2,
-      }}
-    >
-      <CircularProgress size={40} />
-      <Typography variant="body1" color="text.secondary">
-        Перенаправлення...
-      </Typography>
-    </Box>
-  );
+  return <LoadingScreen />;
 }

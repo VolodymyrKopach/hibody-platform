@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react'
-import { Box, Button, Card, CardContent, Typography, Stack, TextField, Alert, CircularProgress } from '@mui/material'
+import { Box, Button, Card, CardContent, Typography, Stack, TextField, Alert } from '@mui/material'
 import { useAuth } from '@/providers/AuthProvider'
+import { LoadingScreen } from '@/components/ui'
 
 export default function TestPage() {
   const { user, signIn, signOut, loading } = useAuth()
@@ -45,11 +46,7 @@ export default function TestPage() {
   }
 
   if (loading) {
-    return (
-      <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
-        <CircularProgress size={40} />
-      </Box>
-    )
+    return <LoadingScreen />
   }
 
   return (

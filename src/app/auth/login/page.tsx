@@ -2,10 +2,11 @@
 
 import React, { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Box, Container, Typography, CircularProgress } from '@mui/material'
+import { Box, Container, Typography } from '@mui/material'
 import { useTheme, alpha } from '@mui/material/styles'
 import { LoginForm } from '@/components/auth'
 import { useAuth } from '@/providers/AuthProvider'
+import { LoadingScreen } from '@/components/ui'
 
 function LoginPageContent() {
   const theme = useTheme()
@@ -31,18 +32,7 @@ function LoginPageContent() {
   }
 
   if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <CircularProgress size={40} />
-      </Box>
-    )
+    return <LoadingScreen />
   }
 
   if (user) {
@@ -120,20 +110,7 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <Box
-          sx={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <CircularProgress size={40} />
-        </Box>
-      }
-    >
+    <Suspense fallback={<LoadingScreen />}>
       <LoginPageContent />
     </Suspense>
   )
