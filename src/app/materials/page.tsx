@@ -370,9 +370,7 @@ const MyMaterials = () => {
       
       const deleteSuccess = await deleteLessonFromDb(lessonId);
       
-      if (deleteSuccess) {
-        alert('Урок успішно видалено!');
-      } else {
+      if (!deleteSuccess) {
         alert('Помилка при видаленні уроку');
       }
     } else {
