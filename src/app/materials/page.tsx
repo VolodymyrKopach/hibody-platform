@@ -44,17 +44,12 @@ import {
   Delete,
   Edit,
   Plus,
-  TrendingUp,
   Clock,
-  BarChart3,
   BookOpen,
   Calculator,
   Palette,
   Music,
   Globe,
-  Zap,
-  Users,
-  Heart,
   X,
   ChevronLeft,
   ChevronRight,
@@ -305,32 +300,7 @@ const MyMaterials = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published': return theme.palette.success.main;
-      case 'draft': return theme.palette.warning.main;
-      case 'archived': return theme.palette.grey[500];
-      default: return theme.palette.grey[500];
-    }
-  };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'published': return 'Опубліковано';
-      case 'draft': return 'Чернетка';
-      case 'archived': return 'Архів';
-      default: return status;
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return theme.palette.success.main;
-      case 'medium': return theme.palette.warning.main;
-      case 'hard': return theme.palette.error.main;
-      default: return theme.palette.grey[500];
-    }
-  };
 
   // Фільтрація та сортування
   const filteredMaterials = materials.filter(material => {
@@ -631,21 +601,7 @@ const MyMaterials = () => {
             <SubjectIcon size={48} color="#ffffff" />
           </Box>
           
-          {/* Status Badge */}
-          <Chip
-            label={getStatusLabel(material.status)}
-            size="small"
-            sx={{
-              position: 'absolute',
-              top: 12,
-              left: 12,
-              backgroundColor: getStatusColor(material.status),
-              color: '#ffffff',
-              fontWeight: 500,
-              fontSize: '0.75rem',
-              zIndex: 2,
-            }}
-          />
+
 
           {/* More Menu */}
           <IconButton
@@ -692,7 +648,7 @@ const MyMaterials = () => {
             {material.description}
           </Typography>
 
-          <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 0.5 }}>
+          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
             <Chip
               label={material.ageGroup}
               size="small"
@@ -714,43 +670,22 @@ const MyMaterials = () => {
               }}
             />
             <Chip
-              label={material.difficulty}
+              icon={<Clock size={14} />}
+              label={material.duration}
               size="small"
               sx={{
-                backgroundColor: alpha(getDifficultyColor(material.difficulty), 0.1),
-                color: getDifficultyColor(material.difficulty),
+                backgroundColor: alpha(theme.palette.info.main, 0.1),
+                color: theme.palette.info.main,
                 fontWeight: 500,
-                fontSize: '0.75rem'
+                fontSize: '0.75rem',
+                '& .MuiChip-icon': {
+                  color: theme.palette.info.main,
+                }
               }}
             />
           </Stack>
 
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            pt: 1,
-            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Clock size={14} color={theme.palette.text.secondary} />
-                <Typography variant="caption" color="text.secondary">
-                  {material.duration}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <BarChart3 size={14} color={theme.palette.text.secondary} />
-                <Typography variant="caption" color="text.secondary">
-                  {material.views}
-                </Typography>
-              </Box>
-            </Box>
-            
-            <Typography variant="caption" color="text.secondary">
-              {material.lastModified}
-            </Typography>
-          </Box>
+
         </CardContent>
       </Card>
     );

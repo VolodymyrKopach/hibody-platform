@@ -65,6 +65,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
   ];
 
   const isActive = (href: string, exact = false) => {
+    // Якщо це головна сторінка (/) і ми на /materials, показуємо materials як активний
+    if (pathname === '/' && href === '/materials') {
+      return true;
+    }
+    
     if (exact) {
       return pathname === href;
     }
