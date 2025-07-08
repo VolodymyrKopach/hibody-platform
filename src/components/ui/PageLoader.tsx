@@ -58,7 +58,7 @@ export const PageLoader: React.FC<PageLoaderProps> = ({
             width: dotSize,
             height: dotSize,
             borderRadius: '50%',
-            background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+            background: 'linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(129, 140, 248) 100%)',
             animation: `${dotPulse} 1.4s ease-in-out infinite`,
             animationDelay: `${index * 0.2}s`,
           }}
