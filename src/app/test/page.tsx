@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react'
-import { Box, Button, Card, CardContent, Typography, Stack, TextField, Alert } from '@mui/material'
+import { Box, Button, Card, CardContent, Typography, Stack, TextField, Alert, CircularProgress } from '@mui/material'
 import { useAuth } from '@/providers/AuthProvider'
 
 export default function TestPage() {
@@ -46,8 +46,8 @@ export default function TestPage() {
 
   if (loading) {
     return (
-      <Box sx={{ p: 4 }}>
-        <Typography>Завантаження...</Typography>
+      <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
+        <CircularProgress size={40} />
       </Box>
     )
   }
@@ -57,6 +57,29 @@ export default function TestPage() {
       <Typography variant="h4" gutterBottom>
         Тест авторизації
       </Typography>
+
+      {/* Loading Demo Link */}
+      <Card sx={{ mb: 3, bgcolor: 'primary.main', color: 'white' }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+            🌊 Loading Demo
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mb: 2 }}>
+            Переглянути всі loading анімації з вічним режимом
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => window.open('/loading-demo', '_blank')}
+            sx={{ 
+              bgcolor: 'white', 
+              color: 'primary.main',
+              '&:hover': { bgcolor: 'grey.100' }
+            }}
+          >
+            🚀 Відкрити Loading Demo
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card sx={{ mb: 3 }}>
         <CardContent>

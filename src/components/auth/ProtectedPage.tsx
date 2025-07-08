@@ -11,7 +11,7 @@ interface ProtectedPageProps {
 
 const ProtectedPage: React.FC<ProtectedPageProps> = ({ 
   children, 
-  fallback = <LoadingScreen message="Перевірка авторизації..." />
+  fallback = <LoadingScreen />
 }) => {
   const { user, loading } = useAuth();
 

@@ -93,19 +93,19 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
 
   // Показуємо loading screen поки йде перевірка авторизації
   if (loading) {
-    return <LoadingScreen message="Перевірка доступу..." />;
+    return <LoadingScreen />;
   }
 
   // Для неавторизованих користувачів на захищених сторінках показуємо loading
   // поки відбувається редирект
   if (!user && isProtectedRoute) {
-    return <LoadingScreen message="Перенаправлення на сторінку входу..." />;
+    return <LoadingScreen />;
   }
 
   // Для авторизованих користувачів на сторінках авторизації показуємо loading
   // поки відбувається редирект
   if (user && isAuthOnlyRoute) {
-    return <LoadingScreen message="Перенаправлення..." />;
+    return <LoadingScreen />;
   }
 
   // В інших випадках показуємо контент (включаючи 404)

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Box, Button, Card, CardContent, Typography, Alert } from '@mui/material'
+import { Box, Button, Card, CardContent, Typography, Alert, CircularProgress } from '@mui/material'
 import { useAuth } from '@/providers/AuthProvider'
 
 export const AuthTest: React.FC = () => {
@@ -47,7 +47,9 @@ export const AuthTest: React.FC = () => {
     return (
       <Card>
         <CardContent>
-          <Typography>Завантаження...</Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+            <CircularProgress size={32} />
+          </Box>
         </CardContent>
       </Card>
     )

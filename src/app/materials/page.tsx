@@ -707,9 +707,6 @@ const MyMaterials = () => {
             }}
           >
             <CircularProgress size={60} thickness={4} />
-            <Typography variant="h6" color="text.secondary">
-              Завантаження матеріалів...
-            </Typography>
           </Box>
         </Layout>
       
@@ -814,9 +811,6 @@ const MyMaterials = () => {
             {isLoading && isInitialized && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CircularProgress size={20} thickness={4} />
-                <Typography variant="body2" color="text.secondary">
-                  Оновлення...
-                </Typography>
               </Box>
             )}
           </Box>
@@ -903,9 +897,6 @@ const MyMaterials = () => {
               gap: 3
             }}>
               <CircularProgress size={60} thickness={4} />
-              <Typography variant="h6" color="text.secondary">
-                Завантаження матеріалів...
-              </Typography>
             </Box>
           ) : sortedMaterials.length > 0 ? (
             <Box sx={{ 

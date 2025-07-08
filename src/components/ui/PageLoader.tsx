@@ -1,62 +1,69 @@
 'use client'
 
 import React from 'react'
-import { Box, CircularProgress, Typography } from '@mui/material'
+import { Box, keyframes } from '@mui/material'
+
+// Елегантна анімація крапок
+const dotPulse = keyframes`
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+`
 
 interface PageLoaderProps {
-  message?: string
   size?: 'small' | 'medium' | 'large'
   fullScreen?: boolean
 }
 
 export const PageLoader: React.FC<PageLoaderProps> = ({
-  message = 'Завантаження...',
   size = 'medium',
   fullScreen = false
 }) => {
   const getSizeProps = () => {
     switch (size) {
       case 'small':
-        return { size: 24, fontSize: '0.875rem' }
+        return { dotSize: 6, gap: 1 }
       case 'large':
-        return { size: 48, fontSize: '1.25rem' }
+        return { dotSize: 12, gap: 2 }
       default:
-        return { size: 32, fontSize: '1rem' }
+        return { dotSize: 8, gap: 1.5 }
     }
   }
 
-  const { size: progressSize, fontSize } = getSizeProps()
+  const { dotSize, gap } = getSizeProps()
 
   const content = (
     <Box
       sx={{
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 2,
+        gap: gap,
         p: 3,
       }}
     >
-      <CircularProgress 
-        size={progressSize}
-        thickness={4}
-        sx={{
-          color: 'primary.main',
-          '& .MuiCircularProgress-circle': {
-            strokeLinecap: 'round',
-          },
-        }}
-      />
-      {message && (
-        <Typography 
-          variant="body2" 
-          color="text.secondary"
-          sx={{ fontSize }}
-        >
-          {message}
-        </Typography>
-      )}
+      {[0, 1, 2].map((index) => (
+        <Box
+          key={index}
+          sx={{
+            width: dotSize,
+            height: dotSize,
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+            animation: `${dotPulse} 1.4s ease-in-out infinite`,
+            animationDelay: `${index * 0.2}s`,
+          }}
+        />
+      ))}
     </Box>
   )
 

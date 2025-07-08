@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Box, Container, Typography } from '@mui/material'
+import { Box, Container, Typography, CircularProgress } from '@mui/material'
 import { useTheme, alpha } from '@mui/material/styles'
 import { RegisterForm } from '@/components/auth'
 import { useAuth } from '@/providers/AuthProvider'
@@ -37,7 +37,7 @@ export default function RegisterPage() {
           justifyContent: 'center',
         }}
       >
-        <Typography>Завантаження...</Typography>
+        <CircularProgress size={40} />
       </Box>
     )
   }

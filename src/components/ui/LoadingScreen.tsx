@@ -1,22 +1,53 @@
 'use client'
 
 import React from 'react'
-import { Box, CircularProgress, Typography, keyframes } from '@mui/material'
+import { Box, keyframes } from '@mui/material'
 import { styled } from '@mui/material/styles'
 
-// Анімація для логотипу
-const pulse = keyframes`
+// Хвиляста анімація з двома збалансованими хвилями
+const waveAnimation = keyframes`
   0% {
-    transform: scale(1);
-    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    box-shadow: 
+      0 8px 32px rgba(33, 150, 243, 0.3),
+      0 0 0 8px rgba(33, 150, 243, 0.1);
+  }
+  25% {
+    transform: scale(1.1) rotate(2deg);
+    box-shadow: 
+      0 12px 40px rgba(33, 150, 243, 0.4),
+      0 0 0 12px rgba(33, 150, 243, 0.05);
   }
   50% {
-    transform: scale(1.05);
-    opacity: 0.8;
+    transform: scale(1.05) rotate(0deg);
+    box-shadow: 
+      0 16px 48px rgba(33, 150, 243, 0.5),
+      0 0 0 16px rgba(33, 150, 243, 0.03);
+  }
+  75% {
+    transform: scale(1.1) rotate(-2deg);
+    box-shadow: 
+      0 12px 40px rgba(33, 150, 243, 0.4),
+      0 0 0 12px rgba(33, 150, 243, 0.05);
   }
   100% {
-    transform: scale(1);
-    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    box-shadow: 
+      0 8px 32px rgba(33, 150, 243, 0.3),
+      0 0 0 8px rgba(33, 150, 243, 0.1);
+  }
+`
+
+// Градієнтна анімація фону
+const backgroundPulse = keyframes`
+  0% {
+    background: linear-gradient(45deg, #2196F3 30%, #21CBF3 90%);
+  }
+  50% {
+    background: linear-gradient(45deg, #21CBF3 30%, #2196F3 90%);
+  }
+  100% {
+    background: linear-gradient(45deg, #2196F3 30%, #21CBF3 90%);
   }
 `
 
@@ -27,71 +58,38 @@ const LoadingContainer = styled(Box)(({ theme }) => ({
   right: 0,
   bottom: 0,
   display: 'flex',
-  flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   backgroundColor: theme.palette.background.default,
   zIndex: 9999,
-  gap: theme.spacing(3),
 }))
 
-const LogoContainer = styled(Box)(({ theme }) => ({
-  animation: `${pulse} 2s ease-in-out infinite`,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginBottom: theme.spacing(2),
-}))
-
-const LoadingText = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.secondary,
-  fontSize: '1.1rem',
-  fontWeight: 400,
-}))
-
-interface LoadingScreenProps {
-  message?: string
-}
-
-export const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
-  message = 'Завантаження...' 
-}) => {
+export const LoadingScreen: React.FC = () => {
   return (
     <LoadingContainer>
-      <LogoContainer>
-        <Box
-          sx={{
-            width: 80,
-            height: 80,
-            borderRadius: '50%',
-            background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            boxShadow: '0 8px 32px rgba(33, 150, 243, 0.3)',
-          }}
-        >
-          Hi
-        </Box>
-      </LogoContainer>
-      
-      <CircularProgress 
-        size={40} 
-        thickness={4}
+      {/* Іконка з двома збалансованими хвилями */}
+      <Box
         sx={{
-          color: 'primary.main',
-          '& .MuiCircularProgress-circle': {
-            strokeLinecap: 'round',
-          },
+          width: 80,
+          height: 80,
+          borderRadius: '50%',
+          background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontSize: '2rem',
+          fontWeight: 'bold',
+          animation: `
+            ${waveAnimation} 2.5s ease-in-out infinite,
+            ${backgroundPulse} 3s ease-in-out infinite
+          `,
+          border: 'none',
+          outline: 'none',
         }}
-      />
-      
-      <LoadingText variant="body1">
-        {message}
-      </LoadingText>
+      >
+        Hi
+      </Box>
     </LoadingContainer>
   )
 } 

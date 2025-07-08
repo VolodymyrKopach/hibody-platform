@@ -2,7 +2,7 @@
 
 import React, { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Box, Container, Typography } from '@mui/material'
+import { Box, Container, Typography, CircularProgress } from '@mui/material'
 import { useTheme, alpha } from '@mui/material/styles'
 import { LoginForm } from '@/components/auth'
 import { useAuth } from '@/providers/AuthProvider'
@@ -40,7 +40,7 @@ function LoginPageContent() {
           justifyContent: 'center',
         }}
       >
-        <Typography>Завантаження...</Typography>
+        <CircularProgress size={40} />
       </Box>
     )
   }
@@ -130,7 +130,7 @@ export default function LoginPage() {
             justifyContent: 'center',
           }}
         >
-          <Typography>Завантаження...</Typography>
+          <CircularProgress size={40} />
         </Box>
       }
     >
