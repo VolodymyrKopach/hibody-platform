@@ -3,22 +3,22 @@
 import React, { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  Box,
-  Button,
-  TextField,
-  Typography,
   Paper,
+  TextField,
+  Button,
+  Typography,
   Alert,
-  CircularProgress,
-  Link,
-  Divider,
+  Box,
   InputAdornment,
   IconButton,
+  Divider,
+  Link,
+  CircularProgress,
 } from '@mui/material'
-import { useTheme, alpha } from '@mui/material/styles'
-import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react'
+import { alpha, useTheme } from '@mui/material/styles'
+import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/providers/AuthProvider'
-import { RegisterFormData } from '@/types/auth'
+import { useTranslation } from 'react-i18next'
 
 interface RegisterFormProps {
   onSwitchToLogin?: () => void
@@ -26,69 +26,73 @@ interface RegisterFormProps {
 }
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess }) => {
+  const { t } = useTranslation(['auth', 'common'])
   const theme = useTheme()
   const router = useRouter()
   const searchParams = useSearchParams()
   const { signUp } = useAuth()
-  const [formData, setFormData] = useState<RegisterFormData>({
+  
+  const [formData, setFormData] = useState({
+    fullName: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    fullName: '',
+    confirmPassword: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }))
-    // Очищаємо помилку при зміні полів
-    if (error) setError(null)
+    setError('') // Clear error when user starts typing
   }
 
   const validateForm = (): string | null => {
-    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.fullName) {
-      return 'Будь ласка, заповніть всі поля'
+    if (!formData.fullName.trim()) {
+      return t('auth:validation.firstNameRequired')
     }
-
+    
+    if (!formData.email.trim()) {
+      return t('auth:validation.required')
+    }
+    
+    if (!formData.password) {
+      return t('auth:validation.required')
+    }
+    
     if (formData.password.length < 6) {
-      return 'Пароль повинен містити принаймні 6 символів'
+      return t('auth:validation.passwordTooShort')
     }
-
+    
     if (formData.password !== formData.confirmPassword) {
-      return 'Паролі не співпадають'
+      return t('auth:validation.passwordsDoNotMatch2')
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) {
-      return 'Введіть коректну електронну адресу'
-    }
-
+    
     return null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
-
+    
     const validationError = validateForm()
     if (validationError) {
       setError(validationError)
-      setLoading(false)
       return
     }
 
+    setLoading(true)
+    setError('')
+
     try {
-      const { error } = await signUp(formData.email, formData.password, formData.fullName)
+      const result = await signUp(formData.email, formData.password, formData.fullName)
       
-      if (error) {
-        setError(error.message)
+      if (result.error) {
+        setError(result.error.message)
       } else {
         // Успішна реєстрація - перенаправляємо користувача
         const redirectTo = searchParams?.get('redirectTo')
@@ -100,7 +104,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess 
         onSuccess?.()
       }
     } catch (err) {
-      setError('Помилка при реєстрації')
+      setError(t('auth:register.errors.registrationError'))
     } finally {
       setLoading(false)
     }
@@ -123,10 +127,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess 
     >
       <Box sx={{ textAlign: 'center', mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-          Реєстрація
+          {t('auth:register.title')}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Створіть свій обліковий запис
+          {t('auth:register.description')}
         </Typography>
       </Box>
 
@@ -140,7 +144,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess 
         <TextField
           fullWidth
           name="fullName"
-          label="Повне ім'я"
+          label={t('auth:register.fullName')}
           value={formData.fullName}
           onChange={handleChange}
           required
@@ -158,7 +162,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess 
         <TextField
           fullWidth
           name="email"
-          label="Електронна пошта"
+          label={t('auth:register.email')}
           type="email"
           value={formData.email}
           onChange={handleChange}
@@ -177,7 +181,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess 
         <TextField
           fullWidth
           name="password"
-          label="Пароль"
+          label={t('auth:register.password')}
           type={showPassword ? 'text' : 'password'}
           value={formData.password}
           onChange={handleChange}
@@ -207,7 +211,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess 
         <TextField
           fullWidth
           name="confirmPassword"
-          label="Підтвердження паролю"
+          label={t('auth:register.confirmPassword')}
           type={showConfirmPassword ? 'text' : 'password'}
           value={formData.confirmPassword}
           onChange={handleChange}
@@ -254,19 +258,19 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess 
           {loading ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            'Зареєструватися'
+            t('auth:register.submit')
           )}
         </Button>
 
         <Divider sx={{ my: 2 }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            або
+            {t('auth:register.or')}
           </Typography>
         </Divider>
 
         <Box sx={{ textAlign: 'center' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Вже маєте обліковий запис?{' '}
+            {t('auth:register.hasAccount')}{' '}
             <Link
               component="button"
               type="button"
@@ -280,7 +284,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess 
                 },
               }}
             >
-              Увійти
+              {t('auth:register.login')}
             </Link>
           </Typography>
         </Box>

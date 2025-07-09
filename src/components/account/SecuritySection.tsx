@@ -2,85 +2,77 @@
 
 import React, { useState } from 'react';
 import {
-  Box,
-  Typography,
-  TextField,
-  Button,
   Card,
   CardContent,
-  Stack,
+  Typography,
+  Button,
+  TextField,
   Alert,
-  CircularProgress,
+  Box,
+  Stack,
   InputAdornment,
   IconButton,
-  useTheme,
-  alpha,
+  CircularProgress,
 } from '@mui/material';
-import { 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  Shield,
-  Key,
-  AlertTriangle,
-} from 'lucide-react';
+import { alpha, useTheme } from '@mui/material/styles';
+import { Shield, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { useAuth } from '@/providers/AuthProvider';
+import { useTranslation } from 'react-i18next';
 
 const SecuritySection: React.FC = () => {
+  const { t } = useTranslation(['account', 'auth', 'security', 'common']);
   const theme = useTheme();
+  const { user } = useAuth();
+  
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [showPasswords, setShowPasswords] = useState({
-    new: false,
-    confirm: false,
-  });
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [passwordForm, setPasswordForm] = useState({
     newPassword: '',
     confirmPassword: '',
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    new: false,
+    confirm: false,
   });
 
   const handlePasswordChange = (field: string, value: string) => {
     setPasswordForm(prev => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }));
-    // Очищаємо помилки при зміні полів
-    if (error) setError(null);
-    if (success) setSuccess(null);
+    setErrorMessage('');
+    setSuccessMessage('');
   };
 
   const togglePasswordVisibility = (field: 'new' | 'confirm') => {
     setShowPasswords(prev => ({
       ...prev,
-      [field]: !prev[field],
+      [field]: !prev[field]
     }));
   };
 
   const validatePassword = (password: string): string | null => {
-    if (password.length < 6) {
-      return 'Пароль повинен містити щонайменше 6 символів';
+    if (password.length < 8) {
+      return t('auth:validation.passwordTooShort');
     }
-    if (!/(?=.*[a-z])/.test(password)) {
-      return 'Пароль повинен містити щонайменше одну малу літеру';
+    
+    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      return t('account:security.recommendations.passwordComplexity');
     }
-    if (!/(?=.*[A-Z])/.test(password)) {
-      return 'Пароль повинен містити щонайменше одну велику літеру';
-    }
-    if (!/(?=.*\d)/.test(password)) {
-      return 'Пароль повинен містити щонайменше одну цифру';
-    }
+    
     return null;
   };
 
   const handleStartPasswordChange = () => {
     setIsChangingPassword(true);
-    setError(null);
-    setSuccess(null);
     setPasswordForm({
       newPassword: '',
       confirmPassword: '',
     });
+    setErrorMessage('');
+    setSuccessMessage('');
   };
 
   const handleCancelPasswordChange = () => {
@@ -89,32 +81,25 @@ const SecuritySection: React.FC = () => {
       newPassword: '',
       confirmPassword: '',
     });
-    setError(null);
-    setSuccess(null);
+    setErrorMessage('');
+    setSuccessMessage('');
   };
 
   const handleSavePassword = async () => {
-    const { newPassword, confirmPassword } = passwordForm;
-
     // Валідація
-    if (!newPassword || !confirmPassword) {
-      setError('Заповніть всі поля');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError('Паролі не співпадають');
-      return;
-    }
-
-    const passwordError = validatePassword(newPassword);
+    const passwordError = validatePassword(passwordForm.newPassword);
     if (passwordError) {
-      setError(passwordError);
+      setErrorMessage(passwordError);
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setErrorMessage(t('auth:validation.passwordsDoNotMatch2'));
       return;
     }
 
     setIsSaving(true);
-    setError(null);
+    setErrorMessage('');
 
     try {
       const response = await fetch('/api/user/change-password', {
@@ -123,25 +108,25 @@ const SecuritySection: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          newPassword,
+          newPassword: passwordForm.newPassword,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setSuccess('Пароль успішно змінено');
+        setSuccessMessage(t('account:security.passwordChanged'));
         setIsChangingPassword(false);
         setPasswordForm({
           newPassword: '',
           confirmPassword: '',
         });
       } else {
-        setError(data.error?.message || 'Помилка при зміні пароля');
+        setErrorMessage(data.message || t('account:security.passwordError'));
       }
-    } catch (err) {
-      console.error('Error changing password:', err);
-      setError('Помилка підключення до сервера');
+    } catch (error) {
+      console.error('Password change error:', error);
+      setErrorMessage(t('common:errors.connectionToServer'));
     } finally {
       setIsSaving(false);
     }
@@ -149,154 +134,102 @@ const SecuritySection: React.FC = () => {
 
   const getPasswordStrength = (password: string) => {
     let strength = 0;
-    if (password.length >= 6) strength++;
-    if (/(?=.*[a-z])/.test(password)) strength++;
-    if (/(?=.*[A-Z])/.test(password)) strength++;
-    if (/(?=.*\d)/.test(password)) strength++;
-    if (/(?=.*[!@#$%^&*])/.test(password)) strength++;
-
+    
+    if (password.length >= 8) strength += 1;
+    if (/[a-z]/.test(password)) strength += 1;
+    if (/[A-Z]/.test(password)) strength += 1;
+    if (/[0-9]/.test(password)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+    
+    const labels = [
+      t('auth:passwordStrength.veryWeak'),
+      t('auth:passwordStrength.weak'),
+      t('auth:passwordStrength.medium'),
+      t('auth:passwordStrength.good'),
+      t('auth:passwordStrength.excellent')
+    ];
+    
     return {
       score: strength,
-      label: ['Дуже слабкий', 'Слабкий', 'Середній', 'Хороший', 'Відмінний'][strength] || 'Дуже слабкий',
-      color: ['#f44336', '#ff9800', '#2196f3', '#4caf50', '#8bc34a'][strength] || '#f44336',
+      label: labels[strength] || t('auth:passwordStrength.veryWeak'),
+      color: ['#f44336', '#ff9800', '#ffeb3b', '#4caf50', '#2e7d32'][strength] || '#f44336'
     };
   };
 
   const passwordStrength = getPasswordStrength(passwordForm.newPassword);
 
   return (
-    <Box>
-      <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
-        Безпека акаунта
+    <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+      {/* Заголовок секції */}
+      <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+        {t('security:title')}
       </Typography>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
-
-      {success && (
+      {/* Повідомлення про успіх */}
+      {successMessage && (
         <Alert severity="success" sx={{ mb: 3 }}>
-          {success}
+          {successMessage}
         </Alert>
       )}
 
-      <Stack spacing={3}>
-        {/* Зміна пароля */}
-        <Card sx={{ 
-          borderRadius: '12px',
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}>
-          <CardContent sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <Box
-                sx={{
-                  p: 1.5,
+      {/* Повідомлення про помилку */}
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {errorMessage}
+        </Alert>
+      )}
+
+      {/* Карточка зміни пароля */}
+      <Card sx={{ 
+        borderRadius: '12px',
+        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        mb: 3,
+      }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: '8px',
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                color: theme.palette.primary.main,
+                mr: 2,
+              }}
+            >
+              <Shield size={24} />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                {t('security:changePassword')}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t('account:security.updatePasswordDescription')}
+              </Typography>
+            </Box>
+            {!isChangingPassword && (
+              <Button
+                onClick={handleStartPasswordChange}
+                variant="outlined"
+                sx={{ 
+                  textTransform: 'none',
                   borderRadius: '8px',
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  color: theme.palette.primary.main,
-                  mr: 2,
                 }}
               >
-                <Key size={24} />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Зміна пароля
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Оновіть свій пароль для забезпечення безпеки акаунта
-                </Typography>
-              </Box>
-              
-              {!isChangingPassword && (
-                <Button
-                  variant="outlined"
-                  onClick={handleStartPasswordChange}
-                  sx={{ 
-                    textTransform: 'none',
-                    borderRadius: '8px',
-                  }}
-                >
-                  Змінити пароль
-                </Button>
-              )}
-            </Box>
+                {t('security:changePassword')}
+              </Button>
+            )}
+          </Box>
 
-            {isChangingPassword && (
-              <Stack spacing={3}>
-                {/* Новий пароль */}
-                <Box>
-                  <TextField
-                    label="Новий пароль"
-                    type={showPasswords.new ? 'text' : 'password'}
-                    fullWidth
-                    value={passwordForm.newPassword}
-                    onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                    variant="outlined"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '8px',
-                      }
-                    }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() => togglePasswordVisibility('new')}
-                            edge="end"
-                          >
-                            {showPasswords.new ? <EyeOff size={20} /> : <Eye size={20} />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                  
-                  {/* Індикатор надійності пароля */}
-                  {passwordForm.newPassword && (
-                    <Box sx={{ mt: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Надійність:
-                        </Typography>
-                        <Typography 
-                          variant="caption" 
-                          sx={{ color: passwordStrength.color, fontWeight: 500 }}
-                        >
-                          {passwordStrength.label}
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          height: 4,
-                          borderRadius: 2,
-                          backgroundColor: alpha(theme.palette.grey[300], 0.5),
-                          mt: 0.5,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            height: '100%',
-                            borderRadius: 2,
-                            backgroundColor: passwordStrength.color,
-                            width: `${(passwordStrength.score / 5) * 100}%`,
-                            transition: 'all 0.3s ease',
-                          }}
-                        />
-                      </Box>
-                    </Box>
-                  )}
-                </Box>
-
-                {/* Підтвердження пароля */}
+          {isChangingPassword && (
+            <Stack spacing={3}>
+              {/* Новий пароль */}
+              <Box>
                 <TextField
-                  label="Підтвердіть новий пароль"
-                  type={showPasswords.confirm ? 'text' : 'password'}
+                  label={t('security:form.newPassword')}
+                  type={showPasswords.new ? 'text' : 'password'}
                   fullWidth
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                  value={passwordForm.newPassword}
+                  onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
                   variant="outlined"
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -307,129 +240,191 @@ const SecuritySection: React.FC = () => {
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
-                          onClick={() => togglePasswordVisibility('confirm')}
+                          onClick={() => togglePasswordVisibility('new')}
                           edge="end"
                         >
-                          {showPasswords.confirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                          {showPasswords.new ? <EyeOff size={20} /> : <Eye size={20} />}
                         </IconButton>
                       </InputAdornment>
                     ),
                   }}
-                  error={
-                    passwordForm.confirmPassword.length > 0 && 
-                    passwordForm.newPassword !== passwordForm.confirmPassword
-                  }
-                  helperText={
-                    passwordForm.confirmPassword.length > 0 && 
-                    passwordForm.newPassword !== passwordForm.confirmPassword
-                      ? 'Паролі не співпадають'
-                      : ''
-                  }
                 />
+                
+                {/* Індикатор надійності пароля */}
+                {passwordForm.newPassword && (
+                  <Box sx={{ mt: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {t('auth:passwordStrength.strengthLabel')}
+                      </Typography>
+                      <Typography 
+                        variant="caption" 
+                        sx={{ color: passwordStrength.color, fontWeight: 500 }}
+                      >
+                        {passwordStrength.label}
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        height: 4,
+                        borderRadius: 2,
+                        backgroundColor: alpha(theme.palette.grey[300], 0.5),
+                        mt: 0.5,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          height: '100%',
+                          borderRadius: 2,
+                          backgroundColor: passwordStrength.color,
+                          width: `${(passwordStrength.score / 5) * 100}%`,
+                          transition: 'all 0.3s ease',
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                )}
+              </Box>
 
-                {/* Кнопки */}
-                <Box sx={{ 
-                  display: 'flex', 
-                  gap: 2, 
-                  justifyContent: 'flex-end',
-                  pt: 2,
-                  borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                }}>
-                  <Button
-                    onClick={handleCancelPasswordChange}
-                    variant="outlined"
-                    disabled={isSaving}
-                    sx={{ 
-                      textTransform: 'none',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    Скасувати
-                  </Button>
-                  <Button
-                    onClick={handleSavePassword}
-                    variant="contained"
-                    disabled={
-                      isSaving || 
-                      !passwordForm.newPassword || 
-                      !passwordForm.confirmPassword ||
-                      passwordForm.newPassword !== passwordForm.confirmPassword
-                    }
-                    sx={{ 
-                      textTransform: 'none',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    {isSaving ? (
-                      <>
-                        <CircularProgress size={18} sx={{ mr: 1 }} />
-                        Збереження...
-                      </>
-                    ) : (
-                      'Зберегти пароль'
-                    )}
-                  </Button>
-                </Box>
-              </Stack>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Рекомендації з безпеки */}
-        <Card sx={{ 
-          borderRadius: '12px',
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}>
-          <CardContent sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <Box
+              {/* Підтвердження пароля */}
+              <TextField
+                label={t('security:form.confirmNewPassword')}
+                type={showPasswords.confirm ? 'text' : 'password'}
+                fullWidth
+                value={passwordForm.confirmPassword}
+                onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                variant="outlined"
                 sx={{
-                  p: 1.5,
-                  borderRadius: '8px',
-                  backgroundColor: alpha(theme.palette.warning.main, 0.1),
-                  color: theme.palette.warning.main,
-                  mr: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                  }
                 }}
-              >
-                <Shield size={24} />
-              </Box>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Рекомендації з безпеки
-              </Typography>
-            </Box>
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => togglePasswordVisibility('confirm')}
+                        edge="end"
+                      >
+                        {showPasswords.confirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                error={
+                  passwordForm.confirmPassword.length > 0 && 
+                  passwordForm.newPassword !== passwordForm.confirmPassword
+                }
+                helperText={
+                  passwordForm.confirmPassword.length > 0 && 
+                  passwordForm.newPassword !== passwordForm.confirmPassword
+                    ? t('auth:validation.passwordsDoNotMatch2')
+                    : ''
+                }
+              />
 
-            <Stack spacing={2}>
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                <AlertTriangle size={16} color={theme.palette.info.main} />
-                <Typography variant="body2" color="text.secondary">
-                  Використовуйте унікальний пароль, який ви не використовуєте на інших сайтах
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                <AlertTriangle size={16} color={theme.palette.info.main} />
-                <Typography variant="body2" color="text.secondary">
-                  Пароль повинен містити великі та малі літери, цифри та спеціальні символи
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                <AlertTriangle size={16} color={theme.palette.info.main} />
-                <Typography variant="body2" color="text.secondary">
-                  Не діліться своїм паролем з іншими людьми
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                <AlertTriangle size={16} color={theme.palette.info.main} />
-                <Typography variant="body2" color="text.secondary">
-                  Регулярно змінюйте пароль для забезпечення максимальної безпеки
-                </Typography>
+              {/* Кнопки */}
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 2, 
+                justifyContent: 'flex-end',
+                pt: 2,
+                borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              }}>
+                <Button
+                  onClick={handleCancelPasswordChange}
+                  variant="outlined"
+                  disabled={isSaving}
+                  sx={{ 
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                  }}
+                >
+                  {t('security:actions.cancel')}
+                </Button>
+                <Button
+                  onClick={handleSavePassword}
+                  variant="contained"
+                  disabled={
+                    isSaving || 
+                    !passwordForm.newPassword || 
+                    !passwordForm.confirmPassword ||
+                    passwordForm.newPassword !== passwordForm.confirmPassword
+                  }
+                  sx={{ 
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                  }}
+                >
+                  {isSaving ? (
+                    <>
+                      <CircularProgress size={18} sx={{ mr: 1 }} />
+                      {t('security:actions.saving')}
+                    </>
+                  ) : (
+                    t('security:actions.save')
+                  )}
+                </Button>
               </Box>
             </Stack>
-          </CardContent>
-        </Card>
-      </Stack>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Рекомендації з безпеки */}
+      <Card sx={{ 
+        borderRadius: '12px',
+        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+      }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: '8px',
+                backgroundColor: alpha(theme.palette.warning.main, 0.1),
+                color: theme.palette.warning.main,
+                mr: 2,
+              }}
+            >
+              <Shield size={24} />
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {t('security:recommendations.title')}
+            </Typography>
+          </Box>
+
+          <Stack spacing={2}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+              <AlertTriangle size={16} color={theme.palette.info.main} />
+              <Typography variant="body2" color="text.secondary">
+                {t('security:recommendations.uniquePassword')}
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+              <AlertTriangle size={16} color={theme.palette.info.main} />
+              <Typography variant="body2" color="text.secondary">
+                {t('security:recommendations.passwordComplexity')}
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+              <AlertTriangle size={16} color={theme.palette.info.main} />
+              <Typography variant="body2" color="text.secondary">
+                {t('security:recommendations.dontShare')}
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+              <AlertTriangle size={16} color={theme.palette.info.main} />
+              <Typography variant="body2" color="text.secondary">
+                {t('account:security.recommendations.updateRegularly', { defaultValue: 'Регулярно оновлюйте пароль для максимальної безпеки' })}
+              </Typography>
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
     </Box>
   );
 };

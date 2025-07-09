@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -33,6 +34,7 @@ interface UserProfile {
 }
 
 const ProfileSection: React.FC = () => {
+  const { t } = useTranslation(['account', 'common']);
   const theme = useTheme();
   const { user, profile: contextProfile, updateProfile } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -65,18 +67,18 @@ const ProfileSection: React.FC = () => {
             avatar_url: data.profile.avatar_url || '',
           });
         } else {
-          setError(data.error?.message || 'Помилка завантаження профілю');
+          setError(data.error?.message || t('profile.profileLoadError'));
         }
       } catch (err) {
         console.error('Error fetching profile:', err);
-        setError('Помилка підключення до сервера');
+        setError(t('profile.connectionError'));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchProfile();
-  }, [user]);
+  }, [user, t]);
 
   const handleEditStart = () => {
     setIsEditing(true);
@@ -124,7 +126,7 @@ const ProfileSection: React.FC = () => {
       if (data.success) {
         setProfile(data.profile);
         setIsEditing(false);
-        setSuccess('Профіль оновлено успішно');
+        setSuccess(t('profile.profileUpdated'));
         
         // Оновлюємо профіль в контексті
         await updateProfile({
@@ -132,18 +134,18 @@ const ProfileSection: React.FC = () => {
           avatar_url: data.profile.avatar_url,
         });
       } else {
-        setError(data.error?.message || 'Помилка при збереженні');
+        setError(data.error?.message || t('profile.profileUpdateError'));
       }
     } catch (err) {
       console.error('Error updating profile:', err);
-      setError('Помилка підключення до сервера');
+      setError(t('profile.connectionError'));
     } finally {
       setIsSaving(false);
     }
   };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'Невідомо';
+    if (!dateString) return t('profile.unknown');
     return new Date(dateString).toLocaleDateString('uk-UA', {
       year: 'numeric',
       month: 'long',
@@ -169,7 +171,7 @@ const ProfileSection: React.FC = () => {
   if (!profile) {
     return (
       <Alert severity="error">
-        Не вдалося завантажити дані профілю
+        {t('profile.profileLoadError')}
       </Alert>
     );
   }
@@ -183,7 +185,7 @@ const ProfileSection: React.FC = () => {
         mb: 3 
       }}>
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
-          Інформація профілю
+          {t('profile.profileInfo')}
         </Typography>
         
         {!isEditing && (
@@ -196,7 +198,7 @@ const ProfileSection: React.FC = () => {
               borderRadius: '8px',
             }}
           >
-            Редагувати
+            {t('profile.edit')}
           </Button>
         )}
       </Box>
@@ -221,7 +223,7 @@ const ProfileSection: React.FC = () => {
         }}>
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Аватар
+              {t('profile.avatar')}
             </Typography>
             
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -263,11 +265,11 @@ const ProfileSection: React.FC = () => {
               {isEditing && (
                 <Box sx={{ flex: 1 }}>
                   <TextField
-                    label="URL аватара"
+                    label={t('profile.avatarUrl')}
                     fullWidth
                     value={editForm.avatar_url}
                     onChange={(e) => handleInputChange('avatar_url', e.target.value)}
-                    placeholder="https://example.com/avatar.jpg"
+                    placeholder={t('profile.enterAvatarUrl')}
                     variant="outlined"
                     size="small"
                     sx={{
@@ -277,7 +279,7 @@ const ProfileSection: React.FC = () => {
                     }}
                   />
                   <Typography variant="caption" color="text.secondary">
-                    Введіть URL зображення для аватара
+                    {t('profile.avatarUrlDescription')}
                   </Typography>
                 </Box>
               )}
@@ -292,21 +294,21 @@ const ProfileSection: React.FC = () => {
         }}>
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-              Основна інформація
+              {t('profile.basicInfo')}
             </Typography>
             
             <Stack spacing={3}>
               {/* Повне ім'я */}
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Повне ім'я
+                  {t('profile.fullName')}
                 </Typography>
                 {isEditing ? (
                   <TextField
                     fullWidth
                     value={editForm.full_name}
                     onChange={(e) => handleInputChange('full_name', e.target.value)}
-                    placeholder="Введіть ваше повне ім'я"
+                    placeholder={t('profile.enterFullName')}
                     variant="outlined"
                     size="small"
                     sx={{
@@ -317,7 +319,7 @@ const ProfileSection: React.FC = () => {
                   />
                 ) : (
                   <Typography variant="body1">
-                    {profile.full_name || 'Не вказано'}
+                    {profile.full_name || t('profile.notSpecified')}
                   </Typography>
                 )}
               </Box>
@@ -325,7 +327,7 @@ const ProfileSection: React.FC = () => {
               {/* Email (тільки для читання) */}
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Email
+                  {t('profile.email')}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                   {profile.email}
@@ -335,24 +337,20 @@ const ProfileSection: React.FC = () => {
               {/* Роль (тільки для читання) */}
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Роль
+                  {t('profile.role')}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  {profile.role === 'teacher' ? 'Вчитель' : 
-                   profile.role === 'admin' ? 'Адміністратор' :
-                   profile.role === 'student' ? 'Учень' : 'Користувач'}
+                  {t(`common:roles.${profile.role}`)}
                 </Typography>
               </Box>
 
               {/* Підписка (тільки для читання) */}
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Тип підписки
+                  {t('profile.subscriptionType')}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  {profile.subscription_type === 'free' ? 'Безкоштовна' :
-                   profile.subscription_type === 'professional' ? 'Професійна' :
-                   profile.subscription_type === 'premium' ? 'Преміум' : 'Невідома'}
+                  {t(`common:subscription.${profile.subscription_type}`)}
                 </Typography>
               </Box>
             </Stack>
@@ -376,7 +374,7 @@ const ProfileSection: React.FC = () => {
                     borderRadius: '8px',
                   }}
                 >
-                  Скасувати
+                  {t('profile.cancel')}
                 </Button>
                 <Button
                   startIcon={isSaving ? <CircularProgress size={18} /> : <Save size={18} />}
@@ -388,7 +386,7 @@ const ProfileSection: React.FC = () => {
                     borderRadius: '8px',
                   }}
                 >
-                  {isSaving ? 'Збереження...' : 'Зберегти'}
+                  {isSaving ? t('profile.saving') : t('profile.save')}
                 </Button>
               </Box>
             )}
@@ -402,13 +400,13 @@ const ProfileSection: React.FC = () => {
         }}>
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-              Системна інформація
+              {t('profile.systemInfo')}
             </Typography>
             
             <Stack spacing={2}>
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Дата реєстрації
+                  {t('profile.registrationDate')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {formatDate(profile.created_at)}
@@ -417,7 +415,7 @@ const ProfileSection: React.FC = () => {
 
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Останнє оновлення профілю
+                  {t('profile.lastProfileUpdate')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {formatDate(profile.updated_at)}
@@ -427,7 +425,7 @@ const ProfileSection: React.FC = () => {
               {profile.last_sign_in_at && (
                 <Box>
                   <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
-                    Останній вхід
+                    {t('profile.lastSignIn')}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {formatDate(profile.last_sign_in_at)}

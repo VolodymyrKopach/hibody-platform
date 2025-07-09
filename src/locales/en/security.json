@@ -1,0 +1,10 @@
+{
+  "title": "Security",
+  "changePassword": "Change Password",
+  "recommendations": {
+    "title": "Security Recommendations",
+    "uniquePassword": "Use a unique password that you don't use on other sites",
+    "passwordComplexity": "Create a complex password with a combination of letters, numbers and symbols",
+    "dontShare": "Never share your password with other people"
+  }
+} 

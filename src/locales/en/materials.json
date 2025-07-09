@@ -1,0 +1,55 @@
+{
+  "title": "My Materials",
+  "subtitle": "Manage your lessons and educational materials",
+  "form": {
+    "lessonTitle": "Lesson title",
+    "description": "Description",
+    "subject": "Subject",
+    "ageGroup": "Age group"
+  },
+  "actions": {
+    "createLesson": "Create lesson",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "dialogs": {
+    "deleteTitle": "Delete material?",
+    "deleteMessage": "Are you sure you want to delete \"{title}\"? This action cannot be undone.",
+    "editTitle": "Edit lesson"
+  },
+  "roles": {
+    "teacher": "Teacher",
+    "student": "Student",
+    "user": "User"
+  },
+  "subscription": {
+    "free": "Free"
+  },
+  "filters": {
+    "all": "All",
+    "published": "Published",
+    "draft": "Drafts",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "sorting": {
+    "recent": "Recent",
+    "popular": "Popular", 
+    "rating": "By rating",
+    "title": "By title"
+  },
+  "emptyState": {
+    "title": "No materials found",
+    "subtitle": "Create your first lesson to see it here"
+  },
+  "errors": {
+    "loadingTimeout": "Loading is taking longer than expected",
+    "networkIssue": "There may be a network or server issue",
+    "loadingError": "Error loading materials",
+    "noLessonId": "Error: lesson ID not found for deletion",
+    "deleteError": "Error deleting lesson"
+  }
+} 

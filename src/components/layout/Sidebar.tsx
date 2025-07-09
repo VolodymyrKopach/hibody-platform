@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   List,
@@ -33,17 +34,18 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
+  const { t } = useTranslation('common');
   const theme = useTheme();
   const pathname = usePathname();
 
   const menuItems = [
     {
-      label: 'AI Чат',
+      label: t('navigation.aiChat'),
       icon: MessageSquare,
       href: '/chat'
     },
     {
-      label: 'Мої матеріали',
+      label: t('navigation.myMaterials'),
       icon: FileText,
       href: '/materials'
     }

@@ -1,21 +1,23 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import {
-  Box,
   Paper,
-  Typography,
   TextField,
   Button,
+  Typography,
   Alert,
-  CircularProgress,
+  Box,
   InputAdornment,
   IconButton,
-  useTheme,
-  alpha,
   LinearProgress,
+  CircularProgress,
 } from '@mui/material'
-import { Lock, Eye, EyeOff, CheckCircle, Key } from 'lucide-react'
+import { alpha, useTheme } from '@mui/material/styles'
+import { Lock, Eye, EyeOff, Key, CheckCircle } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
+import { useTranslation } from 'react-i18next'
 
 interface ResetPasswordFormProps {
   token: string
@@ -23,116 +25,112 @@ interface ResetPasswordFormProps {
 }
 
 const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess }) => {
+  const { t } = useTranslation(['auth', 'common'])
   const theme = useTheme()
+  const router = useRouter()
+  
   const [formData, setFormData] = useState({
     password: '',
-    confirmPassword: '',
+    confirmPassword: ''
   })
   const [showPassword, setShowPassword] = useState({
     password: false,
-    confirmPassword: false,
+    confirmPassword: false
   })
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }))
-    if (error) setError(null)
+    setError('') // Clear error when user starts typing
   }
 
   const togglePasswordVisibility = (field: 'password' | 'confirmPassword') => {
     setShowPassword(prev => ({
       ...prev,
-      [field]: !prev[field],
+      [field]: !prev[field]
     }))
   }
 
   const getPasswordStrength = (password: string) => {
     let strength = 0
-    if (password.length >= 6) strength++
-    if (/(?=.*[a-z])/.test(password)) strength++
-    if (/(?=.*[A-Z])/.test(password)) strength++
-    if (/(?=.*\d)/.test(password)) strength++
-    if (/(?=.*[!@#$%^&*])/.test(password)) strength++
-
+    
+    if (password.length >= 8) strength += 1
+    if (/[a-z]/.test(password)) strength += 1
+    if (/[A-Z]/.test(password)) strength += 1
+    if (/[0-9]/.test(password)) strength += 1
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1
+    
+    const labels = [
+      t('auth:passwordStrength.veryWeak'),
+      t('auth:passwordStrength.weak'),
+      t('auth:passwordStrength.medium'),
+      t('auth:passwordStrength.good'),
+      t('auth:passwordStrength.excellent')
+    ]
+    
     return {
       score: strength,
-      label: ['Дуже слабкий', 'Слабкий', 'Середній', 'Хороший', 'Відмінний'][strength] || 'Дуже слабкий',
-      color: ['#f44336', '#ff9800', '#2196f3', '#4caf50', '#8bc34a'][strength] || '#f44336',
-      progress: (strength / 5) * 100,
+      label: labels[strength] || t('auth:passwordStrength.veryWeak'),
+      color: ['#f44336', '#ff9800', '#ffeb3b', '#4caf50', '#2e7d32'][strength] || '#f44336',
+      progress: (strength / 5) * 100
     }
   }
 
   const validatePassword = (password: string): string | null => {
-    if (password.length < 6) {
-      return 'Пароль повинен містити щонайменше 6 символів'
+    if (password.length < 8) {
+      return t('auth:validation.passwordTooShort')
     }
-    if (!/(?=.*[a-z])/.test(password)) {
-      return 'Пароль повинен містити щонайменше одну малу літеру'
+    
+    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      return 'Пароль повинен містити великі та малі літери, цифри'
     }
-    if (!/(?=.*[A-Z])/.test(password)) {
-      return 'Пароль повинен містити щонайменше одну велику літеру'
-    }
-    if (!/(?=.*\d)/.test(password)) {
-      return 'Пароль повинен містити щонайменше одну цифру'
-    }
+    
     return null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    const { password, confirmPassword } = formData
-
+    
     // Валідація
-    if (!password || !confirmPassword) {
-      setError('Заповніть всі поля')
-      setLoading(false)
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError('Паролі не співпадають')
-      setLoading(false)
-      return
-    }
-
-    const passwordError = validatePassword(password)
+    const passwordError = validatePassword(formData.password)
     if (passwordError) {
       setError(passwordError)
-      setLoading(false)
+      return
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError(t('auth:validation.passwordsDoNotMatch'))
       return
     }
 
+    setLoading(true)
+    setError('')
+
     try {
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          password,
-        }),
+      // Оновлюємо пароль користувача
+      const { error } = await supabase.auth.updateUser({
+        password: formData.password
       })
 
-      const data = await response.json()
-
-      if (data.success) {
-        setSuccess(true)
-        setTimeout(() => {
-          onSuccess()
-        }, 2000)
-      } else {
-        setError(data.error?.message || 'Помилка при скиданні пароля')
+      if (error) {
+        throw error
       }
-    } catch (err) {
+
+      setSuccess(true)
+      
+      // Перенаправляємо користувача через 2 секунди
+      setTimeout(() => {
+        router.push('/auth/login')
+        onSuccess()
+      }, 2000)
+
+    } catch (err: any) {
       console.error('Reset password error:', err)
       setError('Помилка підключення до сервера')
     } finally {
@@ -165,7 +163,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
             style={{ marginBottom: '16px' }}
           />
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-            Пароль змінено
+            {t('auth:resetPassword.success')}
           </Typography>
           <Typography variant="body1" sx={{ color: 'text.secondary' }}>
             Ваш пароль успішно оновлено. Зараз ви будете перенаправлені до сторінки входу.
@@ -191,7 +189,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
       <Box sx={{ textAlign: 'center', mb: 3 }}>
         <Key size={48} color={theme.palette.primary.main} style={{ marginBottom: '16px' }} />
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-          Новий пароль
+          {t('auth:resetPassword.title')}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           Введіть новий пароль для свого облікового запису
@@ -208,7 +206,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
         <TextField
           fullWidth
           name="password"
-          label="Новий пароль"
+          label={t('auth:resetPassword.newPassword')}
           type={showPassword.password ? 'text' : 'password'}
           value={formData.password}
           onChange={handleChange}
@@ -240,7 +238,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="caption" color="text.secondary">
-                Надійність пароля
+                {t('auth:passwordStrength.strengthLabel')}
               </Typography>
               <Typography 
                 variant="caption" 
@@ -268,7 +266,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
         <TextField
           fullWidth
           name="confirmPassword"
-          label="Підтвердіть новий пароль"
+          label={t('auth:resetPassword.confirmPassword')}
           type={showPassword.confirmPassword ? 'text' : 'password'}
           value={formData.confirmPassword}
           onChange={handleChange}
@@ -282,7 +280,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
           helperText={
             formData.confirmPassword.length > 0 && 
             formData.password !== formData.confirmPassword
-              ? 'Паролі не співпадають'
+              ? t('auth:validation.passwordsDoNotMatch2')
               : ''
           }
           InputProps={{
@@ -324,7 +322,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
           {loading ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            'Змінити пароль'
+            t('auth:resetPassword.submit')
           )}
         </Button>
       </Box>

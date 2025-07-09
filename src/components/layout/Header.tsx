@@ -370,42 +370,52 @@ const Header: React.FC<HeaderProps> = ({
           </MenuItem>
 
           {/* Language Selector */}
-          <Box sx={{ px: 1, py: 0.5 }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', px: 1 }}>
-              {t('language.title', 'Language')}
-            </Typography>
-            {languages.map((language) => (
-              <MenuItem
-                key={language.code}
-                onClick={() => handleLanguageChange(language.code)}
-                selected={language.code === i18n.language}
-                sx={{
-                  borderRadius: '6px',
-                  mb: 0.25,
-                  py: 0.5,
-                  minHeight: 'auto',
-                  fontSize: '0.875rem',
-                  backgroundColor: language.code === i18n.language ? alpha(theme.palette.primary.main, 0.08) : 'transparent',
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                  },
-                  '&.Mui-selected': {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                    '&:hover': {
-                      backgroundColor: alpha(theme.palette.primary.main, 0.12),
-                    },
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: '28px' }}>
-                  <span style={{ fontSize: '1rem' }}>{language.flag}</span>
-                </ListItemIcon>
-                <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
-                  {language.name}
-                </Typography>
-              </MenuItem>
-            ))}
-          </Box>
+          <MenuItem 
+            sx={{ 
+              borderRadius: '8px', 
+              mb: 0.5,
+              px: 2,
+              '&:hover': {
+                backgroundColor: 'transparent',
+              },
+              cursor: 'default'
+            }}
+          >
+            <ListItemIcon>
+              <Languages size={18} />
+            </ListItemIcon>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+              <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                {t('language.title', 'Language')}
+              </Typography>
+              <Stack direction="row" spacing={0.5}>
+                {languages.map((language) => (
+                  <Box
+                    key={language.code}
+                    onClick={() => handleLanguageChange(language.code)}
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: language.code === i18n.language ? alpha(theme.palette.primary.main, 0.12) : 'transparent',
+                      border: `1px solid ${language.code === i18n.language ? theme.palette.primary.main : 'transparent'}`,
+                      '&:hover': {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                      },
+                      transition: 'all 0.2s ease',
+                    }}
+                    title={language.name}
+                  >
+                    <span style={{ fontSize: '1rem' }}>{language.flag}</span>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+          </MenuItem>
           
           <Divider sx={{ my: 1 }} />
           

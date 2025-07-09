@@ -26,7 +26,22 @@
     "editingProfile": "Editing Profile",
     "basicInfo": "Basic Information",
     "notSpecified": "Not specified",
-    "enterFullName": "Enter your full name"
+    "enterFullName": "Enter your full name",
+    "profileInfo": "Profile Information",
+    "systemInfo": "System Information",
+    "profileUpdated": "Profile updated successfully",
+    "profileLoadError": "Failed to load profile data",
+    "profileUpdateError": "Error saving",
+    "connectionError": "Server connection error",
+    "subscriptionType": "Subscription Type",
+    "registrationDate": "Registration Date",
+    "lastProfileUpdate": "Last Profile Update",
+    "lastSignIn": "Last Sign In",
+    "unknown": "Unknown",
+    "avatar": "Avatar",
+    "avatarUrl": "Avatar URL",
+    "enterAvatarUrl": "https://example.com/avatar.jpg",
+    "avatarUrlDescription": "Enter image URL for avatar"
   },
   "security": {
     "title": "Security",
@@ -56,7 +71,15 @@
     },
     "savePassword": "Save Password",
     "passwordChanged": "Password successfully changed",
-    "passwordError": "Error changing password"
+    "passwordError": "Error changing password",
+    "updatePasswordDescription": "Update your password to improve security",
+    "recommendations": {
+      "title": "Security Recommendations",
+      "uniquePassword": "Use a unique password that you don't use on other sites",
+      "passwordComplexity": "Create a complex password with a combination of letters, numbers and symbols",
+      "dontShare": "Never share your password with other people",
+      "updateRegularly": "Regularly update your password for maximum security"
+    }
   },
   "stats": {
     "title": "Statistics",

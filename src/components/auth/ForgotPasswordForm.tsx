@@ -2,48 +2,54 @@
 
 import React, { useState } from 'react'
 import {
-  Box,
   Paper,
-  Typography,
   TextField,
   Button,
+  Typography,
   Alert,
-  CircularProgress,
+  Box,
   InputAdornment,
-  useTheme,
-  alpha,
-  Link,
+  CircularProgress,
 } from '@mui/material'
-import { Mail, ArrowLeft, CheckCircle } from 'lucide-react'
+import { alpha, useTheme } from '@mui/material/styles'
+import { Mail, Send, CheckCircle } from 'lucide-react'
+import { useAuth } from '@/providers/AuthProvider'
+import { useTranslation } from 'react-i18next'
 
 interface ForgotPasswordFormProps {
-  onBackToLogin: () => void
+  onBack?: () => void
 }
 
-const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToLogin }) => {
+const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
+  const { t } = useTranslation(['auth', 'common'])
   const theme = useTheme()
+  const { signIn } = useAuth()
+  
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value)
-    if (error) setError(null)
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    // Валідація email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      setError('Введіть коректну електронну адресу')
-      setLoading(false)
+    
+    if (!email.trim()) {
+      setError(t('auth:validation.required'))
       return
     }
+
+    if (!validateEmail(email)) {
+      setError(t('auth:validation.invalidEmail'))
+      return
+    }
+
+    setLoading(true)
+    setError('')
 
     try {
       const response = await fetch('/api/auth/forgot-password', {
@@ -69,8 +75,6 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToLogin }
     }
   }
 
-  const isFormValid = email.trim() !== ''
-
   if (success) {
     return (
       <Paper
@@ -93,31 +97,22 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToLogin }
             style={{ marginBottom: '16px' }}
           />
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-            Лист відправлено
+            {t('auth:forgotPassword.success')}
           </Typography>
-          <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
-            Ми відправили посилання для скидання пароля на адресу:
-          </Typography>
-          <Typography variant="body1" sx={{ fontWeight: 600, color: 'primary.main' }}>
-            {email}
+          <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+            Перевірте свою електронну пошту {email} для подальших інструкцій.
           </Typography>
         </Box>
 
-        <Alert severity="info" sx={{ mb: 3, borderRadius: '12px' }}>
-          Перевірте свою поштову скриньку та перейдіть за посиланням для скидання пароля.
-        </Alert>
-
         <Button
-          onClick={onBackToLogin}
           variant="outlined"
-          startIcon={<ArrowLeft size={20} />}
+          onClick={onBack}
           sx={{
             borderRadius: '12px',
             textTransform: 'none',
-            px: 3,
           }}
         >
-          Повернутися до входу
+          {t('auth:forgotPassword.backToLogin')}
         </Button>
       </Paper>
     )
@@ -137,11 +132,12 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToLogin }
       }}
     >
       <Box sx={{ textAlign: 'center', mb: 3 }}>
+        <Send size={48} color={theme.palette.primary.main} style={{ marginBottom: '16px' }} />
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-          Забули пароль?
+          {t('auth:forgotPassword.title')}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Введіть свою електронну адресу і ми відправимо вам посилання для скидання пароля
+          {t('auth:forgotPassword.description')}
         </Typography>
       </Box>
 
@@ -155,10 +151,13 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToLogin }
         <TextField
           fullWidth
           name="email"
-          label="Електронна пошта"
+          label={t('auth:forgotPassword.email')}
           type="email"
           value={email}
-          onChange={handleChange}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            setError('')
+          }}
           required
           disabled={loading}
           sx={{ mb: 3 }}
@@ -175,10 +174,10 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToLogin }
           type="submit"
           fullWidth
           variant="contained"
-          disabled={!isFormValid || loading}
+          disabled={!email.trim() || loading}
           sx={{
             py: 1.5,
-            mb: 3,
+            mb: 2,
             borderRadius: '12px',
             background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
             boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
@@ -191,33 +190,21 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToLogin }
           {loading ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            'Відправити посилання'
+            t('auth:forgotPassword.submit')
           )}
         </Button>
 
-        <Box sx={{ textAlign: 'center' }}>
-          <Link
-            component="button"
-            type="button"
-            onClick={onBackToLogin}
-            sx={{
-              color: 'text.secondary',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              mx: 'auto',
-              '&:hover': {
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            <ArrowLeft size={16} />
-            Повернутися до входу
-          </Link>
-        </Box>
+        <Button
+          variant="text"
+          onClick={onBack}
+          fullWidth
+          sx={{
+            textTransform: 'none',
+            borderRadius: '12px',
+          }}
+        >
+          {t('auth:forgotPassword.backToLogin')}
+        </Button>
       </Box>
     </Paper>
   )

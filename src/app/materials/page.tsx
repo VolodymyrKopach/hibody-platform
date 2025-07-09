@@ -83,7 +83,7 @@ const MyMaterials = () => {
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuth();
-  const { t } = useTranslation(['lessons', 'common']);
+  const { t } = useTranslation(['materials', 'slides', 'lessons', 'common']);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -140,9 +140,9 @@ const MyMaterials = () => {
   const convertToSimpleLesson = (dbLesson: any): SimpleLesson => {
     const slides: SimpleSlide[] = (dbLesson.slides || []).map((slide: any) => ({
       id: slide.id,
-      title: slide.title || 'Слайд без назви',
+      title: slide.title || t('slides:messages.slideWithoutTitle'),
       content: slide.description || '',
-      htmlContent: slide.html_content || '<div style="padding: 20px; text-align: center;">Контент слайду недоступний</div>',
+      htmlContent: slide.html_content || `<div style="padding: 20px; text-align: center;">${t('slides:errors.contentUnavailable', { defaultValue: 'Контент слайду недоступний' })}</div>`,
       type: slide.type || 'content',
       status: slide.status || 'ready'
     }));
@@ -180,7 +180,7 @@ const MyMaterials = () => {
         status: lesson.status,
         views: lesson.views,
         rating: lesson.rating,
-        duration: `${lesson.duration} хв`,
+        duration: `${lesson.duration} ${t('lessons:duration.minutes')}`,
         thumbnail: lesson.thumbnail_url || '/images/default-lesson.png',
         tags: lesson.tags,
         difficulty: lesson.difficulty,
@@ -366,7 +366,7 @@ const MyMaterials = () => {
       
       if (!lessonId) {
         console.error('No lessonId found in material');
-        alert('Помилка: не знайдено ID уроку для видалення');
+        alert(t('materials:errors.noLessonId', { defaultValue: 'Помилка: не знайдено ID уроку для видалення' }));
         setDeleteDialogOpen(false);
         setMaterialToDelete(null);
         return;
@@ -375,7 +375,7 @@ const MyMaterials = () => {
       const deleteSuccess = await deleteLessonFromDb(lessonId);
       
       if (!deleteSuccess) {
-        alert('Помилка при видаленні уроку');
+        alert(t('materials:errors.deleteError', { defaultValue: 'Помилка при видаленні уроку' }));
       }
     } else {
       console.error('No material to delete');
@@ -802,10 +802,10 @@ const MyMaterials = () => {
           }}>
             <Box>
               <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
-                {t('lessons:materials.title')}
+                {t('materials:title')}
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                {t('lessons:materials.subtitle')}
+                {t('materials:subtitle')}
               </Typography>
             </Box>
             
@@ -859,12 +859,12 @@ const MyMaterials = () => {
                     backgroundColor: '#ffffff'
                   }}
                 >
-                  <MenuItem value="all">{t('lessons:materials.filters.all')}</MenuItem>
-                  <MenuItem value="published">{t('lessons:materials.filters.published')}</MenuItem>
-                  <MenuItem value="draft">{t('lessons:materials.filters.draft')}</MenuItem>
-                  <MenuItem value="easy">{t('lessons:materials.filters.easy')}</MenuItem>
-                  <MenuItem value="medium">{t('lessons:materials.filters.medium')}</MenuItem>
-                  <MenuItem value="hard">{t('lessons:materials.filters.hard')}</MenuItem>
+                  <MenuItem value="all">{t('materials:filters.all')}</MenuItem>
+                  <MenuItem value="published">{t('materials:filters.published')}</MenuItem>
+                  <MenuItem value="draft">{t('materials:filters.draft')}</MenuItem>
+                  <MenuItem value="easy">{t('materials:filters.easy')}</MenuItem>
+                  <MenuItem value="medium">{t('materials:filters.medium')}</MenuItem>
+                  <MenuItem value="hard">{t('materials:filters.hard')}</MenuItem>
                 </Select>
               </FormControl>
 
@@ -879,10 +879,10 @@ const MyMaterials = () => {
                     backgroundColor: '#ffffff'
                   }}
                 >
-                  <MenuItem value="recent">{t('lessons:materials.sorting.recent')}</MenuItem>
-                  <MenuItem value="popular">{t('lessons:materials.sorting.popular')}</MenuItem>
-                  <MenuItem value="rating">{t('lessons:materials.sorting.rating')}</MenuItem>
-                  <MenuItem value="title">{t('lessons:materials.sorting.title')}</MenuItem>
+                  <MenuItem value="recent">{t('materials:sorting.recent')}</MenuItem>
+                  <MenuItem value="popular">{t('materials:sorting.popular')}</MenuItem>
+                  <MenuItem value="rating">{t('materials:sorting.rating')}</MenuItem>
+                  <MenuItem value="title">{t('materials:sorting.title')}</MenuItem>
                 </Select>
               </FormControl>
             </Stack>
@@ -924,10 +924,10 @@ const MyMaterials = () => {
               backgroundColor: alpha(theme.palette.grey[50], 0.3)
             }}>
               <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary' }}>
-                Матеріали не знайдено
+                {t('materials:emptyState.title')}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Створіть свій перший урок, щоб побачити його тут
+                {t('materials:emptyState.subtitle')}
               </Typography>
               <Button
                 variant="contained"
@@ -939,7 +939,7 @@ const MyMaterials = () => {
                   background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
                 }}
               >
-                Створити урок
+                {t('materials:actions.createLesson')}
               </Button>
             </Paper>
           )}
@@ -991,7 +991,7 @@ const MyMaterials = () => {
               <ListItemIcon>
                 <BookOpen size={18} />
               </ListItemIcon>
-              <ListItemText>Створити урок</ListItemText>
+              <ListItemText>{t('materials:actions.createLesson')}</ListItemText>
             </MenuItem>
           </Menu>
 
@@ -1015,14 +1015,14 @@ const MyMaterials = () => {
               <ListItemIcon>
                 <Edit size={16} />
               </ListItemIcon>
-              <ListItemText>Редагувати</ListItemText>
+              <ListItemText>{t('materials:actions.edit')}</ListItemText>
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
               <ListItemIcon>
                 <Delete size={16} color={theme.palette.error.main} />
               </ListItemIcon>
-              <ListItemText>Видалити</ListItemText>
+              <ListItemText>{t('materials:actions.delete')}</ListItemText>
             </MenuItem>
           </Menu>
 
@@ -1041,17 +1041,16 @@ const MyMaterials = () => {
               color: theme.palette.error.main
             }}>
               <Delete size={24} />
-              Видалити матеріал?
+              {t('materials:dialogs.deleteTitle')}
             </DialogTitle>
             <DialogContent>
               <DialogContentText>
-                Ви впевнені, що хочете видалити "{materialToDelete?.title}"? 
-                Цю дію неможливо скасувати.
+                {t('materials:dialogs.deleteMessage', { title: materialToDelete?.title })}
               </DialogContentText>
             </DialogContent>
             <DialogActions sx={{ p: 3, pt: 1 }}>
               <Button onClick={() => setDeleteDialogOpen(false)} sx={{ textTransform: 'none' }}>
-                Скасувати
+                {t('materials:actions.cancel')}
               </Button>
               <Button 
                 onClick={handleDeleteConfirm} 
@@ -1059,7 +1058,7 @@ const MyMaterials = () => {
                 variant="contained"
                 sx={{ textTransform: 'none', borderRadius: '8px' }}
               >
-                Видалити
+                {t('materials:actions.delete')}
               </Button>
             </DialogActions>
           </Dialog>
@@ -1087,12 +1086,12 @@ const MyMaterials = () => {
               gap: 2,
             }}>
               <Edit size={24} />
-              Редагувати урок
+              {t('materials:dialogs.editTitle')}
             </DialogTitle>
             <DialogContent sx={{ px: 3, pb: 2 }}>
               <Stack spacing={3} sx={{ mt: 2 }}>
                 <TextField
-                  label="Назва уроку"
+                  label={t('materials:form.lessonTitle')}
                   fullWidth
                   value={editFormData.title}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, title: e.target.value }))}
@@ -1104,7 +1103,7 @@ const MyMaterials = () => {
                   }}
                 />
                 <TextField
-                  label="Опис"
+                  label={t('materials:form.description')}
                   fullWidth
                   multiline
                   rows={3}
@@ -1118,7 +1117,7 @@ const MyMaterials = () => {
                   }}
                 />
                 <TextField
-                  label="Предмет"
+                  label={t('materials:form.subject')}
                   fullWidth
                   value={editFormData.subject}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, subject: e.target.value }))}
@@ -1130,7 +1129,7 @@ const MyMaterials = () => {
                   }}
                 />
                 <TextField
-                  label="Вікова група"
+                  label={t('materials:form.ageGroup')}
                   fullWidth
                   value={editFormData.ageGroup}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, ageGroup: e.target.value }))}
@@ -1145,7 +1144,7 @@ const MyMaterials = () => {
             </DialogContent>
             <DialogActions sx={{ p: 3, pt: 1 }}>
               <Button onClick={handleEditCancel} sx={{ textTransform: 'none' }}>
-                Скасувати
+                {t('materials:actions.cancel')}
               </Button>
               <Button 
                 onClick={handleEditSave}
@@ -1157,7 +1156,7 @@ const MyMaterials = () => {
                   px: 4,
                 }}
               >
-                Зберегти
+                {t('materials:actions.save')}
               </Button>
             </DialogActions>
           </Dialog>

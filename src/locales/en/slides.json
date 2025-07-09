@@ -1,74 +1,24 @@
 {
-  "title": "Slides",
-  "create": "Create Slide",
-  "edit": "Edit Slide",
-  "delete": "Delete Slide",
-  "save": "Save Slide",
-  "cancel": "Cancel",
-  "duplicate": "Duplicate",
-  "export": "Export",
-  "share": "Share",
-  "close": "Close",
-  "details": {
-    "title": "Slide Title",
-    "description": "Slide Description",
-    "type": "Type",
-    "status": "Status",
-    "duration": "Duration",
-    "order": "Order",
-    "createdAt": "Created",
-    "updatedAt": "Updated"
+  "navigation": {
+    "nextSlide": "Next slide",
+    "close": "Close",
+    "exitPresentation": "Exit presentation mode",
+    "presentationMode": "Presentation mode"
   },
   "types": {
     "welcome": "Welcome",
     "content": "Content",
-    "activity": "Activity",
+    "activity": "Activity", 
     "game": "Game",
-    "quiz": "Quiz",
-    "summary": "Summary",
-    "intro": "Introduction"
+    "summary": "Summary"
   },
-  "status": {
-    "draft": "Draft",
-    "ready": "Ready",
-    "published": "Published",
-    "completed": "Completed"
+  "form": {
+    "title": "Slide title",
+    "description": "Slide description",
+    "type": "Slide type",
+    "icon": "Icon"
   },
-  "emptyState": {
-    "title": "Start creating your lesson",
-    "description": "Your slides will appear here after generation. Just start a conversation with AI about the lesson topic!",
-    "example1": "💬 \"Create a lesson about space for 7-year-old children\"",
-    "example2": "💬 \"Make a math lesson about addition\"",
-    "example3": "💬 \"Help create a lesson about animals\"",
-    "footer": "AI will automatically create interactive slides based on your request"
-  },
-  "tooltips": {
-    "close": "Close",
-    "edit": "Edit slide",
-    "delete": "Delete slide",
-    "preview": "Preview slide",
-    "select": "Select slide",
-    "deselect": "Deselect",
-    "move": "Move slide"
-  },
-  "navigation": {
-    "previous": "Previous slide",
-    "next": "Next slide",
-    "first": "First slide",
-    "last": "Last slide"
-  },
-  "export": {
-    "title": "Export slides",
-    "formats": {
-      "html": "HTML file",
-      "pdf": "PDF document",
-      "image": "Image"
-    }
-  },
-  "duration": {
-    "short": "Short",
-    "medium": "Medium",
-    "long": "Long",
-    "minutes": "min"
+  "messages": {
+    "slideWithoutTitle": "Slide without title"
   }
 } 

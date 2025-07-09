@@ -26,7 +26,22 @@
     "editingProfile": "Редагування профілю",
     "basicInfo": "Основна інформація",
     "notSpecified": "Не вказано",
-    "enterFullName": "Введіть ваше повне ім'я"
+    "enterFullName": "Введіть ваше повне ім'я",
+    "profileInfo": "Інформація профілю",
+    "systemInfo": "Системна інформація",
+    "profileUpdated": "Профіль оновлено успішно",
+    "profileLoadError": "Не вдалося завантажити дані профілю",
+    "profileUpdateError": "Помилка при збереженні",
+    "connectionError": "Помилка підключення до сервера",
+    "subscriptionType": "Тип підписки",
+    "registrationDate": "Дата реєстрації",
+    "lastProfileUpdate": "Останнє оновлення профілю",
+    "lastSignIn": "Останній вхід",
+    "unknown": "Невідомо",
+    "avatar": "Аватар",
+    "avatarUrl": "URL аватара",
+    "enterAvatarUrl": "https://example.com/avatar.jpg",
+    "avatarUrlDescription": "Введіть URL зображення для аватара"
   },
   "security": {
     "title": "Безпека",
@@ -56,7 +71,15 @@
     },
     "savePassword": "Зберегти пароль",
     "passwordChanged": "Пароль успішно змінено",
-    "passwordError": "Помилка при зміні паролю"
+    "passwordError": "Помилка при зміні паролю",
+    "updatePasswordDescription": "Оновіть свій пароль для підвищення безпеки",
+    "recommendations": {
+      "title": "Рекомендації безпеки",
+      "uniquePassword": "Використовуйте унікальний пароль, який ви не використовуєте на інших сайтах",
+      "passwordComplexity": "Створіть складний пароль з комбінацією літер, цифр та символів",
+      "dontShare": "Ніколи не діліться своїм паролем з іншими людьми",
+      "updateRegularly": "Регулярно оновлюйте пароль для максимальної безпеки"
+    }
   },
   "stats": {
     "title": "Статистика",

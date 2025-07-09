@@ -1,0 +1,41 @@
+{
+  "slideTest": {
+    "title": "🧪 Slide Database Storage Test",
+    "description": "Testing API functionality for creating and retrieving slides from Supabase",
+    "createTestLesson": "Create test lesson",
+    "createSlide": "Create slide", 
+    "getSlides": "Get slides",
+    "clearTestData": "Clear test data",
+    "messages": {
+      "createTestLessonFirst": "Create test lesson first",
+      "testDataCleared": "🗑️ Test data cleared"
+    },
+    "sections": {
+      "createLesson": "1. Creating test lesson",
+      "slideSettings": "2. Test slide settings", 
+      "slideOperations": "3. Slide operations"
+    }
+  },
+  "supabaseTest": {
+    "title": "Supabase Integration Test",
+    "description": "This component tests Supabase connection and verifies database functionality.",
+    "runTests": "Run tests",
+    "running": "Testing...",
+    "currentUser": "Current user:",
+    "resultTitle": "Test results",
+    "loginRequired": "Please log in for full functionality testing",
+    "clickToRun": "Click \"Run tests\" to check the system"
+  },
+  "authTest": {
+    "statusAuthenticated": "Authenticated",
+    "statusNotAuthenticated": "Not authenticated"
+  },
+  "common": {
+    "lessonId": "Lesson ID:",
+    "name": "Name:",
+    "role": "Role:",
+    "subscription": "Subscription:",
+    "user": "User:",
+    "loading": "Loading:"
+  }
+} 

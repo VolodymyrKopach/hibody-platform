@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -14,6 +15,7 @@ interface TypingIndicatorProps {
 }
 
 const TypingIndicator: React.FC<TypingIndicatorProps> = ({ isTyping }) => {
+  const { t } = useTranslation('common');
   const theme = useTheme();
 
   if (!isTyping) return null;
@@ -42,7 +44,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ isTyping }) => {
             }}
           >
             <Typography variant="body2" color="text.secondary">
-              Друкую...
+              {t('chat.typingIndicator')}
             </Typography>
           </Paper>
         </Box>

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 
 // Layout
 import Layout from '@/components/layout/Layout';
@@ -13,7 +14,7 @@ import ChatMessage from '@/components/chat/ChatMessage';
 import ChatInput from '@/components/chat/ChatInput';
 import TypingIndicator from '@/components/chat/TypingIndicator';
 import SlidePanel from '@/components/slides/SlidePanel';
-import SlideDialog from '@/components/slides/SlideDialog';
+import { SlideDialog } from '@/components/slides';
 import SaveLessonDialog from '@/components/dialogs/SaveLessonDialog';
 
 // Хуки
@@ -25,6 +26,7 @@ import { Message } from '@/types/chat';
 import { generateMessageId } from '@/utils/messageUtils';
 
 const ChatInterface: React.FC = () => {
+  const { t } = useTranslation('common');
   const theme = useTheme();
 
   // Основна логіка чату
@@ -61,7 +63,7 @@ const ChatInterface: React.FC = () => {
     saveSelectedSlides,
     generateSlidePreview,
     regenerateSlidePreview,
-    forceRefreshAllPreviews,
+
     updateCurrentLesson,
     toggleSlidePanelOpen,
     exportLesson
@@ -92,8 +94,8 @@ const ChatInterface: React.FC = () => {
 
   return (
     <Layout 
-      title="Чат з ШІ" 
-      breadcrumbs={[{ label: 'Головна', href: '/' }, { label: 'Чат' }]}
+      title={t('pages.chatTitle')} 
+      breadcrumbs={[{ label: t('navigation.home'), href: '/' }, { label: t('navigation.chat') }]}
       noPadding={true}
     >
             <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

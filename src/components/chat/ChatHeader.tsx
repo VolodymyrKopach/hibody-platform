@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -24,6 +25,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   hasSlides,
   onToggleSlidePanel
 }) => {
+  const { t } = useTranslation('common');
   const theme = useTheme();
 
   return (
@@ -50,14 +52,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </Avatar>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Помічник Вчителя
+              {t('chat.assistantName')}
             </Typography>
           </Box>
         </Box>
         
         {/* Header Controls */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip title={slidePanelOpen ? "Сховати слайди" : "Показати слайди"}>
+          <Tooltip title={slidePanelOpen ? t('tooltips.hideSlides') : t('tooltips.showSlides')}>
             <Box sx={{ position: 'relative' }}>
               <IconButton
                 onClick={onToggleSlidePanel}
