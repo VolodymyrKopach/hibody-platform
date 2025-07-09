@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import MUIThemeProvider from '@/providers/theme-provider';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { I18nProvider } from '@/providers/I18nProvider';
+import { LocalizedLayout } from '@/components/layout/LocalizedLayout';
 import { RouteGuard } from '@/components/auth';
 
 const inter = Inter({
@@ -24,13 +26,17 @@ export default function RootLayout({
   return (
     <html lang="uk">
       <body className={`${inter.variable} antialiased`}>
-        <MUIThemeProvider>
-          <AuthProvider>
-            <RouteGuard>
-              {children}
-            </RouteGuard>
-          </AuthProvider>
-        </MUIThemeProvider>
+        <I18nProvider>
+          <LocalizedLayout>
+            <MUIThemeProvider>
+              <AuthProvider>
+                <RouteGuard>
+                  {children}
+                </RouteGuard>
+              </AuthProvider>
+            </MUIThemeProvider>
+          </LocalizedLayout>
+        </I18nProvider>
       </body>
     </html>
   );

@@ -1,0 +1,68 @@
+{
+  "interface": {
+    "title": "AI Assistant Chat",
+    "placeholder": "Type your message...",
+    "send": "Send",
+    "clear": "Clear chat",
+    "typing": "AI is typing...",
+    "connecting": "Connecting...",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "retry": "Retry"
+  },
+  "messages": {
+    "welcome": "Hello! I'm your AI assistant. How can I help you?",
+    "thinking": "Thinking...",
+    "error": "An error occurred processing your message",
+    "networkError": "Network error. Check your connection",
+    "tooLong": "Message too long",
+    "empty": "Message cannot be empty",
+    "rateLimited": "Too many requests. Try again later"
+  },
+  "suggestions": {
+    "title": "Suggestions:",
+    "createLesson": "Create lesson",
+    "editSlide": "Edit slide",
+    "askQuestion": "Ask question",
+    "getHelp": "Get help"
+  },
+  "lessonCreation": {
+    "step1": "Step 1: Lesson topic",
+    "step2": "Step 2: Age group", 
+    "step3": "Step 3: Details",
+    "step4": "Step 4: Generation",
+    "topicPrompt": "What's the lesson topic?",
+    "agePrompt": "For which age group?",
+    "detailsPrompt": "Add details or special requirements",
+    "generating": "Generating lesson...",
+    "complete": "Lesson created!",
+    "error": "Error creating lesson"
+  },
+  "help": {
+    "title": "Help",
+    "commands": "Available commands:",
+    "createLessonCmd": "/create-lesson - Create a new lesson",
+    "editSlideCmd": "/edit-slide - Edit a slide",
+    "helpCmd": "/help - Show this help",
+    "clearCmd": "/clear - Clear chat history",
+    "examples": "Example questions:",
+    "example1": "Create a lesson about dinosaurs for kids 6-7 years old",
+    "example2": "Help me edit this slide",
+    "example3": "How to make the lesson more interactive?"
+  },
+  "ai": {
+    "name": "AI Assistant",
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "busy": "Busy",
+      "error": "Error"
+    },
+    "capabilities": {
+      "lessonCreation": "Lesson creation",
+      "slideEditing": "Slide editing",
+      "contentGeneration": "Content generation",
+      "questionAnswering": "Question answering"
+    }
+  }
+} 

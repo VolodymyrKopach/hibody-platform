@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -38,6 +39,7 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
   onDataChange,
   onPreviewSelect
 }) => {
+  const { t } = useTranslation(['lessons', 'common']);
   const theme = useTheme();
 
   const handleSave = () => {
@@ -71,36 +73,9 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
     onDataChange({ [field]: value });
   };
 
-  // Список предметів
-  const subjects = [
-    { value: "Математика", label: "🔢 Математика" },
-    { value: "Українська мова", label: "🇺🇦 Українська мова" },
-    { value: "Англійська мова", label: "🇬🇧 Англійська мова" },
-    { value: "Природознавство", label: "🌿 Природознавство" },
-    { value: "Історія", label: "📜 Історія" },
-    { value: "Географія", label: "🌍 Географія" },
-    { value: "Фізика", label: "⚡ Фізика" },
-    { value: "Хімія", label: "🧪 Хімія" },
-    { value: "Біологія", label: "🧬 Біологія" },
-    { value: "Мистецтво", label: "🎨 Мистецтво" },
-    { value: "Музика", label: "🎵 Музика" },
-    { value: "Фізкультура", label: "⚽ Фізкультура" },
-    { value: "Інформатика", label: "💻 Інформатика" },
-    { value: "Трудове навчання", label: "🔨 Трудове навчання" },
-    { value: "Загальне навчання", label: "📚 Загальне навчання" }
-  ];
-
-  // Список вікових груп
-  const ageGroups = [
-    { value: "3-5 років", label: "🍼 3-5 років (дошкільна)" },
-    { value: "6-7 років", label: "🎒 6-7 років (1 клас)" },
-    { value: "8-9 років", label: "📖 8-9 років (2-3 класи)" },
-    { value: "10-11 років", label: "🧮 10-11 років (4-5 класи)" },
-    { value: "12-13 років", label: "🔬 12-13 років (6-7 класи)" },
-    { value: "14-15 років", label: "🎓 14-15 років (8-9 класи)" },
-    { value: "16-18 років", label: "🎯 16-18 років (10-11 класи)" },
-    { value: "Всі вікові групи", label: "🌈 Всі вікові групи" }
-  ];
+  // Get subject and age group options from translations
+  const subjects = t('lessons:subjectOptions', { returnObjects: true }) as Array<{value: string, label: string}>;
+  const ageGroups = t('lessons:ageGroupOptions', { returnObjects: true }) as Array<{value: string, label: string}>;
 
   return (
     <Dialog
@@ -147,14 +122,14 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
             mb: 0.5,
             fontSize: '1.3rem'
           }}>
-            Зберегти урок
+            {t('lessons:saveDialog.title')}
           </Typography>
           <Typography variant="body2" sx={{ 
             color: 'text.secondary',
             fontSize: '0.875rem',
             lineHeight: 1.4
           }}>
-            Налаштуйте інформацію про ваш урок перед збереженням
+            {t('lessons:saveDialog.subtitle')}
           </Typography>
         </Box>
       </DialogTitle>
@@ -163,7 +138,7 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
           {/* Назва уроку */}
           <TextField
-            label="📚 Назва уроку"
+            label={t('lessons:saveDialog.nameLabel')}
             variant="outlined"
             fullWidth
             value={dialogData.title}
@@ -184,13 +159,13 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
                 fontWeight: 500
               }
             }}
-            placeholder="Введіть назву уроку"
+            placeholder={t('lessons:saveDialog.namePlaceholder')}
             required
           />
 
           {/* Опис уроку */}
           <TextField
-            label="📝 Опис уроку"
+            label={t('lessons:saveDialog.descriptionLabel')}
             variant="outlined"
             fullWidth
             multiline
@@ -213,12 +188,12 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
                 fontWeight: 500
               }
             }}
-            placeholder="Короткий опис змісту та мети уроку"
+            placeholder={t('lessons:saveDialog.descriptionPlaceholder')}
           />
 
           {/* Предмет/жанр */}
           <TextField
-            label="🎯 Предмет/Жанр"
+            label={t('lessons:saveDialog.subjectLabel')}
             variant="outlined"
             fullWidth
             select
@@ -250,7 +225,7 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
 
           {/* Вікова група */}
           <TextField
-            label="👥 Вікова група"
+            label={t('lessons:saveDialog.ageGroupLabel')}
             variant="outlined"
             fullWidth
             select
@@ -321,7 +296,7 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
             }
           }}
         >
-          Скасувати
+          {t('common:buttons.cancel')}
         </Button>
         <Button 
           onClick={handleSave}
@@ -349,7 +324,7 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
             }
           }}
         >
-          {isSaving ? 'Збереження...' : 'Зберегти урок'}
+          {isSaving ? t('lessons:saveDialog.saving') : t('lessons:saveDialog.save')}
         </Button>
       </DialogActions>
     </Dialog>

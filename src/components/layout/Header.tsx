@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Menu, 
   MessageSquare, 
@@ -34,6 +35,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { AuthModal } from '@/components/auth';
+import { LanguageSwitcher } from '@/components/ui';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -50,6 +52,7 @@ const Header: React.FC<HeaderProps> = ({
   breadcrumbs = [], 
   title = 'Дашборд' 
 }) => {
+  const { t } = useTranslation(['common', 'auth']);
   const theme = useTheme();
   const router = useRouter();
   const { user, profile, signOut, loading } = useAuth();
@@ -214,6 +217,9 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Right Section */}
         <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1, justifyContent: 'flex-end' }}>
+          {/* Language Switcher */}
+          <LanguageSwitcher />
+          
           {/* Quick Actions - показуємо тільки для авторизованих користувачів */}
           {user && (
             <Button
@@ -233,7 +239,7 @@ const Header: React.FC<HeaderProps> = ({
               }}
             >
               <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                Створити
+                {t('common:buttons.create', 'Create')}
               </Box>
             </Button>
           )}
@@ -277,7 +283,7 @@ const Header: React.FC<HeaderProps> = ({
                 },
               }}
             >
-              Увійти
+              {t('auth:login.submit', 'Sign In')}
             </Button>
           )}
         </Stack>

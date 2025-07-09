@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Button,
@@ -26,6 +27,7 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) => {
+  const { t } = useTranslation('auth')
   const theme = useTheme()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -78,7 +80,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
       }
     } catch (err) {
       console.error('Login error:', err)
-      setError('Помилка при вході в систему')
+      setError(t('auth:login.errors.invalidCredentials', 'Login error'))
     } finally {
       setLoading(false)
     }
@@ -101,10 +103,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
     >
       <Box sx={{ textAlign: 'center', mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-          Вхід
+          {t('login.title')}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Увійдіть до свого облікового запису
+          {t('auth:login.description', 'Enter your credentials to access your account')}
         </Typography>
       </Box>
 
@@ -118,7 +120,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
         <TextField
           fullWidth
           name="email"
-          label="Електронна пошта"
+          label={t('login.email')}
           type="email"
           value={formData.email}
           onChange={handleChange}
@@ -137,7 +139,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
         <TextField
           fullWidth
           name="password"
-          label="Пароль"
+          label={t('login.password')}
           type={showPassword ? 'text' : 'password'}
           value={formData.password}
           onChange={handleChange}
@@ -181,7 +183,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
             }}
             disabled={loading}
           >
-            Забули пароль?
+            {t('auth:login.forgotPassword', 'Forgot password?')}
           </Link>
         </Box>
 
@@ -205,19 +207,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
           {loading ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            'Увійти'
+            t('auth:login.submit', 'Sign In')
           )}
         </Button>
 
         <Divider sx={{ my: 2 }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            або
+            {t('common:buttons.or', 'or')}
           </Typography>
         </Divider>
 
         <Box sx={{ textAlign: 'center' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Немає облікового запису?{' '}
+            {t('auth:login.noAccount', "Don't have an account?")}{' '}
             <Link
               component="button"
               type="button"
@@ -231,7 +233,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
                 },
               }}
             >
-              Зареєструватися
+              {t('auth:login.register', 'Sign Up')}
             </Link>
           </Typography>
         </Box>

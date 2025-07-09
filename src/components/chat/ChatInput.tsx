@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   TextField,
@@ -22,6 +23,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isLoading,
   disabled
 }) => {
+  const { t } = useTranslation('chat');
   const theme = useTheme();
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -41,7 +43,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onChange={(e) => onChange(e.target.value)}
         onKeyPress={handleKeyPress}
         disabled={disabled}
-        placeholder="Напишіть про який урок ви мрієте (предмет, вік дітей, тема)..."
+        placeholder={t('interface.placeholder')}
         variant="outlined"
         sx={{
           '& .MuiOutlinedInput-root': {

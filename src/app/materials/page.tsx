@@ -36,6 +36,7 @@ import {
 } from '@mui/material';
 import Layout from '@/components/layout/Layout';
 import { useAuth } from '@/providers/AuthProvider';
+import { useTranslation } from 'react-i18next';
 import { useSupabaseLessons, DatabaseLesson } from '@/hooks/useSupabaseLessons';
 import {
   Search,
@@ -82,6 +83,7 @@ const MyMaterials = () => {
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useTranslation(['lessons', 'common']);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -694,7 +696,7 @@ const MyMaterials = () => {
   if (isLoading && !loadingTimeout && !isInitialized) {
     return (
       
-        <Layout title="Мої матеріали" breadcrumbs={[{ label: 'Мої матеріали' }]}>
+        <Layout title={t('lessons:materials.title')} breadcrumbs={[{ label: t('lessons:materials.breadcrumb') }]}>
           <Box 
             sx={{ 
               width: '100%',
@@ -717,7 +719,7 @@ const MyMaterials = () => {
   if (loadingTimeout) {
     return (
       
-        <Layout title="Мої матеріали" breadcrumbs={[{ label: 'Мої матеріали' }]}>
+        <Layout title={t('lessons:materials.title')} breadcrumbs={[{ label: t('lessons:materials.breadcrumb') }]}>
           <Box 
             sx={{ 
               width: '100%',
@@ -730,17 +732,17 @@ const MyMaterials = () => {
             }}
           >
             <Typography variant="h6" color="error">
-              Завантаження займає більше часу, ніж очікувалося
+              {t('lessons:materials.errors.loadingTimeout')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Можливо, виникла проблема з мережею або сервером
+              {t('lessons:materials.errors.networkIssue')}
             </Typography>
             <Button 
               variant="contained" 
               onClick={refreshLessons}
               sx={{ textTransform: 'none' }}
             >
-              Спробувати знову
+              {t('common:buttons.retry')}
             </Button>
           </Box>
         </Layout>
@@ -752,7 +754,7 @@ const MyMaterials = () => {
   if (dbError) {
     return (
       
-        <Layout title="Мої матеріали" breadcrumbs={[{ label: 'Мої матеріали' }]}>
+        <Layout title={t('lessons:materials.title')} breadcrumbs={[{ label: t('lessons:materials.breadcrumb') }]}>
           <Box 
             sx={{ 
               width: '100%',
@@ -765,7 +767,7 @@ const MyMaterials = () => {
             }}
           >
             <Typography variant="h6" color="error">
-              Помилка завантаження матеріалів
+              {t('lessons:materials.errors.loadingError')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {dbError}
@@ -775,7 +777,7 @@ const MyMaterials = () => {
               onClick={refreshLessons}
               sx={{ textTransform: 'none' }}
             >
-              Спробувати знову
+              {t('common:buttons.retry')}
             </Button>
           </Box>
         </Layout>
@@ -787,7 +789,7 @@ const MyMaterials = () => {
 
   return (
     
-      <Layout title="Мої матеріали" breadcrumbs={[{ label: 'Мої матеріали' }]}>
+      <Layout title={t('lessons:materials.title')} breadcrumbs={[{ label: t('lessons:materials.breadcrumb') }]}>
         <Box sx={{ width: '100%', maxWidth: '1400px', mx: 'auto', p: 3 }}>
           {/* Header */}
           <Box sx={{ 
@@ -800,10 +802,10 @@ const MyMaterials = () => {
           }}>
             <Box>
               <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
-                Мої матеріали
+                {t('lessons:materials.title')}
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Керуйте своїми навчальними матеріалами та уроками
+                {t('lessons:materials.subtitle')}
               </Typography>
             </Box>
             
@@ -825,7 +827,7 @@ const MyMaterials = () => {
           }}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
               <TextField
-                placeholder="Пошук матеріалів..."
+                placeholder={t('common:placeholders.searchMaterials')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 variant="outlined"
@@ -847,40 +849,40 @@ const MyMaterials = () => {
               />
               
               <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>Фільтр</InputLabel>
+                <InputLabel>{t('common:labels.filter')}</InputLabel>
                 <Select
                   value={selectedFilter}
-                  label="Фільтр"
+                  label={t('common:labels.filter')}
                   onChange={(e) => setSelectedFilter(e.target.value)}
                   sx={{ 
                     borderRadius: '12px',
                     backgroundColor: '#ffffff'
                   }}
                 >
-                  <MenuItem value="all">Всі</MenuItem>
-                  <MenuItem value="published">Опубліковані</MenuItem>
-                  <MenuItem value="draft">Чернетки</MenuItem>
-                  <MenuItem value="easy">Легкі</MenuItem>
-                  <MenuItem value="medium">Середні</MenuItem>
-                  <MenuItem value="hard">Складні</MenuItem>
+                  <MenuItem value="all">{t('lessons:materials.filters.all')}</MenuItem>
+                  <MenuItem value="published">{t('lessons:materials.filters.published')}</MenuItem>
+                  <MenuItem value="draft">{t('lessons:materials.filters.draft')}</MenuItem>
+                  <MenuItem value="easy">{t('lessons:materials.filters.easy')}</MenuItem>
+                  <MenuItem value="medium">{t('lessons:materials.filters.medium')}</MenuItem>
+                  <MenuItem value="hard">{t('lessons:materials.filters.hard')}</MenuItem>
                 </Select>
               </FormControl>
 
               <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>Сортування</InputLabel>
+                <InputLabel>{t('common:buttons.sort')}</InputLabel>
                 <Select
                   value={sortBy}
-                  label="Сортування"
+                  label={t('common:buttons.sort')}
                   onChange={(e) => setSortBy(e.target.value)}
                   sx={{ 
                     borderRadius: '12px',
                     backgroundColor: '#ffffff'
                   }}
                 >
-                  <MenuItem value="recent">Нещодавні</MenuItem>
-                  <MenuItem value="popular">Популярні</MenuItem>
-                  <MenuItem value="rating">За рейтингом</MenuItem>
-                  <MenuItem value="title">За назвою</MenuItem>
+                  <MenuItem value="recent">{t('lessons:materials.sorting.recent')}</MenuItem>
+                  <MenuItem value="popular">{t('lessons:materials.sorting.popular')}</MenuItem>
+                  <MenuItem value="rating">{t('lessons:materials.sorting.rating')}</MenuItem>
+                  <MenuItem value="title">{t('lessons:materials.sorting.title')}</MenuItem>
                 </Select>
               </FormControl>
             </Stack>

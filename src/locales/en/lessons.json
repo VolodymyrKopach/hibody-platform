@@ -1,0 +1,188 @@
+{
+  "title": "Lessons",
+  "create": "Create Lesson",
+  "edit": "Edit Lesson",
+  "delete": "Delete Lesson",
+  "save": "Save Lesson",
+  "cancel": "Cancel",
+  "duplicate": "Duplicate",
+  "export": "Export",
+  "share": "Share",
+  "myMaterials": "My Materials",
+  "details": {
+    "title": "Lesson Title",
+    "description": "Lesson Description",
+    "subject": "Subject",
+    "ageGroup": "Age Group",
+    "duration": "Duration",
+    "difficulty": "Difficulty",
+    "status": "Status",
+    "author": "Author",
+    "createdAt": "Created",
+    "updatedAt": "Updated"
+  },
+  "status": {
+    "draft": "Draft",
+    "published": "Published",
+    "archived": "Archived"
+  },
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "subjects": {
+    "mathematics": "Mathematics",
+    "ukrainian": "Ukrainian Language",
+    "english": "English Language",
+    "science": "Science",
+    "history": "History",
+    "geography": "Geography",
+    "physics": "Physics",
+    "chemistry": "Chemistry",
+    "biology": "Biology",
+    "art": "Art",
+    "music": "Music",
+    "physical": "Physical Education",
+    "computer": "Computer Science",
+    "technology": "Technology",
+    "general": "General Education"
+  },
+  "search": {
+    "placeholder": "Lesson name or description...",
+    "filter": "Filter",
+    "sort": "Sort",
+    "noResults": "No lessons found for your filters.",
+    "empty": "You don't have any lessons yet. Create your first lesson!",
+    "label": "Search"
+  },
+  "filters": {
+    "subject": "Subject",
+    "age": "Age",
+    "status": "Status",
+    "all": "All"
+  },
+  "actions": {
+    "open": "Open",
+    "edit": "Edit",
+    "delete": "Delete",
+    "clear": "Clear"
+  },
+  "forms": {
+    "titleLabel": "Lesson Title",
+    "descriptionLabel": "Description",
+    "subjectLabel": "Subject",
+    "ageGroupLabel": "Age Group",
+    "descriptionMissing": "Description missing"
+  },
+  "duration": {
+    "minutes": "min"
+  },
+  "suggestedTopics": [
+    "Mathematics - adding numbers",
+    "English language - alphabet",
+    "Science - animals",
+    "Art - colors",
+    "Geography - countries of the world",
+    "History - ancient times",
+    "Dinosaurs and extinct animals",
+    "Space and planets",
+    "Sea creatures",
+    "Interesting facts about animals",
+    "Seasons",
+    "Healthy eating"
+  ],
+  "generator": {
+    "title": "🎨 FLUX.1 [schnell] Image Generator",
+    "description": "Create high-quality educational illustrations for your lessons using artificial intelligence",
+    "topicLabel": "Lesson Topic",
+    "ageLabel": "Age",
+    "styleLabel": "Style",
+    "quickTopics": "Quick topic selection:",
+    "customPrompt": "Use custom prompt",
+    "customPromptLabel": "Custom prompt",
+    "generateImage": "🎨 Generate Image",
+    "generating": "Generating...",
+    "forSlide": "📄 For Slide",
+    "styles": {
+      "cartoon": "Cartoon",
+      "illustration": "Illustration",
+      "realistic": "Realistic"
+    },
+    "result": {
+      "title": "Generated image:",
+      "promptUsed": "Prompt used:",
+      "altText": "Generated educational illustration"
+    },
+    "errors": {
+      "enterTopic": "Please enter a topic or custom prompt",
+      "enterTopicForSlide": "Please enter a topic for the slide",
+      "generateFailed": "Failed to generate image",
+      "serverError": "Server error during image generation",
+      "generationError": "Error during image generation"
+    }
+  },
+  "dialogs": {
+    "saveLesson": {
+      "title": "Save Lesson",
+      "description": "Configure your lesson information before saving",
+      "titleLabel": "📚 Lesson Title",
+      "descriptionLabel": "📝 Lesson Description",
+      "subjectLabel": "🎯 Subject/Genre",
+      "ageGroupLabel": "👥 Age Group",
+      "titlePlaceholder": "Enter lesson title",
+      "descriptionPlaceholder": "Short description of content and purpose"
+    }
+  },
+  "ageGroupOptions": [
+    { "value": "3-5 years", "label": "🍼 3-5 years (preschool)" },
+    { "value": "6-7 years", "label": "🎒 6-7 years (1st grade)" },
+    { "value": "8-9 years", "label": "📖 8-9 years (2nd-3rd grade)" },
+    { "value": "10-11 years", "label": "🧮 10-11 years (4th-5th grade)" },
+    { "value": "12-13 years", "label": "🔬 12-13 years (6th-7th grade)" },
+    { "value": "14-15 years", "label": "🎓 14-15 years (8th-9th grade)" },
+    { "value": "16-18 years", "label": "🎯 16-18 years (10th-11th grade)" },
+    { "value": "All age groups", "label": "🌈 All age groups" }
+  ],
+  "subjectOptions": [
+    { "value": "Mathematics", "label": "🔢 Mathematics" },
+    { "value": "Ukrainian Language", "label": "🇺🇦 Ukrainian Language" },
+    { "value": "English Language", "label": "🇬🇧 English Language" },
+    { "value": "Science", "label": "🌿 Science" },
+    { "value": "History", "label": "📜 History" },
+    { "value": "Geography", "label": "🌍 Geography" },
+    { "value": "Physics", "label": "⚡ Physics" },
+    { "value": "Chemistry", "label": "🧪 Chemistry" },
+    { "value": "Biology", "label": "🧬 Biology" },
+    { "value": "Art", "label": "🎨 Art" },
+    { "value": "Music", "label": "🎵 Music" },
+    { "value": "Physical Education", "label": "⚽ Physical Education" },
+    { "value": "Computer Science", "label": "💻 Computer Science" },
+    { "value": "Technology", "label": "🔨 Technology" },
+    { "value": "General Education", "label": "📚 General Education" }
+  ],
+  "materials": {
+    "title": "My Materials",
+    "subtitle": "Manage your educational materials and lessons",
+    "breadcrumb": "My Materials",
+    "errors": {
+      "loadingTimeout": "Loading is taking longer than expected",
+      "networkIssue": "There may be a network or server issue",
+      "loadingError": "Error loading materials"
+    },
+    "filters": {
+      "all": "All",
+      "published": "Published",
+      "draft": "Drafts", 
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "sorting": {
+      "recent": "Recent",
+      "popular": "Popular",
+      "rating": "By Rating",
+      "title": "By Title"
+    }
+  }
+} 

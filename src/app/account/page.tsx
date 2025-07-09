@@ -26,6 +26,7 @@ import Layout from '@/components/layout/Layout';
 import ProfileSection from '@/components/account/ProfileSection';
 import StatsSection from '@/components/account/StatsSection';
 import SecuritySection from '@/components/account/SecuritySection';
+import { useTranslation } from 'react-i18next';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -61,6 +62,7 @@ function a11yProps(index: number) {
 }
 
 const AccountPage: React.FC = () => {
+  const { t } = useTranslation(['account', 'common']);
   const theme = useTheme();
   const { user, profile } = useAuth();
   const [tabValue, setTabValue] = useState(0);
@@ -97,8 +99,8 @@ const AccountPage: React.FC = () => {
 
   return (
       <Layout 
-        title="Акаунт" 
-        breadcrumbs={[{ label: 'Акаунт' }]}
+        title={t('account:tabs.profile')} 
+        breadcrumbs={[{ label: t('account:tabs.profile') }]}
       >
         <Container maxWidth="lg" sx={{ py: 4 }}>
           {/* Header with user info */}
@@ -128,7 +130,7 @@ const AccountPage: React.FC = () => {
                 
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                    {profile?.full_name || 'Користувач'}
+                    {profile?.full_name || t('common:roles.user')}
                   </Typography>
                   
                   <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
@@ -137,7 +139,7 @@ const AccountPage: React.FC = () => {
                   
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     <Chip
-                      label={profile?.role || 'Користувач'}
+                      label={t(`common:roles.${profile?.role || 'user'}`)}
                       size="small"
                       sx={{
                         backgroundColor: alpha(getRoleColor(profile?.role || ''), 0.1),
@@ -146,12 +148,7 @@ const AccountPage: React.FC = () => {
                       }}
                     />
                     <Chip
-                      label={
-                        profile?.subscription_type === 'free' ? 'Безкоштовний' :
-                        profile?.subscription_type === 'professional' ? 'Професійний' :
-                        profile?.subscription_type === 'premium' ? 'Преміум' :
-                        'Невідомий'
-                      }
+                      label={t(`common:subscriptionTypes.${profile?.subscription_type || 'free'}`)}
                       size="small"
                       sx={{
                         backgroundColor: alpha(getSubscriptionColor(profile?.subscription_type || ''), 0.1),
@@ -190,19 +187,19 @@ const AccountPage: React.FC = () => {
               >
                 <Tab
                   icon={<User size={20} />}
-                  label="Профіль"
+                  label={t('account:tabs.profile')}
                   iconPosition="start"
                   {...a11yProps(0)}
                 />
                 <Tab
                   icon={<BarChart3 size={20} />}
-                  label="Статистика"
+                  label={t('account:tabs.stats')}
                   iconPosition="start"
                   {...a11yProps(1)}
                 />
                 <Tab
                   icon={<Shield size={20} />}
-                  label="Безпека"
+                  label={t('account:tabs.security')}
                   iconPosition="start"
                   {...a11yProps(2)}
                 />

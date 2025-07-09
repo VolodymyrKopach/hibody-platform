@@ -19,6 +19,7 @@ import {
   Clock,
   Award,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface UserStats {
   totalLessons: number;
@@ -95,6 +96,7 @@ const StatCard: React.FC<StatCardProps> = ({
 };
 
 const StatsSection: React.FC = () => {
+  const { t } = useTranslation(['account', 'common']);
   const theme = useTheme();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -112,11 +114,11 @@ const StatsSection: React.FC = () => {
         if (data.success) {
           setStats(data.stats);
         } else {
-          setError(data.error?.message || 'Помилка завантаження статистики');
+          setError(data.error?.message || t('account:stats.loadError'));
         }
       } catch (err) {
         console.error('Error fetching stats:', err);
-        setError('Помилка підключення до сервера');
+        setError(t('common:errors.serverError'));
       } finally {
         setIsLoading(false);
       }
@@ -126,7 +128,7 @@ const StatsSection: React.FC = () => {
   }, []);
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Невідомо';
+    if (!dateString) return t('account:stats.unknown');
     return new Date(dateString).toLocaleDateString('uk-UA', {
       year: 'numeric',
       month: 'long',
@@ -135,32 +137,23 @@ const StatsSection: React.FC = () => {
   };
 
   const formatRelativeTime = (dateString: string | null) => {
-    if (!dateString) return 'Невідомо';
+    if (!dateString) return t('account:stats.unknown');
     
     const now = new Date();
     const date = new Date(dateString);
     const diffInMs = now.getTime() - date.getTime();
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
     
-    if (diffInDays === 0) return 'Сьогодні';
-    if (diffInDays === 1) return 'Вчора';
-    if (diffInDays < 7) return `${diffInDays} днів тому`;
-    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} тижнів тому`;
-    if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} місяців тому`;
-    return `${Math.floor(diffInDays / 365)} років тому`;
+    if (diffInDays === 0) return t('account:stats.today');
+    if (diffInDays === 1) return t('account:stats.yesterday');
+    if (diffInDays < 7) return `${diffInDays} ${t('account:stats.daysAgo')}`;
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} ${t('account:stats.weeksAgo')}`;
+    if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} ${t('account:stats.monthsAgo')}`;
+    return `${Math.floor(diffInDays / 365)} ${t('account:stats.yearsAgo')}`;
   };
 
   const getSubscriptionLabel = (type: string) => {
-    switch (type) {
-      case 'free':
-        return 'Безкоштовна';
-      case 'professional':
-        return 'Професійна';
-      case 'premium':
-        return 'Преміум';
-      default:
-        return 'Невідома';
-    }
+    return t(`common:subscriptionTypes.${type}`, { defaultValue: t('account:stats.unknown') });
   };
 
   const getSubscriptionColor = (type: string) => {
@@ -200,7 +193,7 @@ const StatsSection: React.FC = () => {
   if (!stats) {
     return (
       <Alert severity="info">
-        Статистика недоступна
+        {t('account:stats.loadError')}
       </Alert>
     );
   }
@@ -208,7 +201,7 @@ const StatsSection: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-        📊 Ваша статистика
+        📊 {t('common:stats.yourStats')}
       </Typography>
 
       {/* Main Stats Grid */}
@@ -224,23 +217,23 @@ const StatsSection: React.FC = () => {
       }}>
         <StatCard
           icon={<BookOpen size={24} />}
-          title="Уроки"
+          title={t('account:stats.lessons')}
           value={stats.totalLessons}
-          subtitle="Всього створено"
+          subtitle={t('account:stats.totalCreated')}
           color={theme.palette.primary.main}
         />
         <StatCard
           icon={<Presentation size={24} />}
-          title="Слайди"
+          title={t('account:stats.slides')}
           value={stats.totalSlides}
-          subtitle="Всього згенеровано"
+          subtitle={t('account:stats.totalGenerated')}
           color={theme.palette.secondary.main}
         />
         <StatCard
           icon={<Calendar size={24} />}
-          title="За місяць"
+          title={t('account:stats.thisMonth')}
           value={stats.monthlyLessons}
-          subtitle="Нових уроків"
+          subtitle={t('account:stats.newLessons')}
           color={theme.palette.success.main}
         />
       </Box>
@@ -257,16 +250,16 @@ const StatsSection: React.FC = () => {
       }}>
         <StatCard
           icon={<Clock size={24} />}
-          title="Остання активність"
+          title={t('account:stats.lastActivity')}
           value={formatRelativeTime(stats.lastActivity)}
-          subtitle="Створення контенту"
+          subtitle={t('account:stats.contentCreation')}
           color={theme.palette.info.main}
         />
         <StatCard
           icon={<TrendingUp size={24} />}
-          title="Продуктивність"
+          title={t('account:stats.productivity')}
           value={`${(stats.totalSlides / Math.max(stats.totalLessons, 1)).toFixed(1)}`}
-          subtitle="Слайдів на урок"
+          subtitle={t('account:stats.slidesPerLesson')}
           color={theme.palette.warning.main}
         />
       </Box>
@@ -282,7 +275,7 @@ const StatsSection: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Award size={24} color={theme.palette.primary.main} />
             <Typography variant="h6" sx={{ ml: 1, fontWeight: 600 }}>
-              📈 Аналіз активності
+              📈 {t('common:stats.activityAnalysis')}
             </Typography>
           </Box>
           
@@ -296,16 +289,16 @@ const StatsSection: React.FC = () => {
           }}>
             <Box>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Середня кількість слайдів
+                {t('common:stats.averageSlides')}
               </Typography>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {(stats.totalSlides / Math.max(stats.totalLessons, 1)).toFixed(1)} на урок
+                {(stats.totalSlides / Math.max(stats.totalLessons, 1)).toFixed(1)} {t('common:stats.slidesPerLesson')}
               </Typography>
             </Box>
             
             <Box>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Тип підписки
+                {t('common:stats.subscriptionType')}
               </Typography>
               <Chip 
                 label={getSubscriptionLabel(stats.subscriptionType)}
@@ -327,7 +320,7 @@ const StatsSection: React.FC = () => {
       }}>
         <CardContent sx={{ p: 3 }}>
           <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-            ℹ️ Інформація про акаунт
+            ℹ️ {t('common:stats.accountInfo')}
           </Typography>
           
           <Box sx={{ 
@@ -340,7 +333,7 @@ const StatsSection: React.FC = () => {
           }}>
             <Box>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Дата реєстрації
+                {t('common:dates.joinedAt')}
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                 {formatDate(stats.joinedAt)}
@@ -349,7 +342,7 @@ const StatsSection: React.FC = () => {
             
             <Box>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Останній вхід
+                {t('common:dates.lastSignIn')}
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                 {formatRelativeTime(stats.lastSignIn)}

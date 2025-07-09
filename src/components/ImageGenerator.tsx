@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button, TextField, Box, Card, CardContent, Typography, CircularProgress, Alert, FormControl, InputLabel, Select, MenuItem, Chip } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { generateImage, createEducationalImagePrompt } from '@/utils/imageGeneration';
 
 interface ImageGeneratorProps {
@@ -17,6 +18,8 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   initialAgeGroup = '6-12',
   mode = 'standalone'
 }) => {
+  const { t } = useTranslation(['lessons', 'common']);
+  
   const [topic, setTopic] = useState(initialTopic);
   const [ageGroup, setAgeGroup] = useState(initialAgeGroup);
   const [style, setStyle] = useState<'cartoon' | 'realistic' | 'illustration'>('cartoon');
@@ -29,7 +32,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
 
   const handleGenerate = async () => {
     if (!topic && !customPrompt) {
-      setError('Будь ласка, введіть тему або користувацький промпт');
+      setError(t('lessons:generator.errors.enterTopic'));
       return;
     }
 
@@ -54,10 +57,10 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
           onImageGenerated(result.image, result.prompt || prompt);
         }
       } else {
-        setError(result.error || 'Не вдалося згенерувати зображення');
+        setError(result.error || t('lessons:generator.errors.generateFailed'));
       }
     } catch (err) {
-      setError('Помилка при генерації зображення');
+      setError(t('lessons:generator.errors.generationError'));
       console.error('Generation error:', err);
     } finally {
       setIsGenerating(false);
@@ -66,7 +69,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
 
   const handleSlideImageGenerate = async () => {
     if (!topic) {
-      setError('Будь ласка, введіть тему для слайду');
+      setError(t('lessons:generator.errors.enterTopicForSlide'));
       return;
     }
 
@@ -96,38 +99,31 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
             onImageGenerated(result.image, result.prompt);
           }
         } else {
-          setError(result.error || 'Не вдалося згенерувати зображення для слайду');
+          setError(result.error || t('lessons:generator.errors.generateFailed'));
         }
       } else {
-        setError('Помилка сервера при генерації зображення');
+        setError(t('lessons:generator.errors.serverError'));
       }
     } catch (err) {
-      setError('Помилка при генерації зображення для слайду');
+      setError(t('lessons:generator.errors.generationError'));
       console.error('Slide generation error:', err);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const suggestedTopics = [
-    'Математика - додавання чисел',
-    'Українська мова - алфавіт',
-    'Природознавство - тварини',
-    'Мистецтво - кольори',
-    'Географія - країни світу',
-    'Історія - стародавні часи'
-  ];
+  const suggestedTopics = t('lessons:suggestedTopics', { returnObjects: true }) as string[];
 
   return (
     <Box sx={{ maxWidth: mode === 'embedded' ? '100%' : 800, mx: 'auto', p: 2 }}>
       <Card elevation={3}>
         <CardContent>
           <Typography variant="h5" component="h2" gutterBottom>
-            🎨 Генератор зображень FLUX.1 [schnell]
+            {t('lessons:generator.title')}
           </Typography>
           
           <Typography variant="body2" color="text.secondary" paragraph>
-            Створюйте високоякісні освітні ілюстрації для ваших уроків за допомогою штучного інтелекту
+            {t('lessons:generator.description')}
           </Typography>
 
           {error && (
@@ -137,20 +133,20 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
           )}
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* Тема */}
+            {/* Topic */}
             <TextField
-              label="Тема уроку"
+              label={t('lessons:generator.topicLabel')}
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="Наприклад: Додавання чисел до 10"
+              placeholder={t('common:placeholders.topicExample')}
               fullWidth
               disabled={useCustomPrompt}
             />
 
-            {/* Швидкі теми */}
+            {/* Quick topics */}
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                Швидкий вибір тем:
+                {t('lessons:generator.quickTopics')}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {suggestedTopics.map((suggestedTopic) => (
@@ -166,38 +162,38 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
               </Box>
             </Box>
 
-            {/* Налаштування */}
+            {/* Settings */}
             <Box sx={{ display: 'flex', gap: 2 }}>
               <FormControl sx={{ minWidth: 120 }}>
-                <InputLabel>Вік</InputLabel>
+                <InputLabel>{t('lessons:generator.ageLabel')}</InputLabel>
                 <Select
                   value={ageGroup}
-                  label="Вік"
+                  label={t('lessons:generator.ageLabel')}
                   onChange={(e) => setAgeGroup(e.target.value)}
                   disabled={useCustomPrompt}
                 >
-                  <MenuItem value="3-6">3-6 років</MenuItem>
-                  <MenuItem value="6-12">6-12 років</MenuItem>
-                  <MenuItem value="12-18">12-18 років</MenuItem>
+                  <MenuItem value="3-6">{t('common:ageGroups.3-5')}</MenuItem>
+                  <MenuItem value="6-12">{t('common:ageGroups.6-7')} - {t('common:ageGroups.10-11')}</MenuItem>
+                  <MenuItem value="12-18">{t('common:ageGroups.12-13')} - {t('common:ageGroups.16-18')}</MenuItem>
                 </Select>
               </FormControl>
 
               <FormControl sx={{ minWidth: 120 }}>
-                <InputLabel>Стиль</InputLabel>
+                <InputLabel>{t('lessons:generator.styleLabel')}</InputLabel>
                 <Select
                   value={style}
-                  label="Стиль"
+                  label={t('lessons:generator.styleLabel')}
                   onChange={(e) => setStyle(e.target.value as any)}
                   disabled={useCustomPrompt}
                 >
-                  <MenuItem value="cartoon">Мультяшний</MenuItem>
-                  <MenuItem value="illustration">Ілюстрація</MenuItem>
-                  <MenuItem value="realistic">Реалістичний</MenuItem>
+                  <MenuItem value="cartoon">{t('lessons:generator.styles.cartoon')}</MenuItem>
+                  <MenuItem value="illustration">{t('lessons:generator.styles.illustration')}</MenuItem>
+                  <MenuItem value="realistic">{t('lessons:generator.styles.realistic')}</MenuItem>
                 </Select>
               </FormControl>
             </Box>
 
-            {/* Користувацький промпт */}
+            {/* Custom prompt */}
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                 <input
@@ -208,17 +204,17 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
                 />
                 <label htmlFor="custom-prompt">
                   <Typography variant="body2">
-                    Використати власний промпт
+                    {t('lessons:generator.customPrompt')}
                   </Typography>
                 </label>
               </Box>
               
               {useCustomPrompt && (
                 <TextField
-                  label="Користувацький промпт"
+                  label={t('lessons:generator.customPromptLabel')}
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
-                  placeholder="Опишіть зображення англійською мовою..."
+                  placeholder={t('common:placeholders.customPromptExample')}
                   fullWidth
                   multiline
                   rows={3}
@@ -226,7 +222,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
               )}
             </Box>
 
-            {/* Кнопки генерації */}
+            {/* Generation buttons */}
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Button
                 variant="contained"
@@ -235,7 +231,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
                 startIcon={isGenerating ? <CircularProgress size={16} /> : null}
                 sx={{ flex: 1 }}
               >
-                {isGenerating ? 'Генерується...' : '🎨 Згенерувати зображення'}
+                {isGenerating ? t('lessons:generator.generating') : t('lessons:generator.generateImage')}
               </Button>
 
               {!useCustomPrompt && (
@@ -245,22 +241,22 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
                   disabled={isGenerating || !topic}
                   sx={{ flex: 1 }}
                 >
-                  📊 Для слайду
+                  {t('lessons:generator.forSlide')}
                 </Button>
               )}
             </Box>
 
-            {/* Результат */}
+            {/* Result */}
             {generatedImage && (
               <Box sx={{ mt: 3 }}>
                 <Typography variant="h6" gutterBottom>
-                  Згенероване зображення:
+                  {t('lessons:generator.result.title')}
                 </Typography>
                 
                 <Box sx={{ textAlign: 'center', mb: 2 }}>
                   <img
                     src={`data:image/png;base64,${generatedImage}`}
-                    alt="Generated illustration"
+                    alt={t('lessons:generator.result.altText', 'Generated educational illustration')}
                     style={{
                       maxWidth: '100%',
                       height: 'auto',
@@ -271,7 +267,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
                 </Box>
 
                 <Typography variant="body2" color="text.secondary">
-                  <strong>Використаний промпт:</strong> {usedPrompt}
+                  <strong>{t('lessons:generator.result.promptUsed')}</strong> {usedPrompt}
                 </Typography>
               </Box>
             )}

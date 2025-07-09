@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -56,6 +57,7 @@ const LessonsList: React.FC<LessonsListProps> = ({
   onLessonEdit,
   showPublicLessons = false
 }) => {
+  const { t } = useTranslation(['lessons', 'common']);
   const theme = useTheme();
   const { user } = useAuth();
   const { 
@@ -125,7 +127,7 @@ const LessonsList: React.FC<LessonsListProps> = ({
   };
 
   const handleDeleteLesson = async (lessonId: string) => {
-    if (window.confirm('Ви впевнені, що хочете видалити цей урок?')) {
+    if (window.confirm(t('common:confirmations.deleteLesson'))) {
       try {
         await deleteLesson(lessonId);
         handleMenuClose();
@@ -151,11 +153,11 @@ const LessonsList: React.FC<LessonsListProps> = ({
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'published':
-        return 'Опубліковано';
+        return t('common:status.published');
       case 'draft':
-        return 'Чернетка';
+        return t('common:status.draft');
       case 'archived':
-        return 'Архів';
+        return t('common:status.archived');
       default:
         return status;
     }
@@ -177,11 +179,11 @@ const LessonsList: React.FC<LessonsListProps> = ({
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
-        return 'Легко';
+        return t('common:status.easy');
       case 'medium':
-        return 'Середньо';
+        return t('common:status.medium');
       case 'hard':
-        return 'Складно';
+        return t('common:status.hard');
       default:
         return difficulty;
     }
@@ -215,22 +217,22 @@ const LessonsList: React.FC<LessonsListProps> = ({
           <Grid item xs={12} md={4}>
             <TextField
               fullWidth
-              label="Пошук"
+              label={t('lessons:search.label')}
               variant="outlined"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Назва або опис уроку..."
+              placeholder={t('lessons:search.placeholder')}
             />
           </Grid>
           <Grid item xs={12} md={2}>
             <FormControl fullWidth>
-              <InputLabel>Предмет</InputLabel>
+              <InputLabel>{t('lessons:filters.subject')}</InputLabel>
               <Select
                 value={subjectFilter}
                 onChange={(e) => setSubjectFilter(e.target.value)}
-                label="Предмет"
+                label={t('lessons:filters.subject')}
               >
-                <MenuItem value="">Всі</MenuItem>
+                <MenuItem value="">{t('lessons:filters.all')}</MenuItem>
                 {subjects.map(subject => (
                   <MenuItem key={subject} value={subject}>
                     {subject}
@@ -241,13 +243,13 @@ const LessonsList: React.FC<LessonsListProps> = ({
           </Grid>
           <Grid item xs={12} md={2}>
             <FormControl fullWidth>
-              <InputLabel>Вік</InputLabel>
+              <InputLabel>{t('lessons:filters.age')}</InputLabel>
               <Select
                 value={ageGroupFilter}
                 onChange={(e) => setAgeGroupFilter(e.target.value)}
-                label="Вік"
+                label={t('lessons:filters.age')}
               >
-                <MenuItem value="">Всі</MenuItem>
+                <MenuItem value="">{t('lessons:filters.all')}</MenuItem>
                 {ageGroups.map(ageGroup => (
                   <MenuItem key={ageGroup} value={ageGroup}>
                     {ageGroup}
@@ -258,13 +260,13 @@ const LessonsList: React.FC<LessonsListProps> = ({
           </Grid>
           <Grid item xs={12} md={2}>
             <FormControl fullWidth>
-              <InputLabel>Статус</InputLabel>
+              <InputLabel>{t('lessons:filters.status')}</InputLabel>
               <Select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                label="Статус"
+                label={t('lessons:filters.status')}
               >
-                <MenuItem value="">Всі</MenuItem>
+                <MenuItem value="">{t('lessons:filters.all')}</MenuItem>
                 {statuses.map(status => (
                   <MenuItem key={status} value={status}>
                     {getStatusLabel(status)}
@@ -284,7 +286,7 @@ const LessonsList: React.FC<LessonsListProps> = ({
                 setStatusFilter('');
               }}
             >
-              Очистити
+              {t('lessons:actions.clear')}
             </Button>
           </Grid>
         </Grid>
@@ -294,8 +296,8 @@ const LessonsList: React.FC<LessonsListProps> = ({
       {paginatedLessons.length === 0 ? (
         <Alert severity="info">
           {filteredLessons.length === 0 && lessons.length === 0 
-            ? 'У вас ще немає уроків. Створіть свій перший урок!' 
-            : 'За вашими фільтрами не знайдено уроків.'}
+            ? t('lessons:search.empty')
+            : t('lessons:search.noResults')}
         </Alert>
       ) : (
         <Grid container spacing={3}>
@@ -338,7 +340,7 @@ const LessonsList: React.FC<LessonsListProps> = ({
                       overflow: 'hidden',
                     }}
                   >
-                                         {lesson.description || 'Опис відсутній'}
+                    {lesson.description || t('lessons:forms.descriptionMissing')}
                   </Typography>
 
                   <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
@@ -371,7 +373,7 @@ const LessonsList: React.FC<LessonsListProps> = ({
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Schedule fontSize="small" color="action" />
                       <Typography variant="body2" color="text.secondary">
-                        {lesson.duration_minutes} хв
+                        {lesson.duration_minutes} {t('lessons:duration.minutes')}
                       </Typography>
                     </Box>
                   </Stack>
@@ -385,7 +387,7 @@ const LessonsList: React.FC<LessonsListProps> = ({
                     onClick={() => onLessonSelect?.(lesson)}
                     sx={{ mr: 1 }}
                   >
-                    Відкрити
+                    {t('lessons:actions.open')}
                   </Button>
                   <Button
                     size="small"
@@ -393,7 +395,7 @@ const LessonsList: React.FC<LessonsListProps> = ({
                     startIcon={<Edit />}
                     onClick={() => onLessonEdit?.(lesson)}
                   >
-                    Редагувати
+                    {t('lessons:actions.edit')}
                   </Button>
                 </CardActions>
               </Card>
@@ -437,7 +439,7 @@ const LessonsList: React.FC<LessonsListProps> = ({
           <ListItemIcon>
             <PlayArrow />
           </ListItemIcon>
-          Відкрити
+          {t('lessons:actions.open')}
         </MenuItem>
         <MenuItem onClick={() => {
           onLessonEdit?.(selectedLesson!);
@@ -446,7 +448,7 @@ const LessonsList: React.FC<LessonsListProps> = ({
           <ListItemIcon>
             <Edit />
           </ListItemIcon>
-          Редагувати
+          {t('lessons:actions.edit')}
         </MenuItem>
         <Divider />
         <MenuItem onClick={() => {
@@ -456,16 +458,16 @@ const LessonsList: React.FC<LessonsListProps> = ({
           <ListItemIcon>
             <Share />
           </ListItemIcon>
-          Поділитися
+          {t('common:buttons.share')}
         </MenuItem>
         <MenuItem onClick={() => {
           // TODO: Implement duplication
           handleMenuClose();
         }}>
           <ListItemIcon>
-            <BookOpen />
+            <FileCopy />
           </ListItemIcon>
-          Дублювати
+          {t('common:buttons.duplicate')}
         </MenuItem>
         <Divider />
         <MenuItem 
@@ -477,7 +479,7 @@ const LessonsList: React.FC<LessonsListProps> = ({
           <ListItemIcon>
             <Delete sx={{ color: 'error.main' }} />
           </ListItemIcon>
-          Видалити
+          {t('common:buttons.delete')}
         </MenuItem>
       </Menu>
     </Box>

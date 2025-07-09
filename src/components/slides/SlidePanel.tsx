@@ -9,6 +9,7 @@ import {
   Button
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import { X, Download } from 'lucide-react';
 import { SimpleLesson, SimpleSlide } from '@/types/chat';
 import SlideCard from './SlideCard';
@@ -43,6 +44,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
   onExportLesson
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation(['slides', 'common']);
 
   // Компонент для відображення інформації про урок
   const LessonInfo = () => {
@@ -89,7 +91,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
             }}
           />
           <Chip 
-            label={`${currentLesson.duration} хв`} 
+            label={`${currentLesson.duration} ${t('common:time.minutes')}`} 
             size="small" 
             variant="outlined"
             sx={{ 
@@ -131,7 +133,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
             <strong>{selectedSlides.size}</strong>/{currentLesson.slides.length}
           </Typography>
           
-          {/* Кнопки управління */}
+          {/* Control buttons */}
           <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
             <Button
               size="small"
@@ -150,7 +152,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
                 }
               }}
             >
-              Всі
+              {t('common:buttons.selectAll', 'Всі')}
             </Button>
             <Button
               size="small"
@@ -169,10 +171,10 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
                 }
               }}
             >
-              Очистити
+              {t('common:buttons.clear')}
             </Button>
             
-            {/* Кнопка збереження */}
+            {/* Save button */}
             {selectedSlides.size > 0 && (
               <Button
                 variant="contained"
@@ -193,7 +195,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
                   }
                 }}
               >
-                {isSavingLesson ? 'Збереження...' : `Зберегти (${selectedSlides.size})`}
+                {isSavingLesson ? t('common:buttons.savingLesson') : `${t('common:buttons.saveSelection')} (${selectedSlides.size})`}
               </Button>
             )}
           </Box>
@@ -202,7 +204,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
     );
   };
 
-  // Компонент для порожнього стану
+  // Empty state component
   const EmptyState = () => (
     <Box sx={{ 
       flex: 1, 
@@ -216,11 +218,11 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
       <Box sx={{ fontSize: '4rem', mb: 2 }}>🎨</Box>
       
       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}>
-        Створіть свій перший урок!
+        {t('slides:emptyState.title')}
       </Typography>
       
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3, lineHeight: 1.6 }}>
-        Просто напишіть в чаті що ви хочете створити, наприклад:
+        {t('slides:emptyState.description')}
       </Typography>
       
       <Paper elevation={0} sx={{ 
@@ -231,32 +233,32 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
         width: '100%'
       }}>
         <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
-          💡 "Створи урок про космос для дітей 7 років"
+          {t('slides:emptyState.example1')}
         </Typography>
         <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary', mt: 1 }}>
-          📚 "Зроби урок математики про додавання"
+          {t('slides:emptyState.example2')}
         </Typography>
         <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary', mt: 1 }}>
-          🌈 "Урок англійської про кольори"
+          {t('slides:emptyState.example3')}
         </Typography>
       </Paper>
       
       <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
-        ✨ Після створення уроку тут з'являться всі слайди з можливістю перегляду та редагування
+        {t('slides:emptyState.footer')}
       </Typography>
     </Box>
   );
 
   return (
     <Box sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Заголовок панелі */}
+      {/* Panel header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
         <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem' }}>
-          Слайди уроку
+          {t('slides:title')}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {currentLesson && (
-            <Tooltip title="Експортувати урок">
+            <Tooltip title={t('slides:export.title')}>
               <IconButton
                 onClick={onExportLesson}
                 size="small"
@@ -281,7 +283,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
           <LessonInfo />
           <SelectionControls />
           
-          {/* Список слайдів */}
+          {/* Slides list */}
           <Box sx={{ 
             flex: 1, 
             overflowY: 'auto',
@@ -289,9 +291,9 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
             display: 'flex',
             flexDirection: 'column',
             gap: 1.5,
-            paddingRight: 0.5, // Невеликий відступ для скролбару
-            paddingBottom: 1,   // Додатковий відступ знизу
-            minHeight: 0,       // Дозволяє flex контейнеру стискатися
+            paddingRight: 0.5, // Small margin for scrollbar
+            paddingBottom: 1,   // Additional bottom margin
+            minHeight: 0,       // Allows flex container to shrink
             '&::-webkit-scrollbar': {
               width: '6px',
             },
