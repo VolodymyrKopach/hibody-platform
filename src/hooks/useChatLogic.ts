@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Message } from '@/types/chat';
 import { generateMessageId, setMessageIdCounter } from '@/utils/messageUtils';
 
@@ -32,18 +33,20 @@ const sendMessageToAPI = async (message: string, conversationHistory?: any, acti
   return response.json();
 };
 
-// Початкове повідомлення як константа поза компонентом
-const INITIAL_MESSAGE: Message = {
-  id: generateMessageId(),
-  text: "Привіт! 👋 Я HiBody AI - ваш персональний помічник для створення інтерактивних уроків для дітей.\n\n🎯 **Що я можу зробити:**\n\n🔹 Створити урок на будь-яку тему з інтерактивними слайдами\n🔹 Адаптувати матеріал під вік дитини\n🔹 Додати ігрові елементи та завдання\n🔹 Згенерувати візуальний контент\n\n💬 **Просто опишіть, який урок ви хочете створити!**\n\nНаприклад: *\"Створи урок про динозаврів для дітей 6-8 років з інтерактивними іграми\"*",
-  sender: 'ai',
-  timestamp: new Date(),
-  status: 'sent',
-  feedback: null
-};
-
 const useChatLogic = (): UseChatLogicReturn => {
-  const [messages, setMessages] = useState<Message[]>(() => [INITIAL_MESSAGE]);
+  const { t } = useTranslation('chat');
+  
+  // Створюємо початкове повідомлення з локалізацією
+  const createInitialMessage = (): Message => ({
+    id: generateMessageId(),
+    text: `${t('welcome.greeting')}\n\n🎯 ${t('welcome.capabilities')}\n\n🔹 ${t('welcome.feature1')}\n🔹 ${t('welcome.feature2')}\n🔹 ${t('welcome.feature3')}\n🔹 ${t('welcome.feature4')}\n\n💬 ${t('welcome.callToAction')}\n\n${t('welcome.example')}`,
+    sender: 'ai',
+    timestamp: new Date(),
+    status: 'sent',
+    feedback: null
+  });
+
+  const [messages, setMessages] = useState<Message[]>(() => [createInitialMessage()]);
   
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -97,7 +100,7 @@ const useChatLogic = (): UseChatLogicReturn => {
       
       const errorMessage: Message = {
         id: generateMessageId(),
-        text: 'Вибачте, сталася помилка. Спробуйте ще раз.',
+        text: t('actions.errorGeneral'),
         sender: 'ai',
         timestamp: new Date(),
         status: 'sent',
@@ -211,7 +214,7 @@ const useChatLogic = (): UseChatLogicReturn => {
       
       const errorMessage: Message = {
         id: generateMessageId(),
-        text: 'Вибачте, сталася помилка при обробці дії. Спробуйте ще раз.',
+        text: t('actions.errorAction'),
         sender: 'ai',
         timestamp: new Date(),
         status: 'sent',

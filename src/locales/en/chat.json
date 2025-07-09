@@ -64,5 +64,21 @@
       "contentGeneration": "Content generation",
       "questionAnswering": "Question answering"
     }
+  },
+  "welcome": {
+    "greeting": "Hello! 👋 I'm HiBody AI - your personal assistant for creating interactive lessons for children.",
+    "capabilities": "**What I can do:**",
+    "feature1": "Create lessons on any topic with interactive slides",
+    "feature2": "Adapt material to the child's age",
+    "feature3": "Add game elements and tasks",
+    "feature4": "Generate visual content",
+    "callToAction": "**Just describe what lesson you want to create!**",
+    "example": "For example: *\"Create a lesson about dinosaurs for children 6-8 years old with interactive games\"*"
+  },
+  "actions": {
+    "quickActions": "Quick actions:",
+    "createLesson": "Create lesson",
+    "errorGeneral": "Sorry, an error occurred. Please try again.",
+    "errorAction": "Sorry, an error occurred while processing the action. Please try again."
   }
 } 

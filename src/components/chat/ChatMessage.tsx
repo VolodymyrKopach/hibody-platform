@@ -9,6 +9,7 @@ import {
   IconButton
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import { Bot, User, ThumbsUp, ThumbsDown, RefreshCw } from 'lucide-react';
 import { Message } from '@/types/chat';
 import { SimpleLesson } from '@/types/chat';
@@ -29,6 +30,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   onLessonCreate,
   onActionClick
 }) => {
+  const { t } = useTranslation('chat');
   const theme = useTheme();
 
   // Обробка створення уроку з повідомлення
@@ -214,7 +216,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               {message.sender === 'ai' && message.availableActions && message.availableActions.length > 0 && (
                 <Box sx={{ mt: 3, mb: 1 }}>
                   <Typography variant="subtitle2" sx={{ mb: 2, color: theme.palette.text.secondary }}>
-                    🚀 Швидкі дії:
+                    🚀 {t('actions.quickActions')}
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
                     {message.availableActions.map((action, index) => (
@@ -284,7 +286,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                           fontSize: '0.75rem',
                         }}
                       >
-                        Створити урок
+                        {t('actions.createLesson')}
                       </Button>
                     )}
                     

@@ -1,197 +1,194 @@
 'use client';
 
-import React, { useState } from 'react'
-import { Box, Button, Card, CardContent, Typography, Stack, TextField, Alert } from '@mui/material'
-import { useAuth } from '@/providers/AuthProvider'
-import { LoadingScreen } from '@/components/ui'
+import React, { useState } from 'react';
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Button, 
+  Paper,
+  FormControl,
+  Select,
+  MenuItem,
+  SelectChangeEvent
+} from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import { useRouter } from 'next/navigation';
 
-export default function TestPage() {
-  const { user, signIn, signOut, loading } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+// Layout
+import Layout from '@/components/layout/Layout';
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
+// Chat components for testing
+import ChatMessage from '@/components/chat/ChatMessage';
+import { Message } from '@/types/chat';
+import { generateMessageId } from '@/utils/messageUtils';
 
-    try {
-      console.log('Test page: Attempting login...')
-      const { error } = await signIn(email, password)
-      
-      if (error) {
-        console.error('Test page: Login error:', error)
-        setError(error.message)
-      } else {
-        console.log('Test page: Login successful')
-        setEmail('')
-        setPassword('')
-      }
-    } catch (err) {
-      console.error('Test page: Login exception:', err)
-      setError('Помилка при вході')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+const TestPage: React.FC = () => {
+  const { t, i18n } = useTranslation('common');
+  const { t: tChat } = useTranslation('chat');
+  const router = useRouter();
+  
+  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
 
-  const handleLogout = async () => {
-    try {
-      await signOut()
-    } catch (err) {
-      console.error('❌ TestPage.handleLogout: Logout error:', err)
-    }
-  }
+  // Create test welcome message based on current language
+  const createWelcomeMessage = (): Message => ({
+    id: generateMessageId(),
+    text: `${tChat('welcome.greeting')}\n\n🎯 ${tChat('welcome.capabilities')}\n\n🔹 ${tChat('welcome.feature1')}\n🔹 ${tChat('welcome.feature2')}\n🔹 ${tChat('welcome.feature3')}\n🔹 ${tChat('welcome.feature4')}\n\n💬 ${tChat('welcome.callToAction')}\n\n${tChat('welcome.example')}`,
+    sender: 'ai',
+    timestamp: new Date(),
+    status: 'sent',
+    feedback: null
+  });
 
-  if (loading) {
-    return <LoadingScreen />
-  }
+  const [testMessage, setTestMessage] = useState<Message>(createWelcomeMessage());
+
+  const handleLanguageChange = async (event: SelectChangeEvent<string>) => {
+    const newLanguage = event.target.value;
+    setCurrentLanguage(newLanguage);
+    await i18n.changeLanguage(newLanguage);
+    
+    // Update the test message with new language
+    setTimeout(() => {
+      setTestMessage(createWelcomeMessage());
+    }, 100);
+  };
+
+  const errorMessage: Message = {
+    id: generateMessageId(),
+    text: tChat('actions.errorGeneral'),
+    sender: 'ai',
+    timestamp: new Date(),
+    status: 'sent',
+    feedback: null
+  };
 
   return (
-    <Box sx={{ p: 4, maxWidth: 600, mx: 'auto' }}>
-      <Typography variant="h4" gutterBottom>
-        Тест авторизації
-      </Typography>
+    <Layout 
+      title={t('pages.testTitle')} 
+      breadcrumbs={[
+        { label: t('navigation.home'), href: '/' }, 
+        { label: t('pages.testTitle') }
+      ]}
+    >
+      <Container maxWidth="lg">
+        <Box sx={{ py: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            🧪 Chat Localization Test
+          </Typography>
+          
+          <Typography variant="body1" sx={{ mb: 3 }}>
+            This page tests chat localization. Change the language to see how chat messages appear in different languages.
+          </Typography>
 
-      {/* Loading Demo Link */}
-      <Card sx={{ mb: 3, bgcolor: 'primary.main', color: 'white' }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-            🌊 Loading Demo
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mb: 2 }}>
-            Переглянути всі loading анімації з вічним режимом
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => window.open('/loading-demo', '_blank')}
-            sx={{ 
-              bgcolor: 'white', 
-              color: 'primary.main',
-              '&:hover': { bgcolor: 'grey.100' }
-            }}
-          >
-            🚀 Відкрити Loading Demo
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Поточний стан
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Користувач: {user ? `${user.email} (${user.id})` : 'Не авторизований'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Loading: {loading ? 'Так' : 'Ні'}
-          </Typography>
-        </CardContent>
-      </Card>
-
-      {!user ? (
-        <Card>
-          <CardContent>
+          {/* Language Selector */}
+          <Paper sx={{ p: 3, mb: 4 }}>
             <Typography variant="h6" gutterBottom>
-              Вхід
+              Language Settings
             </Typography>
-            
-            {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
-            )}
+            <FormControl sx={{ minWidth: 200 }}>
+              <Select
+                value={currentLanguage}
+                onChange={handleLanguageChange}
+                displayEmpty
+              >
+                <MenuItem value="uk">🇺🇦 Українська</MenuItem>
+                <MenuItem value="en">🇬🇧 English</MenuItem>
+              </Select>
+            </FormControl>
+          </Paper>
 
-            <Box component="form" onSubmit={handleLogin}>
-              <Stack spacing={2}>
-                <TextField
-                  label="Email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-                <TextField
-                  label="Пароль"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={isLoading}
-                  fullWidth
-                >
-                  {isLoading ? 'Входжу...' : 'Увійти'}
-                </Button>
-              </Stack>
+          {/* Chat Messages Test */}
+          <Paper sx={{ p: 3, mb: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              Welcome Message Test
+            </Typography>
+            <Box sx={{ 
+              maxWidth: '800px',
+              mx: 'auto',
+              p: 2,
+              backgroundColor: '#f5f5f5',
+              borderRadius: 2
+            }}>
+              <ChatMessage
+                message={testMessage}
+                onRegenerate={() => console.log('Regenerate clicked')}
+                onFeedback={() => console.log('Feedback clicked')}
+                onLessonCreate={() => console.log('Lesson create clicked')}
+                onActionClick={() => console.log('Action clicked')}
+              />
             </Box>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Авторизований
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Ви успішно авторизовані як {user.email}
-            </Typography>
-            <Button
-              variant="outlined"
-              onClick={handleLogout}
-              fullWidth
-            >
-              Вийти
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+          </Paper>
 
-      <Card sx={{ mt: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Тестові дії
-          </Typography>
-          <Stack spacing={2}>
-            <Button
-              variant="outlined"
-              onClick={() => window.location.href = '/'}
-              fullWidth
+          {/* Error Message Test */}
+          <Paper sx={{ p: 3, mb: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              Error Message Test
+            </Typography>
+            <Box sx={{ 
+              maxWidth: '800px',
+              mx: 'auto',
+              p: 2,
+              backgroundColor: '#f5f5f5',
+              borderRadius: 2
+            }}>
+              <ChatMessage
+                message={errorMessage}
+                onRegenerate={() => console.log('Regenerate clicked')}
+                onFeedback={() => console.log('Feedback clicked')}
+                onLessonCreate={() => console.log('Lesson create clicked')}
+                onActionClick={() => console.log('Action clicked')}
+              />
+            </Box>
+          </Paper>
+
+          {/* Test with HTML content */}
+          <Paper sx={{ p: 3, mb: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              HTML Content Message Test
+            </Typography>
+            <Box sx={{ 
+              maxWidth: '800px',
+              mx: 'auto',
+              p: 2,
+              backgroundColor: '#f5f5f5',
+              borderRadius: 2
+            }}>
+              <ChatMessage
+                message={{
+                  id: generateMessageId(),
+                  text: `Here's your lesson slide:\n\n\`\`\`html\n<div>Sample slide content</div>\n\`\`\``,
+                  sender: 'ai',
+                  timestamp: new Date(),
+                  status: 'sent',
+                  feedback: null
+                }}
+                onRegenerate={() => console.log('Regenerate clicked')}
+                onFeedback={() => console.log('Feedback clicked')}
+                onLessonCreate={() => console.log('Lesson create clicked')}
+                onActionClick={() => console.log('Action clicked')}
+              />
+            </Box>
+          </Paper>
+
+          {/* Navigation */}
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+            <Button 
+              variant="contained" 
+              onClick={() => router.push('/chat')}
             >
-              Перейти на головну (/)
+              Go to Chat
             </Button>
-            <Button
-              variant="outlined"
-              onClick={() => window.location.href = '/chat'}
-              fullWidth
+            <Button 
+              variant="outlined" 
+              onClick={() => router.push('/')}
             >
-              Перейти на чат (/chat)
+              Go Home
             </Button>
-            <Button
-              variant="outlined"
-              onClick={() => window.location.href = '/materials'}
-              fullWidth
-            >
-              Перейти на матеріали (/materials)
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => window.location.href = '/auth/login'}
-              fullWidth
-            >
-              Перейти на логін (/auth/login)
-            </Button>
-          </Stack>
-        </CardContent>
-      </Card>
-    </Box>
-  )
-} 
+          </Box>
+        </Box>
+      </Container>
+    </Layout>
+  );
+};
+
+export default TestPage; 
