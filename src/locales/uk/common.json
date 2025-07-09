@@ -5,7 +5,15 @@
     "materials": "Матеріали", 
     "account": "Акаунт",
     "lessons": "Уроки",
-    "slides": "Слайди"
+    "slides": "Слайди",
+    "home": "Головна",
+    "aiChat": "AI Чат",
+    "myMaterials": "Мої матеріали"
+  },
+  "pages": {
+    "chatTitle": "Чат з ШІ",
+    "materialsTitle": "Мої матеріали",
+    "accountTitle": "Акаунт"
   },
   "buttons": {
     "save": "Зберегти",
@@ -56,7 +64,9 @@
     "preview": "Попередній перегляд",
     "startPasswordChange": "Змінити пароль",
     "savePassword": "Зберегти пароль",
-    "regenerate": "Регенерувати"
+    "regenerate": "Регенерувати",
+    "profile": "Профіль",
+    "logout": "Вийти"
   },
   "status": {
     "success": "Успіх",
@@ -73,7 +83,12 @@
     "archived": "Архів",
     "easy": "Легко",
     "medium": "Середньо",
-    "hard": "Складно"
+    "hard": "Складно",
+    "notSpecified": "Не вказано",
+    "authenticated": "Авторизований",
+    "notAuthenticated": "Не авторизований",
+    "yes": "Так",
+    "no": "Ні"
   },
   "time": {
     "now": "зараз",
@@ -128,6 +143,7 @@
     "all": "Всі вікові групи"
   },
   "language": {
+    "title": "Мова",
     "ukrainian": "Українська",
     "english": "English",
     "change": "Змінити мову"
@@ -198,55 +214,37 @@
     "completed": "Завершено",
     "role": "Роль",
     "subscription": "Підписка",
-    "avatar": "Аватар",
-    "fullName": "Повне ім'я",
-    "basicInfo": "Основна інформація",
-    "systemInfo": "Системна інформація",
-    "newPassword": "Новий пароль",
-    "confirmPassword": "Підтвердіть пароль",
-    "currentPassword": "Поточний пароль",
-    "filter": "Фільтр"
+    "user": "Користувач"
   },
   "roles": {
     "teacher": "Вчитель",
-    "admin": "Адміністратор",
-    "student": "Учень",
-    "user": "Користувач"
+    "student": "Учень", 
+    "user": "Користувач",
+    "admin": "Адміністратор"
   },
-  "security": {
-    "passwordStrength": "Надійність пароля",
-    "veryWeak": "Дуже слабкий",
-    "weak": "Слабкий", 
-    "medium": "Середній",
-    "good": "Хороший",
-    "excellent": "Відмінний",
-    "recommendations": "Рекомендації з безпеки"
+  "tooltips": {
+    "hideSlides": "Сховати слайди",
+    "showSlides": "Показати слайди"
   },
-  "dates": {
-    "registrationDate": "Дата реєстрації",
-    "lastProfileUpdate": "Останнє оновлення профілю",
-    "lastSignIn": "Останній вхід",
-    "joinedAt": "Дата реєстрації",
-    "createdAt": "Створено",
-    "updatedAt": "Оновлено"
+  "chat": {
+    "assistantName": "Помічник Вчителя",
+    "typingIndicator": "Друкую..."
+  },
+  "titles": {
+    "dashboard": "Дашборд",
+    "teacherAssistant": "Помічник Вчителя",
+    "defaultUser": "Користувач"
   },
   "stats": {
-    "totalLessons": "Всього уроків",
-    "totalSlides": "Всього слайдів", 
-    "monthlyLessons": "За місяць",
-    "lastActivity": "Остання активність",
-    "productivity": "Продуктивність",
-    "slidesPerLesson": "слайдів на урок",
     "yourStats": "Ваша статистика",
     "activityAnalysis": "Аналіз активності",
-    "accountInfo": "Інформація про акаунт",
     "averageSlides": "Середня кількість слайдів",
-    "subscriptionType": "Тип підписки"
+    "slidesPerLesson": "слайдів на урок",
+    "subscriptionType": "Тип підписки",
+    "accountInfo": "Інформація акаунту"
   },
-  "notifications": {
-    "profileUpdated": "Профіль оновлено успішно",
-    "passwordChanged": "Пароль успішно змінено",
-    "saving": "Збереження...",
-    "saved": "Збережено"
+  "dates": {
+    "joinedAt": "Дата реєстрації",
+    "lastSignIn": "Останній вхід"
   }
 } 

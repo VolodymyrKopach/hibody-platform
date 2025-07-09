@@ -12,7 +12,8 @@ import {
   ChevronRight,
   Sparkles,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Languages
 } from 'lucide-react';
 import {
   AppBar,
@@ -35,7 +36,6 @@ import {
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { AuthModal } from '@/components/auth';
-import { LanguageSwitcher } from '@/components/ui';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -50,9 +50,9 @@ const Header: React.FC<HeaderProps> = ({
   onToggleSidebarCollapse,
   sidebarCollapsed,
   breadcrumbs = [], 
-  title = 'Дашборд' 
+  title
 }) => {
-  const { t } = useTranslation(['common', 'auth']);
+  const { t, i18n } = useTranslation(['common', 'auth']);
   const theme = useTheme();
   const router = useRouter();
   const { user, profile, signOut, loading } = useAuth();
@@ -71,6 +71,14 @@ const Header: React.FC<HeaderProps> = ({
   // }, [loading])
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  // Languages configuration
+  const languages = [
+    { code: 'uk', name: 'Українська', flag: '🇺🇦' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+  ];
+
+  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
 
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setUserMenuAnchor(event.currentTarget);
@@ -99,6 +107,11 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleCreateClick = () => {
     router.push('/chat');
+  };
+
+  const handleLanguageChange = (languageCode: string) => {
+    i18n.changeLanguage(languageCode);
+    handleUserMenuClose();
   };
 
   return (
@@ -183,7 +196,7 @@ const Header: React.FC<HeaderProps> = ({
           {/* Page Title */}
           <Box sx={{ ml: 2 }}>
             <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              {title}
+              {title || t('titles.dashboard')}
             </Typography>
           </Box>
 
@@ -217,9 +230,6 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Right Section */}
         <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1, justifyContent: 'flex-end' }}>
-          {/* Language Switcher */}
-          <LanguageSwitcher />
-          
           {/* Quick Actions - показуємо тільки для авторизованих користувачів */}
           {user && (
             <Button
@@ -321,14 +331,14 @@ const Header: React.FC<HeaderProps> = ({
             </Avatar>
             <Box>
               <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                {profile?.full_name || 'Користувач'}
+                {profile?.full_name || t('titles.defaultUser')}
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {user?.email}
               </Typography>
               <Chip
-                label={profile?.subscription_type === 'free' ? 'Безкоштовний' : 
-                      profile?.subscription_type === 'professional' ? 'Професійний' : 'Преміум'}
+                label={profile?.subscription_type === 'free' ? t('subscription.free') : 
+                      profile?.subscription_type === 'professional' ? t('subscription.professional') : t('subscription.premium')}
                 size="small"
                 sx={{
                   mt: 0.5,
@@ -356,8 +366,46 @@ const Header: React.FC<HeaderProps> = ({
             <ListItemIcon>
               <User size={18} />
             </ListItemIcon>
-            Профіль
+            {t('buttons.profile')}
           </MenuItem>
+
+          {/* Language Selector */}
+          <Box sx={{ px: 1, py: 0.5 }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', px: 1 }}>
+              {t('language.title', 'Language')}
+            </Typography>
+            {languages.map((language) => (
+              <MenuItem
+                key={language.code}
+                onClick={() => handleLanguageChange(language.code)}
+                selected={language.code === i18n.language}
+                sx={{
+                  borderRadius: '6px',
+                  mb: 0.25,
+                  py: 0.5,
+                  minHeight: 'auto',
+                  fontSize: '0.875rem',
+                  backgroundColor: language.code === i18n.language ? alpha(theme.palette.primary.main, 0.08) : 'transparent',
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                  },
+                  '&.Mui-selected': {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: '28px' }}>
+                  <span style={{ fontSize: '1rem' }}>{language.flag}</span>
+                </ListItemIcon>
+                <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                  {language.name}
+                </Typography>
+              </MenuItem>
+            ))}
+          </Box>
           
           <Divider sx={{ my: 1 }} />
           
@@ -374,7 +422,7 @@ const Header: React.FC<HeaderProps> = ({
             <ListItemIcon>
               <LogOut size={18} color={theme.palette.error.main} />
             </ListItemIcon>
-            Вийти
+            {t('buttons.logout')}
           </MenuItem>
         </Box>
       </MuiMenu>

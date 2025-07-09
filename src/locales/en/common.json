@@ -5,7 +5,14 @@
     "materials": "Materials", 
     "account": "Account",
     "lessons": "Lessons",
-    "slides": "Slides"
+    "slides": "Slides",
+    "aiChat": "AI Chat",
+    "myMaterials": "My Materials"
+  },
+  "pages": {
+    "chatTitle": "AI Chat",
+    "materialsTitle": "My Materials",
+    "accountTitle": "Account"
   },
   "buttons": {
     "save": "Save",
@@ -56,7 +63,9 @@
     "preview": "Preview",
     "startPasswordChange": "Change Password",
     "savePassword": "Save Password",
-    "regenerate": "Regenerate"
+    "regenerate": "Regenerate",
+    "profile": "Profile",
+    "logout": "Logout"
   },
   "status": {
     "success": "Success",
@@ -128,6 +137,7 @@
     "all": "All age groups"
   },
   "language": {
+    "title": "Language",
     "ukrainian": "Українська",
     "english": "English",
     "change": "Change Language"
@@ -248,5 +258,26 @@
     "passwordChanged": "Password changed successfully",
     "saving": "Saving...",
     "saved": "Saved"
+  },
+  "titles": {
+    "dashboard": "Dashboard",
+    "teacherAssistant": "Teacher Assistant",
+    "defaultUser": "User"
+  },
+  "chat": {
+    "assistantName": "Teacher Assistant",
+    "typingIndicator": "Typing..."
+  },
+  "stats": {
+    "yourStats": "Your Statistics",
+    "activityAnalysis": "Activity Analysis",
+    "averageSlides": "Average slides",
+    "slidesPerLesson": "slides per lesson",
+    "subscriptionType": "Subscription Type",
+    "accountInfo": "Account Information"
+  },
+  "dates": {
+    "joinedAt": "Joined",
+    "lastSignIn": "Last Sign In"
   }
 } 
