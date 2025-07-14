@@ -1,0 +1,190 @@
+{
+  "constructor": {
+    "title": "Generation Constructor",
+    "description": "Create a personalized lesson for the selected age group",
+    "step": {
+      "select": "Select Group",
+      "form": "Settings",
+      "preview": "Preview"
+    },
+    "progress": "Completion Progress",
+    "errors": "errors need to be fixed",
+    "ready": "Ready",
+    "generating": "Generating...",
+    "generate": "Generate"
+  },
+  "ageGroups": {
+    "2-3": "2-3 years",
+    "4-6": "4-6 years",
+    "7-8": "7-8 years",
+    "9-10": "9-10 years"
+  },
+  "form": {
+    "sections": {
+      "general": "General Settings",
+      "generalDesc": "Basic settings for generation",
+      "content": "Content",
+      "contentDesc": "Content and topic settings",
+      "difficulty": "Difficulty",
+      "difficultyDesc": "Difficulty level and requirements",
+      "format": "Format",
+      "formatDesc": "Format and presentation settings",
+      "language": "Language",
+      "languageDesc": "Language settings"
+    },
+    "ageGroup2_3": {
+      "goals": {
+        "title": "Lesson Goal",
+        "description": "What to develop in the child",
+        "options": {
+          "language_development": "Language Development",
+          "motor_skills": "Motor Skills",
+          "world_knowledge": "World Knowledge",
+          "emotional_development": "Emotional Development",
+          "social_skills": "Social Skills",
+          "creativity": "Creativity",
+          "custom_goal": "Custom Goal"
+        }
+      },
+      "activities": {
+        "title": "Activity Type",
+        "description": "What format of activity",
+        "options": {
+          "imitation": "Imitation",
+          "musical_rhythm": "Musical-Rhythmic",
+          "simple_puzzles": "Simple Puzzles",
+          "colors_shapes": "Colors & Shapes",
+          "animals": "Animals",
+          "household_items": "Household Items",
+          "role_play": "Role Play",
+          "custom_activity": "Custom Activity"
+        }
+      },
+      "themes": {
+        "title": "Theme",
+        "description": "What the lesson will be about",
+        "options": {
+          "family": "Family",
+          "animals": "Animals",
+          "transport": "Transport",
+          "food": "Food",
+          "home": "Home",
+          "nature": "Nature",
+          "holidays": "Holidays",
+          "toys": "Toys",
+          "custom_theme": "Custom Theme"
+        }
+      },
+      "audio": {
+        "title": "Audio Support",
+        "description": "Audio accompaniment (required)",
+        "options": {
+          "children_songs": "Children's Songs",
+          "animal_sounds": "Animal Sounds",
+          "transport_sounds": "Transport Sounds",
+          "lullabies": "Lullabies",
+          "rhythm_sounds": "Rhythm Sounds",
+          "word_repetition": "Word Repetition",
+          "custom_audio": "Custom Audio"
+        }
+      },
+      "difficulty": {
+        "title": "Difficulty Level",
+        "description": "How difficult the lesson should be",
+        "options": {
+          "simple": "Simple",
+          "medium": "Medium",
+          "complex": "Complex",
+          "auto": "Automatic"
+        }
+      },
+      "duration": {
+        "title": "Lesson Duration",
+        "description": "How long the activity will last",
+        "options": {
+          "short": "Short",
+          "standard": "Standard",
+          "long": "Long",
+          "repeatable": "Repeatable"
+        }
+      },
+      "style": {
+        "title": "Presentation Style",
+        "description": "How to present material to the child",
+        "options": {
+          "playful": "Playful",
+          "storytelling": "Storytelling",
+          "musical": "Musical",
+          "movement": "Movement",
+          "interactive": "Interactive"
+        }
+      },
+      "participation": {
+        "title": "Participation Format",
+        "description": "Who participates in the lesson",
+        "options": {
+          "individual": "Individual",
+          "with_adult": "With Adult",
+          "with_friends": "With Friends",
+          "group": "Group"
+        }
+      },
+      "visual": {
+        "title": "Visual Effects",
+        "description": "Appearance settings",
+        "options": {
+          "bright_colors": "Bright Colors",
+          "large_elements": "Large Elements",
+          "simple_animations": "Simple Animations",
+          "repetition": "Repetition",
+          "contrast": "Contrast"
+        }
+      },
+      "speed": {
+        "title": "Presentation Speed",
+        "description": "Material presentation pace",
+        "options": {
+          "slow": "Slow",
+          "moderate": "Moderate",
+          "fast": "Fast",
+          "adaptive": "Adaptive"
+        }
+      }
+    }
+  },
+  "actions": {
+    "generateLesson": "Generate Lesson",
+    "saveConfig": "Save Configuration",
+    "export": "Export",
+    "readyToGenerate": "Form is correctly filled. Ready to generate!",
+    "generating": "Generating lesson...",
+    "saving": "Saving configuration..."
+  },
+  "preview": {
+    "title": "Preview",
+    "loading": "Loading preview...",
+    "error": "Error loading preview",
+    "empty": "No data for preview",
+    "generate": "Generate preview"
+  },
+  "history": {
+    "undo": "Undo",
+    "redo": "Redo",
+    "undoDescription": "Undo: {{description}}",
+    "redoDescription": "Redo: {{description}}",
+    "memoryUsage": "Memory usage",
+    "timeline": "Change History",
+    "noEntries": "No history entries yet",
+    "searchPlaceholder": "Search history...",
+    "filterByType": "Filter by type",
+    "allTypes": "All types",
+    "fieldChange": "Field change",
+    "bulkChange": "Bulk change",
+    "formLoad": "Form load",
+    "formReset": "Form reset",
+    "formLoaded": "Form loaded",
+    "formResetAction": "Form reset",
+    "toggleMetadata": "Toggle metadata",
+    "showingEntries": "Showing {{count}} of {{total}} entries"
+  }
+} 

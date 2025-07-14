@@ -3,10 +3,12 @@ import { useTranslation } from 'react-i18next';
 import {
   Box,
   TextField,
-  Button
+  Button,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
-import { Send } from 'lucide-react';
+import { Send, Wand2 } from 'lucide-react';
 
 interface ChatInputProps {
   value: string;
@@ -14,6 +16,7 @@ interface ChatInputProps {
   onSend: () => void;
   isLoading: boolean;
   disabled: boolean;
+  onOpenGenerationConstructor: () => void;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -21,7 +24,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onChange,
   onSend,
   isLoading,
-  disabled
+  disabled,
+  onOpenGenerationConstructor
 }) => {
   const { t } = useTranslation('chat');
   const theme = useTheme();
@@ -35,6 +39,33 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end', width: '100%' }}>
+      {/* Кнопка конструктора генерації */}
+      <Tooltip title="Конструктор генерації">
+        <IconButton
+          onClick={onOpenGenerationConstructor}
+          disabled={disabled}
+          sx={{
+            width: 56,
+            height: 56,
+            borderRadius: 3,
+            border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+            color: theme.palette.primary.main,
+            backgroundColor: alpha(theme.palette.primary.main, 0.04),
+            '&:hover': {
+              backgroundColor: alpha(theme.palette.primary.main, 0.08),
+              borderColor: alpha(theme.palette.primary.main, 0.4),
+            },
+            '&:disabled': {
+              color: theme.palette.grey[400],
+              borderColor: theme.palette.grey[300],
+              backgroundColor: theme.palette.grey[50],
+            }
+          }}
+        >
+          <Wand2 size={20} />
+        </IconButton>
+      </Tooltip>
+
       <TextField
         fullWidth
         multiline

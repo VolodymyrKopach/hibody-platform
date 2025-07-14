@@ -1,5 +1,9 @@
-export { default as useChatLogic } from './useChatLogic';
-export { default as useSlideManagement } from './useSlideManagement';
-export { useSupabaseLessons } from './useSupabaseLessons';
-export { useSessionRefresh } from './useSessionRefresh';
-export { useLocalization } from './useLocalization';
+// === SOLID: SRP - Hooks exports ===
+export * from './useChatLogic';
+export * from './useLocalization';
+export * from './useGenerationForm';
+export * from './useFormValidation';
+export * from './usePreview';
+export * from './useGenerationConstructor';
+export * from './useBreakpoint';
+export * from './useFormWithHistory';

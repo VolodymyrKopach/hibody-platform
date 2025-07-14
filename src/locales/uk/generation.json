@@ -1,0 +1,190 @@
+{
+  "constructor": {
+    "title": "Конструктор генерації",
+    "description": "Створіть персоналізований урок для обраної вікової групи",
+    "step": {
+      "select": "Оберіть групу",
+      "form": "Налаштування",
+      "preview": "Перегляд"
+    },
+    "progress": "Прогрес заповнення",
+    "errors": "помилок потребують виправлення",
+    "ready": "Готово",
+    "generating": "Генерація...",
+    "generate": "Згенерувати"
+  },
+  "ageGroups": {
+    "2-3": "2-3 роки",
+    "4-6": "4-6 років",
+    "7-8": "7-8 років",
+    "9-10": "9-10 років"
+  },
+  "form": {
+    "sections": {
+      "general": "Основні параметри",
+      "generalDesc": "Базові налаштування для генерації",
+      "content": "Контент",
+      "contentDesc": "Налаштування змісту та тематики",
+      "difficulty": "Складність",
+      "difficultyDesc": "Рівень складності та вимоги",
+      "format": "Формат",
+      "formatDesc": "Налаштування формату та презентації",
+      "language": "Мова",
+      "languageDesc": "Мовні налаштування"
+    },
+    "ageGroup2_3": {
+      "goals": {
+        "title": "Ціль заняття",
+        "description": "Що розвиваємо у дитини",
+        "options": {
+          "language_development": "Розвиток мови",
+          "motor_skills": "Моторика",
+          "world_knowledge": "Пізнання світу",
+          "emotional_development": "Емоційний розвиток",
+          "social_skills": "Соціальні навички",
+          "creativity": "Творчість",
+          "custom_goal": "Власна ціль"
+        }
+      },
+      "activities": {
+        "title": "Тип активності",
+        "description": "Який формат заняття",
+        "options": {
+          "imitation": "Імітація",
+          "musical_rhythm": "Музично-ритмічні",
+          "simple_puzzles": "Прості пазли",
+          "colors_shapes": "Кольори та форми",
+          "animals": "Тварини",
+          "household_items": "Побутові предмети",
+          "role_play": "Рольові ігри",
+          "custom_activity": "Власний варіант"
+        }
+      },
+      "themes": {
+        "title": "Тематика",
+        "description": "Про що буде заняття",
+        "options": {
+          "family": "Сім'я",
+          "animals": "Тварини",
+          "transport": "Транспорт",
+          "food": "Їжа",
+          "home": "Дім",
+          "nature": "Природа",
+          "holidays": "Свята",
+          "toys": "Іграшки",
+          "custom_theme": "Власна тема"
+        }
+      },
+      "audio": {
+        "title": "Аудіо-супровід",
+        "description": "Звуковий супровід (обов'язковий)",
+        "options": {
+          "children_songs": "Дитячі пісні",
+          "animal_sounds": "Звуки тварин",
+          "transport_sounds": "Звуки транспорту",
+          "lullabies": "Колискові",
+          "rhythm_sounds": "Ритмічні звуки",
+          "word_repetition": "Повторення слів",
+          "custom_audio": "Власний варіант"
+        }
+      },
+      "difficulty": {
+        "title": "Рівень складності",
+        "description": "Наскільки складним має бути заняття",
+        "options": {
+          "simple": "Простий",
+          "medium": "Середній",
+          "complex": "Складніший",
+          "auto": "Автоматичний"
+        }
+      },
+      "duration": {
+        "title": "Тривалість заняття",
+        "description": "Скільки часу триватиме активність",
+        "options": {
+          "short": "Коротка",
+          "standard": "Стандартна",
+          "long": "Довга",
+          "repeatable": "Повторювана"
+        }
+      },
+      "style": {
+        "title": "Стиль подачі",
+        "description": "Як подавати матеріал дитині",
+        "options": {
+          "playful": "Ігровий",
+          "storytelling": "Казковий",
+          "musical": "Музичний",
+          "movement": "Руховий",
+          "interactive": "Інтерактивний"
+        }
+      },
+      "participation": {
+        "title": "Формат участі",
+        "description": "Хто бере участь у занятті",
+        "options": {
+          "individual": "Індивідуальний",
+          "with_adult": "З дорослим",
+          "with_friends": "З друзями",
+          "group": "Груповий"
+        }
+      },
+      "visual": {
+        "title": "Візуальні ефекти",
+        "description": "Налаштування зовнішнього вигляду",
+        "options": {
+          "bright_colors": "Яскраві кольори",
+          "large_elements": "Великі елементи",
+          "simple_animations": "Прості анімації",
+          "repetition": "Повторення",
+          "contrast": "Контрастність"
+        }
+      },
+      "speed": {
+        "title": "Швидкість подачі",
+        "description": "Темп презентації матеріалу",
+        "options": {
+          "slow": "Повільна",
+          "moderate": "Помірна",
+          "fast": "Швидка",
+          "adaptive": "Адаптивна"
+        }
+      }
+    }
+  },
+  "actions": {
+    "generateLesson": "Генерувати урок",
+    "saveConfig": "Зберегти конфігурацію",
+    "export": "Експорт",
+    "readyToGenerate": "Форма заповнена правильно. Можна розпочинати генерацію!",
+    "generating": "Генерація уроку...",
+    "saving": "Збереження конфігурації..."
+  },
+  "preview": {
+    "title": "Попередній перегляд",
+    "loading": "Завантажуємо попередній перегляд...",
+    "error": "Помилка завантаження попереднього перегляду",
+    "empty": "Немає даних для попереднього перегляду",
+    "generate": "Генерувати попередній перегляд"
+  },
+  "history": {
+    "undo": "Скасувати",
+    "redo": "Повторити",
+    "undoDescription": "Скасувати: {{description}}",
+    "redoDescription": "Повторити: {{description}}",
+    "memoryUsage": "Використання пам'яті",
+    "timeline": "Історія змін",
+    "noEntries": "Поки немає записів в історії",
+    "searchPlaceholder": "Пошук в історії...",
+    "filterByType": "Фільтрувати за типом",
+    "allTypes": "Всі типи",
+    "fieldChange": "Зміна поля",
+    "bulkChange": "Масова зміна",
+    "formLoad": "Завантаження форми",
+    "formReset": "Скидання форми",
+    "formLoaded": "Форма завантажена",
+    "formResetAction": "Форма скинута",
+    "toggleMetadata": "Перемикання метаданих",
+    "showingEntries": "Показано {{count}} з {{total}} записів"
+  }
+} 

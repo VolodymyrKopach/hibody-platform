@@ -16,6 +16,7 @@ import TypingIndicator from '@/components/chat/TypingIndicator';
 import SlidePanel from '@/components/slides/SlidePanel';
 import { SlideDialog } from '@/components/slides';
 import SaveLessonDialog from '@/components/dialogs/SaveLessonDialog';
+import SimpleGenerationDialog from '@/components/dialogs/SimpleGenerationDialog';
 
 // Хуки
 import useChatLogic from '@/hooks/useChatLogic';
@@ -68,6 +69,23 @@ const ChatInterface: React.FC = () => {
     toggleSlidePanelOpen,
     exportLesson
   } = useSlideManagement(messages, setMessages);
+
+  // Стан для діалогу конструктора генерації
+  const [generationConstructorOpen, setGenerationConstructorOpen] = React.useState(false);
+
+  const handleOpenGenerationConstructor = () => {
+    setGenerationConstructorOpen(true);
+  };
+
+  const handleCloseGenerationConstructor = () => {
+    setGenerationConstructorOpen(false);
+  };
+
+  const handleGenerate = (parameters: any) => {
+    console.log('🎯 Генерація запущена з параметрами:', parameters);
+    // Тут буде логіка передачі параметрів у ChatService
+    setGenerationConstructorOpen(false);
+  };
 
   // Обробка збереження уроку з результатом
   const handleSaveLesson = async () => {
@@ -169,6 +187,7 @@ const ChatInterface: React.FC = () => {
                   onSend={sendMessage}
                   isLoading={isLoading}
                   disabled={isTyping}
+                  onOpenGenerationConstructor={handleOpenGenerationConstructor}
                 />
               </Box>
             </Box>
@@ -221,6 +240,16 @@ const ChatInterface: React.FC = () => {
           onDataChange={updateSaveDialogData}
           onPreviewSelect={handlePreviewSelect}
           isSaving={slideUIState.isSavingLesson}
+        />
+
+        {/* Діалог конструктора генерації */}
+        <SimpleGenerationDialog
+          open={generationConstructorOpen}
+          onClose={handleCloseGenerationConstructor}
+          onSendToChat={(prompt) => {
+            setInputText(prompt);
+            setTimeout(() => sendMessage(), 100);
+          }}
         />
       </Box>
           </Layout>
