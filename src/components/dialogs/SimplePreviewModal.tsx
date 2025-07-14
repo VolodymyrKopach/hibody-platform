@@ -62,11 +62,112 @@ const FieldIcon = styled(Box)(({ theme }) => ({
 type AgeGroup = '2-3' | '4-6' | '7-8' | '9-10';
 
 interface FormData {
+  // Базовые поля
   topic: string;
   difficulty: string;
   duration: string;
   activities: string;
   goals: string;
+  
+  // Поля для 4-6 лет
+  // Базовые фильтры
+  thematic?: string;
+  taskTypes?: string[];
+  language?: string;
+  
+  // Специализированные фильтры
+  learningGoal?: string;
+  complexityLevel?: string;
+  lessonDuration?: string;
+  
+  // Интерактивные настройки
+  presentationStyle?: string;
+  audioSupport?: string[];
+  participationFormat?: string;
+  
+  // Технические параметры
+  visualDesign?: string[];
+  presentationSpeed?: string;
+  interactivity?: string;
+  
+  // Образовательные стандарты
+  educationalProgram?: string;
+  gradingSystem?: string;
+  
+  // Новые поля для 2-4 лет
+  // Основные фильтры
+  lessonGoal?: string;
+  activityType?: string[];
+  thematic24?: string;
+  audioSupport24?: boolean;
+  complexityLevel24?: string;
+  lessonDuration24?: string;
+  
+  // Специальные фильтры
+  presentationStyle24?: string;
+  participationFormat24?: string;
+  
+  // Технические настройки
+  visualEffects?: string[];
+  presentationSpeed24?: string;
+  
+  // Новые поля для 7-8 лет (молодші школярі)
+  // Основные предметы
+  subject78?: string;
+  lessonFormat78?: string[];
+  skills78?: string[];
+  
+  // Специализированные фильтры
+  complexityLevel78?: string;
+  lessonDuration78?: string;
+  thematicOrientation78?: string;
+  
+  // Методические параметры
+  pedagogicalGoal78?: string;
+  assessmentMethod78?: string;
+  audioSettings78?: string[];
+  
+  // Интерактивные элементы
+  interactionType78?: string;
+  presentationStyle78?: string;
+  socialFormat78?: string;
+  
+  // Технические параметры
+  platform78?: string[];
+  visualStyle78?: string;
+  
+  // Образовательные стандарты
+  educationalProgram78?: string;
+  competencies78?: string[];
+
+  // Новые поля для 9-10 лет (старші школярі)
+  // Академические предметы
+  subject910?: string;
+  complexity910?: string;
+  taskTypes910?: string[];
+  
+  // Специализированные фильтры
+  learningGoal910?: string;
+  lessonDuration910?: string;
+  thematicOrientation910?: string;
+  
+  // Методические параметры
+  pedagogicalApproach910?: string;
+  independenceLevel910?: string;
+  gradingSystem910?: string;
+  
+  // Технологические параметры
+  digitalTools910?: string[];
+  visualDesign910?: string;
+  audioSettings910?: string;
+  
+  // Социальные параметры
+  interactionFormat910?: string;
+  studentRole910?: string;
+  
+  // Образовательные стандарты
+  educationalProgram910?: string;
+  keyCompetencies910?: string[];
 }
 
 interface PreviewData {
