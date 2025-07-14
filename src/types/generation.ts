@@ -1,250 +1,139 @@
-// === SOLID: SRP - Кожен тип має одну відповідальність ===
+// === SOLID: ISP - Interface Segregation Principle ===
+// Розділяємо інтерфейси за віковими групами для уникнення залежностей від невикористовуваних полів
 
-/**
- * Базова конфігурація шрифтів для вікової групи
- */
-export interface FontConfig {
-  primary: string;
-  secondary: string;
-  body: string;
+export type AgeGroup = '2-3' | '4-6' | '7-8' | '9-10';
+
+// Базовий інтерфейс для всіх форм
+export interface BaseFormData {
+  topic: string;
 }
 
-/**
- * Конфігурація макету для вікової групи
- */
-export interface LayoutConfig {
-  elementsPerSlide: number;
-  maxWords: number;
-  spacing: 'compact' | 'normal' | 'spacious';
+// Інтерфейс для конкретної вікової групи 2-3
+export interface AgeGroup2to3FormData extends BaseFormData {
+  lessonGoal?: string;
+  activityType?: string[];
+  thematic24?: string;
+  audioSupport24?: boolean;
+  complexityLevel24?: string;
+  lessonDuration24?: string;
+  presentationStyle24?: string;
+  participationFormat24?: string;
+  visualEffects?: string[];
+  presentationSpeed24?: string;
 }
 
-/**
- * Конфігурація аудіо для вікової групи
- */
-export interface AudioConfig {
-  required: boolean;
-  types: ('narration' | 'music' | 'effects')[];
-  volume: 'low' | 'medium' | 'high';
+// Інтерфейс для конкретної вікової групи 4-6
+export interface AgeGroup4to6FormData extends BaseFormData {
+  thematic?: string;
+  taskTypes?: string[];
+  language?: string;
+  learningGoal?: string;
+  complexityLevel?: string;
+  lessonDuration?: string;
+  presentationStyle?: string;
+  audioSupport?: string[];
+  participationFormat?: string;
+  visualDesign?: string[];
+  presentationSpeed?: string;
+  interactivity?: string;
+  educationalProgram?: string;
+  gradingSystem?: string;
 }
 
-/**
- * Основна конфігурація вікової групи
- * SOLID: SRP - відповідає тільки за характеристики вікової групи
- */
-export interface AgeGroupConfig {
-  id: string;
-  name: string;
-  icon: string;
-  ageRange: string;
-  description: string;
-  fontSize: FontConfig;
-  layout: LayoutConfig;
-  audio: AudioConfig;
-  timeRange: string;
-  complexity: 'simple' | 'medium' | 'complex';
+// Інтерфейс для конкретної вікової групи 7-8
+export interface AgeGroup7to8FormData extends BaseFormData {
+  subject78?: string;
+  lessonFormat78?: string[];
+  skills78?: string[];
+  complexityLevel78?: string;
+  lessonDuration78?: string;
+  thematicOrientation78?: string;
+  pedagogicalGoal78?: string;
+  assessmentMethod78?: string;
+  audioSettings78?: string[];
+  interactionType78?: string;
+  presentationStyle78?: string;
+  socialFormat78?: string;
+  platform78?: string[];
+  visualStyle78?: string;
+  educationalProgram78?: string;
+  competencies78?: string[];
 }
 
-/**
- * Опції для фільтрів
- */
-export interface FilterOption {
-  id: string;
+// Інтерфейс для конкретної вікової групи 9-10
+export interface AgeGroup9to10FormData extends BaseFormData {
+  subject910?: string;
+  complexity910?: string;
+  taskTypes910?: string[];
+  learningGoal910?: string;
+  lessonDuration910?: string;
+  thematicOrientation910?: string;
+  pedagogicalApproach910?: string;
+  independenceLevel910?: string;
+  gradingSystem910?: string;
+  digitalTools910?: string[];
+  visualDesign910?: string;
+  audioSettings910?: string;
+  interactionFormat910?: string;
+  studentRole910?: string;
+  educationalProgram910?: string;
+  keyCompetencies910?: string[];
+}
+
+// Union type для всіх форм
+export type FormData = AgeGroup2to3FormData | AgeGroup4to6FormData | AgeGroup7to8FormData | AgeGroup9to10FormData;
+
+// === SOLID: LSP - Liskov Substitution Principle ===
+// Всі конфігурації мають бути замінними через загальний інтерфейс
+
+export interface FieldConfig {
   label: string;
-  value: string;
-  description?: string;
-  icon?: string;
-}
-
-/**
- * Конфігурація одного фільтра
- * SOLID: SRP - відповідає тільки за один фільтр
- */
-export interface FilterConfig {
-  id: string;
-  field: string;
-  label: string;
-  type: 'select' | 'multiselect' | 'radio' | 'checkbox' | 'text' | 'textarea';
-  required: boolean;
-  options?: FilterOption[];
   placeholder?: string;
+  options?: string[];
+  type: 'text' | 'select' | 'multiselect' | 'textarea' | 'checkbox';
   section?: string;
-  width?: 'full' | 'half' | 'third';
-  validation?: {
-    minLength?: number;
-    maxLength?: number;
-    pattern?: string;
-    custom?: (value: any) => boolean;
-  };
+  description?: string;
+  required?: boolean;
 }
 
-/**
- * Група фільтрів для вікової групи
- * SOLID: ISP - специфічний інтерфейс для групи фільтрів
- */
-export interface AgeGroupFilters {
-  ageGroupId: string;
-  groups: FilterGroup[];
-}
-
-/**
- * Логічна група фільтрів
- */
-export interface FilterGroup {
+export interface SectionConfig {
   id: string;
   title: string;
-  description?: string;
-  filters: FilterConfig[];
-  collapsible: boolean;
-  defaultExpanded: boolean;
+  description: string;
+  order: number;
 }
 
-/**
- * Значення форми
- */
-export interface FormValues {
-  [filterId: string]: any;
+export interface AgeGroupConfig {
+  id: AgeGroup;
+  icon: React.ComponentType<{ size?: number }>;
+  label: string;
+  color: string;
+  fields: Record<string, FieldConfig>;
+  sections: SectionConfig[];
 }
 
-/**
- * Помилки валідації
- */
-export interface ValidationErrors {
-  [filterId: string]: string[];
+// === SOLID: DIP - Dependency Inversion Principle ===
+// Абстракції для роботи з формами
+
+export interface IFormValidator<T extends BaseFormData> {
+  validate(formData: T): boolean;
+  getValidationErrors(formData: T): string[];
 }
 
-/**
- * Стан форми
- * SOLID: SRP - відповідає тільки за стан форми
- */
-export interface FormState {
-  selectedAgeGroup: AgeGroupId;
-  values: FormValues;
-  errors: ValidationErrors;
-  isValid: boolean;
-  isDirty: boolean;
-  isSubmitting: boolean;
+export interface IPromptGenerator<T extends BaseFormData> {
+  generatePrompt(ageGroup: AgeGroup, formData: T): string;
 }
 
-/**
- * Дані для превю
- * SOLID: SRP - відповідає тільки за превю
- */
-export interface PreviewData {
-  ageGroup: AgeGroupConfig;
-  characteristics: {
-    fontSize: FontConfig;
-    layout: LayoutConfig;
-    audio: AudioConfig;
-    estimatedDuration: string;
-  };
-  sampleSlide: {
-    title: string;
-    content: string;
-    elements: PreviewElement[];
-  };
+export interface IAgeGroupConfigProvider {
+  getConfig(ageGroup: AgeGroup): AgeGroupConfig;
+  getAllConfigs(): AgeGroupConfig[];
 }
 
-/**
- * Елемент превю слайду
- */
-export interface PreviewElement {
-  id: string;
-  type: 'text' | 'image' | 'audio' | 'interactive';
-  content: string;
-  style: {
-    fontSize: string;
-    color: string;
-    position: 'top' | 'center' | 'bottom';
-  };
-}
-
-/**
- * Стан превю
- * SOLID: SRP - відповідає тільки за стан превю
- */
-export interface PreviewState {
-  visible: boolean;
-  loading: boolean;
-  data: PreviewData | null;
-  error: string | null;
-}
-
-/**
- * Загальний стан конструктора генерації
- * SOLID: SRP - агрегує всі стани, але не містить логіки
- */
-export interface GenerationConstructorState {
-  form: FormState;
-  preview: PreviewState;
-  availableAgeGroups: AgeGroupConfig[];
-  availableFilters: AgeGroupFilters[];
-}
-
-/**
- * Параметри для генерації контенту
- * SOLID: SRP - відповідає тільки за параметри генерації
- */
-export interface GenerationParameters {
-  ageGroup: string;
-  filters: FormValues;
-  requirements: {
-    slideCount?: number;
-    duration?: number;
-    includeAudio: boolean;
-    complexity: string;
-  };
-}
-
-// === SOLID: OCP - Інтерфейси для розширення ===
-
-/**
- * Базовий інтерфейс для валідатора
- * SOLID: DIP - залежимо від абстракції, не від конкретної реалізації
- */
-export interface IValidator {
-  validate(value: any, config: FilterConfig): string[];
-  validateForm(values: FormValues, filters: FilterConfig[]): ValidationErrors;
-}
-
-/**
- * Інтерфейс для генератора превю
- * SOLID: DIP - залежимо від абстракції
- */
-export interface IPreviewGenerator {
-  generatePreview(ageGroup: AgeGroupConfig, values: FormValues): PreviewData;
-  generateSampleSlide(ageGroup: AgeGroupConfig): PreviewElement[];
-}
-
-/**
- * Інтерфейс для менеджера конфігурацій
- * SOLID: DIP - залежимо від абстракції
- */
-export interface IConfigManager {
-  getAgeGroups(): AgeGroupConfig[];
-  getFiltersForAge(ageGroupId: string): AgeGroupFilters;
-  getDefaultValues(ageGroupId: string): FormValues;
-}
-
-// === Utility Types ===
-
-/**
- * Тип для ID вікових груп
- */
-export type AgeGroupId = '2-3' | '4-6' | '7-8' | '9-10';
-
-/**
- * Тип для статусу форми
- */
-export type FormStatus = 'idle' | 'validating' | 'submitting' | 'success' | 'error';
-
-/**
- * Тип для подій форми
- */
-export type FormEvent = 
-  | { type: 'SET_AGE_GROUP'; payload: AgeGroupId }
-  | { type: 'SET_FIELD_VALUE'; payload: { field: string; value: any } }
-  | { type: 'SET_ERRORS'; payload: ValidationErrors }
-  | { type: 'RESET_FORM' }
-  | { type: 'SUBMIT_START' }
-  | { type: 'SUBMIT_SUCCESS' }
-  | { type: 'SUBMIT_ERROR'; payload: string }; 
+// Props для компонентів
+export interface GenerationFormProps<T extends BaseFormData> {
+  onGenerate: (data: { ageGroup: AgeGroup; formData: T; detailedPrompt: string }) => void;
+  onPreview: (data: { ageGroup: AgeGroup; formData: T }) => void;
+  configProvider: IAgeGroupConfigProvider;
+  validator: IFormValidator<T>;
+  promptGenerator: IPromptGenerator<T>;
+} 
