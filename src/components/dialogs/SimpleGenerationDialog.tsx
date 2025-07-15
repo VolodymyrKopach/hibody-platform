@@ -242,12 +242,10 @@ const SimpleGenerationDialog: React.FC<SimpleGenerationDialogProps> = ({
         
         {/* Content */}
         <DialogContent sx={{ p: 0 }}>
-          <Box sx={{ p: 3 }}>
             <SimpleGenerationForm
               onGenerate={handleGenerate}
               onPreview={handlePreview}
             />
-          </Box>
         </DialogContent>
       </Dialog>
       

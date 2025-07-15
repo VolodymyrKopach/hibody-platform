@@ -1,171 +1,193 @@
+/**
+ * === SOLID: SRP - Single Responsibility ===
+ * Компонент відповідальний лише за рендеринг полів форми
+ */
+
 import React from 'react';
-import { Box, Typography, useTheme, alpha } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { FilterConfig } from '@/types/generation';
-import { SelectField } from './form-fields';
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  FormControlLabel,
+  Box,
+  Chip
+} from '@mui/material';
+import { FieldRendererProps } from '../../types/generation';
 
-// === SOLID: SRP - Styled Components ===
-const PlaceholderField = styled(Box)(({ theme }) => ({
-  minHeight: 80,
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  alignItems: 'center',
-  border: `1px dashed ${theme.palette.divider}`,
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.action.hover, 0.3),
-  position: 'relative',
-  padding: theme.spacing(2),
-}));
+// === SOLID: SRP - Окремі компоненти для різних типів полів ===
 
-const RequiredIndicator = styled(Box)(({ theme }) => ({
-  color: theme.palette.error.main,
-  fontSize: '0.75rem',
-  position: 'absolute',
-  top: 4,
-  right: 4,
-}));
+const TextFieldRenderer: React.FC<{
+  fieldConfig: FieldRendererProps['fieldConfig'];
+  value: string;
+  onChange: (value: string) => void;
+}> = ({ fieldConfig, value, onChange }) => (
+  <TextField
+    fullWidth
+    label={fieldConfig.label}
+    placeholder={fieldConfig.placeholder}
+    value={value || ''}
+    onChange={(e) => onChange(e.target.value)}
+    size="small"
+  />
+);
 
-// === SOLID: ISP - Specific interface for FieldRenderer ===
-interface FieldRendererProps {
-  config: FilterConfig;
-  value: any;
-  error?: string[];
-  onChange: (value: any) => void;
-  onBlur?: () => void;
-  disabled?: boolean;
-}
+const TextAreaFieldRenderer: React.FC<{
+  fieldConfig: FieldRendererProps['fieldConfig'];
+  value: string;
+  onChange: (value: string) => void;
+}> = ({ fieldConfig, value, onChange }) => (
+  <TextField
+    fullWidth
+    label={fieldConfig.label}
+    placeholder={fieldConfig.placeholder}
+    value={value || ''}
+    onChange={(e) => onChange(e.target.value)}
+    multiline
+    rows={3}
+    size="small"
+  />
+);
 
-// === SOLID: SRP - FieldRenderer component ===
+const SelectFieldRenderer: React.FC<{
+  fieldConfig: FieldRendererProps['fieldConfig'];
+  value: string;
+  onChange: (value: string) => void;
+}> = ({ fieldConfig, value, onChange }) => (
+  <FormControl fullWidth size="small">
+    <InputLabel>{fieldConfig.label}</InputLabel>
+    <Select
+      value={value || ''}
+      label={fieldConfig.label}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      {fieldConfig.options?.map((option) => (
+        <MenuItem key={option} value={option}>
+          {option}
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+);
+
+const MultiSelectFieldRenderer: React.FC<{
+  fieldConfig: FieldRendererProps['fieldConfig'];
+  value: string[];
+  onChange: (value: string[]) => void;
+}> = ({ fieldConfig, value, onChange }) => (
+  <FormControl fullWidth size="small">
+    <InputLabel>{fieldConfig.label}</InputLabel>
+    <Select
+      multiple
+      value={Array.isArray(value) ? value : []}
+      label={fieldConfig.label}
+      onChange={(e) => {
+        const selectedValue = Array.isArray(e.target.value) ? e.target.value : [e.target.value];
+        onChange(selectedValue);
+      }}
+      renderValue={(selected) => (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+          {(selected as string[]).map((value) => (
+            <Chip key={value} label={value} size="small" />
+          ))}
+        </Box>
+      )}
+    >
+      {fieldConfig.options?.map((option) => (
+        <MenuItem key={option} value={option}>
+          {option}
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+);
+
+const CheckboxFieldRenderer: React.FC<{
+  fieldConfig: FieldRendererProps['fieldConfig'];
+  value: boolean;
+  onChange: (value: boolean) => void;
+}> = ({ fieldConfig, value, onChange }) => (
+  <FormControlLabel
+    control={
+      <Checkbox
+        checked={Boolean(value)}
+        onChange={(e) => onChange(e.target.checked)}
+        size="small"
+      />
+    }
+    label={fieldConfig.label}
+    sx={{ alignItems: 'flex-start' }}
+  />
+);
+
+// === SOLID: SRP - Головний компонент FieldRenderer ===
 const FieldRenderer: React.FC<FieldRendererProps> = ({
-  config,
+  fieldKey,
+  fieldConfig,
   value,
-  error,
-  onChange,
-  onBlur,
-  disabled = false
+  onChange
 }) => {
-  const theme = useTheme();
-  
-  // === SOLID: SRP - Render field based on type ===
-  switch (config.type) {
-    case 'select':
-      return (
-        <SelectField
-          config={config}
-          value={value}
-          error={error}
-          onChange={onChange}
-          onBlur={onBlur}
-          disabled={disabled}
-        />
-      );
-    
-    case 'multiselect':
-      return (
-        <PlaceholderField>
-          <Typography variant="body2" color="text.secondary">
-            MULTISELECT
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {config.field}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-            Буде реалізовано далі
-          </Typography>
-          {config.required && (
-            <RequiredIndicator>*</RequiredIndicator>
-          )}
-        </PlaceholderField>
-      );
-    
-    case 'radio':
-      return (
-        <PlaceholderField>
-          <Typography variant="body2" color="text.secondary">
-            RADIO
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {config.field}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-            Буде реалізовано далі
-          </Typography>
-          {config.required && (
-            <RequiredIndicator>*</RequiredIndicator>
-          )}
-        </PlaceholderField>
-      );
-    
-    case 'checkbox':
-      return (
-        <PlaceholderField>
-          <Typography variant="body2" color="text.secondary">
-            CHECKBOX
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {config.field}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-            Буде реалізовано далі
-          </Typography>
-          {config.required && (
-            <RequiredIndicator>*</RequiredIndicator>
-          )}
-        </PlaceholderField>
-      );
-    
-    case 'text':
-      return (
-        <PlaceholderField>
-          <Typography variant="body2" color="text.secondary">
-            TEXT
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {config.field}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-            Буде реалізовано далі
-          </Typography>
-          {config.required && (
-            <RequiredIndicator>*</RequiredIndicator>
-          )}
-        </PlaceholderField>
-      );
-    
-    case 'textarea':
-      return (
-        <PlaceholderField>
-          <Typography variant="body2" color="text.secondary">
-            TEXTAREA
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {config.field}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-            Буде реалізовано далі
-          </Typography>
-          {config.required && (
-            <RequiredIndicator>*</RequiredIndicator>
-          )}
-        </PlaceholderField>
-      );
-    
-    default:
-      return (
-        <PlaceholderField>
-          <Typography variant="body2" color="text.secondary">
-            UNKNOWN TYPE: {config.type}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {config.field}
-          </Typography>
-          {config.required && (
-            <RequiredIndicator>*</RequiredIndicator>
-          )}
-        </PlaceholderField>
-      );
-  }
+  // === SOLID: OCP - Легко розширюється новими типами полів ===
+  const renderField = () => {
+    switch (fieldConfig.type) {
+      case 'text':
+        return (
+          <TextFieldRenderer
+            fieldConfig={fieldConfig}
+            value={value as string}
+            onChange={onChange as (value: string) => void}
+          />
+        );
+      
+      case 'textarea':
+        return (
+          <TextAreaFieldRenderer
+            fieldConfig={fieldConfig}
+            value={value as string}
+            onChange={onChange as (value: string) => void}
+          />
+        );
+      
+      case 'select':
+        return (
+          <SelectFieldRenderer
+            fieldConfig={fieldConfig}
+            value={value as string}
+            onChange={onChange as (value: string) => void}
+          />
+        );
+      
+      case 'multiselect':
+        return (
+          <MultiSelectFieldRenderer
+            fieldConfig={fieldConfig}
+            value={value as string[]}
+            onChange={onChange as (value: string[]) => void}
+          />
+        );
+      
+      case 'checkbox':
+        return (
+          <CheckboxFieldRenderer
+            fieldConfig={fieldConfig}
+            value={value as boolean}
+            onChange={onChange as (value: boolean) => void}
+          />
+        );
+      
+      default:
+        console.warn(`Unknown field type: ${fieldConfig.type}`);
+        return null;
+    }
+  };
+
+  return (
+    <Box key={fieldKey}>
+      {renderField()}
+    </Box>
+  );
 };
 
 export default FieldRenderer; 

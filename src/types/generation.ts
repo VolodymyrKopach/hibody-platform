@@ -1,29 +1,51 @@
-// === SOLID: ISP - Interface Segregation Principle ===
-// Розділяємо інтерфейси за віковими групами для уникнення залежностей від невикористовуваних полів
+/**
+ * === SOLID: ISP - Interface Segregation ===
+ * Розділяємо інтерфейси на менші, більш спеціалізовані
+ */
 
+import { ComponentType } from 'react';
+
+// === Базові типи ===
 export type AgeGroup = '2-3' | '4-6' | '7-8' | '9-10';
 
-// Базовий інтерфейс для всіх форм
-export interface BaseFormData {
+export type FieldType = 'text' | 'select' | 'multiselect' | 'textarea' | 'checkbox';
+
+// === Конфігурація полів ===
+export interface FieldConfig {
+  label: string;
+  placeholder?: string;
+  options?: string[];
+  type: FieldType;
+  section?: string;
+  description?: string;
+}
+
+// === Конфігурація секцій ===
+export interface SectionConfig {
+  id: string;
+  title: string;
+  description: string;
+}
+
+// === Конфігурація вікових груп ===
+export interface AgeGroupConfig {
+  icon: ComponentType<{ size?: number }>;
+  label: string;
+  color: string;
+  fields: Record<string, FieldConfig>;
+  sections: SectionConfig[];
+}
+
+// === Форма даних ===
+export interface FormData {
+  // Базові поля
   topic: string;
-}
-
-// Інтерфейс для конкретної вікової групи 2-3
-export interface AgeGroup2to3FormData extends BaseFormData {
-  lessonGoal?: string;
-  activityType?: string[];
-  thematic24?: string;
-  audioSupport24?: boolean;
-  complexityLevel24?: string;
-  lessonDuration24?: string;
-  presentationStyle24?: string;
-  participationFormat24?: string;
-  visualEffects?: string[];
-  presentationSpeed24?: string;
-}
-
-// Інтерфейс для конкретної вікової групи 4-6
-export interface AgeGroup4to6FormData extends BaseFormData {
+  difficulty: string;
+  duration: string;
+  activities: string;
+  goals: string;
+  
+  // Поля для 4-6 років
   thematic?: string;
   taskTypes?: string[];
   language?: string;
@@ -38,10 +60,20 @@ export interface AgeGroup4to6FormData extends BaseFormData {
   interactivity?: string;
   educationalProgram?: string;
   gradingSystem?: string;
-}
-
-// Інтерфейс для конкретної вікової групи 7-8
-export interface AgeGroup7to8FormData extends BaseFormData {
+  
+  // Поля для 2-3 років
+  lessonGoal?: string;
+  activityType?: string[];
+  thematic24?: string;
+  audioSupport24?: boolean;
+  complexityLevel24?: string;
+  lessonDuration24?: string;
+  presentationStyle24?: string;
+  participationFormat24?: string;
+  visualEffects?: string[];
+  presentationSpeed24?: string;
+  
+  // Поля для 7-8 років
   subject78?: string;
   lessonFormat78?: string[];
   skills78?: string[];
@@ -58,10 +90,8 @@ export interface AgeGroup7to8FormData extends BaseFormData {
   visualStyle78?: string;
   educationalProgram78?: string;
   competencies78?: string[];
-}
 
-// Інтерфейс для конкретної вікової групи 9-10
-export interface AgeGroup9to10FormData extends BaseFormData {
+  // Поля для 9-10 років
   subject910?: string;
   complexity910?: string;
   taskTypes910?: string[];
@@ -80,60 +110,29 @@ export interface AgeGroup9to10FormData extends BaseFormData {
   keyCompetencies910?: string[];
 }
 
-// Union type для всіх форм
-export type FormData = AgeGroup2to3FormData | AgeGroup4to6FormData | AgeGroup7to8FormData | AgeGroup9to10FormData;
-
-// === SOLID: LSP - Liskov Substitution Principle ===
-// Всі конфігурації мають бути замінними через загальний інтерфейс
-
-export interface FieldConfig {
-  label: string;
-  placeholder?: string;
-  options?: string[];
-  type: 'text' | 'select' | 'multiselect' | 'textarea' | 'checkbox';
-  section?: string;
-  description?: string;
-  required?: boolean;
+// === Пропси компонентів ===
+export interface SimpleGenerationFormProps {
+  onGenerate: (data: { ageGroup: AgeGroup; formData: FormData; detailedPrompt: string }) => void;
+  onPreview: (data: { ageGroup: AgeGroup; formData: FormData }) => void;
 }
 
-export interface SectionConfig {
-  id: string;
-  title: string;
-  description: string;
-  order: number;
+export interface AgeGroupSelectorProps {
+  selectedAge: AgeGroup | null;
+  onAgeSelect: (age: AgeGroup) => void;
 }
 
-export interface AgeGroupConfig {
-  id: AgeGroup;
-  icon: React.ComponentType<{ size?: number }>;
-  label: string;
-  color: string;
-  fields: Record<string, FieldConfig>;
-  sections: SectionConfig[];
+export interface GenerationFormProps {
+  ageGroup: AgeGroup;
+  formData: FormData;
+  onFieldChange: (field: keyof FormData, value: string | string[] | boolean) => void;
+  onGenerate: () => void;
+  onPreview: () => void;
+  isFormValid: boolean;
 }
 
-// === SOLID: DIP - Dependency Inversion Principle ===
-// Абстракції для роботи з формами
-
-export interface IFormValidator<T extends BaseFormData> {
-  validate(formData: T): boolean;
-  getValidationErrors(formData: T): string[];
-}
-
-export interface IPromptGenerator<T extends BaseFormData> {
-  generatePrompt(ageGroup: AgeGroup, formData: T): string;
-}
-
-export interface IAgeGroupConfigProvider {
-  getConfig(ageGroup: AgeGroup): AgeGroupConfig;
-  getAllConfigs(): AgeGroupConfig[];
-}
-
-// Props для компонентів
-export interface GenerationFormProps<T extends BaseFormData> {
-  onGenerate: (data: { ageGroup: AgeGroup; formData: T; detailedPrompt: string }) => void;
-  onPreview: (data: { ageGroup: AgeGroup; formData: T }) => void;
-  configProvider: IAgeGroupConfigProvider;
-  validator: IFormValidator<T>;
-  promptGenerator: IPromptGenerator<T>;
+export interface FieldRendererProps {
+  fieldKey: string;
+  fieldConfig: FieldConfig;
+  value: string | string[] | boolean;
+  onChange: (value: string | string[] | boolean) => void;
 } 
