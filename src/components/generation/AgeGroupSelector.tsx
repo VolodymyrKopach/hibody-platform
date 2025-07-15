@@ -42,9 +42,6 @@ const AgeGroupSelector: React.FC<AgeGroupSelectorProps> = ({
   
   return (
     <Box sx={{ mb: 4 }}>
-      <Typography variant="h6" gutterBottom>
-        1. Оберіть вікову групу
-      </Typography>
       <Box sx={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',

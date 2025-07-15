@@ -40,6 +40,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end', width: '100%' }}>
       {/* Кнопка конструктора генерації */}
+      {/* ЗАКОМЕНТОВАНО: поки неактивна в цій версії проекту
       <Tooltip title="Конструктор генерації">
         <IconButton
           onClick={onOpenGenerationConstructor}
@@ -65,6 +66,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           <Wand2 size={20} />
         </IconButton>
       </Tooltip>
+      */}
 
       <TextField
         fullWidth

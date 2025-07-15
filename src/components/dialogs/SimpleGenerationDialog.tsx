@@ -169,8 +169,8 @@ const SimpleGenerationDialog: React.FC<SimpleGenerationDialogProps> = ({
   
   // === SOLID: SRP - State management ===
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
-  const [successMessage, setSuccessMessage] = useState('');
+      const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+    const [successMessage, setSuccessMessage] = useState('');
   
   // === SOLID: SRP - Handle preview ===
   const handlePreview = useCallback((data: PreviewData) => {

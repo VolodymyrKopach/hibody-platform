@@ -14,25 +14,22 @@ import {
   Button,
   Box,
   Typography,
-  Card,
-  CardContent,
   Chip,
   IconButton,
   useTheme,
-  alpha
+  alpha,
+  Divider
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { X, Clock, Target, BookOpen, Activity } from 'lucide-react';
 
 // === SOLID: SRP - Styled Components ===
-const PreviewCard = styled(Card)(({ theme }) => ({
-  marginBottom: theme.spacing(2),
-  borderRadius: typeof theme.shape.borderRadius === 'number' ? theme.shape.borderRadius * 1.5 : 12,
+const SectionContainer = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+  padding: theme.spacing(2),
+  backgroundColor: alpha(theme.palette.background.default, 0.3),
+  borderRadius: theme.shape.borderRadius,
   border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-  
-  '&:hover': {
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-  },
 }));
 
 const FieldRow = styled(Box)(({ theme }) => ({
@@ -278,7 +275,7 @@ const SimplePreviewModal: React.FC<SimplePreviewModalProps> = ({
         </Box>
       </DialogTitle>
       
-      <DialogContent>
+      <DialogContent sx={{ pt: 2 }}>
         {/* Age Group */}
         <Box sx={{ mb: 3, textAlign: 'center' }}>
           <Chip 
@@ -290,49 +287,47 @@ const SimplePreviewModal: React.FC<SimplePreviewModalProps> = ({
         </Box>
         
         {/* Form Data Preview */}
-        <PreviewCard>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Деталі уроку
-            </Typography>
+        <SectionContainer>
+          <Typography variant="h6" gutterBottom>
+            Деталі уроку
+          </Typography>
+          
+          {Object.entries(data.formData).map(([fieldKey, value]) => {
+            if (!value.trim()) return null;
             
-            {Object.entries(data.formData).map(([fieldKey, value]) => {
-              if (!value.trim()) return null;
-              
-              const Icon = getFieldIcon(fieldKey);
-              const label = getFieldLabel(fieldKey, data.ageGroup);
-              
-              return (
-                <FieldRow key={fieldKey}>
-                  <FieldIcon>
-                    <Icon size={20} />
-                  </FieldIcon>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      {label}
-                    </Typography>
-                    <Typography variant="body1">
-                      {value}
-                    </Typography>
-                  </Box>
-                </FieldRow>
-              );
-            })}
-          </CardContent>
-        </PreviewCard>
+            const Icon = getFieldIcon(fieldKey);
+            const label = getFieldLabel(fieldKey, data.ageGroup);
+            
+            return (
+              <FieldRow key={fieldKey}>
+                <FieldIcon>
+                  <Icon size={20} />
+                </FieldIcon>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    {label}
+                  </Typography>
+                  <Typography variant="body1">
+                    {value}
+                  </Typography>
+                </Box>
+              </FieldRow>
+            );
+          })}
+        </SectionContainer>
+        
+        <Divider sx={{ my: 2 }} />
         
         {/* Generated Prompt Preview */}
-        <PreviewCard>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Що буде відправлено в чат
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-              Буде створено детальний запит для генерації персоналізованого уроку 
-              на основі вказаних параметрів. Урок буде адаптований для вікової групи {getAgeGroupLabel(data.ageGroup)}.
-            </Typography>
-          </CardContent>
-        </PreviewCard>
+        <SectionContainer>
+          <Typography variant="h6" gutterBottom>
+            Що буде відправлено в чат
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            Буде створено детальний запит для генерації персоналізованого уроку 
+            на основі вказаних параметрів. Урок буде адаптований для вікової групи {getAgeGroupLabel(data.ageGroup)}.
+          </Typography>
+        </SectionContainer>
       </DialogContent>
       
       <DialogActions sx={{ p: 3 }}>

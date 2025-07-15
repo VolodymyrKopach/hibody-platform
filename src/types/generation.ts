@@ -108,6 +108,9 @@ export interface FormData {
   studentRole910?: string;
   educationalProgram910?: string;
   keyCompetencies910?: string[];
+  
+  // Додаткова інформація (для всіх вікових груп)
+  additionalInfo?: string;
 }
 
 // === Пропси компонентів ===
