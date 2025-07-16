@@ -54,8 +54,8 @@ ${currentSlide ? `КОНТЕКСТ: Поточний слайд: "${currentSlide
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 300,
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: 500,
         temperature: 0.1,
         messages: [{ role: 'user', content: prompt }]
       })

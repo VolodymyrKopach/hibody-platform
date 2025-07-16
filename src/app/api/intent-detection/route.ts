@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call Claude Haiku API for fast intent detection
+    // Legacy Claude API for intent detection (deprecated - use GeminiIntentService instead)
     const claudeResponse = await fetch(CLAUDE_API_URL, {
       method: 'POST',
       headers: {
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
+        model: 'claude-3-sonnet-20240229',
         max_tokens: 500,
         temperature: 0.1, // Low temperature for consistent intent detection
         system: INTENT_DETECTION_SYSTEM_PROMPT,

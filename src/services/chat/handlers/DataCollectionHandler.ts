@@ -90,7 +90,7 @@ export class DataCollectionHandler implements IIntentHandler {
       
       console.log(`📝 Combined message: "${combinedMessage}"`);
       
-      // Re-analyze with Gemini instead of Haiku
+      // Re-analyze with Gemini to check if we now have sufficient data
       const reAnalyzedIntent = await this.getGeminiService().detectIntent(combinedMessage, conversationHistory);
 
       console.log(`🎯 Re-analysis result: ${reAnalyzedIntent.intent}, sufficient: ${reAnalyzedIntent.isDataSufficient}`);

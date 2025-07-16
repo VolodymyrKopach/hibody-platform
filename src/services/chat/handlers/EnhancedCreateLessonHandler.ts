@@ -1,7 +1,7 @@
 import { IIntentHandler } from './IIntentHandler';
 import { ConversationHistory, ChatResponse } from '../types';
 import { IntentDetectionResult, UserIntent } from '../../intent/IIntentDetectionService';
-import { EnhancedIntentDetectionResult } from '../../intent/ClaudeHaikuIntentService';
+import { EnhancedIntentDetectionResult } from '../../intent/GeminiIntentService';
 import { ClaudeSonnetContentService } from '../../content/ClaudeSonnetContentService';
 
 // Enhanced handler with Claude Sonnet integration and data validation

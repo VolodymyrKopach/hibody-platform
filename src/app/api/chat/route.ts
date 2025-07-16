@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       console.log('📋 Conversation context:', conversationHistory.step || 'none');
     }
     
-    // Use ChatService with Claude Haiku + Sonnet integration
+    // Use ChatService with Gemini + Claude Sonnet integration
     const chatService = new ChatService();
     const result = await chatService.processMessage(message, conversationHistory, action);
     
