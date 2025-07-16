@@ -15,14 +15,8 @@ export class GeminiCommandParsingService {
   private client: GoogleGenAI;
 
   constructor() {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY environment variable is required');
-    }
-    
-    this.client = new GoogleGenAI({ 
-      apiKey
-    });
+    // The client gets the API key from the environment variable `GEMINI_API_KEY`.
+    this.client = new GoogleGenAI({});
   }
 
   /**
@@ -34,7 +28,13 @@ export class GeminiCommandParsingService {
       
       const response = await this.client.models.generateContent({
         model: "gemini-2.5-flash-lite-preview-06-17",
-        contents: prompt
+        contents: prompt,
+        config: {
+          thinkingConfig: {
+            thinkingBudget: 0, // Disable thinking for faster command parsing
+          },
+          temperature: 0.1
+        }
       });
 
       const responseText = response.text;
@@ -71,7 +71,7 @@ CRITICAL REQUIREMENTS:
 - Do NOT use pattern matching or regex
 - Support ANY language input
 - Understand context and intentions, not specific words
-- Return responses in the same language as user input (${language})
+- Return responses in the same language as user input
 
 SLIDE COMMAND TYPES:
 1. edit_slide - edit existing slide content
@@ -88,7 +88,7 @@ RESPONSE FORMAT (JSON only):
   "type": "edit_slide",
   "slideNumber": 1,
   "slideId": null,
-  "instruction": "interpreted instruction in ${language}",
+  "instruction": "interpreted instruction in user's language",
   "context": "${message}",
   "targetElement": "specific element to target or null"
 }

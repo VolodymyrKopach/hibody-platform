@@ -1,4 +1,4 @@
-import { ClaudeSonnetContentService } from '@/services/content/ClaudeSonnetContentService';
+import { GeminiContentService } from '@/services/content/GeminiContentService';
 import { AgeGroupConfig, FormValues } from '@/types/generation';
 import { configManager } from './ConfigManager';
 
@@ -71,11 +71,11 @@ export interface EnhancedPreviewData {
 
 // === SOLID: SRP - Preview generation service ===
 export class PreviewGenerationService {
-  private contentService: ClaudeSonnetContentService | null = null;
+  private contentService: GeminiContentService | null = null;
 
-  constructor(private claudeApiKey?: string) {
-    if (claudeApiKey) {
-      this.contentService = new ClaudeSonnetContentService(claudeApiKey);
+  constructor(private geminiApiKey?: string) {
+    if (geminiApiKey) {
+      this.contentService = new GeminiContentService();
     }
   }
 
@@ -113,7 +113,7 @@ export class PreviewGenerationService {
       const metadata = {
         generatedAt: new Date().toISOString(),
         generationTime: Date.now() - startTime,
-        aiProvider: this.contentService ? 'Claude Sonnet' : 'Mock',
+        aiProvider: this.contentService ? 'AI' : 'Mock',
         version: '3.0.0'
       };
 
@@ -415,5 +415,5 @@ export class PreviewGenerationService {
 
 // === SOLID: SRP - Singleton instance ===
 export const previewGenerationService = new PreviewGenerationService(
-  process.env.NEXT_PUBLIC_CLAUDE_API_KEY
+          process.env.NEXT_PUBLIC_GEMINI_API_KEY
 ); 

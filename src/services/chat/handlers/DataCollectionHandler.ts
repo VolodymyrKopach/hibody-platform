@@ -3,20 +3,20 @@ import { ConversationHistory, ChatResponse } from '../types';
 import { IntentDetectionResult, UserIntent } from '../../intent/IIntentDetectionService';
 import { GeminiIntentService, EnhancedIntentDetectionResult } from '../../intent/GeminiIntentService';
 import { EnhancedCreateLessonHandler } from './EnhancedCreateLessonHandler';
-import { ClaudeSonnetContentService } from '../../content/ClaudeSonnetContentService';
+import { GeminiContentService } from '../../content/GeminiContentService';
 
 // Handler for collecting missing data from users
 export class DataCollectionHandler implements IIntentHandler {
   private geminiService: GeminiIntentService | null = null;
   private lessonHandler: EnhancedCreateLessonHandler | null = null;
-  private contentService: ClaudeSonnetContentService | null = null;
+  private contentService: GeminiContentService | null = null;
 
   constructor() {
-    const claudeApiKey = process.env.CLAUDE_API_KEY;
-    if (!claudeApiKey) {
-      throw new Error('Claude API key not found in environment variables (CLAUDE_API_KEY)');
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    if (!geminiApiKey) {
+      throw new Error('Gemini API key not found in environment variables (GEMINI_API_KEY)');
     }
-    this.contentService = new ClaudeSonnetContentService(claudeApiKey);
+    this.contentService = new GeminiContentService();
   }
 
   private getGeminiService(): GeminiIntentService {

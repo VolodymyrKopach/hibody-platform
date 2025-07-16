@@ -2,19 +2,19 @@ import { IIntentHandler } from './IIntentHandler';
 import { ConversationHistory, ChatResponse } from '../types';
 import { IntentDetectionResult, UserIntent } from '../../intent/IIntentDetectionService';
 import { EnhancedIntentDetectionResult } from '../../intent/GeminiIntentService';
-import { ClaudeSonnetContentService } from '../../content/ClaudeSonnetContentService';
+import { GeminiContentService } from '../../content/GeminiContentService';
 
-// Enhanced handler with Claude Sonnet integration and data validation
+// Enhanced handler with Gemini 2.5 Flash integration and data validation
 export class EnhancedCreateLessonHandler implements IIntentHandler {
-  private contentService: ClaudeSonnetContentService | null = null;
+  private contentService: GeminiContentService | null = null;
 
-  private getContentService(): ClaudeSonnetContentService {
+  private getContentService(): GeminiContentService {
     if (!this.contentService) {
-      const claudeApiKey = process.env.CLAUDE_API_KEY;
-      if (!claudeApiKey) {
-        throw new Error('Claude API key required for content generation (CLAUDE_API_KEY)');
+      const geminiApiKey = process.env.GEMINI_API_KEY;
+      if (!geminiApiKey) {
+        throw new Error('Gemini API key required for content generation (GEMINI_API_KEY)');
       }
-      this.contentService = new ClaudeSonnetContentService(claudeApiKey);
+      this.contentService = new GeminiContentService();
     }
     return this.contentService;
   }
@@ -58,11 +58,11 @@ export class EnhancedCreateLessonHandler implements IIntentHandler {
       };
     }
 
-    console.log('🎨 Generating lesson plan with Claude Sonnet...');
+    console.log('🎨 Generating lesson plan with Gemini 2.5 Flash...');
     console.log(`📋 Topic: ${topic}, Age: ${age}, Language: ${intent.language}`);
     
     try {
-      // Generate plan using Claude Sonnet (no hardcoded templates!)
+      // Generate plan using Gemini 2.5 Flash (no hardcoded templates!)
       const generatedPlan = await this.getContentService().generateLessonPlan(
         topic, 
         age, 

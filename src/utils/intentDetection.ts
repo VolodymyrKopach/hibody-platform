@@ -1,12 +1,23 @@
 // AI-Based Intent Detection System
-// Підтримує багато мов та використовує Claude для визначення намірів
+// Підтримує багато мов та використовує Gemini для визначення намірів
+import { GeminiIntentService } from '@/services/intent/GeminiIntentService';
+import { UserIntent } from '@/services/intent/IIntentDetectionService';
 
 export interface IntentDetectionResult {
   intent: UserIntent;
   confidence: number;
-  parameters: IntentParameters;
-  language: 'uk' | 'en' | 'ru' | 'other';
+  language: string;
   reasoning: string;
+  parameters: {
+    topic?: string | null;
+    age?: string | null;
+    slideNumber?: number | null;
+    instruction?: string | null;
+    rawMessage?: string;
+  };
+  isDataSufficient?: boolean;
+  missingData?: string[];
+  suggestedQuestion?: string;
 }
 
 export interface IntentParameters {
@@ -22,20 +33,7 @@ export interface IntentParameters {
   rawMessage: string;
 }
 
-export enum UserIntent {
-  CREATE_LESSON = 'CREATE_LESSON',
-  GENERATE_PLAN = 'GENERATE_PLAN',
-  CREATE_SLIDE = 'CREATE_SLIDE',
-  CREATE_NEW_SLIDE = 'CREATE_NEW_SLIDE',
-  REGENERATE_SLIDE = 'REGENERATE_SLIDE',
-  EDIT_HTML_INLINE = 'EDIT_HTML_INLINE',
-  EDIT_SLIDE = 'EDIT_SLIDE',
-  IMPROVE_HTML = 'IMPROVE_HTML',
-  FREE_CHAT = 'FREE_CHAT',
-  HELP = 'HELP',
-  EXPORT = 'EXPORT',
-  PREVIEW = 'PREVIEW'
-}
+
 
 const INTENT_DETECTION_PROMPT = `
 You are an expert AI assistant for analyzing user messages in an educational content creation platform called HiBody.
@@ -114,84 +112,13 @@ RESPONSE FORMAT (JSON only):
 Analyze this message and return only valid JSON:
 `;
 
-export async function detectIntentWithAI(message: string, conversationHistory?: any): Promise<IntentDetectionResult> {
-  // ТІЛЬКИ нейронна мережа - НІЯКИХ fallback функцій!
-  return await detectIntentDirectly(message, conversationHistory);
-}
-
-// Direct Claude API call for intent detection
-async function detectIntentDirectly(message: string, conversationHistory?: any): Promise<IntentDetectionResult> {
-  const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
-  const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
-
-  if (!CLAUDE_API_KEY) {
-    throw new Error('Claude API key required - no regex fallback allowed');
-  }
-
-  const prompt = conversationHistory 
-    ? `${INTENT_DETECTION_PROMPT}
-
-Context:
-- Current step: ${conversationHistory.step || 'unknown'}
-- Active lesson: ${conversationHistory.currentLesson ? 'YES' : 'NO'}
-- Lesson topic: ${conversationHistory.lessonTopic || 'none'}
-- User age: ${conversationHistory.age || 'none'}
-- Generated slides: ${conversationHistory.slidesCount || 0}
-
-Message to analyze: "${message}"`
-    : `${INTENT_DETECTION_PROMPT}
-
-Message to analyze: "${message}"`;
-
-  const response = await fetch(CLAUDE_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': CLAUDE_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: 1000,
-      temperature: 0.1,
-      messages: [
-        {
-          role: 'user',
-          content: prompt
-        }
-      ]
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`Claude API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const content = data.content[0]?.text;
-
-  if (!content) {
-    throw new Error('No content in Claude response');
-  }
-
-  try {
-    const result = JSON.parse(content);
-    
-    // Map the intent to our UserIntent enum and add commandType
-    return {
-      intent: result.intent as UserIntent,
-      confidence: result.confidence || 0.8,
-      parameters: {
-        ...result.parameters,
-        rawMessage: message
-      },
-      language: result.language || 'other',
-      reasoning: result.reasoning || 'AI-based neural network detection'
-    };
-  } catch (parseError) {
-    console.error('Failed to parse Claude response:', content);
-    throw new Error('Invalid JSON response from Claude - neural network required');
-  }
+// Основна функція для детекції намірів через Gemini
+export async function detectIntent(
+  message: string, 
+  conversationHistory?: any
+): Promise<IntentDetectionResult> {
+  const geminiService = new GeminiIntentService();
+  return await geminiService.detectIntent(message, conversationHistory);
 }
 
 // ВИДАЛЕНО: fallbackIntentDetection та extractMultilingualKeywords 

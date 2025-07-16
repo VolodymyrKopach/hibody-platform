@@ -1,18 +1,18 @@
 import { IIntentHandler } from './IIntentHandler';
 import { ConversationHistory, ChatResponse } from '../types';
 import { IntentDetectionResult, UserIntent } from '../../intent/IIntentDetectionService';
-import { ClaudeSonnetContentService } from '../../content/ClaudeSonnetContentService';
+import { GeminiContentService } from '../../content/GeminiContentService';
 
 // Single Responsibility: Обробка редагування плану
 export class EditPlanHandler implements IIntentHandler {
-  private contentService: ClaudeSonnetContentService;
+  private contentService: GeminiContentService;
 
   constructor() {
-    const apiKey = process.env.CLAUDE_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error('Claude API key not found in environment variables (CLAUDE_API_KEY)');
+      throw new Error('Gemini API key not found in environment variables (GEMINI_API_KEY)');
     }
-    this.contentService = new ClaudeSonnetContentService(apiKey);
+    this.contentService = new GeminiContentService();
   }
   
   canHandle(intent: IntentDetectionResult, conversationHistory?: ConversationHistory): boolean {
@@ -37,13 +37,13 @@ export class EditPlanHandler implements IIntentHandler {
       };
     }
 
-    console.log('🔧 Processing plan modifications with Claude Sonnet...');
+    console.log('🔧 Processing plan modifications with Gemini 2.5 Flash...');
     
     try {
       // Витягуємо зміни з повідомлення користувача
       const userChanges = this.extractChangesFromMessage(intent.parameters.rawMessage);
       
-      // Генеруємо оновлений план з Claude Sonnet
+              // Генеруємо оновлений план з Gemini 2.5 Flash
       const updatedPlan = await this.contentService.generateEditedPlan(
         conversationHistory.planningResult!,
         userChanges,
@@ -59,7 +59,7 @@ export class EditPlanHandler implements IIntentHandler {
 
       return {
         success: true,
-        message: `✨ **План оновлено з використанням Claude Sonnet!**
+        message: `✨ **План оновлено за допомогою ШІ!**
 
 ${updatedPlan}`,
         conversationHistory: newConversationHistory,
@@ -72,7 +72,7 @@ ${updatedPlan}`,
         ]
       };
     } catch (error) {
-      console.error('❌ Error updating plan with Claude:', error);
+      console.error('❌ Error updating plan with Gemini 2.5 Flash:', error);
       
       return {
         success: false,

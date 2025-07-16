@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       console.log('📋 Conversation context:', conversationHistory.step || 'none');
     }
     
-    // Use ChatService with Gemini + Claude Sonnet integration
+    // Use ChatService with Gemini 2.5 Flash integration
     const chatService = new ChatService();
     const result = await chatService.processMessage(message, conversationHistory, action);
     
@@ -23,11 +23,11 @@ export async function POST(request: NextRequest) {
     console.error('Chat API error:', error);
     
     // Show helpful error message for missing API key
-    if (error instanceof Error && error.message.includes('Claude API key is required')) {
+    if (error instanceof Error && error.message.includes('Gemini API key') || error instanceof Error && error.message.includes('API key')) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Claude API key required', 
+          error: 'Gemini API key required', 
           details: error.message
         },
         { status: 500 }

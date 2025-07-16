@@ -1,4 +1,4 @@
-import { ClaudeSonnetContentService } from '@/services/content/ClaudeSonnetContentService';
+import { GeminiContentService } from '@/services/content/GeminiContentService';
 import { LessonService } from '@/services/database/LessonService';
 import { SlideService } from '@/services/database/SlideService';
 import { AgeGroupConfig, FormValues } from '@/types/generation';
@@ -37,12 +37,12 @@ interface GenerationContext {
 
 // === SOLID: SRP - Main generation service ===
 export class GenerationConstructorService {
-  private contentService: ClaudeSonnetContentService;
+  private contentService: GeminiContentService;
   private lessonService: LessonService;
   private slideService: SlideService;
 
-  constructor(private claudeApiKey: string) {
-    this.contentService = new ClaudeSonnetContentService(claudeApiKey);
+  constructor(private geminiApiKey: string) {
+    this.contentService = new GeminiContentService();
     this.lessonService = new LessonService();
     this.slideService = new SlideService();
   }
@@ -148,7 +148,7 @@ export class GenerationConstructorService {
   private async generateLessonMetadata(context: GenerationContext): Promise<LessonInsert> {
     console.log('📚 GENERATION SERVICE: Generating lesson metadata');
     
-    // === SOLID: SRP - Use Claude to enhance lesson description ===
+    // === SOLID: SRP - Use Gemini 2.5 Flash to enhance lesson description ===
     const enhancedDescription = await this.enhanceLessonDescription(context);
     
     return {

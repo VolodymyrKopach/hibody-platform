@@ -23,7 +23,13 @@ export class GeminiIntentService implements IIntentDetectionService {
     try {
       const response = await this.client.models.generateContent({
         model: "gemini-2.5-flash-lite-preview-06-17",
-        contents: prompt
+        contents: prompt,
+        config: {
+          thinkingConfig: {
+            thinkingBudget: 0, // Disable thinking for faster intent detection
+          },
+          temperature: 0.1
+        }
       });
 
       const content = response.text;

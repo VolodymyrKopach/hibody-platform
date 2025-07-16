@@ -1,8 +1,8 @@
 import { IIntentDetectionService } from '../intent/IIntentDetectionService';
 import { IntentDetectionServiceFactory } from '../intent/IntentDetectionServiceFactory';
 import { IIntentHandler } from './handlers/IIntentHandler';
-import { ClaudeSonnetContentService } from '../content/ClaudeSonnetContentService';
-import { SimpleEditService } from '../content/SimpleEditService';
+import { GeminiContentService } from '../content/GeminiContentService';
+import { GeminiSimpleEditService } from '../content/GeminiSimpleEditService';
 import { FallbackHandler } from './handlers/FallbackHandler';
 import { EditPlanHandler } from './handlers/EditPlanHandler';
 import { EnhancedCreateLessonHandler } from './handlers/EnhancedCreateLessonHandler';
@@ -12,14 +12,14 @@ import { type ConversationHistory, type ChatResponse } from './types';
 import { type SimpleSlide } from '@/types/chat';
 import { type SlideImageInfo } from '@/types/lesson';
 import { type ProcessedSlideData, extractImagePrompts, processSlideWithImages } from '@/utils/slideImageProcessor';
-import { GeminiIntentService, EnhancedIntentDetectionResult } from '../../intent/GeminiIntentService';
+import { GeminiIntentService, EnhancedIntentDetectionResult } from '../intent/GeminiIntentService';
 
 // Single Responsibility: Координує роботу чату через dependency injection
 export class ChatService {
   private intentDetectionService: IIntentDetectionService;
   private handlers: IIntentHandler[];
-  private contentService: ClaudeSonnetContentService;
-  private simpleEditService: SimpleEditService;
+  private contentService: GeminiContentService;
+  private simpleEditService: GeminiSimpleEditService;
 
   constructor() {
     // Тепер використовує GeminiIntentService через фабрику
@@ -35,12 +35,12 @@ export class ChatService {
     ];
 
     // Ініціалізуємо content service для генерації слайдів
-    const claudeApiKey = process.env.CLAUDE_API_KEY;
-    if (!claudeApiKey) {
-      throw new Error('Claude API key not found in environment variables (CLAUDE_API_KEY)');
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    if (!geminiApiKey) {
+      throw new Error('Gemini API key not found in environment variables (GEMINI_API_KEY)');
     }
-    this.contentService = new ClaudeSonnetContentService(claudeApiKey);
-    this.simpleEditService = new SimpleEditService(claudeApiKey);
+    this.contentService = new GeminiContentService();
+    this.simpleEditService = new GeminiSimpleEditService();
   }
 
   async processMessage(
@@ -182,7 +182,7 @@ export class ChatService {
       throw new Error('No plan to approve');
     }
 
-    console.log('🎨 Generating first slide HTML using Claude Sonnet...');
+    console.log('🎨 Generating first slide HTML using Gemini 2.5 Flash...');
     console.log('📋 Lesson plan:', conversationHistory.planningResult.substring(0, 200) + '...');
     
     try {
@@ -190,7 +190,7 @@ export class ChatService {
       const firstSlideDescription = this.extractSlideDescription(conversationHistory.planningResult, 1);
       console.log('📝 First slide description:', firstSlideDescription.substring(0, 100) + '...');
 
-      // Генеруємо HTML слайд через Claude Sonnet
+      // Генеруємо HTML слайд через Gemini 2.5 Flash
       const slideHTML = await this.contentService.generateSlideContent(
         firstSlideDescription,
         conversationHistory.lessonTopic || 'урок',
@@ -239,7 +239,7 @@ export class ChatService {
         success: true,
         message: `✅ **Перший слайд готовий!** (1/${conversationHistory.totalSlides})
 
-Слайд згенеровано з використанням Claude Sonnet на основі навчальної програми та доданий до правої панелі.
+Слайд згенеровано за допомогою ШІ на основі навчальної програми та доданий до правої панелі.
 
 🎯 **Що далі?**
 • Переглянути слайд у правій панелі ➡️
@@ -261,7 +261,7 @@ export class ChatService {
         lesson: lesson
       };
     } catch (error) {
-      console.error('❌ Error generating slide with Claude:', error);
+      console.error('❌ Error generating slide with Gemini 2.5 Flash:', error);
       
       return {
         success: false,
@@ -327,7 +327,7 @@ export class ChatService {
       };
     }
 
-    console.log(`🎨 Generating slide ${nextSlideNumber} using Claude Sonnet...`);
+    console.log(`🎨 Generating slide ${nextSlideNumber} using Gemini 2.5 Flash...`);
     
     try {
       // Витягуємо опис слайду з навчальної програми
@@ -338,7 +338,7 @@ export class ChatService {
       
       console.log('📝 Slide description:', slideDescription.substring(0, 100) + '...');
 
-      // Генеруємо HTML слайд через Claude Sonnet
+      // Генеруємо HTML слайд через Gemini 2.5 Flash
       const slideHTML = await this.contentService.generateSlideContent(
         slideDescription,
         conversationHistory.lessonTopic || 'урок',
@@ -377,7 +377,7 @@ export class ChatService {
         success: true,
         message: `✅ **Слайд ${nextSlideNumber} готовий!** (${nextSlideNumber}/${conversationHistory.totalSlides})
 
-Слайд згенеровано з використанням Claude Sonnet на основі навчальної програми та додано до правої панелі.
+Слайд згенеровано за допомогою ШІ на основі навчальної програми та додано до правої панелі.
 
 🎯 **Що далі?**`,
         conversationHistory: newConversationHistory,
@@ -402,7 +402,7 @@ export class ChatService {
         lesson: updatedLesson
       };
     } catch (error) {
-      console.error('❌ Error generating next slide with Claude:', error);
+      console.error('❌ Error generating next slide with Gemini 2.5 Flash:', error);
       
       return {
         success: false,
@@ -437,7 +437,7 @@ export class ChatService {
       };
     }
     
-    console.log(`🔄 Regenerating slide ${slideNumberToRegenerate} using Claude Sonnet...`);
+    console.log(`🔄 Regenerating slide ${slideNumberToRegenerate} using Gemini 2.5 Flash...`);
     
     try {
       // Витягуємо опис слайду з навчальної програми
@@ -448,7 +448,7 @@ export class ChatService {
       
       console.log('📝 Slide description for regeneration:', slideDescription.substring(0, 100) + '...');
 
-      // Генеруємо новий HTML слайд через Claude Sonnet
+      // Генеруємо новий HTML слайд через Gemini 2.5 Flash
       const newSlideHTML = await this.contentService.generateSlideContent(
         `${slideDescription}. Створіть НОВИЙ варіант цього слайду з іншим дизайном та підходом.`,
         conversationHistory.lessonTopic || 'урок',
@@ -496,7 +496,7 @@ export class ChatService {
         success: true,
         message: `🔄 **Слайд ${slideNumberToRegenerate} перегенеровано!**
 
-Новий варіант слайду створено з використанням Claude Sonnet на основі навчальної програми та **замінено** попередній слайд в правій панелі.
+Новий варіант слайду створено за допомогою ШІ на основі навчальної програми та **замінено** попередній слайд в правій панелі.
 
 📋 **Детальний звіт про зміни:**
 ${detectedChanges.map(change => `• ${change}`).join('\n')}
@@ -518,7 +518,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
         lesson: updatedLesson
       };
     } catch (error) {
-      console.error('❌ Error regenerating slide with Claude:', error);
+      console.error('❌ Error regenerating slide with Gemini 2.5 Flash:', error);
       
       return {
         success: false,
@@ -560,7 +560,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
       const currentSlide = conversationHistory.currentLesson.slides[slideNumberToEdit - 1];
       const editInstruction = intentResult?.parameters?.rawMessage || 'Покращити слайд';
       
-      // Використовуємо простий підхід - надсилаємо HTML до Claude
+      // Використовуємо простий підхід - надсилаємо HTML до Gemini 2.5 Flash
       const editedSlideHTML = await this.simpleEditService.editSlide(
         currentSlide.htmlContent || currentSlide.content,
         editInstruction,
@@ -693,14 +693,14 @@ ${detectedChanges.map((change: string) => `• ${change}`).join('\n')}
       };
     }
     
-    console.log(`🎨 Improving slide ${slideNumberToImprove} using Claude Sonnet...`);
+    console.log(`🎨 Improving slide ${slideNumberToImprove} using Gemini 2.5 Flash...`);
     
     try {
       // Отримуємо поточний слайд
       const currentSlide = conversationHistory.currentLesson.slides[slideNumberToImprove - 1];
       const improvementInstruction = intentResult?.parameters?.rawMessage || 'Зробити слайд яскравішим та інтерактивнішим';
       
-      // Генеруємо покращений HTML слайд через Claude Sonnet
+      // Генеруємо покращений HTML слайд через Gemini 2.5 Flash
       const improvedSlideHTML = await this.contentService.generateSlideContent(
         `Покращити дизайн та інтерактивність існуючого слайду: "${improvementInstruction}". 
         
@@ -773,7 +773,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
         lesson: updatedLesson
       };
     } catch (error) {
-      console.error('❌ Error improving slide with Claude:', error);
+      console.error('❌ Error improving slide with Gemini 2.5 Flash:', error);
       
       return {
         success: false,

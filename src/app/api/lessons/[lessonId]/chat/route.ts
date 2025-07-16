@@ -5,9 +5,9 @@ import {
   ProcessSlideCommandResponse
 } from '../../../../../types/api';
 import { LessonSlide, SlideAction, LessonChatMessage, SlideCommand, SlideResponse } from '../../../../../types/lesson';
+import { GoogleGenAI } from '@google/genai';
 
-const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
-const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 // Тимчасове сховище (в продакшні буде база даних)
 let lessons: Map<string, any> = new Map();
@@ -66,8 +66,8 @@ export async function POST(
     const { message, currentLesson, selectedSlideId } = await request.json();
     const lessonId = params.lessonId;
 
-    if (!CLAUDE_API_KEY) {
-      throw new Error('CLAUDE_API_KEY is not configured');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
     // Парсимо команду
@@ -102,34 +102,25 @@ ${lessonContext}
 
 Обробити команду та дати відповідь у форматі JSON.`;
 
-    // Викликаємо Claude API
-    const response = await fetch(CLAUDE_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: 4000,
-        temperature: 0.7,
-        system: SLIDE_SYSTEM_PROMPT,
-        messages: [
-          {
-            role: 'user',
-            content: userPrompt,
-          },
-        ],
-      }),
+    // Викликаємо Gemini API
+    const client = new GoogleGenAI({});
+    const fullPrompt = `${SLIDE_SYSTEM_PROMPT}\n\n${userPrompt}`;
+    
+    const response = await client.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: fullPrompt,
+      config: {
+        thinkingConfig: {
+          thinkingBudget: 0, // Disable thinking for faster generation
+        },
+        temperature: 0.7
+      }
     });
 
-    if (!response.ok) {
-      throw new Error(`Claude API error: ${response.status}`);
+    const aiResponse = response.text;
+    if (!aiResponse) {
+      throw new Error('No content in Gemini response');
     }
-
-    const data = await response.json();
-    const aiResponse = data.content[0].text;
 
     // Спробуємо парсити JSON відповідь
     let slideResponse: SlideResponse;
@@ -196,7 +187,7 @@ async function processEditSlideCommand(
 
     // Генеруємо AI промпт для редагування
     const aiPrompt = generateEditSlidePrompt(targetSlide, command, lesson);
-    const aiResponse = await callClaudeAPI(aiPrompt, request.model, request.temperature);
+    const aiResponse = await callGeminiAPI(aiPrompt, request.model, request.temperature);
     
     if (!aiResponse.success) {
       throw new Error(aiResponse.error);
@@ -263,7 +254,7 @@ async function processCreateSlideCommand(
 
     // Генеруємо AI промпт для створення слайду
     const aiPrompt = generateCreateSlidePrompt(command, lesson);
-    const aiResponse = await callClaudeAPI(aiPrompt, request.model, request.temperature);
+    const aiResponse = await callGeminiAPI(aiPrompt, request.model, request.temperature);
     
     if (!aiResponse.success) {
       throw new Error(aiResponse.error);
@@ -475,47 +466,41 @@ function generateCreateSlidePrompt(command: any, lesson: any): string {
 }`;
 }
 
-// Виклик Claude API
-async function callClaudeAPI(
+// Виклик Gemini API
+async function callGeminiAPI(
   prompt: string, 
-  model: string = 'claude-3-sonnet-20240229',
+  model: string = 'gemini-2.5-flash',
   temperature: number = 0.7
 ): Promise<{ success: boolean; content?: string; error?: string }> {
   try {
-    if (!CLAUDE_API_KEY) {
-      return { success: false, error: 'Claude API key не налаштований' };
+    if (!GEMINI_API_KEY) {
+      return { success: false, error: 'Gemini API key не налаштований' };
     }
 
-    const response = await fetch(CLAUDE_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 4000,
-        temperature,
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ]
-      })
+    // The client gets the API key from the environment variable `GEMINI_API_KEY`.
+    const client = new GoogleGenAI({});
+
+    const response = await client.models.generateContent({
+      model,
+      contents: prompt,
+      config: {
+        thinkingConfig: {
+          thinkingBudget: 0, // Disable thinking for faster generation
+        },
+        temperature
+      }
     });
 
-    if (!response.ok) {
-      return { success: false, error: `Claude API error: ${response.status}` };
+    const content = response.text;
+    if (!content) {
+      return { success: false, error: 'No content in Gemini response' };
     }
 
-    const data = await response.json();
-    return { success: true, content: data.content[0].text };
+    return { success: true, content };
 
   } catch (error) {
-    console.error('Claude API error:', error);
-    return { success: false, error: 'Помилка виклику Claude API' };
+    console.error('Gemini API error:', error);
+    return { success: false, error: 'Помилка виклику Gemini API' };
   }
 }
 

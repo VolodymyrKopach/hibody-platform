@@ -65,17 +65,17 @@ function validateRequest(body: any): GenerateLessonRequest {
 
 // === SOLID: DIP - Dependency injection setup ===
 async function getGenerationServices() {
-  const claudeApiKey = process.env.CLAUDE_API_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY;
   
-  if (!claudeApiKey) {
-    throw new GenerationAPIError('Claude API key not configured', 500, 'MISSING_API_KEY');
+  if (!geminiApiKey) {
+    throw new GenerationAPIError('Gemini API key not configured', 500, 'MISSING_API_KEY');
   }
   
-  const { ClaudeSonnetContentService } = await import('@/services/content/ClaudeSonnetContentService');
+  const { GeminiContentService } = await import('@/services/content/GeminiContentService');
   const { LessonService } = await import('@/services/database/LessonService');
   
   return {
-    contentService: new ClaudeSonnetContentService(claudeApiKey),
+          contentService: new GeminiContentService(),
     lessonService: new LessonService()
   };
 }

@@ -153,7 +153,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         slides: [{
           id: `slide_${Date.now()}`,
           title: `${topic} - Вступ`,
-          content: 'Вступний слайд згенеровано з Claude Sonnet',
+          content: 'Вступний слайд згенеровано',
           htmlContent: '<div>Слайд генерується...</div>',
           type: 'content',
           status: 'completed'
