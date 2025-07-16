@@ -12,6 +12,7 @@ import { type ConversationHistory, type ChatResponse } from './types';
 import { type SimpleSlide } from '@/types/chat';
 import { type SlideImageInfo } from '@/types/lesson';
 import { type ProcessedSlideData, extractImagePrompts, processSlideWithImages } from '@/utils/slideImageProcessor';
+import { GeminiIntentService, EnhancedIntentDetectionResult } from '../../intent/GeminiIntentService';
 
 // Single Responsibility: Координує роботу чату через dependency injection
 export class ChatService {
@@ -21,7 +22,7 @@ export class ChatService {
   private simpleEditService: SimpleEditService;
 
   constructor() {
-    // Dependency Inversion: залежимо від абстракцій, не від конкретних класів
+    // Тепер використовує GeminiIntentService через фабрику
     this.intentDetectionService = IntentDetectionServiceFactory.create();
     
     // Open/Closed: легко додавати нові обробники без зміни існуючого коду

@@ -89,8 +89,66 @@ export class ClaudeSonnetContentService {
   }
 
   private buildLessonPlanPrompt(topic: string, age: string, language: string): string {
-    const prompts = {
-      uk: `Ви - експерт з розробки освітніх програм для дітей. Створіть детальний та захоплюючий план уроку.
+    if (language === 'en') {
+      return `You are an expert in developing educational programs for children. Create a detailed and engaging lesson plan.
+
+INPUT DATA:
+- Topic: ${topic}
+- Children's age: ${age}
+- Language: English
+
+LESSON PLAN REQUIREMENTS:
+1. Create an engaging title
+2. Clear learning objectives
+3. Age-appropriate content structure
+4. Interactive elements and activities
+5. Assessment methods
+6. Required materials
+
+STRUCTURE:
+## 📚 [Lesson Title]
+
+**Target Audience:** ${age}
+**Duration:** 30-45 minutes
+**Subject:** [Subject area]
+
+### 🎯 Learning Objectives
+- [Objective 1]
+- [Objective 2]
+- [Objective 3]
+
+### 📋 Lesson Plan
+
+#### Slide 1: Introduction (5 minutes)
+- [Content description]
+- [Interactive element]
+
+#### Slide 2: Main Content (10 minutes)
+- [Content description]
+- [Activities]
+
+[Continue with more slides...]
+
+### 🎮 Interactive Activities
+- [Activity 1]
+- [Activity 2]
+
+### 📊 Assessment
+- [Assessment method]
+
+### 📚 Required Materials
+- [Material 1]
+- [Material 2]
+
+### 💡 Recommendations
+- [Teaching tips]
+- [Adaptation suggestions]
+
+Create a complete, detailed lesson plan that is engaging and educational for the specified age group.`;
+    }
+
+    // Ukrainian version (existing)
+    return `Ви - експерт з розробки освітніх програм для дітей. Створіть детальний та захоплюючий план уроку.
 
 ВХІДНІ ДАНІ:
 - Тема: ${topic}
@@ -122,78 +180,7 @@ export class ClaudeSonnetContentService {
 - Забезпечте логічну послідовність подачі матеріалу
 - Включіть елементи мотивації та заохочення
 
-Створіть план у форматі Markdown з детальними описами кожного слайду.`,
-
-      en: `You are an expert in developing educational programs for children. Create a detailed and engaging lesson plan.
-
-INPUT DATA:
-- Topic: ${topic}
-- Age: ${age}
-- Language: English
-
-REQUIREMENTS:
-1. Lesson should be interactive and interesting for children of this age
-2. Include different types of activities (learning, games, practice)
-3. Consider age-specific developmental features
-4. Include 4-8 slides depending on topic complexity
-5. Each slide should have purpose, content, and interactive elements
-
-PLAN STRUCTURE:
-- Title and lesson objectives
-- Duration
-- Detailed description of each slide with type (intro, educational, activity, summary)
-- Teaching recommendations
-
-STYLE:
-- Friendly and engaging
-- Age-appropriate
-- With practical examples
-- With game elements
-
-IMPORTANT:
-- Consider psychological features of age ${age}
-- Use interactive elements appropriate for children's abilities
-- Ensure logical sequence of material presentation
-- Include motivation and encouragement elements
-
-Create the plan in Markdown format with detailed slide descriptions.`,
-
-      ru: `Вы - эксперт по разработке образовательных программ для детей. Создайте детальный и увлекательный план урока.
-
-ВХОДНЫЕ ДАННЫЕ:
-- Тема: ${topic}
-- Возраст детей: ${age}
-- Язык: русский
-
-ТРЕБОВАНИЯ К ПЛАНУ:
-1. Урок должен быть интерактивным и интересным для детей этого возраста
-2. Включать разные типы активностей (обучение, игра, практика)
-3. Учитывать возрастные особенности развития
-4. Содержать 4-8 слайдов в зависимости от сложности темы
-5. Каждый слайд должен иметь цель, содержание и интерактивные элементы
-
-СТРУКТУРА ПЛАНА:
-- Заголовок и цель урока
-- Продолжительность
-- Детальное описание каждого слайда с типом (вступительный, обучающий, активность, итоговый)
-- Рекомендации для преподавания
-
-СТИЛЬ:
-- Дружелюбный и увлекательный
-- Адаптированный под возраст детей
-- С практическими примерами
-- С игровыми элементами
-
-ВАЖНО:
-- Учитывайте психологические особенности возраста ${age}
-- Используйте интерактивные элементы соответственно способностям детей
-- Обеспечьте логическую последовательность подачи материала
-- Включите элементы мотивации и поощрения
-
-Создайте план в формате Markdown с детальными описаниями каждого слайда.`
-    };
-
-    return prompts[language as keyof typeof prompts] || prompts.en;
+Створіть план у форматі Markdown з детальними описами кожного слайду.`;
   }
 
   async generateSlideContent(slideDescription: string, topic: string, age: string): Promise<string> {

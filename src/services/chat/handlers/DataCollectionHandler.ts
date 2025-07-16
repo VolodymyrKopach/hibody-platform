@@ -1,13 +1,13 @@
 import { IIntentHandler } from './IIntentHandler';
 import { ConversationHistory, ChatResponse } from '../types';
 import { IntentDetectionResult, UserIntent } from '../../intent/IIntentDetectionService';
-import { ClaudeHaikuIntentService, EnhancedIntentDetectionResult } from '../../intent/ClaudeHaikuIntentService';
+import { GeminiIntentService, EnhancedIntentDetectionResult } from '../../intent/GeminiIntentService';
 import { EnhancedCreateLessonHandler } from './EnhancedCreateLessonHandler';
 import { ClaudeSonnetContentService } from '../../content/ClaudeSonnetContentService';
 
 // Handler for collecting missing data from users
 export class DataCollectionHandler implements IIntentHandler {
-  private haikuService: ClaudeHaikuIntentService | null = null;
+  private geminiService: GeminiIntentService | null = null;
   private lessonHandler: EnhancedCreateLessonHandler | null = null;
   private contentService: ClaudeSonnetContentService | null = null;
 
@@ -19,15 +19,11 @@ export class DataCollectionHandler implements IIntentHandler {
     this.contentService = new ClaudeSonnetContentService(claudeApiKey);
   }
 
-  private getHaikuService(): ClaudeHaikuIntentService {
-    if (!this.haikuService) {
-      const claudeApiKey = process.env.CLAUDE_API_KEY;
-      if (!claudeApiKey) {
-        throw new Error('Claude API key required for DataCollectionHandler');
-      }
-      this.haikuService = new ClaudeHaikuIntentService(claudeApiKey);
+  private getGeminiService(): GeminiIntentService {
+    if (!this.geminiService) {
+      this.geminiService = new GeminiIntentService();
     }
-    return this.haikuService;
+    return this.geminiService;
   }
 
   private getLessonHandler(): EnhancedCreateLessonHandler {
@@ -94,8 +90,8 @@ export class DataCollectionHandler implements IIntentHandler {
       
       console.log(`📝 Combined message: "${combinedMessage}"`);
       
-      // Re-analyze with Haiku to check if we now have sufficient data
-      const reAnalyzedIntent = await this.getHaikuService().detectIntent(combinedMessage, conversationHistory);
+      // Re-analyze with Gemini instead of Haiku
+      const reAnalyzedIntent = await this.getGeminiService().detectIntent(combinedMessage, conversationHistory);
 
       console.log(`🎯 Re-analysis result: ${reAnalyzedIntent.intent}, sufficient: ${reAnalyzedIntent.isDataSufficient}`);
 
