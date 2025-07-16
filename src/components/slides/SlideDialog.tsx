@@ -1,17 +1,16 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
+  Box,
+  Typography,
   Dialog,
   DialogContent,
-  Box,
   IconButton,
-  Typography,
   Tooltip,
-  Paper,
-  useTheme
+  Chip
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import { ChevronLeft, ChevronRight, X, Maximize, Minimize } from 'lucide-react';
 import { SimpleLesson } from '@/types/chat';
 import { useTranslation } from 'react-i18next';
@@ -25,31 +24,70 @@ interface SlideDialogProps {
   onPrevSlide: () => void;
 }
 
-interface SlideDialogHeaderProps {
-  currentLesson: SimpleLesson;
-  currentSlideIndex: number;
+// Компонент контенту слайду (оптимізований)
+const SlideContent = React.memo(({ htmlContent }: { htmlContent: string }) => {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  
+  // Debug logging to see what content we're receiving
+  useEffect(() => {
+    console.log('🔍 SlideContent received htmlContent:', {
+      content: htmlContent,
+      length: htmlContent?.length,
+      isValidHTML: htmlContent?.includes('<html') || htmlContent?.includes('<!DOCTYPE'),
+      preview: htmlContent?.substring(0, 200) + '...',
+      isDefaultMessage: htmlContent?.includes('Слайд генерується'),
+    });
+  }, [htmlContent]);
+  
+  useEffect(() => {
+    if (iframeRef.current) {
+      console.log('🎯 Setting iframe srcdoc to:', htmlContent?.substring(0, 100) + '...');
+      iframeRef.current.srcdoc = htmlContent;
+    }
+  }, [htmlContent]);
+
+  return (
+    <iframe
+      ref={iframeRef}
+      srcDoc={htmlContent}
+      style={{
+        width: '100%',
+        height: '100%',
+        border: 'none',
+        background: 'white',
+      }}
+    />
+  );
+});
+
+SlideContent.displayName = 'SlideContent';
+
+// Мемоізований заголовок діалогу
+const SlideDialogHeader = React.memo(({ 
+  title, 
+  currentIndex, 
+  totalSlides, 
+  hasNext, 
+  hasPrev,
+  isFullscreen,
+  onClose,
+  onNextSlide,
+  onPrevSlide,
+  onToggleFullscreen
+}: {
+  title: string;
+  currentIndex: number;
+  totalSlides: number;
   hasNext: boolean;
   hasPrev: boolean;
   isFullscreen: boolean;
+  onClose: () => void;
   onNextSlide: () => void;
   onPrevSlide: () => void;
   onToggleFullscreen: () => void;
-  onClose: () => void;
-}
-
-const SlideDialogHeader = React.memo<SlideDialogHeaderProps>(({
-  currentLesson,
-  currentSlideIndex,
-  hasNext,
-  hasPrev,
-  isFullscreen,
-  onNextSlide,
-  onPrevSlide,
-  onToggleFullscreen,
-  onClose
 }) => {
-  const { t } = useTranslation(['slides', 'common']);
   const theme = useTheme();
+  const { t } = useTranslation(['slides', 'common']);
 
   return (
     <Box
@@ -58,133 +96,143 @@ const SlideDialogHeader = React.memo<SlideDialogHeaderProps>(({
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 1000,
         background: isFullscreen 
-          ? 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)'
-          : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.95)} 0%, ${alpha(theme.palette.primary.dark, 0.95)} 100%)`,
-        backdropFilter: 'blur(20px)',
-        borderBottom: isFullscreen ? 'none' : `1px solid ${alpha('#ffffff', 0.2)}`,
-        p: 2,
+          ? 'transparent'
+          : alpha(theme.palette.background.paper, 0.95),
+        backdropFilter: isFullscreen ? 'none' : 'blur(10px)',
+        borderBottom: isFullscreen 
+          ? 'none' 
+          : `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        p: isFullscreen ? 1 : 2,
+        zIndex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        opacity: isFullscreen ? 0 : 1,
+        transition: 'opacity 0.3s ease, background 0.3s ease',
+        '&:hover': isFullscreen ? {
+          opacity: 1,
+        } : {},
       }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        {/* Ліва частина - інформація про урок */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
-          <Box>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                color: isFullscreen ? '#ffffff' : '#ffffff',
-                fontWeight: 600,
-                fontSize: { xs: '1rem', sm: '1.25rem' }
-              }}
-            >
-              {currentLesson.title}
-            </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                color: isFullscreen ? alpha('#ffffff', 0.8) : alpha('#ffffff', 0.9),
-                fontSize: { xs: '0.75rem', sm: '0.875rem' }
-              }}
-            >
-              {currentLesson.slides[currentSlideIndex]?.title} • {currentSlideIndex + 1} / {currentLesson.slides.length}
-            </Typography>
-          </Box>
-        </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 600,
+            color: isFullscreen ? '#ffffff' : 'inherit'
+          }}
+        >
+          {title}
+        </Typography>
+        <Chip
+          label={`${currentIndex + 1} з ${totalSlides}`}
+          size="small"
+          color="primary"
+          variant="outlined"
+          sx={{
+            ...(isFullscreen && {
+              backgroundColor: alpha('#ffffff', 0.2),
+              color: '#ffffff',
+              borderColor: alpha('#ffffff', 0.3)
+            })
+          }}
+        />
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            ml: 2,
+            color: isFullscreen ? alpha('#ffffff', 0.7) : 'text.secondary'
+          }}
+        >
+          ← → для навігації • F11 режим презентації • Esc для закриття
+        </Typography>
+      </Box>
+      
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Tooltip title={t('slides:navigation.previousSlide')}>
+          <IconButton
+            onClick={onPrevSlide}
+            disabled={!hasPrev}
+            sx={{
+              backgroundColor: isFullscreen 
+                ? alpha('#ffffff', 0.2)
+                : alpha(theme.palette.primary.main, 0.1),
+              color: isFullscreen ? '#ffffff' : 'inherit',
+              '&:hover': {
+                backgroundColor: isFullscreen
+                  ? alpha('#ffffff', 0.3)
+                  : alpha(theme.palette.primary.main, 0.2),
+              },
+              '&:disabled': {
+                backgroundColor: alpha(theme.palette.grey[300], 0.5),
+              }
+            }}
+          >
+            <ChevronLeft size={20} />
+          </IconButton>
+        </Tooltip>
 
-        {/* Права частина - кнопки управління */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip title={t('slides:navigation.previousSlide')}>
-            <IconButton
-              onClick={onPrevSlide}
-              disabled={!hasPrev}
-              sx={{
-                backgroundColor: isFullscreen 
-                  ? alpha('#ffffff', 0.2)
-                  : alpha(theme.palette.primary.main, 0.1),
-                color: isFullscreen ? '#ffffff' : 'inherit',
-                '&:hover': {
-                  backgroundColor: isFullscreen
-                    ? alpha('#ffffff', 0.3)
-                    : alpha(theme.palette.primary.main, 0.2),
-                },
-                '&:disabled': {
-                  backgroundColor: alpha(theme.palette.grey[300], 0.5),
-                }
-              }}
-            >
-              <ChevronLeft size={20} />
-            </IconButton>
-          </Tooltip>
+        <Tooltip title={t('slides:navigation.nextSlide')}>
+          <IconButton
+            onClick={onNextSlide}
+            disabled={!hasNext}
+            sx={{
+              backgroundColor: isFullscreen 
+                ? alpha('#ffffff', 0.2)
+                : alpha(theme.palette.primary.main, 0.1),
+              color: isFullscreen ? '#ffffff' : 'inherit',
+              '&:hover': {
+                backgroundColor: isFullscreen
+                  ? alpha('#ffffff', 0.3)
+                  : alpha(theme.palette.primary.main, 0.2),
+              },
+              '&:disabled': {
+                backgroundColor: alpha(theme.palette.grey[300], 0.5),
+              }
+            }}
+          >
+            <ChevronRight size={20} />
+          </IconButton>
+        </Tooltip>
 
-          <Tooltip title={t('slides:navigation.nextSlide')}>
-            <IconButton
-              onClick={onNextSlide}
-              disabled={!hasNext}
-              sx={{
-                backgroundColor: isFullscreen 
-                  ? alpha('#ffffff', 0.2)
-                  : alpha(theme.palette.primary.main, 0.1),
-                color: isFullscreen ? '#ffffff' : 'inherit',
-                '&:hover': {
-                  backgroundColor: isFullscreen
-                    ? alpha('#ffffff', 0.3)
-                    : alpha(theme.palette.primary.main, 0.2),
-                },
-                '&:disabled': {
-                  backgroundColor: alpha(theme.palette.grey[300], 0.5),
-                }
-              }}
-            >
-              <ChevronRight size={20} />
-            </IconButton>
-          </Tooltip>
+        <Tooltip title={isFullscreen ? t('slides:navigation.exitPresentation') : t('slides:navigation.presentationMode')}>
+          <IconButton
+            onClick={onToggleFullscreen}
+            sx={{
+              backgroundColor: isFullscreen 
+                ? alpha('#ffffff', 0.2)
+                : alpha(theme.palette.secondary.main, 0.1),
+              color: isFullscreen ? '#ffffff' : theme.palette.secondary.main,
+              '&:hover': {
+                backgroundColor: isFullscreen
+                  ? alpha('#ffffff', 0.3)
+                  : alpha(theme.palette.secondary.main, 0.2),
+              }
+            }}
+          >
+            {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+          </IconButton>
+        </Tooltip>
 
-          <Tooltip title={isFullscreen ? t('slides:navigation.exitPresentation') : t('slides:navigation.presentationMode')}>
-            <IconButton
-              onClick={onToggleFullscreen}
-              sx={{
-                backgroundColor: isFullscreen 
-                  ? alpha('#ffffff', 0.2)
-                  : alpha(theme.palette.secondary.main, 0.1),
-                color: isFullscreen ? '#ffffff' : theme.palette.secondary.main,
-                '&:hover': {
-                  backgroundColor: isFullscreen
-                    ? alpha('#ffffff', 0.3)
-                    : alpha(theme.palette.secondary.main, 0.2),
-                }
-              }}
-            >
-              {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title={t('slides:navigation.close')}>
-            <IconButton
-              onClick={onClose}
-              sx={{
-                backgroundColor: isFullscreen 
-                  ? alpha('#ffffff', 0.2)
-                  : alpha(theme.palette.error.main, 0.1),
-                color: isFullscreen ? '#ffffff' : theme.palette.error.main,
-                '&:hover': {
-                  backgroundColor: isFullscreen
-                    ? alpha('#ffffff', 0.3)
-                    : alpha(theme.palette.error.main, 0.2),
-                }
-              }}
-            >
-              <X size={20} />
-            </IconButton>
-          </Tooltip>
-        </Box>
+        <Tooltip title={t('slides:navigation.close')}>
+          <IconButton
+            onClick={onClose}
+            sx={{
+              backgroundColor: isFullscreen 
+                ? alpha('#ffffff', 0.2)
+                : alpha(theme.palette.error.main, 0.1),
+              color: isFullscreen ? '#ffffff' : theme.palette.error.main,
+              '&:hover': {
+                backgroundColor: isFullscreen
+                  ? alpha('#ffffff', 0.3)
+                  : alpha(theme.palette.error.main, 0.2),
+              }
+            }}
+          >
+            <X size={20} />
+          </IconButton>
+        </Tooltip>
       </Box>
     </Box>
   );
@@ -309,115 +357,53 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
       onClose={onClose}
       maxWidth={false}
       fullWidth
-      fullScreen={isFullscreen}
-      PaperProps={{
-        sx: {
-          bgcolor: 'transparent',
-          boxShadow: 'none',
-          m: 0,
+      sx={{
+        ...(isFullscreen && {
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 9999,
+          '& .MuiBackdrop-root': {
+            backgroundColor: '#000000',
+          }
+        }),
+        '& .MuiDialog-paper': isFullscreen ? {
           width: '100vw',
           height: '100vh',
           maxWidth: 'none',
-          maxHeight: 'none',
+          margin: 0,
           borderRadius: 0,
+          overflow: 'hidden',
+          backgroundColor: '#000000',
+        } : {
+          width: '95vw',
+          height: '95vh',
+          maxWidth: 'none',
+          margin: '2.5vh auto',
+          borderRadius: '16px',
+          overflow: 'hidden',
         }
       }}
-      sx={{
-        '& .MuiDialog-container': {
-          alignItems: 'stretch',
-          justifyContent: 'stretch',
-        },
-        '& .MuiBackdrop-root': {
-          backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        },
-      }}
     >
-      <DialogContent
-        sx={{
-          p: 0,
-          position: 'relative',
-          height: '100vh',
-          width: '100vw',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Header з навігацією */}
+      <DialogContent sx={{ p: 0, position: 'relative', height: '100%' }}>
         <SlideDialogHeader
-          currentLesson={currentLesson}
-          currentSlideIndex={currentSlideIndex}
+          title={currentSlide.title}
+          currentIndex={currentSlideIndex}
+          totalSlides={currentLesson.slides.length}
           hasNext={hasNext}
           hasPrev={hasPrev}
           isFullscreen={isFullscreen}
+          onClose={onClose}
           onNextSlide={onNextSlide}
           onPrevSlide={onPrevSlide}
           onToggleFullscreen={handleToggleFullscreen}
-          onClose={onClose}
         />
 
-        {/* Область контенту слайду */}
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            p: isFullscreen ? 4 : 3,
-            pt: isFullscreen ? 8 : 6, // Додаємо padding-top для header
-          }}
-        >
-          <Paper
-            elevation={0}
-            sx={{
-              width: '100%',
-              height: '100%',
-              maxWidth: '1200px',
-              maxHeight: '800px',
-              borderRadius: isFullscreen ? '0px' : '20px',
-              overflow: 'hidden',
-              bgcolor: '#ffffff',
-              position: 'relative',
-              aspectRatio: '4/3', // Фіксоване співвідношення сторін
-            }}
-          >
-            {/* Контент слайду */}
-            <Box
-              sx={{
-                width: '100%',
-                height: '100%',
-                '& > *': {
-                  width: '100%',
-                  height: '100%',
-                },
-                '& iframe, & img, & video': {
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
-                },
-              }}
-              dangerouslySetInnerHTML={{
-                __html: currentSlide.htmlContent || `
-                  <div style="
-                    padding: 40px;
-                    text-align: center;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    height: 100%;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                  ">
-                    <h1 style="margin: 0 0 20px 0; color: #1976d2; font-size: 2.5rem;">
-                      ${currentSlide.title}
-                    </h1>
-                    <p style="margin: 0; color: #666; font-size: 1.25rem; line-height: 1.6;">
-                      ${currentSlide.content || 'Контент слайду недоступний'}
-                    </p>
-                  </div>
-                `
-              }}
-            />
-          </Paper>
+        {/* Контент слайду */}
+        <Box sx={{ width: '100%', height: '100%', pt: '80px', position: 'relative' }}>
+          <SlideContent htmlContent={currentSlide.htmlContent} />
         </Box>
       </DialogContent>
     </Dialog>

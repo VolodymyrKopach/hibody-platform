@@ -1,6 +1,7 @@
 {
   "navigation": {
     "nextSlide": "Наступний слайд",
+    "previousSlide": "Попередній слайд",
     "close": "Закрити",
     "exitPresentation": "Вийти з режиму презентації",
     "presentationMode": "Режим презентації"

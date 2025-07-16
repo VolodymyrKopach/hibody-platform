@@ -1,6 +1,7 @@
 {
   "navigation": {
     "nextSlide": "Next slide",
+    "previousSlide": "Previous slide",
     "close": "Close",
     "exitPresentation": "Exit presentation mode",
     "presentationMode": "Presentation mode"
