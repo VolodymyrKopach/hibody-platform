@@ -5,98 +5,37 @@ import {
   SlideCommand,
   ProjectFile 
 } from '../types/lesson';
+import { GeminiCommandParsingService } from '../services/commands/GeminiCommandParsingService';
 
-// Функція для парсингу команд через нейронну мережу
-async function parseCommandWithAI(message: string, currentSlide?: LessonSlide): Promise<SlideCommand> {
-  const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
-  const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+// Global instance of Gemini command parsing service
+let geminiCommandService: GeminiCommandParsingService | null = null;
 
-  if (!CLAUDE_API_KEY) {
-    throw new Error('Claude API key required for neural command parsing - no regex fallback allowed');
+// Initialize Gemini service
+function getGeminiCommandService(): GeminiCommandParsingService {
+  if (!geminiCommandService) {
+    geminiCommandService = new GeminiCommandParsingService();
   }
-
-  const prompt = `Ви - експертна нейронна мережа для аналізу команд користувачів щодо слайдів в освітній платформі HiBody.
-
-КРИТИЧНО ВАЖЛИВО: 
-- Аналізуйте ТІЛЬКИ семантичний зміст команди
-- НЕ використовуйте pattern matching або regex
-- Підтримуйте БУДЬ-ЯКУ мову
-- Розумійте контекст та наміри, а не конкретні слова
-
-ТИПИ КОМАНД ДЛЯ СЛАЙДІВ:
-1. edit_slide - редагувати існуючий слайд
-2. improve_slide - покращити слайд  
-3. create_slide - створити новий слайд
-4. delete_slide - видалити слайд
-5. reorder_slides - змінити порядок слайдів
-6. general - загальна команда
-
-${currentSlide ? `КОНТЕКСТ: Поточний слайд: "${currentSlide.title}" (номер ${currentSlide.number})` : ''}
-
-Поверніть JSON:
-{
-  "type": "edit_slide",
-  "slideNumber": 1,
-  "slideId": null,
-  "instruction": "interpreted instruction",
-  "context": "${message}",
-  "targetElement": "extracted target element or null"
+  return geminiCommandService;
 }
 
-Проаналізуйте цю команду: "${message}"`;
-
-  try {
-    const response = await fetch(CLAUDE_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: 500,
-        temperature: 0.1,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Claude API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const content = data.content[0]?.text;
-
-    if (!content) {
-      throw new Error('No content in Claude response');
-    }
-
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const jsonString = jsonMatch ? jsonMatch[0] : content;
-    const result = JSON.parse(jsonString);
-
-    return {
-      type: result.type || 'general',
-      slideNumber: result.slideNumber,
-      slideId: result.slideId,
-      instruction: result.instruction || message,
-      context: result.context || message,
-      targetElement: result.targetElement,
-    };
-  } catch (error) {
-    console.error('Neural command parsing error:', error);
-    throw new Error('Neural network required for command parsing - no regex fallback allowed');
-  }
+// Функція для парсингу команд через Gemini 2.5 Flash Lite
+async function parseCommandWithAI(message: string, currentSlide?: LessonSlide): Promise<SlideCommand> {
+  const service = getGeminiCommandService();
+  const result = await service.parseCommand(message, currentSlide);
+  
+  // Log confidence for debugging
+  console.log(`Command parsing confidence: ${result.confidence}, language: ${result.language}`);
+  
+  return result.command;
 }
 
 export const slideUtils = {
   
   /**
-   * Парсинг природних команд користувача ЧЕРЕЗ НЕЙРОННУ МЕРЕЖУ
+   * Парсинг природних команд користувача ЧЕРЕЗ GEMINI 2.5 FLASH LITE
    */
   parseCommand: async (message: string, currentSlide?: LessonSlide): Promise<SlideCommand> => {
-    // ВСЕ через нейронну мережу - НІЯКИХ regex patterns!
+    // ВСЕ через Gemini нейронну мережу - НІЯКИХ regex patterns!
     return await parseCommandWithAI(message, currentSlide);
   },
   
@@ -379,30 +318,11 @@ export const slideUtils = {
   },
   
   /**
-   * Генерація швидких команд для UI
+   * Генерація швидких команд для UI (мова береться з i18n контексту)
    */
-  generateQuickCommands: (currentSlide?: LessonSlide): string[] => {
-    const commands = [
-      'Покращ дизайн',
-      'Зміни колір фону',
-      'Додай анімацію',
-      'Зроби більшим текст',
-      'Додай зображення'
-    ];
-    
-    if (currentSlide) {
-      commands.unshift(`Підправ слайд ${currentSlide.number}`);
-      
-      if (currentSlide.type === 'game') {
-        commands.push('Додай звукові ефекти', 'Ускладни гру');
-      }
-      
-      if (currentSlide.type === 'content') {
-        commands.push('Додай приклади', 'Зроби інтерактивним');
-      }
-    }
-    
-    return commands;
+  generateQuickCommands: (currentSlide?: LessonSlide, interfaceLanguage: 'uk' | 'en' = 'uk'): string[] => {
+    const service = getGeminiCommandService();
+    return service.getQuickCommands(currentSlide, interfaceLanguage);
   },
 };
 

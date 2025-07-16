@@ -18,18 +18,12 @@ export class GeminiIntentService implements IIntentDetectionService {
   }
 
   async detectIntent(message: string, conversationHistory?: any): Promise<EnhancedIntentDetectionResult> {
-    // Detect user's language first
-    const userLanguage = this.detectLanguage(message);
-    const prompt = this.buildGeminiPrompt(message, conversationHistory, userLanguage);
+    const prompt = this.buildGeminiPrompt(message, conversationHistory);
 
     try {
       const response = await this.client.models.generateContent({
         model: "gemini-2.5-flash-lite-preview-06-17",
-        contents: prompt,
-        generationConfig: {
-          temperature: 0.1, // Low temperature for consistent intent detection
-          maxOutputTokens: 1000,
-        }
+        contents: prompt
       });
 
       const content = response.text;
@@ -37,7 +31,7 @@ export class GeminiIntentService implements IIntentDetectionService {
         throw new Error('No content in Gemini response');
       }
 
-      return this.parseGeminiResponse(content, message, userLanguage);
+      return this.parseGeminiResponse(content, message);
     } catch (error) {
       console.error('Gemini intent detection error:', error);
       throw error;
@@ -190,7 +184,7 @@ ANALYZE THIS MESSAGE:
 "${message}"`;
   }
 
-  private parseGeminiResponse(content: string, originalMessage: string, userLanguage: 'uk' | 'en'): EnhancedIntentDetectionResult {
+  private parseGeminiResponse(content: string, originalMessage: string): EnhancedIntentDetectionResult {
     try {
       // Clean response from extra text
       let jsonText = content.trim();
@@ -214,7 +208,8 @@ ANALYZE THIS MESSAGE:
       const result: EnhancedIntentDetectionResult = {
         intent: normalizedIntent,
         confidence: parsed.confidence || 0.8,
-        language: userLanguage, // Use detected language
+        language: parsed.language || 'uk', // Use Gemini detected language
+        reasoning: parsed.reasoning || `Intent detected: ${normalizedIntent}`,
         parameters: {
           topic: parsed.parameters?.topic || null,
           age: parsed.parameters?.age || null,
@@ -231,7 +226,7 @@ ANALYZE THIS MESSAGE:
       console.log('📊 Gemini Intent Analysis:', {
         intent: result.intent,
         confidence: result.confidence,
-        language: userLanguage,
+        language: parsed.language || 'uk',
         isDataSufficient: result.isDataSufficient,
         missingData: result.missingData,
         parameters: result.parameters
@@ -247,7 +242,8 @@ ANALYZE THIS MESSAGE:
       return {
         intent: UserIntent.FREE_CHAT,
         confidence: 0.5,
-        language: userLanguage,
+        language: 'uk', // Default to Ukrainian
+        reasoning: 'Failed to parse response, defaulting to free chat',
         parameters: {
           rawMessage: originalMessage
         },
