@@ -58,11 +58,15 @@ export const useChatLogic = () => {
           (lastMessage as any).isGeneratingSlides = false;
           lastMessage.lesson = data.lesson;
           
+          // Прибираємо кнопку скасування після завершення генерації
+          lastMessage.availableActions = lastMessage.availableActions?.filter(
+            action => action.action !== 'cancel_generation'
+          ) || [];
+          
           // Додаємо статистику до тексту повідомлення
           lastMessage.text += `\n\n✅ **Генерація завершена!**
 📊 **Статистика:**
 - Створено слайдів: ${data.statistics.completedSlides}/${data.statistics.totalSlides}
-- Час генерації: ${Math.round(data.statistics.generationTime / 1000)}с
 ${data.statistics.failedSlides > 0 ? `- Помилок: ${data.statistics.failedSlides}` : ''}`;
         }
         
