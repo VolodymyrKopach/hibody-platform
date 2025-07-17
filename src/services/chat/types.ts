@@ -1,9 +1,9 @@
 // Експортуємо типи для використання в інших частинах системи
-import { SimpleLesson } from '@/types/chat';
+import { SimpleLesson, SlideGenerationProgress, SlideDescription } from '@/types/chat';
 import { IntentDetectionResult } from '../intent/IIntentDetectionService';
 
 export interface ConversationHistory {
-  step: 'planning' | 'slide_generation' | 'plan_editing' | 'data_collection';
+  step: 'planning' | 'slide_generation' | 'plan_editing' | 'data_collection' | 'bulk_generation';
   planningResult?: string;
   approvedPlan?: string;
   generationMode?: 'individual' | 'batch';
@@ -18,6 +18,12 @@ export interface ConversationHistory {
   lessonTopic?: string;
   lessonAge?: string;
   currentLesson?: SimpleLesson;
+  
+  // === НОВІ ПОЛЯ ДЛЯ МАСОВОЇ ГЕНЕРАЦІЇ СЛАЙДІВ ===
+  slideDescriptions?: SlideDescription[]; // Всі описи слайдів з плану
+  slideGenerationProgress?: SlideGenerationProgress[]; // Прогрес генерації кожного слайду
+  bulkGenerationStartTime?: Date; // Час початку масової генерації
+  isGeneratingAllSlides?: boolean; // Флаг що показує чи генеруються всі слайди
 }
 
 export interface ChatResponse {

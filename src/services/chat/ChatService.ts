@@ -1,15 +1,15 @@
 import { IIntentDetectionService } from '../intent/IIntentDetectionService';
 import { IntentDetectionServiceFactory } from '../intent/IntentDetectionServiceFactory';
 import { IIntentHandler } from './handlers/IIntentHandler';
-import { GeminiContentService } from '../content/GeminiContentService';
-import { GeminiSimpleEditService } from '../content/GeminiSimpleEditService';
+import { GeminiContentService } from '@/services/content/GeminiContentService';
+import { GeminiSimpleEditService } from '@/services/content/GeminiSimpleEditService';
 import { FallbackHandler } from './handlers/FallbackHandler';
 import { EditPlanHandler } from './handlers/EditPlanHandler';
 import { EnhancedCreateLessonHandler } from './handlers/EnhancedCreateLessonHandler';
 import { HelpHandler } from './handlers/HelpHandler';
 import { DataCollectionHandler } from './handlers/DataCollectionHandler';
 import { type ConversationHistory, type ChatResponse } from './types';
-import { type SimpleSlide } from '@/types/chat';
+import { type SimpleSlide, type SlideDescription, type SlideGenerationProgress, type BulkSlideGenerationResult, type SimpleLesson } from '@/types/chat';
 import { type SlideImageInfo } from '@/types/lesson';
 import { type ProcessedSlideData, extractImagePrompts, processSlideWithImages } from '@/utils/slideImageProcessor';
 import { GeminiIntentService, EnhancedIntentDetectionResult } from '../intent/GeminiIntentService';
@@ -66,14 +66,14 @@ export class ChatService {
         return await this.handleGenerateNextSlide(conversationHistory);
       }
       
-      // Уніфікована обробка створення слайдів (як першого, так і наступних)
+      // Обробка створення слайдів - тепер це додавання нового слайду до існуючого уроку
       if (intentResult.intent === 'create_slide') {
         console.log('🎨 Handling CREATE_SLIDE intent');
         
         // Якщо є контекст уроку - це додатковий слайд
         if (conversationHistory?.currentLesson) {
           console.log('📚 Existing lesson found, creating additional slide');
-          return await this.handleGenerateNextSlide(conversationHistory);
+          return await this.handleCreateAdditionalSlide(conversationHistory, intentResult);
         }
         
         // Інакше це помилка - CREATE_SLIDE без контексту має бути CREATE_LESSON
@@ -163,7 +163,13 @@ export class ChatService {
         return await this.handleEditPlanAction(conversationHistory);
 
       case 'generate_next_slide':
-        return await this.handleGenerateNextSlide(conversationHistory);
+        // DEPRECATED: тепер слайди генеруються всі відразу
+        return {
+          success: false,
+          message: '🤔 Слайди тепер генеруються всі відразу після схвалення плану уроку.\n\nЯкщо ви хочете додати новий слайд до існуючого уроку, скажіть: "Додай слайд про [тема]"',
+          conversationHistory,
+          error: 'generate_next_slide deprecated - use bulk generation'
+        };
 
       case 'regenerate_slide':
         return await this.handleRegenerateSlide(conversationHistory, intentResult);
@@ -182,24 +188,15 @@ export class ChatService {
       throw new Error('No plan to approve');
     }
 
-    console.log('🎨 Generating first slide HTML using Gemini 2.5 Flash...');
+    console.log('🎨 Starting bulk slide generation using Gemini 2.5 Flash...');
     console.log('📋 Lesson plan:', conversationHistory.planningResult.substring(0, 200) + '...');
     
     try {
-      // Витягуємо опис першого слайду з плану уроку
-      const firstSlideDescription = this.extractSlideDescription(conversationHistory.planningResult, 1);
-      console.log('📝 First slide description:', firstSlideDescription.substring(0, 100) + '...');
+      // === КРОК 1: Витягуємо всі описи слайдів з плану ===
+      const slideDescriptions = this.extractAllSlideDescriptions(conversationHistory.planningResult);
+      console.log(`📄 Extracted ${slideDescriptions.length} slide descriptions from plan`);
 
-      // Генеруємо HTML слайд через Gemini 2.5 Flash
-      const slideHTML = await this.contentService.generateSlideContent(
-        firstSlideDescription,
-        conversationHistory.lessonTopic || 'урок',
-        conversationHistory.lessonAge || '6-8 років'
-      );
-
-      console.log('✅ Slide HTML generated successfully, length:', slideHTML.length);
-
-      // Створюємо урок з першим слайдом
+      // === КРОК 2: Ініціалізуємо урок ===
       const lesson = {
         id: `lesson_${Date.now()}`,
         title: conversationHistory.lessonTopic || 'Новий урок',
@@ -210,62 +207,210 @@ export class ChatService {
         createdAt: new Date(),
         updatedAt: new Date(),
         authorId: 'ai-chat',
-        slides: [{
-          id: `slide_${Date.now()}`,
-          title: `${conversationHistory.lessonTopic} - Слайд 1`,
-          content: 'Слайд 1 згенеровано на основі навчальної програми',
-          htmlContent: slideHTML,
-          type: 'content' as const,
-          status: 'completed' as const
-        }]
+        slides: [] // Поки що пустий масив, слайди додаються в процесі генерації
       };
+
+      // === КРОК 3: Ініціалізуємо стан прогресу ===
+      const initialProgress: SlideGenerationProgress[] = slideDescriptions.map(desc => ({
+        slideNumber: desc.slideNumber,
+        title: desc.title,
+        status: 'pending',
+        progress: 0
+      }));
 
       const newConversationHistory: ConversationHistory = {
         ...conversationHistory,
-        step: 'slide_generation',
-        currentSlideIndex: 1,
-        generatedSlides: [{ id: 1, html: slideHTML }],
+        step: 'bulk_generation',
+        slideDescriptions,
+        slideGenerationProgress: initialProgress,
+        bulkGenerationStartTime: new Date(),
+        isGeneratingAllSlides: true,
         currentLesson: lesson
       };
 
-      console.log('🎯 ChatService returning lesson object with real generated slide:', {
-        lessonId: lesson.id,
-        title: lesson.title,
-        slidesCount: lesson.slides.length,
-        slideHtmlPreview: slideHTML.substring(0, 100) + '...'
-      });
+      // === КРОК 4: Повертаємо початкове повідомлення про початок генерації ===
+      const initialMessage = `🎨 **Розпочинаємо генерацію всіх слайдів!**
+
+📊 **План генерації:**
+${slideDescriptions.map(desc => `${desc.slideNumber}. ${desc.title} (${desc.type})`).join('\n')}
+
+⏳ **Прогрес:** Генерується ${slideDescriptions.length} слайд(ів)...
+
+Це може зайняти кілька хвилин. Слайди з'являтимуться в правій панелі по мірі готовності.`;
+
+      // === КРОК 5: Запускаємо асинхронну генерацію слайдів ===
+      this.generateAllSlidesAsync(
+        slideDescriptions,
+        conversationHistory.lessonTopic || 'урок',
+        conversationHistory.lessonAge || '6-8 років',
+        lesson,
+        conversationHistory,
+        (slide) => {
+          // Слайд вже додано до уроку в generateAllSlidesAsync
+          console.log(`✅ Slide "${slide.title}" ready and added to lesson`);
+          
+          // TODO: Тут можна додати real-time оновлення через WebSocket
+          console.log('📊 Current lesson slides count:', lesson.slides.length);
+        }
+      );
 
       return {
         success: true,
-        message: `✅ **Перший слайд готовий!** (1/${conversationHistory.totalSlides})
-
-Слайд згенеровано за допомогою ШІ на основі навчальної програми та доданий до правої панелі.
-
-🎯 **Що далі?**
-• Переглянути слайд у правій панелі ➡️
-• Генерувати наступний слайд
-• Покращити поточний слайд`,
+        message: initialMessage,
         conversationHistory: newConversationHistory,
         actions: [
           {
-            action: 'generate_next_slide',
-            label: '▶️ Наступний слайд',
-            description: `Генерувати слайд 2/${conversationHistory.totalSlides}`
-          },
-          {
-            action: 'regenerate_slide',
-            label: '🔄 Перегенерувати',
-            description: 'Створити новий варіант цього слайду'
+            action: 'cancel_generation',
+            label: '⏹️ Скасувати генерацію',
+            description: 'Зупинити процес генерації слайдів'
           }
         ],
         lesson: lesson
       };
+
     } catch (error) {
-      console.error('❌ Error generating slide with Gemini 2.5 Flash:', error);
+      console.error('❌ Error starting bulk slide generation:', error);
       
       return {
         success: false,
-        message: `😔 Виникла помилка при генерації слайду. Спробуйте ще раз.
+        message: `😔 Виникла помилка при підготовці до генерації слайдів. Спробуйте ще раз.
+
+**Помилка:** ${error instanceof Error ? error.message : 'Невідома помилка'}`,
+        conversationHistory,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  // === АСИНХРОННА ГЕНЕРАЦІЯ ВСІХ СЛАЙДІВ (НЕ БЛОКУЄ UI) ===
+  private async generateAllSlidesAsync(
+    slideDescriptions: SlideDescription[],
+    lessonTopic: string,
+    lessonAge: string,
+    lesson: SimpleLesson,
+    conversationHistory?: ConversationHistory,
+    onSlideReady?: (slide: SimpleSlide) => void
+  ): Promise<void> {
+    try {
+      console.log('🚀 Starting SEQUENTIAL slide generation...');
+      
+      // Генеруємо всі слайди ПОСЛІДОВНО
+      const result = await this.generateAllSlides(
+        slideDescriptions,
+        lessonTopic,
+        lessonAge,
+        (progress) => {
+          // Логіка для прогресу
+          console.log('📊 Sequential generation progress:', progress);
+        }
+      );
+
+      // Додаємо всі згенеровані слайди до уроку
+      for (const slide of result.slides) {
+        lesson.slides.push(slide);
+        lesson.updatedAt = new Date();
+        
+        console.log(`✅ Slide "${slide.title}" ready and added to lesson`);
+        
+        // Викликаємо callback для оновлення UI для кожного слайду
+        if (onSlideReady) {
+          onSlideReady(slide);
+        }
+      }
+
+      console.log(`🎉 SEQUENTIAL generation completed! ${result.completedSlides}/${result.totalSlides} slides generated`);
+      
+      if (result.failedSlides > 0) {
+        console.warn(`⚠️ ${result.failedSlides} slides failed to generate`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error in sequential slide generation:', error);
+      // TODO: Повідомити користувача про помилку через UI
+    }
+  }
+
+  // === ДОДАВАННЯ ОКРЕМОГО СЛАЙДУ ДО ІСНУЮЧОГО УРОКУ ===
+  private async handleCreateAdditionalSlide(
+    conversationHistory?: ConversationHistory,
+    intentResult?: any
+  ): Promise<ChatResponse> {
+    if (!conversationHistory?.currentLesson) {
+      throw new Error('No lesson context for additional slide creation');
+    }
+
+    const currentLesson = conversationHistory.currentLesson;
+    const nextSlideNumber = currentLesson.slides.length + 1;
+    
+    console.log(`📄 Creating additional slide ${nextSlideNumber} for lesson "${currentLesson.title}"`);
+    
+    try {
+      // Витягуємо описи з параметрів інтенту або створюємо базовий
+      const slideTitle = intentResult?.parameters?.slideTitle || `Додатковий слайд ${nextSlideNumber}`;
+      const slideDescription = intentResult?.parameters?.slideDescription || 
+        `Додатковий навчальний матеріал для уроку про ${conversationHistory.lessonTopic}`;
+
+      // Генеруємо HTML контент слайду
+      const slideHTML = await this.contentService.generateSlideContent(
+        slideDescription,
+        conversationHistory.lessonTopic || 'урок',
+        conversationHistory.lessonAge || '6-8 років'
+      );
+
+      // Створюємо новий слайд
+      const newSlide: SimpleSlide = {
+        id: `slide_${Date.now()}_additional`,
+        title: slideTitle,
+        content: slideDescription,
+        htmlContent: slideHTML,
+        type: 'content',
+        status: 'completed'
+      };
+
+      // Додаємо до уроку
+      const updatedLesson = {
+        ...currentLesson,
+        slides: [...currentLesson.slides, newSlide],
+        updatedAt: new Date()
+      };
+
+      const newConversationHistory: ConversationHistory = {
+        ...conversationHistory,
+        currentLesson: updatedLesson
+      };
+
+      return {
+        success: true,
+        message: `✅ **Новий слайд додано!**
+
+Слайд "${slideTitle}" успішно створено та додано до уроку. Тепер у вашому уроці ${updatedLesson.slides.length} слайд(ів).
+
+🎯 **Що далі?**
+• Переглянути новий слайд у правій панелі
+• Додати ще один слайд
+• Зберегти урок`,
+        conversationHistory: newConversationHistory,
+        actions: [
+          {
+            action: 'create_slide',
+            label: '➕ Додати ще слайд',
+            description: 'Створити ще один слайд для цього уроку'
+          },
+          {
+            action: 'save_lesson',
+            label: '💾 Зберегти урок',
+            description: 'Зберегти урок до особистої бібліотеки'
+          }
+        ],
+        lesson: updatedLesson
+      };
+
+    } catch (error) {
+      console.error('❌ Error creating additional slide:', error);
+      
+      return {
+        success: false,
+        message: `😔 Виникла помилка при створенні нового слайду. Спробуйте ще раз.
 
 **Помилка:** ${error instanceof Error ? error.message : 'Невідома помилка'}`,
         conversationHistory,
@@ -499,7 +644,7 @@ export class ChatService {
 Новий варіант слайду створено за допомогою ШІ на основі навчальної програми та **замінено** попередній слайд в правій панелі.
 
 📋 **Детальний звіт про зміни:**
-${detectedChanges.map(change => `• ${change}`).join('\n')}
+${detectedChanges.detectedChanges.map(change => `• ${change}`).join('\n')}
 
 🎯 **Тип операції:** Повна регенерація контенту`,
         conversationHistory: newConversationHistory,
@@ -1327,4 +1472,389 @@ ${detectedChanges.map((change: string) => `• ${change}`).join('\n')}
       return `Створіть слайд ${slideNumber} для цього уроку на основі навчальної програми.`;
     }
   }
+
+  // === НОВА ФУНКЦІЯ ДЛЯ МАСОВОЇ ГЕНЕРАЦІЇ СЛАЙДІВ ===
+  private extractAllSlideDescriptions(planningResult: string): SlideDescription[] {
+    console.log('🔍 Extracting all slide descriptions from lesson plan...');
+    
+    try {
+      const slideDescriptions: SlideDescription[] = [];
+      
+      // Шукаємо всі слайди в плані одразу
+      const slidePatterns = [
+        /###\s*Слайд\s+(\d+):\s*([^\n]+)[^#]*?(?=###\s*Слайд\s+|\s*##|\s*$)/gi, // ### Слайд 1: Назва (новий формат)
+        /##\s*Слайд\s+(\d+)[^#]*?(?=##\s*Слайд\s+|\s*$)/gi, // ## Слайд 1, ## Слайд 2, тощо
+        /\*\*Слайд\s+(\d+)[^*]*?(?=\*\*Слайд\s+|\s*$)/gi, // **Слайд 1**, **Слайд 2**, тощо
+        /(\d+)\.\s*[^0-9]*?(?=\d+\.\s*|\s*$)/gi // 1. Текст, 2. Текст, тощо
+      ];
+
+      // Пробуємо кожен паттерн
+      for (const pattern of slidePatterns) {
+        const matches = [...planningResult.matchAll(pattern)];
+        
+        if (matches.length > 0) {
+          console.log(`📄 Found ${matches.length} slides using pattern:`, pattern.source);
+          
+          for (const match of matches) {
+            const slideNumber = parseInt(match[1]);
+            if (slideNumber && !slideDescriptions.find(s => s.slideNumber === slideNumber)) {
+              let description = match[0].trim();
+              let title = `Слайд ${slideNumber}`;
+              
+              // Перевіряємо чи це новий формат з заголовком після двокрапки
+              if (match[2]) {
+                // Новий формат: ### Слайд 1: Заголовок
+                title = match[2].trim();
+                description = description
+                  .replace(/^###\s*Слайд\s+\d+:\s*[^\n]+/i, '')
+                  .trim();
+              } else {
+                // Старий формат - очищаємо від заголовків та форматування
+                description = description
+                  .replace(/^##\s*Слайд\s+\d+[:\s]*/i, '')
+                  .replace(/^\*\*Слайд\s+\d+[:\s]*/i, '')
+                  .replace(/^\d+\.\s*/, '')
+                  .replace(/\*\*$/, '')
+                  .trim();
+
+                // Витягуємо заголовок слайду (перший рядок)
+                const lines = description.split('\n').filter(line => line.trim());
+                title = lines[0]?.replace(/^\*\*/, '').replace(/\*\*$/, '').trim() || `Слайд ${slideNumber}`;
+              }
+              
+              // Визначаємо тип слайду на основі заголовка та контенту
+              const type = this.determineSlideType(title, description, slideNumber);
+              
+              if (description.length > 20) {
+                slideDescriptions.push({
+                  slideNumber,
+                  title,
+                  description,
+                  type
+                });
+              }
+            }
+          }
+          
+          // Якщо знайшли слайди цим паттерном, не пробуємо інші
+          if (slideDescriptions.length > 0) break;
+        }
+      }
+
+      // Якщо не знайшли структурованих слайдів, створюємо базові на основі плану
+      if (slideDescriptions.length === 0) {
+        console.log('📄 No structured slides found, creating default structure...');
+        
+        const defaultSlides = this.createDefaultSlideStructure(planningResult);
+        slideDescriptions.push(...defaultSlides);
+      }
+
+      // Сортуємо за номером слайду
+      slideDescriptions.sort((a, b) => a.slideNumber - b.slideNumber);
+      
+      console.log(`✅ Extracted ${slideDescriptions.length} slide descriptions:`, 
+        slideDescriptions.map(s => `${s.slideNumber}. ${s.title}`));
+      
+      return slideDescriptions;
+      
+    } catch (error) {
+      console.error('❌ Error extracting all slide descriptions:', error);
+      
+      // Fallback: створюємо мінімальну структуру
+      return this.createDefaultSlideStructure(planningResult);
+    }
+  }
+
+  // Допоміжна функція для визначення типу слайду
+  private determineSlideType(title: string, description: string, slideNumber: number): 'welcome' | 'content' | 'activity' | 'summary' {
+    const titleLower = title.toLowerCase();
+    const descLower = description.toLowerCase();
+    
+    // Перший слайд зазвичай вітальний
+    if (slideNumber === 1 || titleLower.includes('вітання') || titleLower.includes('знайомство') || titleLower.includes('вступ')) {
+      return 'welcome';
+    }
+    
+    // Активності
+    if (titleLower.includes('завдання') || titleLower.includes('гра') || titleLower.includes('практика') || 
+        descLower.includes('активність') || descLower.includes('вправа')) {
+      return 'activity';
+    }
+    
+    // Підсумок
+    if (titleLower.includes('підсумок') || titleLower.includes('висновок') || titleLower.includes('результат')) {
+      return 'summary';
+    }
+    
+    // За замовчуванням - контент
+    return 'content';
+  }
+
+     // Створення базової структури слайдів
+  private createDefaultSlideStructure(planningResult: string): SlideDescription[] {
+    const lines = planningResult.split('\n').filter(line => line.trim());
+    const firstLines = lines.slice(0, 5).join(' ').substring(0, 300);
+    
+    return [
+      {
+        slideNumber: 1,
+        title: 'Вітання та знайомство з темою',
+        description: `Вступний слайд для знайомства з темою уроку. ${firstLines}`,
+        type: 'welcome'
+      },
+      {
+        slideNumber: 2,
+        title: 'Основний матеріал',
+        description: `Подача основного навчального матеріалу. ${firstLines}`,
+        type: 'content'
+      },
+      {
+        slideNumber: 3,
+        title: 'Практичне завдання',
+        description: `Інтерактивне завдання для закріплення знань. ${firstLines}`,
+        type: 'activity'
+      },
+      {
+        slideNumber: 4,
+        title: 'Підсумок уроку',
+        description: `Узагальнення вивченого матеріалу та висновки. ${firstLines}`,
+        type: 'summary'
+      }
+    ];
+  }
+
+  // === ФУНКЦІЯ ДЛЯ МАСОВОЇ ГЕНЕРАЦІЇ ВСІХ СЛАЙДІВ ===
+  public async generateAllSlides(
+    slideDescriptions: SlideDescription[],
+    lessonTopic: string,
+    lessonAge: string,
+    progressCallback?: (progress: SlideGenerationProgress[]) => void
+  ): Promise<BulkSlideGenerationResult> {
+    const startTime = Date.now();
+    console.log(`🎨 Starting bulk generation of ${slideDescriptions.length} slides...`);
+    
+    const slides: SimpleSlide[] = [];
+    const errors: string[] = [];
+    const progressState: SlideGenerationProgress[] = slideDescriptions.map(desc => ({
+      slideNumber: desc.slideNumber,
+      title: desc.title,
+      status: 'pending',
+      progress: 0
+    }));
+
+    // Викликаємо callback для початкового стану прогресу
+    if (progressCallback) {
+      progressCallback([...progressState]);
+    }
+
+    // Генеруємо слайди послідовно з невеликими затримками для уникнення rate limiting
+    for (let i = 0; i < slideDescriptions.length; i++) {
+      const slideDesc = slideDescriptions[i];
+      
+      try {
+        console.log(`📄 [${i + 1}/${slideDescriptions.length}] Generating slide: "${slideDesc.title}"`);
+        
+        // Оновлюємо прогрес - слайд генерується
+        progressState[i].status = 'generating';
+        progressState[i].progress = 25;
+        if (progressCallback) {
+          progressCallback([...progressState]);
+        }
+
+        // Генеруємо HTML контент слайду
+        const slideHTML = await this.contentService.generateSlideContent(
+          slideDesc.description,
+          lessonTopic,
+          lessonAge
+        );
+
+        // Оновлюємо прогрес - HTML згенеровано
+        progressState[i].progress = 75;
+        if (progressCallback) {
+          progressCallback([...progressState]);
+        }
+
+        // Створюємо об'єкт слайду
+        const slide: SimpleSlide = {
+          id: `slide_${Date.now()}_${slideDesc.slideNumber}`,
+          title: slideDesc.title,
+          content: slideDesc.description,
+          htmlContent: slideHTML,
+          type: this.mapSlideTypeToSimple(slideDesc.type),
+          status: 'completed'
+        };
+
+        slides.push(slide);
+
+        // Оновлюємо прогрес - слайд завершено
+        progressState[i].status = 'completed';
+        progressState[i].progress = 100;
+        progressState[i].htmlContent = slideHTML;
+        if (progressCallback) {
+          progressCallback([...progressState]);
+        }
+
+        console.log(`✅ [${i + 1}/${slideDescriptions.length}] Slide "${slideDesc.title}" generated successfully`);
+
+        // Затримка між генерацією слайдів (1.5 секунди для уникнення rate limiting)
+        if (i < slideDescriptions.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+
+      } catch (error) {
+        console.error(`❌ [${i + 1}/${slideDescriptions.length}] Failed to generate slide "${slideDesc.title}":`, error);
+        
+        // Оновлюємо прогрес - помилка
+        progressState[i].status = 'error';
+        progressState[i].error = error instanceof Error ? error.message : 'Unknown error';
+        if (progressCallback) {
+          progressCallback([...progressState]);
+        }
+
+        // Створюємо fallback слайд
+        const fallbackSlide: SimpleSlide = {
+          id: `slide_${Date.now()}_${slideDesc.slideNumber}_fallback`,
+          title: slideDesc.title,
+          content: slideDesc.description,
+          htmlContent: `<div style="text-align: center; padding: 40px;">
+            <h2>${slideDesc.title}</h2>
+            <p>Цей слайд буде згенеровано пізніше.</p>
+            <p><small>Опис: ${slideDesc.description.substring(0, 100)}...</small></p>
+          </div>`,
+          type: this.mapSlideTypeToSimple(slideDesc.type),
+          status: 'draft'
+        };
+
+        slides.push(fallbackSlide);
+        errors.push(`Slide ${slideDesc.slideNumber} "${slideDesc.title}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    const generationTime = Date.now() - startTime;
+    const completedSlides = slides.filter(s => s.status === 'completed').length;
+    const failedSlides = errors.length;
+
+    console.log(`🎉 Bulk slide generation completed in ${generationTime}ms:`);
+    console.log(`   ✅ Completed: ${completedSlides}/${slideDescriptions.length}`);
+    console.log(`   ❌ Failed: ${failedSlides}/${slideDescriptions.length}`);
+
+    return {
+      totalSlides: slideDescriptions.length,
+      completedSlides,
+      failedSlides,
+      slides,
+      errors,
+      generationTime
+    };
+  }
+
+  // Допоміжна функція для перетворення типу слайду
+  private mapSlideTypeToSimple(type: 'welcome' | 'content' | 'activity' | 'summary'): 'title' | 'content' | 'interactive' | 'summary' {
+    switch (type) {
+      case 'welcome': return 'title';
+      case 'activity': return 'interactive';
+      case 'summary': return 'summary';
+      default: return 'content';
+    }
+  }
+
+  // === ПОВНІСТЮ ПАРАЛЕЛЬНА ГЕНЕРАЦІЯ ВСІХ СЛАЙДІВ ===
+  private async generateAllSlidesParallel(
+    slideDescriptions: SlideDescription[],
+    lessonTopic: string,
+    lessonAge: string,
+    onSlideReady: (slide: SimpleSlide, progressUpdate: SlideGenerationProgress[]) => void
+  ): Promise<BulkSlideGenerationResult> {
+    console.log(`🚀 Starting PARALLEL generation of ${slideDescriptions.length} slides...`);
+
+    const startTime = Date.now();
+    const progressState: SlideGenerationProgress[] = slideDescriptions.map(desc => ({
+      slideNumber: desc.slideNumber,
+      title: desc.title,
+      status: 'pending',
+      progress: 0
+    }));
+
+    const slides: SimpleSlide[] = [];
+    let completedSlides = 0;
+
+    // Створюємо всі промиси відразу (ПАРАЛЕЛЬНО)
+    const slidePromises = slideDescriptions.map(async (slideDesc, index) => {
+      try {
+        console.log(`📄 [PARALLEL] Starting slide: "${slideDesc.title}"`);
+        
+        // Оновлюємо прогрес - слайд генерується
+        progressState[index].status = 'generating';
+        progressState[index].progress = 25;
+
+        // Генеруємо HTML контент слайду
+        const slideHTML = await this.contentService.generateSlideContent(
+          slideDesc.description,
+          lessonTopic,
+          lessonAge
+        );
+
+        // Оновлюємо прогрес - HTML згенеровано
+        progressState[index].progress = 75;
+
+        // Створюємо об'єкт слайду
+        const slide: SimpleSlide = {
+          id: `slide_${Date.now()}_${slideDesc.slideNumber}_${Math.random().toString(36).substr(2, 9)}`,
+          title: slideDesc.title,
+          content: slideDesc.description,
+          htmlContent: slideHTML,
+          type: this.mapSlideTypeToSimple(slideDesc.type),
+          status: 'completed'
+        };
+
+        // Оновлюємо прогрес - слайд завершено
+        progressState[index].status = 'completed';
+        progressState[index].progress = 100;
+        progressState[index].htmlContent = slideHTML;
+        
+        completedSlides++;
+        console.log(`✅ [PARALLEL] Slide "${slideDesc.title}" completed (${completedSlides}/${slideDescriptions.length})`);
+
+        // Викликаємо callback для відображення слайду відразу
+        onSlideReady(slide, [...progressState]);
+
+        return slide;
+
+      } catch (error) {
+        console.error(`❌ [PARALLEL] Error generating slide "${slideDesc.title}":`, error);
+        
+        progressState[index].status = 'error';
+        progressState[index].progress = 0;
+        progressState[index].error = error instanceof Error ? error.message : 'Unknown error';
+        
+        return null;
+      }
+    });
+
+    // Чекаємо завершення всіх слайдів
+    const results = await Promise.all(slidePromises);
+    
+    // Фільтруємо успішні слайди
+    results.forEach(slide => {
+      if (slide) {
+        slides.push(slide);
+      }
+    });
+
+    const endTime = Date.now();
+    const totalTime = (endTime - startTime) / 1000;
+
+    console.log(`🎉 PARALLEL generation completed in ${totalTime}s: ${slides.length}/${slideDescriptions.length} slides generated`);
+
+    return {
+      slides,
+      totalSlides: slideDescriptions.length,
+      completedSlides: slides.length,
+      failedSlides: slideDescriptions.length - slides.length,
+      generationTime: totalTime * 1000, // конвертуємо в мілісекунди
+      errors: progressState.filter(p => p.status === 'error').map(p => p.error || 'Unknown error')
+    };
+  }
+
+  // === СТАРА ПОСЛІДОВНА ГЕНЕРАЦІЯ (DEPRECATED) ===
 } 

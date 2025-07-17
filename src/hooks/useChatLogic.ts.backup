@@ -37,9 +37,6 @@ export const useChatLogic = () => {
           if (data.lesson) {
             lastMessage.lesson = data.lesson;
           }
-            
-            // Примусово оновлюємо повідомлення для тригеру useEffect
-            return [...newMessages];
         }
         
         return newMessages;

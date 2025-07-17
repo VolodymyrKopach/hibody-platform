@@ -6,12 +6,14 @@ import {
   Paper,
   Avatar,
   Fade,
-  IconButton
+  IconButton,
+  LinearProgress,
+  Chip
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
-import { Bot, User, ThumbsUp, ThumbsDown, RefreshCw } from 'lucide-react';
-import { Message } from '@/types/chat';
+import { Bot, User, ThumbsUp, ThumbsDown, RefreshCw, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Message, SlideGenerationProgress } from '@/types/chat';
 import { SimpleLesson } from '@/types/chat';
 import MarkdownRenderer from '@/components/markdown/MarkdownRenderer';
 
@@ -21,6 +23,8 @@ interface ChatMessageProps {
   onFeedback?: (messageId: number, feedback: 'like' | 'dislike') => void;
   onLessonCreate?: (lesson: SimpleLesson) => void;
   onActionClick?: (action: string, description: string) => void;
+  slideGenerationProgress?: SlideGenerationProgress[]; // Прогрес генерації слайдів
+  isGeneratingSlides?: boolean; // Флаг генерації слайдів
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -28,7 +32,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   onRegenerate,
   onFeedback,
   onLessonCreate,
-  onActionClick
+  onActionClick,
+  slideGenerationProgress,
+  isGeneratingSlides
 }) => {
   const { t } = useTranslation('chat');
   const theme = useTheme();
@@ -211,6 +217,93 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               }}
             >
               <MarkdownRenderer content={message.text} />
+
+              {/* Slide Generation Progress */}
+              {message.sender === 'ai' && isGeneratingSlides && slideGenerationProgress && (
+                <Box sx={{ mt: 3, mb: 2 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Clock size={16} />
+                    📊 Прогрес генерації слайдів
+                  </Typography>
+                  
+                  {slideGenerationProgress.map((slide, index) => (
+                    <Box key={slide.slideNumber} sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {slide.slideNumber}. {slide.title}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          icon={
+                            slide.status === 'completed' ? <CheckCircle size={14} /> :
+                            slide.status === 'error' ? <XCircle size={14} /> :
+                            slide.status === 'generating' ? <RefreshCw size={14} /> :
+                            <Clock size={14} />
+                          }
+                          label={
+                            slide.status === 'completed' ? 'Готово' :
+                            slide.status === 'error' ? 'Помилка' :
+                            slide.status === 'generating' ? 'Генерується' :
+                            'Очікує'
+                          }
+                          color={
+                            slide.status === 'completed' ? 'success' :
+                            slide.status === 'error' ? 'error' :
+                            slide.status === 'generating' ? 'info' :
+                            'default'
+                          }
+                          variant={slide.status === 'generating' ? 'filled' : 'outlined'}
+                        />
+                      </Box>
+                      
+                      {slide.status !== 'pending' && (
+                        <LinearProgress
+                          variant="determinate"
+                          value={slide.progress || 0}
+                          sx={{
+                            height: 6,
+                            borderRadius: 3,
+                            backgroundColor: alpha(theme.palette.grey[300], 0.3),
+                            '& .MuiLinearProgress-bar': {
+                              borderRadius: 3,
+                              backgroundColor: 
+                                slide.status === 'completed' ? theme.palette.success.main :
+                                slide.status === 'error' ? theme.palette.error.main :
+                                theme.palette.info.main
+                            }
+                          }}
+                        />
+                      )}
+                      
+                      {slide.error && (
+                        <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+                          {slide.error}
+                        </Typography>
+                      )}
+                    </Box>
+                  ))}
+                  
+                  {/* Загальний прогрес */}
+                  <Box sx={{ mt: 2, p: 2, backgroundColor: alpha(theme.palette.primary.main, 0.05), borderRadius: 2 }}>
+                    <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                      Загальний прогрес: {slideGenerationProgress.filter(s => s.status === 'completed').length} / {slideGenerationProgress.length} слайдів
+                    </Typography>
+                    <LinearProgress
+                      variant="determinate"
+                      value={(slideGenerationProgress.filter(s => s.status === 'completed').length / slideGenerationProgress.length) * 100}
+                      sx={{
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                        '& .MuiLinearProgress-bar': {
+                          borderRadius: 4,
+                          backgroundColor: theme.palette.primary.main
+                        }
+                      }}
+                    />
+                  </Box>
+                </Box>
+              )}
 
               {/* Available Action Buttons */}
               {message.sender === 'ai' && message.availableActions && message.availableActions.length > 0 && (

@@ -1,0 +1,241 @@
+import { SlideDescription, SimpleLesson, SlideGenerationProgress, SimpleSlide } from '@/types/chat';
+import { ConversationHistory, ChatResponse } from './types';
+
+// Client-side callbacks for real-time updates
+export interface ParallelGenerationCallbacks {
+  onSlideReady?: (slide: SimpleSlide) => void;
+  onProgressUpdate?: (progress: SlideGenerationProgress) => void;
+  onError?: (error: string, slideIndex?: number) => void;
+  onComplete?: (lesson: SimpleLesson) => void;
+}
+
+/**
+ * Client-side adapter that makes API calls to server endpoints
+ * instead of instantiating Gemini services directly in the browser
+ */
+export class ChatServiceAPIAdapter {
+  private baseURL: string;
+
+  constructor() {
+    this.baseURL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+  }
+
+  /**
+   * Send chat message to server API
+   */
+  async sendMessage(
+    message: string, 
+    conversationHistory?: ConversationHistory,
+    action?: string
+  ): Promise<ChatResponse> {
+    try {
+      console.log('📤 [API Adapter] Sending message to chat API...');
+      
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          conversationHistory,
+          action
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || 'Chat API request failed');
+      }
+
+      const result = await response.json();
+      console.log('✅ [API Adapter] Chat response received');
+      
+      return result;
+
+    } catch (error) {
+      console.error('❌ [API Adapter] Chat API error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle plan approval with parallel slide generation via API
+   */
+  async handleApprovePlanParallel(
+    conversationHistory: ConversationHistory,
+    callbacks?: ParallelGenerationCallbacks
+  ): Promise<ChatResponse> {
+    try {
+      if (!conversationHistory?.planningResult) {
+        throw new Error('No plan to approve');
+      }
+
+      console.log('🎨 [API Adapter] Starting parallel generation via API...');
+
+      // Extract slide descriptions from the plan
+      const slideDescriptions = this.extractAllSlideDescriptions(conversationHistory.planningResult);
+      
+      console.log('📋 [API Adapter] Extracted slide descriptions:', slideDescriptions.length);
+
+      // Make API call to sequential generation endpoint
+      const response = await fetch('/api/generation/slides/sequential', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          slideDescriptions,
+          lesson: conversationHistory.currentLesson,
+          topic: conversationHistory.lessonTopic || 'Unknown topic',
+          age: '6-12'
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || 'Parallel generation API request failed');
+      }
+
+      const result = await response.json();
+      
+      console.log('✅ [API Adapter] Parallel generation completed via API');
+
+      // Simulate real-time callbacks since we can't get them from a simple HTTP request
+      // In a real implementation, you'd use WebSockets or Server-Sent Events
+      if (callbacks?.onComplete && result.lesson) {
+        callbacks.onComplete(result.lesson);
+      }
+
+             // Return a chat response format
+       return {
+         message: result.message || 'Slides generated successfully!',
+         lesson: result.lesson,
+         conversationHistory: {
+           ...conversationHistory,
+           currentLesson: result.lesson,
+           step: 'slide_generation'
+         }
+       };
+
+    } catch (error) {
+      console.error('❌ [API Adapter] Parallel generation error:', error);
+      
+      if (callbacks?.onError) {
+        callbacks.onError(error instanceof Error ? error.message : 'Unknown error');
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * Extract slide descriptions from plan text
+   * This is the same logic that was in ChatServiceParallelAdapter
+   */
+  private extractAllSlideDescriptions(planText: string): SlideDescription[] {
+    const slideDescriptions: SlideDescription[] = [];
+    const slideRegex = /### Слайд (\d+):\s*([^(]+)(?:\((\d+)-(\d+)\s+хв\))?\s*\*\*Тип:\*\*\s*([^\*]+)\s*\*\*Мета:\*\*\s*([^\*]+)\s*\*\*Зміст:\*\*\s*(.*?)(?=\*\*Інтерактивні елементи:\*\*|\*\*|$)/gs;
+    
+    let match;
+    while ((match = slideRegex.exec(planText)) !== null) {
+      const slideNumber = parseInt(match[1]);
+      const title = match[2].trim();
+      const type = match[5].trim();
+      const goal = match[6].trim();
+      const content = match[7].trim();
+      
+      slideDescriptions.push({
+        slideNumber,
+        title,
+        type,
+        goal,
+        content,
+        description: `${goal}\n\n${content}`
+      });
+    }
+    
+    console.log(`📋 [API Adapter] Extracted ${slideDescriptions.length} slide descriptions`);
+    return slideDescriptions;
+  }
+
+  /**
+   * Edit existing plan via API
+   */
+  async editPlan(
+    currentPlan: string,
+    userChanges: string,
+    topic: string,
+    age: string
+  ): Promise<string> {
+    try {
+      console.log('✏️ [API Adapter] Editing plan via API...');
+      
+      const response = await fetch('/api/content/edit-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPlan,
+          userChanges,
+          topic,
+          age
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || 'Plan editing API request failed');
+      }
+
+      const result = await response.json();
+      console.log('✅ [API Adapter] Plan edited successfully');
+      
+      return result.editedPlan;
+
+    } catch (error) {
+      console.error('❌ [API Adapter] Plan editing error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate single slide content via API
+   */
+  async generateSlideContent(
+    slideDescription: string,
+    topic: string,
+    age: string
+  ): Promise<string> {
+    try {
+      console.log('🎯 [API Adapter] Generating slide content via API...');
+      
+      const response = await fetch('/api/content/generate-slide', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          slideDescription,
+          topic,
+          age
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || 'Slide content generation API request failed');
+      }
+
+      const result = await response.json();
+      console.log('✅ [API Adapter] Slide content generated successfully');
+      
+      return result.htmlContent;
+
+    } catch (error) {
+      console.error('❌ [API Adapter] Slide content generation error:', error);
+      throw error;
+    }
+  }
+} 

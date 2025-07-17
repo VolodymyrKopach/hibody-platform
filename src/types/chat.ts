@@ -58,4 +58,31 @@ export interface SaveLessonDialogData {
   ageGroup: string;
   selectedPreviewId: string | null;
   previewUrl: string | null;
+}
+
+// === НОВІ ТИПИ ДЛЯ МАСОВОЇ ГЕНЕРАЦІЇ СЛАЙДІВ ===
+
+export interface SlideDescription {
+  slideNumber: number;
+  title: string;
+  description: string;
+  type: 'welcome' | 'content' | 'activity' | 'summary';
+}
+
+export interface SlideGenerationProgress {
+  slideNumber: number;
+  title: string;
+  status: 'pending' | 'generating' | 'completed' | 'error';
+  error?: string;
+  htmlContent?: string;
+  progress?: number; // 0-100
+}
+
+export interface BulkSlideGenerationResult {
+  totalSlides: number;
+  completedSlides: number;
+  failedSlides: number;
+  slides: SimpleSlide[];
+  errors: string[];
+  generationTime: number; // в мілісекундах
 } 

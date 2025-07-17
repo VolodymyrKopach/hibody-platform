@@ -13,8 +13,12 @@ export class GeminiIntentService implements IIntentDetectionService {
   private readonly client: GoogleGenAI;
 
   constructor() {
-    // API key from environment variable GEMINI_API_KEY
-    this.client = new GoogleGenAI({});
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY environment variable is required');
+    }
+    // Pass the API key explicitly to the Google GenAI client
+    this.client = new GoogleGenAI({ apiKey });
   }
 
   async detectIntent(message: string, conversationHistory?: any): Promise<EnhancedIntentDetectionResult> {

@@ -103,7 +103,7 @@ ${lessonContext}
 Обробити команду та дати відповідь у форматі JSON.`;
 
     // Викликаємо Gemini API
-    const client = new GoogleGenAI({});
+    const client = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
     const fullPrompt = `${SLIDE_SYSTEM_PROMPT}\n\n${userPrompt}`;
     
     const response = await client.models.generateContent({
@@ -477,8 +477,8 @@ async function callGeminiAPI(
       return { success: false, error: 'Gemini API key не налаштований' };
     }
 
-    // The client gets the API key from the environment variable `GEMINI_API_KEY`.
-    const client = new GoogleGenAI({});
+    // Pass the API key explicitly to the Google GenAI client
+    const client = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
     const response = await client.models.generateContent({
       model,

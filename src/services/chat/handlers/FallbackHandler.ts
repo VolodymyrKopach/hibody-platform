@@ -34,7 +34,7 @@ export class FallbackHandler implements IIntentHandler {
   private generateFriendlyResponse(language: string): string {
     switch (language) {
       case 'uk':
-        return `👋 Привіт! Все добре, дякую! 
+        return `👋 Привіт!
 
 Я - ваш асистент для створення інтерактивних уроків для дітей. 
 
@@ -48,7 +48,7 @@ export class FallbackHandler implements IIntentHandler {
 • "Зроби урок математики про додавання"`;
 
       case 'en':
-        return `👋 Hello! I'm doing great, thank you!
+        return `👋 Hello!
 
 I'm your assistant for creating interactive lessons for children.
 

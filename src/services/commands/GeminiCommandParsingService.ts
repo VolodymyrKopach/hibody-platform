@@ -15,8 +15,12 @@ export class GeminiCommandParsingService {
   private client: GoogleGenAI;
 
   constructor() {
-    // The client gets the API key from the environment variable `GEMINI_API_KEY`.
-    this.client = new GoogleGenAI({});
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY environment variable is required');
+    }
+    // Pass the API key explicitly to the Google GenAI client
+    this.client = new GoogleGenAI({ apiKey });
   }
 
   /**
