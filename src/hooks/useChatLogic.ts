@@ -63,11 +63,16 @@ export const useChatLogic = () => {
             action => action.action !== 'cancel_generation'
           ) || [];
           
-          // Додаємо статистику до тексту повідомлення
-          lastMessage.text += `\n\n✅ **Генерація завершена!**
+          // Перевіряємо, чи вже додано статистику, щоб уникнути дублювання
+          if (!lastMessage.text.includes('✅ **Генерація завершена!**')) {
+            // Замінюємо початковий текст про прогрес на фінальну статистику
+            const planSection = lastMessage.text.split('⏳ **Прогрес:**')[0];
+            lastMessage.text = planSection + `✅ **Генерація завершена!**
 📊 **Статистика:**
-- Створено слайдів: ${data.statistics.completedSlides}/${data.statistics.totalSlides}
-${data.statistics.failedSlides > 0 ? `- Помилок: ${data.statistics.failedSlides}` : ''}`;
+
+Створено слайдів: ${data.statistics.completedSlides}/${data.statistics.totalSlides}
+${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSlides}` : ''}`;
+          }
         }
         
         return newMessages;

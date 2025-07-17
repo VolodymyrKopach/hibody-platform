@@ -232,7 +232,7 @@ export class ChatService {
       const initialMessage = `🎨 **Розпочинаємо генерацію всіх слайдів!**
 
 📊 **План генерації:**
-${slideDescriptions.map(desc => `${desc.slideNumber}. ${desc.title} (${desc.type})`).join('\n')}
+${slideDescriptions.map(desc => `${desc.slideNumber}. ${desc.title}`).join('\n')}
 
 ⏳ **Прогрес:** Генерується ${slideDescriptions.length} слайд(ів)...
 
