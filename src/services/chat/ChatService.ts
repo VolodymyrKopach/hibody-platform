@@ -644,7 +644,7 @@ ${slideDescriptions.map(desc => `${desc.slideNumber}. ${desc.title} (${desc.type
 Новий варіант слайду створено за допомогою ШІ на основі навчальної програми та **замінено** попередній слайд в правій панелі.
 
 📋 **Детальний звіт про зміни:**
-${detectedChanges.detectedChanges.map(change => `• ${change}`).join('\n')}
+${detectedChanges.map((change: string) => `• ${change}`).join('\n')}
 
 🎯 **Тип операції:** Повна регенерація контенту`,
         conversationHistory: newConversationHistory,
@@ -740,11 +740,12 @@ ${detectedChanges.detectedChanges.map(change => `• ${change}`).join('\n')}
       const slideId = currentSlide.id;
 
       // Аналізуємо зміни між старим та новим слайдом
-      const detectedChanges = this.simpleEditService.analyzeChanges(
+      const analysisResult = this.simpleEditService.analyzeChanges(
         currentSlide.htmlContent || currentSlide.content,
         finalSlideHTML,
         editInstruction
       );
+      const detectedChanges = analysisResult.detectedChanges;
 
       // Оновлюємо поточний слайд (ЗАМІНЮЄМО, а не створюємо новий)
       const updatedLesson = {
@@ -1005,11 +1006,12 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}
       const slideId = currentSlide.id;
 
       // Аналізуємо зміни між старим та новим слайдом
-      const detectedChanges = this.simpleEditService.analyzeChanges(
+      const analysisResult = this.simpleEditService.analyzeChanges(
         currentSlide.htmlContent || currentSlide.content,
         finalSlideHTML,
         finalInstruction
       );
+      const detectedChanges = analysisResult.detectedChanges;
 
       // Оновлюємо поточний слайд (ЗАМІНЮЄМО, а не створюємо новий)
       const updatedLesson = {
