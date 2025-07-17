@@ -1,6 +1,8 @@
 // Service for content generation using Gemini 2.5 Flash
 import { GoogleGenAI } from '@google/genai';
 import { processSlideWithImages, type ProcessedSlideData } from '@/utils/slideImageProcessor';
+import { ageComponentTemplatesService } from '@/services/templates/AgeComponentTemplatesService';
+import { AgeGroup } from '@/types/generation';
 
 export class GeminiContentService {
   private client: GoogleGenAI;
@@ -191,7 +193,7 @@ Create a complete, detailed lesson plan that is engaging and educational for the
   }
 
   async generateSlideContent(slideDescription: string, topic: string, age: string): Promise<string> {
-    const prompt = this.buildSlideContentPrompt(slideDescription, topic, age);
+    const prompt = await this.buildSlideContentPrompt(slideDescription, topic, age);
 
     try {
       console.log('🎯 Generating slide HTML with Gemini...');
@@ -237,7 +239,18 @@ Create a complete, detailed lesson plan that is engaging and educational for the
     }
   }
 
-  private buildSlideContentPrompt(slideDescription: string, topic: string, age: string): string {
+  private async buildSlideContentPrompt(slideDescription: string, topic: string, age: string): Promise<string> {
+    // Отримуємо age-specific шаблон компонентів
+    let ageTemplate = '';
+    try {
+      const ageGroup = this.mapAgeToAgeGroup(age);
+      ageTemplate = await ageComponentTemplatesService.getTemplateForAge(ageGroup);
+      console.log(`✅ Loaded age template for ${ageGroup}, length: ${ageTemplate.length}`);
+    } catch (error) {
+      console.warn('Failed to load age template:', error);
+      ageTemplate = '<!-- No age-specific template available -->';
+    }
+
     return `Ти експерт з створення інтерактивних HTML слайдів для дітей. 
 
 **ЗАВДАННЯ:** Створити повноцінний HTML слайд для дітей віку ${age} на основі опису.
@@ -248,6 +261,19 @@ ${slideDescription}
 **КОНТЕКСТ:**
 - Тема уроку: ${topic}
 - Цільова аудиторія: діти ${age}
+
+**ПРИКЛАДИ КОМПОНЕНТІВ ДЛЯ ЦІЄЇ ВІКОВОЇ ГРУПИ:**
+Використовуй наступні приклади компонентів як референс для створення відповідних візуальних елементів:
+
+${ageTemplate}
+
+**ІНСТРУКЦІЇ З ВИКОРИСТАННЯ ШАБЛОНУ:**
+- Вивчи стилі та компоненти з прикладу вище
+- Адаптуй дизайн під свій контент
+- Використовуй схожі кольори, шрифти та розміри
+- Повторюй інтерактивні паттерни (hover ефекти, анімації)
+- Зберігай стиль кнопок та інтерфейсних елементів
+- Адаптуй складність під вікову групу
 
 **ТЕХНІЧНІ ВИМОГИ:**
 1. Створи ПОВНИЙ HTML документ з <!DOCTYPE html>
@@ -297,6 +323,19 @@ ${slideDescription}
     cleaned = cleaned.trim();
     
     return cleaned;
+  }
+
+  /**
+   * === SOLID: SRP - Маппінг віку на вікову групу ===
+   */
+  private mapAgeToAgeGroup(age: string): AgeGroup {
+    // Витягуємо числове значення з рядка
+    const ageNumber = parseInt(age.match(/\d+/)?.[0] || '6');
+    
+    if (ageNumber <= 3) return '2-3';
+    if (ageNumber <= 6) return '4-6';
+    if (ageNumber <= 8) return '7-8';
+    return '9-10';
   }
 
   async generateEditedPlan(currentPlan: string, userChanges: string, topic: string, age: string): Promise<string> {

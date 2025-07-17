@@ -166,7 +166,7 @@ export class PreviewGenerationService {
           htmlContent = await this.contentService.generateSlideContent(
             prompt,
             formValues.subject as string || 'урок',
-            ageConfig.name
+            ageConfig.ageRange || ageConfig.id
           );
           content = this.extractTextFromHtml(htmlContent);
         } else {

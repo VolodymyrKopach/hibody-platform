@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { SlideGenerationProgress, SimpleLesson } from '@/types/chat';
+import { SlideGenerationProgress, SimpleLesson, SimpleSlide } from '@/types/chat';
 
 interface SSEProgressData {
   progress: SlideGenerationProgress[];
@@ -7,6 +7,7 @@ interface SSEProgressData {
   currentSlide?: SlideGenerationProgress;
   totalSlides: number;
   completedSlides: number;
+  newSlide?: SimpleSlide;  // Новий слайд, якщо був доданий в цьому оновленні
 }
 
 interface SSECompletionData {

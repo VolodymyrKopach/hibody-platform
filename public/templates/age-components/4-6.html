@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎨 Компоненти для дошкільнят 4-6 років</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Comic Sans MS',cursive;background:linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%);min-height:100vh;overflow-x:hidden}
+.c{max-width:1200px;margin:0 auto;padding:20px}
+.t{font-size:48px;color:#4c51bf;text-align:center;margin:20px 0;text-shadow:2px 2px 4px rgba(0,0,0,0.3);animation:titleBounce 3s infinite}
+.s{background:rgba(255,255,255,0.9);border-radius:25px;padding:30px;margin:25px 0;box-shadow:0 15px 40px rgba(0,0,0,0.15);position:relative}
+.st{font-size:36px;color:#805ad5;margin-bottom:25px;text-align:center;font-weight:bold}
+
+/* Герої та персонажі */
+.heroes{display:flex;justify-content:center;gap:30px;flex-wrap:wrap;margin:30px 0}
+.hero{width:200px;height:200px;border-radius:25px;cursor:pointer;position:relative;transition:all 0.4s;animation:heroFloat 4s infinite;overflow:hidden}
+.hero.cat{background:linear-gradient(135deg,#ffecd2 0%,#fcb69f 100%)}
+.hero.dog{background:linear-gradient(135deg,#a8edea 0%,#fed6e3 100%);animation-delay:1s}
+.hero.bear{background:linear-gradient(135deg,#d299c2 0%,#fef9d7 100%);animation-delay:2s}
+.hero::before{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:80px;transition:all 0.3s}
+.hero.cat::before{content:'🐱'}
+.hero.dog::before{content:'🐶'}
+.hero.bear::before{content:'🐻'}
+.hero:hover{transform:scale(1.1) rotate(5deg)}
+.hero:hover::before{font-size:100px}
+
+/* Карти з завданнями */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin:30px 0}
+.card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:20px;padding:25px;color:white;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(45deg,rgba(255,255,255,0.1) 0%,transparent 100%);pointer-events:none}
+.card:hover{transform:translateY(-10px);box-shadow:0 20px 40px rgba(102,126,234,0.4)}
+.card-icon{font-size:60px;text-align:center;margin-bottom:15px}
+.card-title{font-size:24px;font-weight:bold;text-align:center;margin-bottom:10px}
+.card-desc{font-size:16px;text-align:center;opacity:0.9}
+
+/* Інтерактивні кнопки */
+.btns{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin:30px 0}
+.ibtn{width:150px;height:150px;border:none;border-radius:20px;cursor:pointer;font-size:24px;font-weight:bold;color:white;transition:all 0.3s;position:relative;overflow:hidden}
+.ibtn.green{background:linear-gradient(135deg,#4ecdc4 0%,#44a08d 100%)}
+.ibtn.orange{background:linear-gradient(135deg,#ff9a9e 0%,#fecfef 100%)}
+.ibtn.blue{background:linear-gradient(135deg,#a18cd1 0%,#fbc2eb 100%)}
+.ibtn:hover{transform:scale(1.05) rotate(2deg);box-shadow:0 15px 30px rgba(0,0,0,0.2)}
+.ibtn:active{transform:scale(0.95)}
+
+/* Прогрес та досягнення */
+.progress-section{text-align:center;margin:30px 0}
+.progress-title{font-size:32px;color:#4c51bf;margin-bottom:20px;font-weight:bold}
+.progress-bar{width:80%;height:25px;background:rgba(255,255,255,0.3);border-radius:15px;margin:20px auto;overflow:hidden;position:relative}
+.progress-fill{height:100%;background:linear-gradient(90deg,#4ecdc4 0%,#667eea 50%,#f093fb 100%);border-radius:15px;width:0%;animation:progressGrow 3s ease-in-out;position:relative}
+.progress-fill::after{content:'🌟';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:30px;animation:starBounce 1s infinite}
+
+/* Рівні складності */
+.levels{display:flex;justify-content:center;gap:25px;margin:30px 0;flex-wrap:wrap}
+.level{width:120px;height:120px;border-radius:50%;cursor:pointer;position:relative;transition:all 0.3s;border:4px solid white;display:flex;align-items:center;justify-content:center;font-size:48px}
+.level.easy{background:linear-gradient(135deg,#84fab0 0%,#8fd3f4 100%)}
+.level.medium{background:linear-gradient(135deg,#ffecd2 0%,#fcb69f 100%)}
+.level.hard{background:linear-gradient(135deg,#fa709a 0%,#fee140 100%)}
+.level:hover{transform:scale(1.2);box-shadow:0 10px 25px rgba(0,0,0,0.2)}
+
+/* Інтерактивні загадки */
+.quiz{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:20px;padding:25px;margin:20px 0;color:white;text-align:center}
+.quiz-question{font-size:28px;margin-bottom:20px;font-weight:bold}
+.quiz-options{display:flex;justify-content:center;gap:15px;flex-wrap:wrap}
+.quiz-option{background:rgba(255,255,255,0.2);border:none;border-radius:15px;padding:15px 25px;color:white;font-size:18px;cursor:pointer;transition:all 0.3s;font-weight:bold}
+.quiz-option:hover{background:rgba(255,255,255,0.3);transform:scale(1.05)}
+.quiz-option.correct{background:linear-gradient(135deg,#84fab0 0%,#8fd3f4 100%)}
+.quiz-option.wrong{background:linear-gradient(135deg,#fa709a 0%,#fee140 100%)}
+
+/* Анімації */
+@keyframes titleBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes heroFloat{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-10px) rotate(1deg)}66%{transform:translateY(-5px) rotate(-1deg)}}
+@keyframes progressGrow{0%{width:0%}100%{width:75%}}
+@keyframes starBounce{0%,100%{transform:translateY(-50%) scale(1)}50%{transform:translateY(-50%) scale(1.2)}}
+
+/* Адаптивність */
+@media (max-width:768px){
+.t{font-size:36px}
+.st{font-size:28px}
+.heroes{gap:20px}
+.hero{width:150px;height:150px}
+.hero::before{font-size:60px}
+.cards{grid-template-columns:1fr}
+.btns{gap:15px}
+.ibtn{width:120px;height:120px;font-size:20px}
+.levels{gap:15px}
+.level{width:100px;height:100px;font-size:36px}
+}
+</style>
+</head>
+<body>
+<div class="c">
+<h1 class="t">🎨 КОМПОНЕНТИ ДЛЯ ДОШКІЛЬНЯТ 4-6 РОКІВ</h1>
+
+<div class="s">
+<h2 class="st">🌟 Наші друзі-герої</h2>
+<div class="heroes">
+<div class="hero cat" onclick="playCharacterSound('cat')"></div>
+<div class="hero dog" onclick="playCharacterSound('dog')"></div>
+<div class="hero bear" onclick="playCharacterSound('bear')"></div>
+</div>
+</div>
+
+<div class="s">
+<h2 class="st">🎯 Карти завдань</h2>
+<div class="cards">
+<div class="card" onclick="startTask('math')">
+<div class="card-icon">🔢</div>
+<div class="card-title">Рахунок</div>
+<div class="card-desc">Вивчаємо цифри та лічбу</div>
+</div>
+<div class="card" onclick="startTask('letters')">
+<div class="card-icon">🔤</div>
+<div class="card-title">Букви</div>
+<div class="card-desc">Знайомимося з алфавітом</div>
+</div>
+<div class="card" onclick="startTask('colors')">
+<div class="card-icon">🎨</div>
+<div class="card-title">Кольори</div>
+<div class="card-desc">Розпізнаємо кольори</div>
+</div>
+<div class="card" onclick="startTask('shapes')">
+<div class="card-icon">🔺</div>
+<div class="card-title">Форми</div>
+<div class="card-desc">Вивчаємо геометрію</div>
+</div>
+</div>
+</div>
+
+<div class="s">
+<h2 class="st">🎮 Інтерактивні кнопки</h2>
+<div class="btns">
+<button class="ibtn green" onclick="playGame('memory')">
+🧠<br>Пам'ять
+</button>
+<button class="ibtn orange" onclick="playGame('puzzle')">
+🧩<br>Пазли
+</button>
+<button class="ibtn blue" onclick="playGame('music')">
+🎵<br>Музика
+</button>
+</div>
+</div>
+
+<div class="s">
+<h2 class="st">📊 Прогрес навчання</h2>
+<div class="progress-section">
+<div class="progress-title">Чудова робота!</div>
+<div class="progress-bar">
+<div class="progress-fill"></div>
+</div>
+<div style="margin-top:20px;font-size:24px;color:#4c51bf;">
+Зібрано зірочок: 15/20 ⭐
+</div>
+</div>
+</div>
+
+<div class="s">
+<h2 class="st">🎯 Рівні складності</h2>
+<div class="levels">
+<div class="level easy" onclick="setDifficulty('easy')">😊</div>
+<div class="level medium" onclick="setDifficulty('medium')">🤔</div>
+<div class="level hard" onclick="setDifficulty('hard')">🧠</div>
+</div>
+</div>
+
+<div class="s">
+<h2 class="st">❓ Міні-загадка</h2>
+<div class="quiz">
+<div class="quiz-question">Яка фігура має три кути?</div>
+<div class="quiz-options">
+<button class="quiz-option" onclick="checkAnswer(this, false)">Коло 🔵</button>
+<button class="quiz-option" onclick="checkAnswer(this, true)">Трикутник 🔺</button>
+<button class="quiz-option" onclick="checkAnswer(this, false)">Квадрат ⬜</button>
+</div>
+</div>
+</div>
+
+</div>
+
+<script>
+let audioContext, speechSynthesis = window.speechSynthesis;
+
+function initAudio() {
+if (!audioContext) {
+try {
+audioContext = new (window.AudioContext || window.webkitAudioContext)();
+} catch (e) {
+console.warn('Web Audio API не підтримується');
+}
+}
+return audioContext;
+}
+
+function playTone(frequency, duration, volume = 0.1) {
+const ctx = initAudio();
+if (!ctx) return;
+const oscillator = ctx.createOscillator();
+const gainNode = ctx.createGain();
+oscillator.connect(gainNode);
+gainNode.connect(ctx.destination);
+oscillator.frequency.value = frequency;
+oscillator.type = 'sine';
+gainNode.gain.setValueAtTime(0, ctx.currentTime);
+gainNode.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.01);
+gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+oscillator.start(ctx.currentTime);
+oscillator.stop(ctx.currentTime + duration);
+}
+
+function speak(text, options = {}) {
+if (!speechSynthesis) return;
+speechSynthesis.cancel();
+const utterance = new SpeechSynthesisUtterance(text);
+utterance.rate = 0.8;
+utterance.pitch = 1.2;
+utterance.volume = 0.8;
+utterance.lang = 'uk-UA';
+Object.assign(utterance, options);
+speechSynthesis.speak(utterance);
+}
+
+function playCharacterSound(character) {
+if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+const characters = {
+cat: () => {
+playTone(600, 0.3);
+setTimeout(() => speak('Привіт! Я котик і допоможу тобі вчитися!'), 300);
+},
+dog: () => {
+playTone(400, 0.4);
+setTimeout(() => speak('Гав! Я песик і люблю грати!'), 400);
+},
+bear: () => {
+playTone(300, 0.5);
+setTimeout(() => speak('Привіт, друже! Я ведмедик і знаю багато цікавого!'), 500);
+}
+};
+if (characters[character]) characters[character]();
+}
+
+function startTask(taskType) {
+const tasks = {
+math: 'Почнемо рахувати! Один, два, три...',
+letters: 'Вивчаємо букви! А, Б, В, Г...',
+colors: 'Подивись, які красиві кольори!',
+shapes: 'Розглянемо різні фігури!'
+};
+playTone(523, 0.2);
+setTimeout(() => speak(tasks[taskType] || 'Почнемо навчання!'), 200);
+}
+
+function playGame(gameType) {
+const games = {
+memory: 'Гра на пам\'ять! Запам\'ятай послідовність.',
+puzzle: 'Складаємо пазли разом!',
+music: 'Час для музики та танців!'
+};
+playTone(659, 0.3);
+setTimeout(() => speak(games[gameType] || 'Граємо разом!'), 300);
+}
+
+function setDifficulty(level) {
+const levels = {
+easy: 'Обрано легкий рівень. Молодець!',
+medium: 'Середній рівень. Ти готовий до викликів!',
+hard: 'Складний рівень. Ти справжній розумник!'
+};
+playTone(784, 0.2);
+setTimeout(() => speak(levels[level] || 'Рівень обрано!'), 200);
+}
+
+function checkAnswer(button, isCorrect) {
+if (isCorrect) {
+button.classList.add('correct');
+playTone(1047, 0.5);
+setTimeout(() => speak('Правильно! Молодець!'), 200);
+} else {
+button.classList.add('wrong');
+playTone(220, 0.5);
+setTimeout(() => speak('Спробуй ще раз!'), 200);
+}
+// Заблокувати інші кнопки
+const options = button.parentElement.querySelectorAll('.quiz-option');
+options.forEach(opt => opt.disabled = true);
+}
+
+// Ініціалізація
+document.addEventListener('DOMContentLoaded', function() {
+setTimeout(() => speak('Привіт! Вибирай завдання та граймо разом!', {rate: 0.8, pitch: 1.2}), 1000);
+console.log('🎨 Компоненти для дошкільнят 4-6 років завантажено!');
+});
+
+document.addEventListener('touchstart', function(e) {
+if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+});
+</script>
+</body>
+</html> 

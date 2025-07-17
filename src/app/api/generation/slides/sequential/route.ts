@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ChatService } from '@/services/chat/ChatService';
-import { SlideDescription, SimpleLesson, SlideGenerationProgress } from '@/types/chat';
+import { SlideDescription, SimpleLesson, SimpleSlide, SlideGenerationProgress } from '@/types/chat';
 import { sendProgressUpdate, sendCompletion } from '../progress/route';
 
 export async function POST(request: NextRequest) {
@@ -75,10 +75,29 @@ export async function POST(request: NextRequest) {
             completedSlides: progress.filter(p => p.status === 'completed').length
           });
         }
+      },
+      (slide: SimpleSlide, allSlides: SimpleSlide[]) => {
+        // === ДОДАЄМО СЛАЙД ДО УРОКУ ВІДРАЗУ ===
+        lessonObject.slides = [...allSlides];
+        lessonObject.updatedAt = new Date();
+        
+        console.log(`✅ SEQUENTIAL API: Slide "${slide.title}" ready, total slides now: ${lessonObject.slides.length}`);
+        
+        // === ВІДПРАВЛЯЄМО ОНОВЛЕНИЙ УРОК ЧЕРЕЗ SSE ===
+        if (sessionId) {
+          sendProgressUpdate(sessionId, {
+            progress: currentProgress,
+            lesson: lessonObject,
+            currentSlide: currentProgress.find(p => p.status === 'generating'),
+            totalSlides: slideDescriptions.length,
+            completedSlides: lessonObject.slides.length,
+            newSlide: slide  // Додаємо інформацію про новий слайд
+          });
+        }
       }
     );
 
-    // Add generated slides to lesson
+    // Final update - ensure all slides are in lesson
     lessonObject.slides = result.slides;
     lessonObject.updatedAt = new Date();
 

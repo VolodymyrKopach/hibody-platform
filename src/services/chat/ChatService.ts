@@ -1698,7 +1698,8 @@ ${detectedChanges.map((change: string) => `• ${change}`).join('\n')}
     slideDescriptions: SlideDescription[],
     lessonTopic: string,
     lessonAge: string,
-    progressCallback?: (progress: SlideGenerationProgress[]) => void
+    progressCallback?: (progress: SlideGenerationProgress[]) => void,
+    onSlideReady?: (slide: SimpleSlide, allSlides: SimpleSlide[]) => void
   ): Promise<BulkSlideGenerationResult> {
     const startTime = Date.now();
     console.log(`🎨 Starting bulk generation of ${slideDescriptions.length} slides...`);
@@ -1762,6 +1763,11 @@ ${detectedChanges.map((change: string) => `• ${change}`).join('\n')}
         progressState[i].htmlContent = slideHTML;
         if (progressCallback) {
           progressCallback([...progressState]);
+        }
+
+        // === ВИКЛИК CALLBACK ДЛЯ ГОТОВОГО СЛАЙДУ ===
+        if (onSlideReady) {
+          onSlideReady(slide, [...slides]);
         }
 
         console.log(`✅ [${i + 1}/${slideDescriptions.length}] Slide "${slideDesc.title}" generated successfully`);

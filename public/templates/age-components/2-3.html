@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎈 Візуальні компоненти 2-3 роки</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Comic Sans MS',cursive;background:linear-gradient(135deg,#FFE66D 0%,#4ECDC4 50%,#FF6B6B 100%);min-height:100vh;overflow-x:hidden}
+.c{max-width:1200px;margin:0 auto;padding:20px}
+.t{font-size:60px;color:#FF6B6B;text-align:center;margin:20px 0;text-shadow:3px 3px 6px rgba(0,0,0,0.2);animation:a 2s infinite}
+.s{background:rgba(255,255,255,0.95);border-radius:30px;padding:40px;margin:30px 0;box-shadow:0 20px 60px rgba(0,0,0,0.1);position:relative;overflow:hidden}
+.st{font-size:42px;color:#4ECDC4;margin-bottom:30px;text-align:center;font-weight:bold}
+.h{display:flex;justify-content:center;align-items:center;gap:50px;flex-wrap:wrap;margin:40px 0}
+.co{width:300px;height:300px;background:linear-gradient(135deg,#FF6B6B 0%,#FA709A 100%);border-radius:50%;position:relative;cursor:pointer;transition:all 0.3s;animation:b 3s infinite;box-shadow:0 20px 40px rgba(255,107,107,0.3)}
+.co::before{content:'🌞';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:120px;animation:r 8s linear infinite}
+.co:hover{transform:scale(1.1);box-shadow:0 30px 60px rgba(255,107,107,0.5)}
+.cf{width:250px;height:250px;background:linear-gradient(135deg,#4ECDC4 0%,#44A08D 100%);border-radius:40px;position:relative;cursor:pointer;animation:w 2s infinite;box-shadow:0 15px 30px rgba(78,205,196,0.3)}
+.cf::before{content:'🐻';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:100px}
+.bb{display:flex;justify-content:center;gap:30px;flex-wrap:wrap;margin:40px 0}
+.btn{width:180px;height:180px;border:none;border-radius:50%;cursor:pointer;font-size:80px;color:white;font-weight:bold;transition:all 0.3s;position:relative;overflow:hidden;animation:f 3s infinite}
+.btn.p{background:linear-gradient(135deg,#FF6B6B 0%,#EE5A52 100%);box-shadow:0 15px 30px rgba(255,107,107,0.4)}
+.btn.m{background:linear-gradient(135deg,#4ECDC4 0%,#44A08D 100%);box-shadow:0 15px 30px rgba(78,205,196,0.4);animation-delay:0.5s}
+.btn.pa{background:linear-gradient(135deg,#FFE66D 0%,#FF9A9E 100%);box-shadow:0 15px 30px rgba(255,230,109,0.4);animation-delay:1s}
+.btn:hover{transform:scale(1.2) rotate(5deg);box-shadow:0 25px 50px rgba(0,0,0,0.3)}
+.btn:active{transform:scale(0.95)}
+.btn::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,0.3);border-radius:50%;transform:translate(-50%,-50%);transition:all 0.3s}
+.btn:hover::after{width:100%;height:100%}
+.te{text-align:center;margin:40px 0}
+.bt{font-size:56px;color:#FF6B6B;font-weight:bold;margin:20px 0;text-shadow:3px 3px 6px rgba(0,0,0,0.2);animation:p 2s infinite}
+.in{font-size:38px;color:#4ECDC4;margin:15px 0;display:flex;align-items:center;justify-content:center;gap:15px}
+.ii{font-size:50px;animation:ib 1.5s infinite}
+.af{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;margin:40px 0}
+.an{width:150px;height:150px;border-radius:50%;cursor:pointer;position:relative;transition:all 0.3s;animation:af 2.5s infinite}
+.an.ca{background:linear-gradient(135deg,#FA709A 0%,#FEE140 100%);box-shadow:0 10px 25px rgba(250,112,154,0.3)}
+.an.d{background:linear-gradient(135deg,#4FACFE 0%,#00F2FE 100%);box-shadow:0 10px 25px rgba(79,172,254,0.3);animation-delay:0.3s}
+.an.ra{background:linear-gradient(135deg,#A8EDEA 0%,#FED6E3 100%);box-shadow:0 10px 25px rgba(168,237,234,0.3);animation-delay:0.6s}
+.an::before{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:70px;transition:all 0.3s}
+.an.ca::before{content:'🐱'}
+.an.d::before{content:'🐶'}
+.an.ra::before{content:'🐰'}
+.an:hover{transform:scale(1.3) rotate(10deg)}
+.an:hover::before{font-size:90px}
+.rs{display:flex;justify-content:center;align-items:center;gap:30px;margin:40px 0}
+.sr{width:100px;height:100px;background:linear-gradient(135deg,#FFD700 0%,#FFA500 100%);clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);animation:st 1.5s infinite;cursor:pointer;transition:all 0.3s}
+.sr:hover{transform:scale(1.5) rotate(72deg)}
+.con{position:relative;width:120px;height:120px;background:linear-gradient(135deg,#FF6B6B 0%,#4ECDC4 100%);border-radius:50%;cursor:pointer;animation:cs 2s linear infinite}
+.con::before{content:'🎉';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:60px}
+.av{display:flex;justify-content:center;align-items:center;gap:40px;margin:40px 0}
+.sb{width:160px;height:160px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;border-radius:50%;cursor:pointer;position:relative;animation:sp 2s infinite;box-shadow:0 15px 30px rgba(102,126,234,0.3)}
+.sb::before{content:'🔊';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:70px}
+.sw{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border:3px solid rgba(102,126,234,0.3);border-radius:50%;animation:we 2s infinite}
+.pd{margin:40px 0;text-align:center}
+.pb{width:80%;height:30px;background:rgba(255,255,255,0.3);border-radius:15px;margin:20px auto;overflow:hidden;position:relative}
+.pf{height:100%;background:linear-gradient(90deg,#FF6B6B 0%,#4ECDC4 50%,#FFE66D 100%);border-radius:15px;width:65%;animation:pg 3s infinite;position:relative}
+.pf::after{content:'⭐';position:absolute;right:-15px;top:50%;transform:translateY(-50%);font-size:40px;animation:sb 1s infinite}
+.de{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.fe{position:absolute;font-size:40px;animation:fa 6s infinite}
+.fe:nth-child(1){top:10%;left:10%;animation-delay:0s}
+.fe:nth-child(2){top:20%;right:10%;animation-delay:2s}
+.fe:nth-child(3){bottom:20%;left:15%;animation-delay:4s}
+.fe:nth-child(4){bottom:10%;right:15%;animation-delay:1s}
+.sp{display:flex;justify-content:center;gap:30px;flex-wrap:wrap;margin:40px 0}
+.sh{width:120px;height:120px;cursor:pointer;transition:all 0.3s;animation:sf 2s infinite}
+.sh.ci{background:linear-gradient(135deg,#FF9A9E 0%,#FECFEF 100%);border-radius:50%}
+.sh.sq{background:linear-gradient(135deg,#A8EDEA 0%,#FED6E3 100%);border-radius:20px;animation-delay:0.5s}
+.sh.tr{background:linear-gradient(135deg,#FFE66D 0%,#FF9A9E 100%);clip-path:polygon(50% 0%,0% 100%,100% 100%);animation-delay:1s}
+.sh:hover{transform:scale(1.4) rotate(15deg)}
+@keyframes a{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes b{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes w{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+@keyframes f{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes p{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+@keyframes ib{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes af{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-10px) rotate(2deg)}}
+@keyframes st{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(1.2)}}
+@keyframes cs{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes sp{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+@keyframes we{0%{transform:translate(-50%,-50%) scale(0.8);opacity:1}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
+@keyframes pg{0%{width:0%}100%{width:65%}}
+@keyframes sb{0%,100%{transform:translateY(-50%) scale(1)}50%{transform:translateY(-50%) scale(1.3)}}
+@keyframes fa{0%,100%{transform:translateY(0px) rotate(0deg)}33%{transform:translateY(-15px) rotate(5deg)}66%{transform:translateY(-8px) rotate(-3deg)}}
+@keyframes sf{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(5deg)}}
+@keyframes r{0%{transform:translate(-50%,-50%) rotate(0deg)}100%{transform:translate(-50%,-50%) rotate(360deg)}}
+@media (max-width:768px){
+.t{font-size:48px}
+.st{font-size:36px}
+.bt{font-size:42px}
+.in{font-size:32px}
+.co{width:250px;height:250px}
+.cf{width:200px;height:200px}
+.btn{width:140px;height:140px;font-size:60px}
+.an{width:120px;height:120px}
+.s{padding:20px}
+}
+</style>
+</head>
+<body>
+<div class="c">
+<h1 class="t">🎈 ВІЗУАЛЬНІ КОМПОНЕНТИ 2-3 РОКИ</h1>
+<div class="s">
+<h2 class="st">🌟 Головні елементи</h2>
+<div class="h">
+<div class="co" onclick="playSound('sun')"></div>
+<div class="cf" onclick="playSound('bear')"></div>
+</div>
+</div>
+<div class="s">
+<h2 class="st">🎮 Великі інтерактивні кнопки</h2>
+<div class="bb">
+<button class="btn p" onclick="playSound('play')">▶️</button>
+<button class="btn m" onclick="playSound('music')">🎵</button>
+<button class="btn pa" onclick="playSound('paint')">🎨</button>
+</div>
+</div>
+<div class="s">
+<h2 class="st">📝 Текстові елементи</h2>
+<div class="te">
+<div class="bt">ПРИВІТ!</div>
+<div class="in">
+<span class="ii">👆</span>
+Натисни тут
+</div>
+<div class="in">
+<span class="ii">🎵</span>
+Слухай пісню
+</div>
+</div>
+</div>
+<div class="s">
+<h2 class="st">🐾 Тваринки-друзі</h2>
+<div class="af">
+<div class="an ca" onclick="playAnimalSound('cat')"></div>
+<div class="an d" onclick="playAnimalSound('dog')"></div>
+<div class="an ra" onclick="playAnimalSound('rabbit')"></div>
+</div>
+</div>
+<div class="s">
+<h2 class="st">🏆 Система винагород</h2>
+<div class="rs">
+<div class="sr" onclick="playSound('star')"></div>
+<div class="sr" onclick="playSound('star')"></div>
+<div class="sr" onclick="playSound('star')"></div>
+<div class="con" onclick="playSound('celebration')"></div>
+</div>
+</div>
+<div class="s">
+<h2 class="st">🔊 Аудіо-візуальні елементи</h2>
+<div class="av">
+<div style="position:relative">
+<button class="sb" onclick="playSound('hello')"></button>
+<div class="sw"></div>
+</div>
+</div>
+</div>
+<div class="s">
+<h2 class="st">📊 Прогрес навчання</h2>
+<div class="pd">
+<div class="bt">МОЛОДЕЦЬ!</div>
+<div class="pb">
+<div class="pf"></div>
+</div>
+</div>
+</div>
+<div class="s">
+<h2 class="st">🔺 Геометричні форми</h2>
+<div class="sp">
+<div class="sh ci" onclick="playSound('circle')"></div>
+<div class="sh sq" onclick="playSound('square')"></div>
+<div class="sh tr" onclick="playSound('triangle')"></div>
+</div>
+</div>
+<div class="de">
+<div class="fe">🌟</div>
+<div class="fe">🦋</div>
+<div class="fe">🌈</div>
+<div class="fe">🎈</div>
+</div>
+</div>
+<script>
+let audioContext,speechSynthesis=window.speechSynthesis;
+function initAudio(){if(!audioContext){try{audioContext=new(window.AudioContext||window.webkitAudioContext)()}catch(e){console.warn('Web Audio API не підтримується')}}return audioContext}
+function playTone(f,d,v=0.1){const ctx=initAudio();if(!ctx)return;const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=f;o.type='sine';g.gain.setValueAtTime(0,ctx.currentTime);g.gain.linearRampToValueAtTime(v,ctx.currentTime+0.01);g.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+d);o.start(ctx.currentTime);o.stop(ctx.currentTime+d)}
+function speak(text,options={}){if(!speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=0.7;u.pitch=1.3;u.volume=0.8;u.lang='uk-UA';Object.assign(u,options);speechSynthesis.speak(u)}
+function playSound(type){if(audioContext&&audioContext.state==='suspended')audioContext.resume();
+const sounds={
+sun:()=>{playTone(523,0.3,0.15);setTimeout(()=>playTone(659,0.3,0.15),300);setTimeout(()=>speak('Привіт! Я сонечко!'),600)},
+bear:()=>{playTone(220,0.5,0.2);setTimeout(()=>speak('Привіт! Я ведмідь!'),500)},
+play:()=>{playTone(440,0.2,0.15);setTimeout(()=>playTone(554,0.2,0.15),200);setTimeout(()=>speak('Граємо разом!'),400)},
+music:()=>{playTone(523,0.15);setTimeout(()=>playTone(659,0.15),150);setTimeout(()=>playTone(784,0.15),300);setTimeout(()=>playTone(1047,0.3),450);setTimeout(()=>speak('Музика грає!'),800)},
+paint:()=>{playTone(800,0.1);setTimeout(()=>playTone(600,0.1),100);setTimeout(()=>playTone(400,0.1),200);setTimeout(()=>speak('Малюємо!'),300)},
+star:()=>{playTone(1047,0.2);setTimeout(()=>playTone(1319,0.3),200);setTimeout(()=>speak('Зірочка!'),500)},
+celebration:()=>{playTone(523,0.15);setTimeout(()=>playTone(659,0.15),150);setTimeout(()=>playTone(784,0.15),300);setTimeout(()=>playTone(1047,0.15),450);setTimeout(()=>playTone(1319,0.3),600);setTimeout(()=>speak('Ура! Молодець!'),900)},
+hello:()=>{playTone(440,0.3);setTimeout(()=>speak('Привіт, малюк!'),300)},
+circle:()=>{playTone(523,0.2);setTimeout(()=>speak('Кружок!'),200)},
+square:()=>{playTone(659,0.2);setTimeout(()=>speak('Квадрат!'),200)},
+triangle:()=>{playTone(784,0.2);setTimeout(()=>speak('Трикутник!'),200)}
+};
+if(sounds[type])sounds[type]()}
+function playAnimalSound(animal){if(audioContext&&audioContext.state==='suspended')audioContext.resume();
+const animals={
+cat:()=>{playTone(800,0.2);setTimeout(()=>playTone(600,0.2),200);setTimeout(()=>speak('Мяу-мяу!'),400)},
+dog:()=>{playTone(300,0.3);setTimeout(()=>playTone(400,0.3),300);setTimeout(()=>speak('Гав-гав!'),600)},
+rabbit:()=>{playTone(1000,0.1);setTimeout(()=>playTone(1200,0.1),100);setTimeout(()=>playTone(1000,0.1),200);setTimeout(()=>speak('Стрибаю!'),300)}
+};
+if(animals[animal])animals[animal]()}
+document.addEventListener('click',function(e){if(e.target.classList.contains('btn')||e.target.classList.contains('an')||e.target.classList.contains('co')){const r=document.createElement('div');r.style.cssText='position:absolute;border-radius:50%;background:rgba(255,255,255,0.6);transform:scale(0);animation:ripple 0.6s linear;pointer-events:none';const rect=e.target.getBoundingClientRect(),size=Math.max(rect.width,rect.height);r.style.width=r.style.height=size+'px';r.style.left=(e.clientX-rect.left-size/2)+'px';r.style.top=(e.clientY-rect.top-size/2)+'px';e.target.style.position='relative';e.target.appendChild(r);setTimeout(()=>r.remove(),600)}});
+const style=document.createElement('style');style.textContent='@keyframes ripple{to{transform:scale(4);opacity:0}}';document.head.appendChild(style);
+document.addEventListener('DOMContentLoaded',function(){setTimeout(()=>speak('Привіт! Натискай на кольорові кнопки!',{rate:0.8,pitch:1.2}),1000);console.log('🎈 Візуальні компоненти для дітей 2-3 років завантажено!')});
+document.addEventListener('touchstart',function(e){if(audioContext&&audioContext.state==='suspended')audioContext.resume()});
+</script>
+</body>
+</html> 

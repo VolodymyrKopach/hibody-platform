@@ -1,10 +1,19 @@
-import { useState, useCallback, useEffect } from 'react';
-import { Message } from '@/types/chat';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Message, SimpleLesson } from '@/types/chat';
 import { ChatServiceAPIAdapter } from '@/services/chat/ChatServiceAPIAdapter';
 import { useRealTimeSlideGeneration } from './useRealTimeSlideGeneration';
 import { useSlideProgressSSE } from './useSlideProgressSSE';
 
+
+
 export const useChatLogic = () => {
+  // Ref для динамічного callback
+  const onLessonUpdateRef = useRef<((lesson: SimpleLesson) => void) | null>(null);
+  
+  // Функція для встановлення callback
+  const setOnLessonUpdate = useCallback((callback: (lesson: SimpleLesson) => void) => {
+    onLessonUpdateRef.current = callback;
+  }, []);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -36,6 +45,12 @@ export const useChatLogic = () => {
           // Оновлюємо урок якщо є
           if (data.lesson) {
             lastMessage.lesson = data.lesson;
+            
+            // === ВИКЛИК CALLBACK ДЛЯ ОНОВЛЕННЯ ПАНЕЛІ СЛАЙДІВ ===
+            if (onLessonUpdateRef.current && data.newSlide) {
+              console.log(`🎨 [CHAT] Lesson updated with new slide: "${data.newSlide.title}"`);
+              onLessonUpdateRef.current(data.lesson);
+            }
           }
             
             // Примусово оновлюємо повідомлення для тригеру useEffect
@@ -327,6 +342,9 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     
     // Додаємо інформацію про SSE прогрес
     isSSEGenerating,
-    currentProgress
+    currentProgress,
+    
+    // Функція для встановлення callback оновлення уроку
+    setOnLessonUpdate
   };
 }; 

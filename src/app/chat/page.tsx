@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
@@ -41,7 +41,8 @@ const ChatInterface: React.FC = () => {
     sendMessage,
     regenerateMessage,
     handleFeedback: provideFeedback,
-    handleActionClick
+    handleActionClick,
+    setOnLessonUpdate
   } = useChatLogic();
 
   // Управління слайдами
@@ -64,11 +65,15 @@ const ChatInterface: React.FC = () => {
     saveSelectedSlides,
     generateSlidePreview,
     regenerateSlidePreview,
-
     updateCurrentLesson,
     toggleSlidePanelOpen,
     exportLesson
   } = useSlideManagement(messages, setMessages);
+
+  // Встановлюємо callback для оновлення уроку після ініціалізації
+  useEffect(() => {
+    setOnLessonUpdate(updateCurrentLesson);
+  }, [setOnLessonUpdate, updateCurrentLesson]);
 
   // Стан для діалогу конструктора генерації
   const [generationConstructorOpen, setGenerationConstructorOpen] = React.useState(false);
