@@ -47,8 +47,9 @@ export const useChatLogic = () => {
             lastMessage.lesson = data.lesson;
             
             // === ВИКЛИК CALLBACK ДЛЯ ОНОВЛЕННЯ ПАНЕЛІ СЛАЙДІВ ===
-            if (onLessonUpdateRef.current && data.newSlide) {
-              console.log(`🎨 [CHAT] Lesson updated with new slide: "${data.newSlide.title}"`);
+            if (onLessonUpdateRef.current) {
+              const slideInfo = data.newSlide ? `with new slide: "${data.newSlide.title}"` : `with ${data.lesson.slides?.length || 0} slides`;
+              console.log(`🎨 [CHAT] Lesson updated ${slideInfo}`);
               onLessonUpdateRef.current(data.lesson);
             }
           }
@@ -72,6 +73,12 @@ export const useChatLogic = () => {
           (lastMessage as any).slideGenerationProgress = data.finalProgress;
           (lastMessage as any).isGeneratingSlides = false;
           lastMessage.lesson = data.lesson;
+          
+          // === ВИКЛИК CALLBACK ДЛЯ ФІНАЛЬНОГО ОНОВЛЕННЯ ПАНЕЛІ СЛАЙДІВ ===
+          if (onLessonUpdateRef.current) {
+            console.log(`🎉 [CHAT] Final lesson update with ${data.lesson.slides?.length || 0} slides`);
+            onLessonUpdateRef.current(data.lesson);
+          }
           
           // Прибираємо кнопку скасування після завершення генерації
           lastMessage.availableActions = lastMessage.availableActions?.filter(

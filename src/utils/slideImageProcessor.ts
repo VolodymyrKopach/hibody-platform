@@ -28,6 +28,51 @@ export interface GeneratedImageInfo {
 const IMAGE_COMMENT_REGEX = /<!--\s*IMAGE_PROMPT:\s*"([^"]+)"\s+WIDTH:\s*(\d+)\s+HEIGHT:\s*(\d+)\s*-->/gi;
 
 /**
+ * Валідує та корегує розміри зображення для FLUX API
+ */
+function validateAndCorrectDimensions(width: number, height: number): { width: number; height: number; corrected: boolean } {
+  const original = { width, height };
+  let corrected = false;
+  
+  // 1. Спочатку переконуємось що розміри в допустимих межах
+  const MIN_SIZE = 256; // Мінімум для FLUX
+  const MAX_SIZE = 1536; // Максимум для швидкості
+  
+  if (width < MIN_SIZE || height < MIN_SIZE || width > MAX_SIZE || height > MAX_SIZE) {
+    width = Math.min(Math.max(width, MIN_SIZE), MAX_SIZE);
+    height = Math.min(Math.max(height, MIN_SIZE), MAX_SIZE);
+    corrected = true;
+  }
+  
+  // 2. Переконуємось що розміри кратні 16 (обов'язково для FLUX)
+  if (width % 16 !== 0) {
+    width = Math.round(width / 16) * 16;
+    corrected = true;
+  }
+  
+  if (height % 16 !== 0) {
+    height = Math.round(height / 16) * 16;
+    corrected = true;
+  }
+  
+  // 3. Ще раз перевіряємо межі після корекції кратності
+  if (width < MIN_SIZE) {
+    width = MIN_SIZE;
+    corrected = true;
+  }
+  if (height < MIN_SIZE) {
+    height = MIN_SIZE;
+    corrected = true;
+  }
+  
+  if (corrected) {
+    console.log(`📐 Dimension correction: ${original.width}x${original.height} → ${width}x${height}`);
+  }
+  
+  return { width, height, corrected };
+}
+
+/**
  * Витягує всі IMAGE_PROMPT коментарі з HTML
  */
 export function extractImagePrompts(htmlContent: string): ImagePromptComment[] {
@@ -39,56 +84,29 @@ export function extractImagePrompts(htmlContent: string): ImagePromptComment[] {
   
   while ((match = IMAGE_COMMENT_REGEX.exec(htmlContent)) !== null) {
     const [fullComment, prompt, widthStr, heightStr] = match;
-    const width = parseInt(widthStr);
-    const height = parseInt(heightStr);
+    const originalWidth = parseInt(widthStr);
+    const originalHeight = parseInt(heightStr);
     
-    // Валідація розмірів (мають бути кратні 16 для FLUX)
-    if (width % 16 !== 0 || height % 16 !== 0) {
-      console.warn(`⚠️ Image dimensions must be divisible by 16. Found: ${width}x${height}`);
-      // Автоматично корегуємо розміри
-      const correctedWidth = Math.round(width / 16) * 16;
-      const correctedHeight = Math.round(height / 16) * 16;
-      console.log(`🔧 Auto-correcting to: ${correctedWidth}x${correctedHeight}`);
-      
-      prompts.push({
-        fullComment,
-        prompt: prompt.trim(),
-        width: correctedWidth,
-        height: correctedHeight,
-        index: match.index
-      });
+    // Валідуємо та корегуємо розміри
+    const { width, height, corrected } = validateAndCorrectDimensions(originalWidth, originalHeight);
+    
+    if (corrected) {
+      console.warn(`⚠️ Image dimensions corrected for FLUX compatibility`);
+    }
+    
+    // Валідуємо промпт
+    if (!prompt || prompt.trim().length === 0) {
+      console.warn(`⚠️ Empty image prompt found, skipping`);
       continue;
     }
     
-    // Валідація мінімальних та максимальних розмірів (знижуємо мінімум до 128)
-    if (width < 128 || height < 128 || width > 1536 || height > 1536) {
-      console.warn(`⚠️ Image dimensions out of range (128-1536). Found: ${width}x${height}`);
-      // Автоматично корегуємо розміри
-      const clampedWidth = Math.min(Math.max(width, 128), 1536);
-      const clampedHeight = Math.min(Math.max(height, 128), 1536);
-      
-      // Переконуємося що скореговані розміри кратні 16
-      const correctedWidth = Math.round(clampedWidth / 16) * 16;
-      const correctedHeight = Math.round(clampedHeight / 16) * 16;
-      
-      console.log(`🔧 Auto-correcting to: ${correctedWidth}x${correctedHeight}`);
-      
-      prompts.push({
-        fullComment,
-        prompt: prompt.trim(),
-        width: correctedWidth,
-        height: correctedHeight,
-        index: match.index
-      });
-      continue;
-    }
-    
+    // Додаємо до результату
     prompts.push({
       fullComment,
       prompt: prompt.trim(),
       width,
       height,
-      index: match.index
+      index: match.index || 0
     });
   }
   
@@ -96,24 +114,7 @@ export function extractImagePrompts(htmlContent: string): ImagePromptComment[] {
   return prompts;
 }
 
-/**
- * Валідує та корегує розміри зображення для FLUX API
- */
-export function validateAndFixDimensions(width: number, height: number): { width: number; height: number } {
-  // Округлюємо до найближчого числа кратного 16
-  const fixedWidth = Math.round(width / 16) * 16;
-  const fixedHeight = Math.round(height / 16) * 16;
-  
-  // Обмежуємо діапазон (знижуємо мінімум до 128)
-  const clampedWidth = Math.min(Math.max(fixedWidth, 128), 1536);
-  const clampedHeight = Math.min(Math.max(fixedHeight, 128), 1536);
-  
-  if (clampedWidth !== width || clampedHeight !== height) {
-    console.log(`📐 Fixed dimensions: ${width}x${height} → ${clampedWidth}x${clampedHeight}`);
-  }
-  
-  return { width: clampedWidth, height: clampedHeight };
-}
+
 
 /**
  * Функція затримки для rate limiting
@@ -185,7 +186,7 @@ export async function generateAllImages(prompts: ImagePromptComment[]): Promise<
   // Генеруємо зображення послідовно з затримкою 1.5 секунди між запитами
   for (let index = 0; index < prompts.length; index++) {
     const promptData = prompts[index];
-    const { width, height } = validateAndFixDimensions(promptData.width, promptData.height);
+    const { width, height } = validateAndCorrectDimensions(promptData.width, promptData.height);
     
     console.log(`📸 [${index + 1}/${prompts.length}] Generating: "${promptData.prompt.substring(0, 50)}..." (${width}x${height})`);
     
@@ -265,54 +266,95 @@ export function replaceImageComments(
   prompts: ImagePromptComment[], 
   generatedImages: GeneratedImageInfo[]
 ): string {
-  if (prompts.length === 0 || generatedImages.length === 0) {
+  if (prompts.length === 0) {
+    console.log('📝 No image prompts found to replace');
     return htmlContent;
   }
   
   let processedHtml = htmlContent;
+  let replacements = 0;
+  
+  console.log(`🔄 Processing ${prompts.length} image prompts with ${generatedImages.length} generated images`);
   
   // Обробляємо коментарі від кінця до початку щоб не зіпсувати індекси
   for (let i = prompts.length - 1; i >= 0; i--) {
     const prompt = prompts[i];
     const imageData = generatedImages[i];
     
+    let replacement: string;
+    
     if (imageData && imageData.success && imageData.base64Image) {
-      // Створюємо img тег з base64 зображенням
-      const imgTag = `<img src="data:image/webp;base64,${imageData.base64Image}" 
-        alt="${imageData.prompt}" 
+      // Успішно згенероване зображення
+      replacement = `<img src="data:image/webp;base64,${imageData.base64Image}" 
+        alt="${imageData.prompt.replace(/"/g, '&quot;')}" 
         width="${imageData.width}" 
         height="${imageData.height}"
-        style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
-        loading="lazy" />`;
+        style="
+          max-width: 100%; 
+          height: auto; 
+          border-radius: 12px; 
+          box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+          display: block;
+          margin: 15px auto;
+          object-fit: cover;
+        "
+        loading="lazy" 
+        data-prompt="${imageData.prompt.replace(/"/g, '&quot;')}"
+        data-model="${imageData.model}"
+        data-generated="true" />`;
       
-      // Замінюємо коментар на img тег
-      processedHtml = processedHtml.replace(prompt.fullComment, imgTag);
-      
-      console.log(`🔄 Replaced comment ${i + 1}: "${prompt.prompt.substring(0, 30)}..."`);
+      console.log(`✅ Replacing comment ${i + 1} with generated image (${imageData.width}x${imageData.height})`);
     } else {
-      // Якщо генерація не вдалася, замінюємо на placeholder
-      const placeholderImg = `<div style="
+      // Невдала генерація або відсутнє зображення
+      const errorInfo = imageData ? 'Generation failed' : 'No image data';
+      replacement = `<div style="
         width: ${prompt.width}px; 
         height: ${prompt.height}px; 
-        background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
-        border: 2px dashed #ccc;
-        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: 3px dashed rgba(255,255,255,0.3);
+        border-radius: 16px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        color: #666;
+        color: white;
         font-family: 'Comic Sans MS', cursive;
         text-align: center;
-        font-size: 14px;
+        font-size: 16px;
         max-width: 100%;
-      ">
-        🖼️<br/>Зображення<br/>недоступне
+        margin: 15px auto;
+        position: relative;
+        overflow: hidden;
+      " data-failed-prompt="${prompt.prompt.replace(/"/g, '&quot;')}">
+        <div style="font-size: 32px; margin-bottom: 8px;">🎨</div>
+        <div style="font-weight: bold; margin-bottom: 4px;">Зображення генерується...</div>
+        <div style="font-size: 12px; opacity: 0.8; max-width: 80%; word-wrap: break-word;">
+          ${prompt.prompt.substring(0, 60)}${prompt.prompt.length > 60 ? '...' : ''}
+        </div>
+        <div style="font-size: 10px; opacity: 0.6; margin-top: 4px;">⚠️ ${errorInfo}</div>
       </div>`;
       
-      processedHtml = processedHtml.replace(prompt.fullComment, placeholderImg);
-      
-      console.log(`🔄 Replaced failed comment ${i + 1} with placeholder`);
+      console.log(`⚠️ Replacing comment ${i + 1} with placeholder: ${errorInfo}`);
     }
+    
+    // Перевіряємо чи коментар ще існує в HTML
+    if (processedHtml.includes(prompt.fullComment)) {
+      processedHtml = processedHtml.replace(prompt.fullComment, replacement);
+      replacements++;
+    } else {
+      console.warn(`⚠️ Comment ${i + 1} not found in HTML: "${prompt.fullComment.substring(0, 50)}..."`);
+    }
+  }
+  
+  console.log(`🎯 Completed ${replacements}/${prompts.length} image replacements`);
+  
+  // Також шукаємо та замінюємо placeholder div'и, які могли бути створені Gemini
+  const placeholderRegex = /<div[^>]*>🖼️[^<]*Image will be generated here[^<]*<\/div>/gi;
+  const placeholderMatches = processedHtml.match(placeholderRegex);
+  
+  if (placeholderMatches && placeholderMatches.length > 0) {
+    console.log(`🔍 Found ${placeholderMatches.length} placeholder divs to clean up`);
+    processedHtml = processedHtml.replace(placeholderRegex, '<!-- Placeholder div removed -->');
   }
   
   return processedHtml;

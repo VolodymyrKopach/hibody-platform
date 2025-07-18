@@ -83,21 +83,88 @@ export async function generateImage(params: ImageGenerationRequest): Promise<Ima
   }
 }
 
+// Освітні теми та їх характеристики
+const educationalTopics = {
+  math: {
+    keywords: ['numbers', 'counting', 'shapes', 'addition', 'subtraction', 'geometry'],
+    style: 'colorful mathematical symbols, friendly number characters, geometric patterns'
+  },
+  science: {
+    keywords: ['nature', 'animals', 'plants', 'experiments', 'discovery', 'exploration'],
+    style: 'scientific illustrations, nature scenes, laboratory equipment, discovery elements'
+  },
+  language: {
+    keywords: ['letters', 'alphabet', 'reading', 'writing', 'books', 'stories'],
+    style: 'playful typography, book illustrations, storytelling scenes, letter characters'
+  },
+  history: {
+    keywords: ['past', 'timeline', 'culture', 'traditions', 'ancient', 'historical'],
+    style: 'historical illustrations, cultural elements, timeline graphics, period-appropriate'
+  },
+  art: {
+    keywords: ['colors', 'creativity', 'drawing', 'painting', 'crafts', 'design'],
+    style: 'artistic elements, paint brushes, color palettes, creative compositions'
+  },
+  default: {
+    keywords: ['learning', 'education', 'knowledge', 'discovery', 'fun'],
+    style: 'educational elements, learning materials, knowledge symbols'
+  }
+};
+
+// Вікові групи та їх характеристики
+const ageGroupStyles = {
+  '2-3': 'very simple shapes, large elements, primary colors, minimal detail, baby-friendly',
+  '4-6': 'cartoon style, bright primary colors, simple characters, playful elements',
+  '7-8': 'detailed illustrations, educational focus, clear learning elements, engaging design',
+  '9-10': 'sophisticated illustrations, complex concepts, detailed graphics, academic style',
+  '11-13': 'realistic illustrations, advanced concepts, detailed educational content',
+  '14+': 'professional educational graphics, complex visual information, mature design'
+};
+
 // Функція для створення освітніх промптів для дітей
 export function createEducationalImagePrompt(
   topic: string, 
   ageGroup: string, 
   style: 'cartoon' | 'realistic' | 'illustration' = 'cartoon'
 ): string {
-  const basePrompt = `High-quality ${style} style educational illustration for children (age ${ageGroup}) about ${topic}.`;
+  // Визначаємо тематику
+  const topicLower = topic.toLowerCase();
+  let topicInfo = educationalTopics.default;
   
+  for (const [key, value] of Object.entries(educationalTopics)) {
+    if (value.keywords.some(keyword => topicLower.includes(keyword))) {
+      topicInfo = value;
+      break;
+    }
+  }
+  
+  // Визначаємо стиль для вікової групи
+  const ageStyle = ageGroupStyles[ageGroup as keyof typeof ageGroupStyles] || ageGroupStyles['7-8'];
+  
+  // Базовий промпт
+  const basePrompt = `Educational ${style} illustration for children aged ${ageGroup}`;
+  
+  // Стильові модифікатори
   const styleModifiers = {
-    cartoon: 'Bright colors, friendly characters, simple shapes, child-friendly design',
-    realistic: 'Photorealistic but appropriate for children, clear details, educational focus',
-    illustration: 'Digital art style, vibrant colors, educational elements, engaging composition'
+    cartoon: 'cartoon style, animated characters, fun and playful',
+    realistic: 'realistic but child-friendly, clear and detailed',
+    illustration: 'digital art illustration, vibrant and engaging'
   };
-
-  return `${basePrompt} ${styleModifiers[style]}. Safe for children, educational content, no scary elements, positive and engaging atmosphere.`;
+  
+  // Формуємо фінальний промпт
+  const finalPrompt = [
+    basePrompt,
+    `about "${topic}"`,
+    styleModifiers[style],
+    topicInfo.style,
+    ageStyle,
+    'high quality, professional educational content',
+    'safe for children, positive atmosphere',
+    'clear and engaging visual learning',
+    'bright lighting, sharp focus'
+  ].join(', ');
+  
+  return finalPrompt;
 }
 
 // Функція для визначення оптимальних розмірів зображення для освітнього контенту

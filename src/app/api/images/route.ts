@@ -1,5 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Функція для покращення освітніх промптів
+function enhanceEducationalPrompt(originalPrompt: string): string {
+  // Базові модифікатори для освітніх зображень
+  const educationalModifiers = [
+    'educational content',
+    'child-friendly',
+    'safe for children',
+    'bright and engaging',
+    'high quality illustration',
+    'clear and detailed',
+    'positive learning environment'
+  ];
+  
+  // Технічні модифікатори для FLUX
+  const technicalModifiers = [
+    'professional digital art',
+    'vibrant colors',
+    'sharp focus',
+    'well-lit',
+    'clean composition',
+    'highly detailed'
+  ];
+  
+  // Перевіряємо чи промпт вже містить освітні елементи
+  const hasEducationalTerms = educationalModifiers.some(term => 
+    originalPrompt.toLowerCase().includes(term.toLowerCase())
+  );
+  
+  // Якщо вже містить освітні терміни, додаємо тільки технічні
+  if (hasEducationalTerms) {
+    return `${originalPrompt}, ${technicalModifiers.slice(0, 3).join(', ')}`;
+  }
+  
+  // Інакше додаємо і освітні і технічні модифікатори
+  const selectedEducational = educationalModifiers.slice(0, 3);
+  const selectedTechnical = technicalModifiers.slice(0, 2);
+  
+  return `${originalPrompt}, ${[...selectedEducational, ...selectedTechnical].join(', ')}`;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { prompt, aspectRatio = '16:9', width = 1024, height = 768 } = await request.json();
@@ -41,7 +81,11 @@ export async function POST(request: NextRequest) {
       adjusted: `${finalWidth}x${finalHeight}`
     });
 
+    // Покращуємо промпт для освітнього контенту
+    const enhancedPrompt = enhanceEducationalPrompt(prompt);
+    
     console.log('📤 [Images API] Calling FLUX API...');
+    console.log('🎨 [Images API] Enhanced prompt:', enhancedPrompt.substring(0, 100) + '...');
     
     const response = await fetch('https://api.together.xyz/v1/images/generations', {
       method: 'POST',
@@ -51,12 +95,15 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         model: 'black-forest-labs/FLUX.1-schnell',
-        prompt: prompt,
+        prompt: enhancedPrompt,
         width: finalWidth,
         height: finalHeight,
-        steps: 4,
+        steps: 4, // Швидка генерація
         n: 1,
         response_format: 'b64_json',
+        // Додаткові параметри для кращої якості освітніх зображень
+        guidance_scale: 3.5, // Помірне дотримання промпту
+        seed: Math.floor(Math.random() * 1000000), // Випадкове зерно для різноманітності
       }),
     });
 
