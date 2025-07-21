@@ -48,24 +48,6 @@ export class GeminiIntentService implements IIntentDetectionService {
     }
   }
 
-  private detectLanguage(message: string): 'uk' | 'en' {
-    // Simple language detection based on character patterns
-    const ukrainianPattern = /[іїєґяюэыё]/i;
-    const englishPattern = /[a-z]/i;
-    
-    const hasUkrainian = ukrainianPattern.test(message);
-    const hasEnglish = englishPattern.test(message);
-    
-    // If has Ukrainian characters, it's Ukrainian
-    if (hasUkrainian) return 'uk';
-    
-    // If only English characters, it's English
-    if (hasEnglish && !hasUkrainian) return 'en';
-    
-    // Default to Ukrainian for this platform
-    return 'uk';
-  }
-
   private buildGeminiPrompt(message: string, conversationHistory?: any, userLanguage: 'uk' | 'en' = 'uk'): string {
     // Build context information
     let contextInfo = '';
