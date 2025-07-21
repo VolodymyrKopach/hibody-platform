@@ -22,6 +22,7 @@ export class GeminiIntentService implements IIntentDetectionService {
   }
 
   async detectIntent(message: string, conversationHistory?: any): Promise<EnhancedIntentDetectionResult> {
+    // Let AI detect language naturally instead of hardcoded detection
     const prompt = this.buildGeminiPrompt(message, conversationHistory);
 
     try {
@@ -48,7 +49,7 @@ export class GeminiIntentService implements IIntentDetectionService {
     }
   }
 
-  private buildGeminiPrompt(message: string, conversationHistory?: any, userLanguage: 'uk' | 'en' = 'uk'): string {
+  private buildGeminiPrompt(message: string, conversationHistory?: any): string {
     // Build context information
     let contextInfo = '';
     if (conversationHistory) {
@@ -77,8 +78,7 @@ TASK: Analyze the user's message and conversation context, then:
 3. Check if sufficient data is available
 4. If NOT sufficient - indicate what needs to be asked
 
-USER'S LANGUAGE: ${userLanguage}
-IMPORTANT: All suggested questions and responses should be in ${userLanguage === 'uk' ? 'UKRAINIAN' : 'ENGLISH'} language!
+IMPORTANT: Detect the user's language from their message and respond in the SAME language!
 
 SUPPORTED INTENTS (exact values):
 - CREATE_LESSON: create a lesson (requires: topic, age)
@@ -102,8 +102,10 @@ PARAMETERS to extract:
 
 INTENT DETECTION LOGIC:
 
-1. **CREATE_LESSON** - if user wants to create a lesson:
-   - Phrases: "create lesson", "make lesson", "lesson about", "teach children"
+1. **CREATE_LESSON** - if user explicitly wants to create a lesson:
+   - EXPLICIT phrases: "create lesson", "make lesson", "lesson about", "teach children", "створи урок", "зроби урок"
+   - Must have CLEAR intent to create educational content
+   - Just asking about a topic (like "tell me about dinosaurs") is NOT lesson creation
    - REQUIRED: topic (subject) + age (age group)
    - If something missing → isDataSufficient: false
 
@@ -118,15 +120,17 @@ INTENT DETECTION LOGIC:
 4. **HELP** - help request:
    - Phrases: "help", "how to use", "what can you do"
 
-5. **FREE_CHAT** - general communication:
-   - Greetings: "hello", "hi", "good day"
-   - General questions not about lessons
+5. **FREE_CHAT** - general communication and questions:
+   - Greetings: "hello", "hi", "good day", "привіт", "добрий день"
+   - General questions about topics: "tell me about X", "what is Y", "підкажи про X"
+   - Casual conversation without explicit lesson creation intent
+   - Any question that's not explicitly asking to create educational content
 
 RESPONSE FORMAT (JSON):
 {
   "intent": "EXACT_INTENT",
   "confidence": 0.95,
-  "language": "${userLanguage}",
+  "language": "detected_language_code",
   "parameters": {
     "topic": "lesson topic",
     "age": "children age", 
@@ -136,37 +140,68 @@ RESPONSE FORMAT (JSON):
   },
   "isDataSufficient": true,
   "missingData": [],
-  "suggestedQuestion": "${userLanguage === 'uk' ? 'Question in Ukrainian' : 'Question in English'}"
+  "suggestedQuestion": "Question in the same language as user's message"
 }
 
 ANALYSIS EXAMPLES:
 
-MESSAGE: "${userLanguage === 'uk' ? 'Створи урок про динозаврів' : 'Create a lesson about dinosaurs'}"
-ANALYSIS: has topic="${userLanguage === 'uk' ? 'динозаври' : 'dinosaurs'}", but missing age
+MESSAGE: "Create a lesson about dinosaurs"
+ANALYSIS: has topic="dinosaurs", but missing age
 RESPONSE:
 {
   "intent": "CREATE_LESSON",
   "confidence": 0.95,
-  "language": "${userLanguage}",
+  "language": "en",
   "parameters": {
-    "topic": "${userLanguage === 'uk' ? 'динозаври' : 'dinosaurs'}",
+    "topic": "dinosaurs",
     "age": null,
-    "rawMessage": "${userLanguage === 'uk' ? 'Створи урок про динозаврів' : 'Create a lesson about dinosaurs'}"
+    "rawMessage": "Create a lesson about dinosaurs"
   },
   "isDataSufficient": false,
   "missingData": ["age"],
-  "suggestedQuestion": "${userLanguage === 'uk' ? 'Для дітей якого віку створити урок про динозаврів?' : 'For what age should I create a lesson about dinosaurs?'}"
+  "suggestedQuestion": "For what age should I create a lesson about dinosaurs?"
 }
 
-MESSAGE: "${userLanguage === 'uk' ? 'Наступний слайд' : 'Next slide'}" (with active lesson)
+MESSAGE: "Створи урок про динозаврів"
+ANALYSIS: has topic="динозаври", but missing age
+RESPONSE:
+{
+  "intent": "CREATE_LESSON",
+  "confidence": 0.95,
+  "language": "uk",
+  "parameters": {
+    "topic": "динозаври",
+    "age": null,
+    "rawMessage": "Створи урок про динозаврів"
+  },
+  "isDataSufficient": false,
+  "missingData": ["age"],
+  "suggestedQuestion": "Для дітей якого віку створити урок про динозаврів?"
+}
+
+MESSAGE: "Next slide" (with active lesson)
 RESPONSE:
 {
   "intent": "CREATE_NEW_SLIDE",
   "confidence": 0.98,
-  "language": "${userLanguage}", 
+  "language": "en", 
   "parameters": {
-    "instruction": "${userLanguage === 'uk' ? 'створити наступний слайд' : 'create next slide'}",
-    "rawMessage": "${userLanguage === 'uk' ? 'Наступний слайд' : 'Next slide'}"
+    "instruction": "create next slide",
+    "rawMessage": "Next slide"
+  },
+  "isDataSufficient": true,
+  "missingData": []
+}
+
+MESSAGE: "підкажи хто такі динозаври"
+ANALYSIS: asking about topic, but NOT requesting lesson creation
+RESPONSE:
+{
+  "intent": "FREE_CHAT",
+  "confidence": 0.90,
+  "language": "uk",
+  "parameters": {
+    "rawMessage": "підкажи хто такі динозаври"
   },
   "isDataSufficient": true,
   "missingData": []
@@ -200,7 +235,7 @@ ANALYZE THIS MESSAGE:
       const result: EnhancedIntentDetectionResult = {
         intent: normalizedIntent,
         confidence: parsed.confidence || 0.8,
-        language: parsed.language || 'uk', // Use Gemini detected language
+        language: parsed.language || 'en', // Default to English if not detected
         reasoning: parsed.reasoning || `Intent detected: ${normalizedIntent}`,
         parameters: {
           topic: parsed.parameters?.topic || null,
@@ -234,7 +269,7 @@ ANALYZE THIS MESSAGE:
       return {
         intent: UserIntent.FREE_CHAT,
         confidence: 0.5,
-        language: 'uk', // Default to Ukrainian
+        language: 'en', // Default to English
         reasoning: 'Failed to parse response, defaulting to free chat',
         parameters: {
           rawMessage: originalMessage
@@ -263,4 +298,6 @@ ANALYZE THIS MESSAGE:
 
     return intentMap[intent.toUpperCase()] || UserIntent.FREE_CHAT;
   }
+
+
 } 
