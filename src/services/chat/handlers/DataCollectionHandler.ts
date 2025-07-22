@@ -42,8 +42,10 @@ export class DataCollectionHandler implements IIntentHandler {
     }
     
     // Handle CREATE_LESSON with insufficient data (first request)
+    // Note: conversationHistory is always present (created by API adapter) but may only contain context
     if (intent.intent === UserIntent.CREATE_LESSON && 
-        !conversationHistory && 
+        (!conversationHistory?.step || conversationHistory.step === 'planning') && 
+        !conversationHistory?.planningResult &&
         enhancedIntent.isDataSufficient === false) {
       return true;
     }
@@ -55,21 +57,27 @@ export class DataCollectionHandler implements IIntentHandler {
     const enhancedIntent = intent as EnhancedIntentDetectionResult;
     
     // Handle first request with insufficient data
-    if (!conversationHistory && enhancedIntent.isDataSufficient === false) {
+    if ((!conversationHistory?.step || conversationHistory.step === 'planning') && 
+        !conversationHistory?.planningResult &&
+        enhancedIntent.isDataSufficient === false) {
       console.log('❌ Insufficient data for CREATE_LESSON, asking for missing information');
+      
+      // === PRESERVE CONVERSATION CONTEXT FROM INITIAL REQUEST ===
+      const preservedContext = conversationHistory?.conversationContext;
+      
+      if (preservedContext) {
+        console.log(`📝 [DATA COLLECTION] Preserving conversation context: ${preservedContext.length} chars`);
+      }
       
       return {
         success: true,
-        message: `🤔 ${enhancedIntent.suggestedQuestion || 'Будь ласка, надайте додаткову інформацію для створення уроку.'}
-
-**Приклади:**
-• "для дітей 6 років"
-• "для дошкільнят 4-5 років"  
-• "для школярів 8-10 років"`,
+        message: `🤔 ${enhancedIntent.suggestedQuestion || 'Будь ласка, надайте додаткову інформацію для створення уроку.'}`,
         conversationHistory: {
           step: 'data_collection',
           pendingIntent: enhancedIntent,
-          missingData: enhancedIntent.missingData || []
+          missingData: enhancedIntent.missingData || [],
+          // === PRESERVE CONVERSATION CONTEXT ===
+          conversationContext: preservedContext
         },
         actions: []
       };
@@ -90,16 +98,28 @@ export class DataCollectionHandler implements IIntentHandler {
       
       console.log(`📝 Combined message: "${combinedMessage}"`);
       
+      // === PASS CONVERSATION CONTEXT TO RE-ANALYSIS ===
+      // Preserve the conversation context when re-analyzing intent
+      const contextualConversationHistory = {
+        ...conversationHistory,
+        conversationContext: conversationHistory.conversationContext
+      };
+      
+      if (conversationHistory.conversationContext) {
+        console.log(`📝 [DATA COLLECTION] Using conversation context for re-analysis: ${conversationHistory.conversationContext.length} chars`);
+      }
+      
       // Re-analyze with Gemini to check if we now have sufficient data
-      const reAnalyzedIntent = await this.getGeminiService().detectIntent(combinedMessage, conversationHistory);
+      const reAnalyzedIntent = await this.getGeminiService().detectIntent(combinedMessage, contextualConversationHistory);
 
       console.log(`🎯 Re-analysis result: ${reAnalyzedIntent.intent}, sufficient: ${reAnalyzedIntent.isDataSufficient}`);
 
       if (reAnalyzedIntent.isDataSufficient) {
         console.log('✅ Sufficient data collected, proceeding with lesson creation');
         
-        // Now we have enough data, proceed with lesson creation
-        return await this.getLessonHandler().handle(reAnalyzedIntent);
+        // === PASS CONVERSATION CONTEXT TO LESSON HANDLER ===
+        // Pass the conversation context to the lesson handler for better lesson generation
+        return await this.getLessonHandler().handle(reAnalyzedIntent, contextualConversationHistory);
       } else {
         // Still missing data, ask for more
         console.log(`❌ Still missing data:`, reAnalyzedIntent.missingData);
@@ -111,7 +131,9 @@ export class DataCollectionHandler implements IIntentHandler {
 **Допоможіть уточнити деталі для створення кращого уроку.**`,
           conversationHistory: {
             ...conversationHistory,
-            pendingIntent: reAnalyzedIntent
+            pendingIntent: reAnalyzedIntent,
+            // === PRESERVE CONVERSATION CONTEXT ===
+            conversationContext: conversationHistory.conversationContext
           },
           actions: []
         };
