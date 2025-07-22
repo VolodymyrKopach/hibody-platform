@@ -39,7 +39,5 @@ export enum UserIntent {
   EDIT_SLIDE = 'edit_slide',
   IMPROVE_HTML = 'improve_html',
   FREE_CHAT = 'free_chat',
-  HELP = 'help',
-  EXPORT = 'export',
-  PREVIEW = 'preview'
+  HELP = 'help'
 } 

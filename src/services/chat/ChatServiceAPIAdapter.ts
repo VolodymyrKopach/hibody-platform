@@ -1,5 +1,6 @@
 import { SlideDescription, SimpleLesson, SlideGenerationProgress, SimpleSlide } from '@/types/chat';
 import { ConversationHistory, ChatResponse } from './types';
+import { ContextCompressionService } from '@/services/context/ContextCompressionService';
 
 // Client-side callbacks for real-time updates
 export interface ParallelGenerationCallbacks {
@@ -15,20 +16,117 @@ export interface ParallelGenerationCallbacks {
  */
 export class ChatServiceAPIAdapter {
   private baseURL: string;
+  private compressionService: ContextCompressionService;
 
   constructor() {
     this.baseURL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+    this.compressionService = new ContextCompressionService();
   }
 
   /**
-   * Send chat message to server API
+   * Prepare conversation context by checking tokens and compressing if needed
+   */
+  private async prepareConversationContext(
+    conversationHistory?: ConversationHistory,
+    conversationContext?: string
+  ): Promise<{ 
+    conversationHistory?: ConversationHistory; 
+    compressionApplied: boolean;
+  }> {
+    // If no context provided, return as is
+    if (!conversationContext && !conversationHistory) {
+      return { conversationHistory, compressionApplied: false };
+    }
+
+    // Prepare conversation history object
+    const preparedHistory: ConversationHistory = conversationHistory ? 
+      { ...conversationHistory } : 
+      { step: 'planning' }; // Default step if no conversation history
+
+    // Check conversation context size
+    if (conversationContext) {
+      const contextTokens = this.compressionService.estimateTokens(conversationContext);
+      
+      console.log(`🔍 [API Adapter] Checking context size: ${conversationContext.length} chars (${contextTokens} tokens)`);
+      
+      if (this.compressionService.shouldCompress(conversationContext)) {
+        console.log('🤖 [API Adapter] Compressing context before sending request...');
+        
+        try {
+          const compressedContext = await this.compressionService.adaptiveCompression(conversationContext);
+          const finalTokens = this.compressionService.estimateTokens(compressedContext);
+          
+          console.log(`📉 [API Adapter] Context compressed: ${conversationContext.length} → ${compressedContext.length} chars`);
+          console.log(`📊 [API Adapter] Tokens reduced: ${contextTokens} → ${finalTokens} tokens`);
+          
+          // === PUT COMPRESSED CONTEXT INTO CONVERSATION HISTORY ===
+          preparedHistory.conversationContext = compressedContext;
+          
+          return { 
+            conversationHistory: preparedHistory, 
+            compressionApplied: true 
+          };
+        } catch (error) {
+          console.error('❌ [API Adapter] Context compression failed:', error);
+          
+          // Fallback to simple truncation
+          const parts = conversationContext.split(' | ');
+          const fallbackContext = [parts[0], ...parts.slice(-8)].join(' | ');
+          
+          console.log(`📉 [API Adapter] Using fallback truncation: ${conversationContext.length} → ${fallbackContext.length} chars`);
+          
+          // === PUT FALLBACK CONTEXT INTO CONVERSATION HISTORY ===
+          preparedHistory.conversationContext = fallbackContext;
+          
+          return { 
+            conversationHistory: preparedHistory, 
+            compressionApplied: true 
+          };
+        }
+      } else {
+        // === PUT ORIGINAL CONTEXT INTO CONVERSATION HISTORY ===
+        preparedHistory.conversationContext = conversationContext;
+      }
+    }
+
+    // Check conversation history size
+    if (conversationHistory) {
+      const historyString = JSON.stringify(conversationHistory);
+      const historyTokens = this.compressionService.estimateTokens(historyString);
+      
+      console.log(`🔍 [API Adapter] Conversation history size: ${historyString.length} chars (${historyTokens} tokens)`);
+      
+      // If history is too large, we might need to compress some fields
+      if (historyTokens > 3000) {
+        console.log('⚠️ [API Adapter] Conversation history is large, consider optimizing');
+      }
+    }
+
+    return { conversationHistory: preparedHistory, compressionApplied: false };
+  }
+
+  /**
+   * Send chat message to server API with pre-request context compression
    */
   async sendMessage(
     message: string, 
     conversationHistory?: ConversationHistory,
-    action?: string
+    action?: string,
+    conversationContext?: string
   ): Promise<ChatResponse> {
     try {
+      console.log('📤 [API Adapter] Preparing message for chat API...');
+      
+      // === PRE-REQUEST COMPRESSION CHECK ===
+      const { 
+        conversationHistory: preparedHistory, 
+        compressionApplied 
+      } = await this.prepareConversationContext(conversationHistory, conversationContext);
+
+      if (compressionApplied) {
+        console.log('✅ [API Adapter] Context compression applied before request');
+      }
+      
       console.log('📤 [API Adapter] Sending message to chat API...');
       
       const response = await fetch('/api/chat', {
@@ -38,7 +136,7 @@ export class ChatServiceAPIAdapter {
         },
         body: JSON.stringify({
           message,
-          conversationHistory,
+          conversationHistory: preparedHistory,
           action
         }),
       });

@@ -128,6 +128,16 @@ export class FallbackHandler implements IIntentHandler {
 - Generated slides: ${conversationHistory.currentLesson?.slides?.length || 0}
 - Has lesson plan: ${conversationHistory.planningResult ? 'YES' : 'NO'}
 `;
+      
+      // === ADD CONVERSATION CONTEXT FOR REFERENCE RESOLUTION ===
+      if (conversationHistory.conversationContext) {
+        contextInfo += `
+**RECENT CONVERSATION:**
+${conversationHistory.conversationContext}
+
+**IMPORTANT**: Use this conversation history to understand what the user might be referring to when they say "it", "that", "this topic", etc.
+`;
+      }
     }
     
     return `You are a knowledgeable teacher assistant who loves education and helping people learn.
@@ -176,17 +186,23 @@ You are a passionate teacher assistant who approaches every conversation with ed
 **STYLE:** Educational, enthusiastic, encouraging, teacher-like, passionate about learning
 ` : `
 **UNCLEAR REQUEST RESPONSE:**
-Create a teacher-like response that:
-1. Acknowledge with teacher patience (use 🤔 emoji and phrases like "Let me help clarify")
-2. Explain like a teacher would - reassuring and educational
-3. Teach them how to communicate their needs clearly
-4. Provide educational examples: ${exampleCommands.join(', ')}
-5. Give 2-3 concrete examples with educational context
-6. Encourage learning and trying again with teacher enthusiasm
-7. **Use markdown formatting** with ## headers, **bold** examples, and - bullet lists
-8. Use teacher language like "Let's try this together" or "Here's how we can make this work"
+Create a helpful teacher-like response that:
+1. **Acknowledge with patience** (use 🤔 emoji and phrases like "Let me help clarify")
+2. **Check for contextual references** - If user said "it", "that", "this", try to identify what they mean from conversation history
+3. **Provide helpful suggestions** - If you can guess what they want, offer specific examples
+4. **Teach clear communication** - Show them how to phrase their request more clearly  
+5. **Give educational examples**: ${exampleCommands.join(', ')}
+6. **Reference current context** - Mention active lessons, recent topics, or what you've been discussing
+7. **Encourage with teacher enthusiasm** - Use phrases like "Let's work together on this" or "I'm here to help you succeed"
+8. **Use markdown formatting** with ## headers, **bold** examples, and - bullet lists
 
-**STYLE:** Patient, educational, encouraging, teacher-like, instructive, well-formatted
+**HANDLING AMBIGUOUS REFERENCES:**
+- If user says "about it" or "about that" → Look for topics in recent conversation
+- If user mentions "the same thing" → Reference what was discussed before  
+- If unclear → Ask specific clarifying questions with examples
+- Always try to be helpful rather than just saying "I don't understand"
+
+**STYLE:** Patient, educational, encouraging, teacher-like, helpful, well-formatted
 `}
 
 **UNIVERSAL CONSTRAINTS:**

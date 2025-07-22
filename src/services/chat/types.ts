@@ -24,6 +24,9 @@ export interface ConversationHistory {
   slideGenerationProgress?: SlideGenerationProgress[]; // Прогрес генерації кожного слайду
   bulkGenerationStartTime?: Date; // Час початку масової генерації
   isGeneratingAllSlides?: boolean; // Флаг що показує чи генеруються всі слайди
+  
+  // === КОНТЕКСТ РОЗМОВИ ===
+  conversationContext?: string; // Стиснений контекст всієї розмови
 }
 
 export interface ChatResponse {

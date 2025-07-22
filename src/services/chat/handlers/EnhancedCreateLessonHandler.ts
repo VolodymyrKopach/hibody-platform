@@ -26,47 +26,52 @@ export class EnhancedCreateLessonHandler implements IIntentHandler {
            enhancedIntent.isDataSufficient === true;
   }
 
-  async handle(intent: IntentDetectionResult): Promise<ChatResponse> {
-    const enhancedIntent = intent as EnhancedIntentDetectionResult;
-    
-    // Check if we have sufficient data
-    if (enhancedIntent.isDataSufficient === false && enhancedIntent.suggestedQuestion) {
-      return {
-        success: true,
-        message: `🤔 ${enhancedIntent.suggestedQuestion}
+  async handle(intent: IntentDetectionResult, conversationHistory?: ConversationHistory): Promise<ChatResponse> {
+    const topic = intent.parameters.topic;
+    const age = intent.parameters.age;
 
-**Приклади:**
-• "для дітей 6 років"
-• "для дошкільнят 4-5 років"  
-• "для школярів 8-10 років"`,
-        conversationHistory: {
-          step: 'data_collection',
-          pendingIntent: enhancedIntent,
-          missingData: enhancedIntent.missingData || []
-        },
-        actions: []
-      };
-    }
+    console.log(`🎯 [ENHANCED CREATE LESSON] Processing lesson creation`);
+    console.log(`📚 Topic: "${topic}"`);
+    console.log(`👶 Age: "${age}"`);
+    console.log(`🌐 Language: "${intent.language}"`);
 
-    // Validate required parameters
-    const { topic, age } = intent.parameters;
     if (!topic || !age) {
+      console.log('❌ Missing required data for lesson creation');
       return {
         success: false,
-        message: 'Помилка: не вистачає обов\'язкових даних для створення уроку (тема або вік).',
+        message: intent.language === 'uk' 
+          ? `❌ **Недостатньо даних для створення уроку**
+
+Будь ласка, вкажіть:
+${!topic ? '• Тему уроку' : ''}
+${!age ? '• Вік дітей' : ''}
+
+💡 **Приклад:** "Створи урок про тварин для дітей 6 років"`
+          : `❌ **Insufficient data for lesson creation**
+
+Please specify:
+${!topic ? '• Lesson topic' : ''}
+${!age ? '• Children age' : ''}
+
+💡 **Example:** "Create a lesson about animals for 6-year-old children"`,
         error: 'Missing required parameters'
       };
     }
-
-    console.log('🎨 Generating lesson plan with Gemini 2.5 Flash...');
-    console.log(`📋 Topic: ${topic}, Age: ${age}, Language: ${intent.language}`);
     
     try {
-      // Generate plan using Gemini 2.5 Flash (no hardcoded templates!)
+      // === PASS CONVERSATION CONTEXT TO LESSON PLAN GENERATION ===
+      const conversationContext = conversationHistory?.conversationContext;
+      
+      if (conversationContext) {
+        console.log(`📝 [LESSON HANDLER] Using conversation context: ${conversationContext.length} chars`);
+      }
+      
+      // Generate plan using Gemini 2.5 Flash with conversation context
       const generatedPlan = await this.getContentService().generateLessonPlan(
         topic, 
         age, 
-        intent.language
+        intent.language,
+        conversationContext
       );
 
       console.log('✅ Lesson plan generated successfully');

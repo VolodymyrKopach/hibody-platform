@@ -85,6 +85,12 @@ export class ChatService {
     action?: string
   ): Promise<ChatResponse> {
     try {
+      // Log conversation context if provided
+      if (conversationHistory?.conversationContext) {
+        console.log(`💬 [CHAT SERVICE] Received conversation context: ${conversationHistory.conversationContext.length} chars`);
+        console.log(`📝 [CONTEXT PREVIEW]`, conversationHistory.conversationContext.substring(0, 200) + '...');
+      }
+      
       const intentResult = await this.intentDetectionService.detectIntent(message, conversationHistory);
       
       console.log(`🎯 [INTENT DETECTED] ${intentResult.intent} (confidence: ${intentResult.confidence})`);

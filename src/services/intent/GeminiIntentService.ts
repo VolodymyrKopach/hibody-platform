@@ -64,6 +64,16 @@ CONVERSATION CONTEXT:
 
 IMPORTANT: If there's an active lesson and user asks about slides ("next", "third", "another slide", "let's go"), this is almost always CREATE_NEW_SLIDE!
 `;
+      
+      // === ADD COMPRESSED CONVERSATION CONTEXT ===
+      if (conversationHistory.conversationContext) {
+        contextInfo += `
+DETAILED CONVERSATION HISTORY:
+${conversationHistory.conversationContext}
+
+Use this conversation history to better understand the user's intent and provide more accurate responses.
+`;
+      }
     }
 
     return `You are an expert intent recognition system for the HiBody educational platform.
@@ -102,9 +112,19 @@ PARAMETERS to extract:
 
 INTENT DETECTION LOGIC:
 
+**CRITICAL: RESOLVE CONTEXTUAL REFERENCES**
+When user says "it", "that", "this topic", "the same thing", etc., look at the conversation history to understand what they're referring to. Extract the actual topic from previous messages.
+
+Examples:
+- "Tell me about dinosaurs" → "Let's create lesson about it" = CREATE_LESSON with topic="dinosaurs"
+- "We discussed space" → "Make lesson about that" = CREATE_LESSON with topic="space"  
+- "I mentioned animals earlier" → "Create lesson about them" = CREATE_LESSON with topic="animals"
+
 1. **CREATE_LESSON** - if user explicitly wants to create a lesson:
    - EXPLICIT phrases: "create lesson", "make lesson", "lesson about", "teach children", "створи урок", "зроби урок"
+   - **CONTEXTUAL phrases**: "lesson about it", "lesson about that", "урок про це", "урок про те"
    - Must have CLEAR intent to create educational content
+   - **IMPORTANT**: If user says "about it/that/this", resolve the reference from conversation history
    - Just asking about a topic (like "tell me about dinosaurs") is NOT lesson creation
    - REQUIRED: topic (subject) + age (age group)
    - If something missing → isDataSufficient: false
@@ -205,6 +225,42 @@ RESPONSE:
   },
   "isDataSufficient": true,
   "missingData": []
+}
+
+**CONTEXTUAL REFERENCE EXAMPLES:**
+
+MESSAGE: "let's create lesson about it" (after discussing dinosaurs)
+ANALYSIS: contextual reference - "it" refers to "dinosaurs" from conversation history
+RESPONSE:
+{
+  "intent": "CREATE_LESSON",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "topic": "dinosaurs",
+    "age": null,
+    "rawMessage": "let's create lesson about it"
+  },
+  "isDataSufficient": false,
+  "missingData": ["age"],
+  "suggestedQuestion": "For what age should I create a lesson about dinosaurs?"
+}
+
+MESSAGE: "створи урок про це" (after talking about space)
+ANALYSIS: contextual reference - "це" refers to "space" from conversation history  
+RESPONSE:
+{
+  "intent": "CREATE_LESSON",
+  "confidence": 0.95,
+  "language": "uk",
+  "parameters": {
+    "topic": "космос",
+    "age": null,
+    "rawMessage": "створи урок про це"
+  },
+  "isDataSufficient": false,
+  "missingData": ["age"],
+  "suggestedQuestion": "Для дітей якого віку створити урок про космос?"
 }
 
 ANALYZE THIS MESSAGE:

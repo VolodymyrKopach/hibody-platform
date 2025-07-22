@@ -11,6 +11,9 @@ export async function POST(request: NextRequest) {
     }
     if (conversationHistory) {
       console.log('📋 Conversation context:', conversationHistory.step || 'none');
+      if (conversationHistory.conversationContext) {
+        console.log('💬 Conversation context size:', conversationHistory.conversationContext.length, 'chars');
+      }
     }
     
     // Use ChatService with Gemini 2.5 Flash integration

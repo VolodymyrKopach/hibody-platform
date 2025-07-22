@@ -3,8 +3,10 @@ import { Message, SimpleLesson } from '@/types/chat';
 import { ChatServiceAPIAdapter } from '@/services/chat/ChatServiceAPIAdapter';
 import { useRealTimeSlideGeneration } from './useRealTimeSlideGeneration';
 import { useSlideProgressSSE } from './useSlideProgressSSE';
+import { ContextCompressionService } from '@/services/context/ContextCompressionService';
 
-
+// === СПРОЩЕНИЙ КОНТЕКСТ РОЗМОВИ (ТІЛЬКИ РЯДОК) ===
+export type ConversationContext = string;
 
 export const useChatLogic = () => {
   // Ref для динамічного callback
@@ -14,11 +16,108 @@ export const useChatLogic = () => {
   const setOnLessonUpdate = useCallback((callback: (lesson: SimpleLesson) => void) => {
     onLessonUpdateRef.current = callback;
   }, []);
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<any>(null);
+  
+  // === СПРОЩЕНИЙ СТЕЙТ ДЛЯ КОНТЕКСТУ РОЗМОВИ (ТІЛЬКИ РЯДОК) ===
+  const [conversationContext, setConversationContext] = useState<ConversationContext>(() => {
+    const initialContext = 'Session started';
+    console.log('🆕 [CONVERSATION CONTEXT] Initial context:', initialContext);
+    return initialContext;
+  });
+
+  // === ІНІЦІАЛІЗУЄМО СЕРВІС СТИСНЕННЯ КОНТЕКСТУ ===
+  const compressionService = useRef(new ContextCompressionService()).current;
+
+  // === РОЗУМНЕ ДОДАВАННЯ ДО КОНТЕКСТУ З AI СТИСНЕННЯМ ===
+  const addToConversationContext = useCallback(async (addition: string) => {
+    console.log('➕ [CONVERSATION CONTEXT] Adding:', addition.substring(0, 100) + '...');
+    
+    const currentContext = conversationContext;
+    const newContext = currentContext + ' | ' + addition;
+    const currentLength = newContext.length;
+    
+    console.log(`📊 [CONVERSATION CONTEXT] Current length: ${currentLength} chars`);
+    
+    // Перевіряємо, чи потребує стиснення
+    if (compressionService.shouldCompress(newContext)) {
+      console.log('🤖 [CONVERSATION CONTEXT] Context too long, using AI compression...');
+      
+      try {
+        const compressed = await compressionService.adaptiveCompression(newContext);
+        
+        console.log(`📉 [CONVERSATION CONTEXT] AI Compressed: ${currentLength} → ${compressed.length} chars`);
+        console.log(`💰 [CONVERSATION CONTEXT] Estimated cost: ~$0.0003`);
+        
+        setConversationContext(compressed);
+      } catch (error) {
+        console.error('❌ [CONVERSATION CONTEXT] AI compression failed:', error);
+        
+        // Fallback до простого обрізання
+        const parts = newContext.split(' | ');
+        const fallback = [
+          parts[0], // Session start
+          ...parts.slice(-8) // Last 8 interactions
+        ].join(' | ');
+        
+        console.log(`📉 [CONVERSATION CONTEXT] Fallback truncation: ${currentLength} → ${fallback.length} chars`);
+        setConversationContext(fallback);
+      }
+    } else {
+      setConversationContext(newContext);
+    }
+  }, [compressionService, conversationContext]);
+
+  // === СПЕЦІАЛЬНЕ ДОДАВАННЯ З ОПЦІЯМИ СТИСНЕННЯ ===
+  const addToConversationContextWithOptions = useCallback(async (
+    addition: string,
+    options: {
+      forceCompression?: boolean;
+      targetTokens?: number;
+      preserveRecentCount?: number;
+    } = {}
+  ) => {
+    console.log('⚙️ [CONVERSATION CONTEXT] Adding with options:', options);
+    
+    const currentContext = conversationContext;
+    const newContext = currentContext + ' | ' + addition;
+    
+    if (options.forceCompression || compressionService.shouldCompress(newContext)) {
+      try {
+        const result = await compressionService.compressContext(newContext, {
+          targetTokens: options.targetTokens || 1500,
+          semanticCleaning: true,
+          preserveRecent: true,
+          recentMessagesCount: options.preserveRecentCount || 3
+        });
+        
+        console.log('📊 [CONVERSATION CONTEXT] Compression metrics:', result.metrics);
+        setConversationContext(result.compressed);
+      } catch (error) {
+        console.error('❌ [CONVERSATION CONTEXT] Custom compression failed:', error);
+        setConversationContext(newContext);
+      }
+    } else {
+      setConversationContext(newContext);
+    }
+  }, [compressionService, conversationContext]);
+
+  // === ОНОВЛЕНІ ФУНКЦІЇ ДЛЯ КЕРУВАННЯ КОНТЕКСТОМ ===
+  const updateConversationContext = useCallback((newContext: string) => {
+    console.log('🔄 [CONVERSATION CONTEXT] Direct update to:', newContext.substring(0, 100) + '...');
+    setConversationContext(newContext);
+  }, []);
+
+  const resetConversationContext = useCallback(() => {
+    console.log('🔄 [CONVERSATION CONTEXT] Resetting conversation context');
+    const newContext = 'Conversation reset';
+    console.log('🆕 [CONVERSATION CONTEXT] New context:', newContext);
+    setConversationContext(newContext);
+  }, []);
 
   // API adapter for client-server communication
   const apiAdapter = new ChatServiceAPIAdapter();
@@ -156,8 +255,13 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
 
+    // === ОНОВЛЮЄМО КОНТЕКСТ РОЗМОВИ З ПОВІДОМЛЕННЯМ КОРИСТУВАЧА ===
+    const updatedContext = conversationContext + ' | USER: ' + message;
+    console.log('📝 [CHAT] Updated context with user message');
+
     try {
-      const response = await apiAdapter.sendMessage(message, conversationHistory);
+      // === ПЕРЕДАЄМО КОНТЕКСТ ДО API ADAPTER ДЛЯ PRE-REQUEST COMPRESSION ===
+      const response = await apiAdapter.sendMessage(message, conversationHistory, undefined, updatedContext);
       
       if (!response.success) {
         throw new Error(response.error || 'Unknown error');
@@ -166,6 +270,10 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       // Оновлюємо conversation history
       if (response.conversationHistory) {
         setConversationHistory(response.conversationHistory);
+        
+        // === ОНОВЛЮЄМО КОНТЕКСТ З ІНФОРМАЦІЄЮ З CONVERSATION HISTORY ===
+        const contextWithTopic = updatedContext + ' | TOPIC: ' + (response.conversationHistory.lessonTopic || 'Unknown topic');
+        setConversationContext(contextWithTopic);
       }
 
       const aiMessage: Message = {
@@ -185,12 +293,16 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
 
       setMessages(prev => [...prev, aiMessage]);
 
+      // === ОНОВЛЮЄМО КОНТЕКСТ З AI ВІДПОВІДДЮ ===
+      const finalContext = conversationContext + ' | AI: ' + response.message;
+      setConversationContext(finalContext);
+
     } catch (error) {
       console.error('Error sending message:', error);
       
       const errorMessage: Message = {
         id: Date.now() + 1,
-        text: `Вибачте, сталася помилка: ${error instanceof Error ? error.message : 'Невідома помилка'}`,
+        text: `❌ **Помилка:** ${error instanceof Error ? error.message : 'Невідома помилка'}`,
         sender: 'ai',
         timestamp: new Date(),
         status: 'delivered',
@@ -198,23 +310,31 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       };
 
       setMessages(prev => [...prev, errorMessage]);
+
+      // === ОНОВЛЮЄМО КОНТЕКСТ З ПОМИЛКОЮ ===
+      const errorContext = conversationContext + ' | ERROR: ' + (error instanceof Error ? error.message : 'Unknown error');
+      setConversationContext(errorContext);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, conversationHistory, apiAdapter]);
+  }, [isLoading, conversationHistory, apiAdapter, conversationContext]);
 
   const handleActionClick = useCallback(async (action: string) => {
-    if (isLoading || !conversationHistory) return;
+    if (isLoading) return;
 
     setIsLoading(true);
+
+    // === ОНОВЛЮЄМО КОНТЕКСТ З ДІЄЮ КОРИСТУВАЧА ===
+    const updatedContext = conversationContext + ' | ACTION: ' + action;
+    console.log('⚡ [CHAT] Updated context with user action');
 
     try {
       // Спеціальна обробка для approve_plan - використовуємо SSE генерацію з прогресом
       if (action === 'approve_plan' && conversationHistory) {
         console.log('🚀 [CHAT] Using SSE generation with progress for plan approval');
         
-        // Спочатку отримуємо план від сервера без генерації
-        const response = await apiAdapter.sendMessage('', conversationHistory, action);
+        // === ПЕРЕДАЄМО КОНТЕКСТ ДО API ADAPTER ДЛЯ PRE-REQUEST COMPRESSION ===
+        const response = await apiAdapter.sendMessage('', conversationHistory, action, updatedContext);
         
         if (!response.success) {
           throw new Error(response.error || 'Unknown error');
@@ -247,6 +367,11 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         if (response.conversationHistory?.slideDescriptions && response.lesson) {
           try {
             console.log('🎯 [CHAT] Starting SSE slide generation...');
+            
+            // === ОНОВЛЮЄМО КОНТЕКСТ ПРИ ПОЧАТКУ ГЕНЕРАЦІЇ СЛАЙДІВ ===
+            const generationContext = updatedContext + ' | GENERATION: Starting slide generation';
+            setConversationContext(generationContext);
+            
             await startGenerationWithProgress(
               response.conversationHistory.slideDescriptions,
               response.lesson,
@@ -255,6 +380,10 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
             );
           } catch (error) {
             console.error('❌ [CHAT] SSE generation failed:', error);
+            
+            // === ОНОВЛЮЄМО КОНТЕКСТ ПРИ ПОМИЛЦІ ГЕНЕРАЦІЇ ===
+            const errorContext = updatedContext + ' | GENERATION_ERROR: ' + (error instanceof Error ? error.message : 'Unknown error');
+            setConversationContext(errorContext);
             
             // Додаємо повідомлення про помилку
             const errorMessage: Message = {
@@ -271,8 +400,8 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         }
         
       } else {
-        // Стандартна обробка інших дій
-        const response = await apiAdapter.sendMessage('', conversationHistory, action);
+        // === СТАНДАРТНА ОБРОБКА ІНШИХ ДІЙ З PRE-REQUEST COMPRESSION ===
+        const response = await apiAdapter.sendMessage('', conversationHistory, action, updatedContext);
         
         if (!response.success) {
           throw new Error(response.error || 'Unknown error');
@@ -298,6 +427,10 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         };
 
         setMessages(prev => [...prev, aiMessage]);
+
+        // === ОНОВЛЮЄМО КОНТЕКСТ З AI ВІДПОВІДДЮ ===
+        const responseContext = updatedContext + ' | AI_RESPONSE: ' + response.message;
+        setConversationContext(responseContext);
       }
 
     } catch (error) {
@@ -305,7 +438,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       
       const errorMessage: Message = {
         id: Date.now(),
-        text: `Помилка при виконанні дії: ${error instanceof Error ? error.message : 'Невідома помилка'}`,
+        text: `❌ **Помилка:** ${error instanceof Error ? error.message : 'Невідома помилка'}`,
         sender: 'ai',
         timestamp: new Date(),
         status: 'delivered',
@@ -313,10 +446,14 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       };
 
       setMessages(prev => [...prev, errorMessage]);
+
+      // === ОНОВЛЮЄМО КОНТЕКСТ З ПОМИЛКОЮ ===
+      const errorContext = updatedContext + ' | ACTION_ERROR: ' + (error instanceof Error ? error.message : 'Unknown error');
+      setConversationContext(errorContext);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, conversationHistory, apiAdapter, generationActions]);
+  }, [isLoading, conversationHistory, apiAdapter, generationActions, startGenerationWithProgress, conversationContext]);
 
   const regenerateMessage = useCallback(async (messageId: number) => {
     // Реалізація регенерації повідомлення
@@ -330,6 +467,11 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       )
     );
   }, []);
+
+  // === ФУНКЦІЇ ДЛЯ ОНОВЛЕННЯ КОНТЕКСТУ РОЗМОВИ ===
+  // updateConversationContext, // This function is now directly available
+  // addInteractionToContext, // This function is no longer needed
+  // resetConversationContext // This function is now directly available
 
   return {
     messages,
@@ -352,6 +494,13 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     currentProgress,
     
     // Функція для встановлення callback оновлення уроку
-    setOnLessonUpdate
+    setOnLessonUpdate,
+    
+    // === НОВИЙ КОНТЕКСТ РОЗМОВИ ===
+    conversationContext,
+    updateConversationContext,
+    addToConversationContext,
+    addToConversationContextWithOptions,
+    resetConversationContext
   };
 }; 

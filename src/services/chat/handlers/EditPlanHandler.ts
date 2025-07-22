@@ -43,12 +43,20 @@ export class EditPlanHandler implements IIntentHandler {
       // Витягуємо зміни з повідомлення користувача
       const userChanges = this.extractChangesFromMessage(intent.parameters.rawMessage);
       
-              // Генеруємо оновлений план з Gemini 2.5 Flash
+      // === PASS CONVERSATION CONTEXT TO PLAN EDITING ===
+      const conversationContext = conversationHistory?.conversationContext;
+      
+      if (conversationContext) {
+        console.log(`📝 [EDIT PLAN HANDLER] Using conversation context: ${conversationContext.length} chars`);
+      }
+      
+      // Генеруємо оновлений план з Gemini 2.5 Flash з урахуванням контексту розмови
       const updatedPlan = await this.contentService.generateEditedPlan(
         conversationHistory.planningResult!,
         userChanges,
         conversationHistory.lessonTopic || 'урок',
-        conversationHistory.lessonAge || '6-8 років'
+        conversationHistory.lessonAge || '6-8 років',
+        conversationContext
       );
 
       const newConversationHistory: ConversationHistory = {

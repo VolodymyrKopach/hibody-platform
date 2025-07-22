@@ -16,12 +16,18 @@ export class GeminiContentService {
     this.client = new GoogleGenAI({ apiKey });
   }
 
-  async generateLessonPlan(topic: string, age: string, language: string = 'uk'): Promise<string> {
-    const prompt = this.buildLessonPlanPrompt(topic, age, language);
+  async generateLessonPlan(
+    topic: string, 
+    age: string, 
+    language: string = 'uk', 
+    conversationContext?: string
+  ): Promise<string> {
+    const prompt = this.buildLessonPlanPrompt(topic, age, language, conversationContext);
 
     console.log('📝 Generated prompt length:', prompt.length);
     console.log('🎯 API request details:', {
-      model: 'gemini-2.5-flash'
+      model: 'gemini-2.5-flash',
+      hasConversationContext: !!conversationContext
     });
 
     try {
@@ -60,9 +66,23 @@ export class GeminiContentService {
     }
   }
 
-  private buildLessonPlanPrompt(topic: string, age: string, language: string): string {
+  private buildLessonPlanPrompt(topic: string, age: string, language: string, conversationContext?: string): string {
+    let contextSection = '';
+    
+    // === ADD CONVERSATION CONTEXT TO LESSON PLAN GENERATION ===
+    if (conversationContext) {
+      contextSection = `
+CONVERSATION HISTORY:
+${conversationContext}
+
+Based on this conversation history, consider the user's preferences, style, and any specific requirements mentioned throughout the conversation when creating the lesson plan.
+`;
+    }
+
     if (language === 'en') {
       return `You are an expert in developing educational programs for children. Create a detailed and engaging lesson plan.
+
+${contextSection}
 
 INPUT DATA:
 - Topic: ${topic}
@@ -119,13 +139,15 @@ STRUCTURE:
 Create a complete, detailed lesson plan that is engaging and educational for the specified age group.`;
     }
 
-    // Ukrainian version
-    return `Ви - експерт з розробки освітніх програм для дітей. Створіть детальний та захоплюючий план уроку.
+    // Ukrainian prompt (default)
+    return `Ти експерт з розробки освітніх програм для дітей. Створи детальний та захоплюючий план уроку.
+
+${contextSection}
 
 ВХІДНІ ДАНІ:
 - Тема: ${topic}
 - Вік дітей: ${age}
-- Мова: українська
+- Мова: Українська
 
 ОБОВ'ЯЗКОВА СТРУКТУРА ПЛАНУ:
 
@@ -375,19 +397,38 @@ ${ageTemplate}
     return '9-10';
   }
 
-  async generateEditedPlan(currentPlan: string, userChanges: string, topic: string, age: string): Promise<string> {
-    const prompt = `Ти експерт з педагогіки та створення освітніх матеріалів для дітей. 
+  async generateEditedPlan(
+    currentPlan: string, 
+    userChanges: string, 
+    topic: string, 
+    age: string,
+    conversationContext?: string
+  ): Promise<string> {
+    
+    let contextSection = '';
+    
+    // === ADD CONVERSATION CONTEXT TO PLAN EDITING ===
+    if (conversationContext) {
+      contextSection = `
+CONVERSATION HISTORY:
+${conversationContext}
 
-**ЗАВДАННЯ:** Оновити існуючий план уроку згідно з побажаннями користувача.
+Consider the conversation history when making edits to ensure consistency with user preferences and previous discussions.
+`;
+    }
 
-**ПОТОЧНИЙ ПЛАН:**
+    const prompt = `Ти експерт з створення освітніх програм для дітей. Тобі потрібно оновити існуючий план уроку на основі запитів користувача.
+
+${contextSection}
+
+ПОТОЧНИЙ ПЛАН УРОКУ:
 ${currentPlan}
 
-**ЗМІНИ ВІД КОРИСТУВАЧА:**
+ЗМІНИ ВІД КОРИСТУВАЧА:
 ${userChanges}
 
-**КОНТЕКСТ:**
-- Тема уроку: ${topic}
+КОНТЕКСТ:
+- Тема: ${topic}
 - Вік дітей: ${age}
 
 **ІНСТРУКЦІЇ:**
