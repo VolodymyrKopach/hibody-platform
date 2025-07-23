@@ -84,6 +84,9 @@ export class SlideAnalysisService implements ISlideAnalysisService {
               let description = match[0].trim();
               let title = match[2]?.trim() || `Slide ${slideNumber}`; // Translated
               
+              // Clean duration from title
+              title = this.cleanTitleFromDuration(title);
+              
               description = description
                 .replace(/^###\s*Slide\s+\d+:\s*[^\n]+/i, '')
                 .replace(/^##\s*Slide\s+\d+[:\s]*/i, '')
@@ -166,5 +169,15 @@ export class SlideAnalysisService implements ISlideAnalysisService {
         type: 'summary'
       }
     ];
+  }
+
+  private cleanTitleFromDuration(title: string): string {
+    return title
+      .replace(/\s*\(?(\d+)\s*minutes?\)?\s*$/i, '')           // Remove duration at end: "5 minutes", "(5 minutes)"
+      .replace(/\s*-\s*(\d+)\s*minutes?\s*$/i, '')             // Remove duration with dash: "- 5 minutes"
+      .replace(/\s*\(\d+\s*минут[аы]?\)\s*$/i, '')             // Remove Ukrainian duration: "(5 минут)"
+      .replace(/\s*\d+\s*min\s*$/i, '')                        // Remove short format: "5 min"
+      .replace(/\s+/g, ' ')                                     // Normalize whitespace
+      .trim();
   }
 } 
