@@ -23,39 +23,39 @@ async function parseSlideCommand(message: string, currentSlide?: LessonSlide): P
   return await slideUtils.parseCommand(message, currentSlide);
 }
 
-// Системний промпт для slide-oriented AI
-const SLIDE_SYSTEM_PROMPT = `Ти - помічник вчителя, який працює з слайдами уроку в стилі PowerPoint.
+// System prompt for slide-oriented AI
+const SLIDE_SYSTEM_PROMPT = `You are a teacher's assistant who works with lesson slides in PowerPoint style.
 
-ТВОЯ РОБОТА:
-1. Розуміти природні команди про слайди ("покращ слайд 2", "зроби слона більшим")
-2. Генерувати зміни для конкретних слайдів
-3. Створювати нові слайди за запитом
-4. Підтримувати цілісність всього уроку
+YOUR JOB:
+1. Understand natural commands about slides ("improve slide 2", "make the elephant bigger")
+2. Generate changes for specific slides
+3. Create new slides on request
+4. Maintain integrity of the entire lesson
 
-ФОРМАТ ВІДПОВІДІ:
+RESPONSE FORMAT:
 {
-  "message": "Дружнє пояснення що ти зробив",
+  "message": "Friendly explanation of what you did",
   "actions": [
     {
       "type": "update_slide",
       "slideId": "slide_2",
       "changes": {
-        "title": "Нова назва",
-        "description": "Новий опис",
-        "content": "Оновлений HTML контент"
+        "title": "New title",
+        "description": "New description",
+        "content": "Updated HTML content"
       },
-      "reason": "Пояснення чому ця зміна потрібна"
+      "reason": "Explanation why this change is needed"
     }
   ],
-  "updatedSlides": [/* масив оновлених слайдів */],
-  "suggestions": ["Додаткові ідеї для покращення"]
+  "updatedSlides": [/* array of updated slides */],
+  "suggestions": ["Additional improvement ideas"]
 }
 
-ПРИНЦИПИ:
-- Зберігай стиль і тему уроку
-- Роби зміни точно за інструкцією
-- Пропонуй покращення, але не нав'язуй
-- Думай про дітей та їх сприйняття`;
+PRINCIPLES:
+- Preserve lesson style and theme
+- Make changes exactly as instructed
+- Suggest improvements but don't impose
+- Think about children and their perception`;
 
 // POST /api/lessons/[lessonId]/chat - обробити команду
 export async function POST(
@@ -76,31 +76,31 @@ export async function POST(
 
     // Формуємо контекст для AI
     const lessonContext = currentLesson ? `
-ПОТОЧНИЙ УРОК: "${currentLesson.title}"
-Цільова аудиторія: ${currentLesson.targetAge}
-Предмет: ${currentLesson.subject}
-Тривалість: ${currentLesson.duration} хв
+CURRENT LESSON: "${currentLesson.title}"
+Target audience: ${currentLesson.targetAge}
+Subject: ${currentLesson.subject}
+Duration: ${currentLesson.duration} mins
 
-СЛАЙДИ В УРОЦІ:
+SLIDES IN THE LESSON:
 ${currentLesson.slides.map((s: LessonSlide, i: number) => 
   `${i + 1}. ${s.title} (${s.type}) - ${s.status}`
 ).join('\n')}
 
-ОБРАНИЙ СЛАЙД: ${currentSlide ? `${currentSlide.title} (ID: ${currentSlide.id})` : 'Не обрано'}
-` : 'Урок ще не створено';
+SELECTED SLIDE: ${currentSlide ? `${currentSlide.title} (ID: ${currentSlide.id})` : 'Not selected'}
+` : 'Lesson not created yet';
 
     const userPrompt = `
-КОМАНДА КОРИСТУВАЧА: "${message}"
+USER COMMAND: "${message}"
 
-РОЗПІЗНАНА КОМАНДА:
-- Тип: ${command.type}
-- Слайд: ${command.slideNumber || 'не вказано'}
-- Інструкція: ${command.instruction}
+RECOGNIZED COMMAND:
+- Type: ${command.type}
+- Slide: ${command.slideNumber || 'not specified'}
+- Instruction: ${command.instruction}
 
-КОНТЕКСТ УРОКУ:
+LESSON CONTEXT:
 ${lessonContext}
 
-Обробити команду та дати відповідь у форматі JSON.`;
+Process the command and provide a response in JSON format.`;
 
     // Викликаємо Gemini API
     const client = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -176,7 +176,7 @@ async function processEditSlideCommand(
 
     if (!targetSlide) {
       return {
-        message: 'Не вдалося знайти слайд для редагування',
+        message: 'Could not find slide to edit',
         command,
         actions: [],
         updatedSlides: [],
@@ -214,7 +214,7 @@ async function processEditSlideCommand(
     };
 
     return {
-      message: `Слайд ${targetSlide.number} "${targetSlide.title}" оновлено`,
+      message: `Slide ${targetSlide.number} "${targetSlide.title}" updated`,
       command,
       actions: [action],
       updatedSlides: [updatedSlide],
@@ -229,9 +229,9 @@ async function processEditSlideCommand(
     };
 
   } catch (error) {
-    console.error('Помилка при редагуванні слайду:', error);
+    console.error('Error editing slide:', error);
     return {
-      message: 'Помилка при редагуванні слайду',
+      message: 'Error editing slide',
       command,
       actions: [],
       updatedSlides: [],
@@ -282,28 +282,28 @@ async function processCreateSlideCommand(
     };
 
     return {
-      message: `Створено новий слайд ${newSlide.number} "${newSlide.title}"`,
+      message: `Created new slide ${newSlide.number} "${newSlide.title}"`,
       command,
       actions: [action],
       updatedSlides: [newSlide],
       preview: [{
         slideId: newSlide.id,
         preview: newSlide.preview,
-        changes: 'Новий слайд створено'
+        changes: 'New slide created'
       }],
       suggestions: [
-        'Покращити слайд',
-        'Додати анімацію',
-        'Створити наступний слайд'
+        'Improve slide',
+        'Add animation',
+        'Create next slide'
       ],
       chatMessage: {} as any,
       success: true
     };
 
   } catch (error) {
-    console.error('Помилка при створенні слайду:', error);
+    console.error('Error creating slide:', error);
     return {
-      message: 'Помилка при створенні слайду',
+      message: 'Error creating slide',
       command,
       actions: [],
       updatedSlides: [],
@@ -322,7 +322,7 @@ async function processImproveSlideCommand(
   // Аналогічно до edit, але з фокусом на автоматичне покращення
   return processEditSlideCommand(lesson, {
     ...command,
-    instruction: `Автоматично покращ слайд: ${command.instruction}`
+    instruction: `Automatically improve slide: ${command.instruction}`
   }, request);
 }
 
@@ -339,7 +339,7 @@ async function processDeleteSlideCommand(
 
     if (!targetSlide) {
       return {
-        message: 'Слайд для видалення не знайдено',
+        message: 'Slide to delete not found',
         command,
         actions: [],
         updatedSlides: [],
@@ -367,7 +367,7 @@ async function processDeleteSlideCommand(
     };
 
     return {
-      message: `Слайд ${targetSlide.number} "${targetSlide.title}" видалено`,
+      message: `Slide ${targetSlide.number} "${targetSlide.title}" deleted`,
       command,
       actions: [action],
       updatedSlides: lesson.slides,
@@ -376,9 +376,9 @@ async function processDeleteSlideCommand(
     };
 
   } catch (error) {
-    console.error('Помилка при видаленні слайду:', error);
+    console.error('Error deleting slide:', error);
     return {
-      message: 'Помилка при видаленні слайду',
+      message: 'Error deleting slide',
       command,
       actions: [],
       updatedSlides: [],
@@ -395,14 +395,14 @@ async function processGeneralCommand(
   request: ProcessSlideCommandRequest
 ): Promise<ProcessSlideCommandResponse> {
   return {
-    message: `Отримано команду: "${command.instruction}". Для кращої обробки вкажіть конкретний слайд.`,
+    message: `Received command: "${command.instruction}". For better processing, please specify a specific slide.`,
     command,
     actions: [],
     updatedSlides: [],
     suggestions: [
-      'Зроби слайд 1 більшим',
-      'Створи новий слайд',
-      'Покращ весь урок'
+      'Make slide 1 bigger',
+      'Create new slide',
+      'Improve entire lesson'
     ],
     chatMessage: {} as any,
     success: true
@@ -413,56 +413,56 @@ async function processGeneralCommand(
 function generateEditSlidePrompt(slide: LessonSlide, command: any, lesson: any): string {
       const context = `Slide context: ${slide.title} in lesson "${lesson.title}"`;
   
-  return `Ти - AI асистент для створення навчальних матеріалів. 
+  return `You are an AI assistant for creating educational materials. 
 
 ${context}
 
-ЗАВДАННЯ: ${command.instruction}
+TASK: ${command.instruction}
 
-Поточний HTML слайду:
-${slide._internal?.htmlContent || 'HTML ще не створено'}
+Current HTML slide:
+${slide._internal?.htmlContent || 'HTML not created yet'}
 
-Внеси зміни згідно з завданням, зберігаючи якість та функціональність слайду.
+Make changes according to the task, preserving quality and functionality of the slide.
 
-ВИМОГИ ДО ОНОВЛЕНОГО СЛАЙДУ:
-- Responsive дизайн
-- Інтерактивні елементи зручні для використання
-- Контент розміщений оптимально для читання
+REQUIREMENTS FOR THE UPDATED SLIDE:
+- Responsive design
+- Interactive elements easy to use
+- Content placed optimally for reading
 
-ФОРМАТ ВІДПОВІДІ:
+RESPONSE FORMAT:
 {
-  "html": "повний HTML код слайду",
-  "title": "оновлена назва слайду",
-  "description": "оновлений опис",
-  "changes": "опис внесених змін",
-  "preview": "короткий текстовий превью"
+  "html": "full HTML code of the slide",
+  "title": "updated slide title",
+  "description": "updated description",
+  "changes": "description of changes made",
+  "preview": "short text preview"
 }`;
 }
 
 function generateCreateSlidePrompt(command: any, lesson: any): string {
-  return `Ти - AI асистент для створення навчальних матеріалів.
+  return `You are an AI assistant for creating educational materials.
 
-УРОК: "${lesson.title}"
-ЦІЛЬОВА АУДИТОРІЯ: ${lesson.targetAge}
-ПРЕДМЕТ: ${lesson.subject}
+LESSON: "${lesson.title}"
+TARGET AUDIENCE: ${lesson.targetAge}
+SUBJECT: ${lesson.subject}
 
-ЗАВДАННЯ: ${command.instruction}
+TASK: ${command.instruction}
 
-Створи новий слайд для цього уроку з урахуванням потреб дітей.
+Create a new slide for this lesson considering the needs of children.
 
-ВИМОГИ ДО СЛАЙДУ:
-- Responsive дизайн
-- Інтерактивні елементи зручні для використання
-- Контент розміщений оптимально для читання
+REQUIREMENTS FOR THE SLIDE:
+- Responsive design
+- Interactive elements easy to use
+- Content placed optimally for reading
 
-ФОРМАТ ВІДПОВІДІ:
+RESPONSE FORMAT:
 {
-  "html": "повний HTML код слайду",
-  "title": "назва слайду",
-  "description": "опис слайду", 
+  "html": "full HTML code of the slide",
+  "title": "slide title",
+  "description": "slide description", 
   "type": "welcome|content|activity|game|summary",
-  "icon": "емодзі",
-  "preview": "короткий текстовий превью"
+  "icon": "emoji",
+  "preview": "short text preview"
 }`;
 }
 
@@ -474,7 +474,7 @@ async function callGeminiAPI(
 ): Promise<{ success: boolean; content?: string; error?: string }> {
   try {
     if (!GEMINI_API_KEY) {
-      return { success: false, error: 'Gemini API key не налаштований' };
+      return { success: false, error: 'Gemini API key not configured' };
     }
 
     // Pass the API key explicitly to the Google GenAI client
@@ -500,7 +500,7 @@ async function callGeminiAPI(
 
   } catch (error) {
     console.error('Gemini API error:', error);
-    return { success: false, error: 'Помилка виклику Gemini API' };
+    return { success: false, error: 'Error calling Gemini API' };
   }
 }
 
@@ -531,13 +531,13 @@ async function parseAIResponseAndUpdateSlide(
       };
     }
   } catch (error) {
-    console.error('Помилка парсингу AI відповіді:', error);
+    console.error('Error parsing AI response:', error);
   }
 
   // Fallback: просте оновлення на основі команди
   return {
     ...slide,
-    description: `${slide.description} (оновлено: ${command.instruction})`,
+    description: `${slide.description} (updated: ${command.instruction})`,
     updatedAt: new Date(),
     _internal: {
       ...slide._internal,
@@ -565,8 +565,8 @@ async function parseAIResponseAndCreateSlide(
       return {
         id: slideId,
         number: slideNumber,
-        title: parsed.title || 'Новий слайд',
-        description: parsed.description || 'Опис слайду',
+        title: parsed.title || 'New slide',
+        description: parsed.description || 'Slide description',
         type: parsed.type || 'content',
         icon: parsed.icon || '📄',
         status: 'ready',
@@ -583,19 +583,19 @@ async function parseAIResponseAndCreateSlide(
       };
     }
   } catch (error) {
-    console.error('Помилка створення слайду з AI:', error);
+    console.error('Error creating slide from AI:', error);
   }
 
   // Fallback: базовий слайд
   return {
     id: slideId,
     number: slideNumber,
-    title: 'Новий слайд',
-    description: command.instruction || 'Створено новий слайд',
+    title: 'New slide',
+    description: command.instruction || 'New slide created',
     type: 'content',
     icon: '📄',
     status: 'draft',
-    preview: command.instruction || 'Новий слайд',
+    preview: command.instruction || 'New slide',
     _internal: {
       filename: `slide_${slideNumber}_new_slide.html`,
       htmlContent: '',

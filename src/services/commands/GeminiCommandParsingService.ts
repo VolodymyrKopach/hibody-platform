@@ -139,17 +139,8 @@ Return only valid JSON response:`;
    * Detect language of user message
    */
   private detectLanguage(message: string): 'uk' | 'en' {
-    // Ukrainian language patterns
-    const ukrainianPatterns = [
-      /[іїєґ]/,
-      /\b(і|в|на|з|до|від|про|при|для|під|над|між|через|серед|після|перед|біля)\b/,
-      /(покращ|зроб|створ|видал|додай|змін|переміст)/i,
-    ];
-
-    // Check for Ukrainian characteristics
-    const hasUkrainianChars = ukrainianPatterns.some(pattern => pattern.test(message));
-    
-    return hasUkrainianChars ? 'uk' : 'en';
+    // English is now the default language for all operations
+    return 'en';
   }
 
   /**

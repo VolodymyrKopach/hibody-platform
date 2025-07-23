@@ -139,79 +139,79 @@ STRUCTURE:
 Create a complete, detailed lesson plan that is engaging and educational for the specified age group.`;
     }
 
-    // Ukrainian prompt (default)
-    return `Ти експерт з розробки освітніх програм для дітей. Створи детальний та захоплюючий план уроку.
+    // English prompt (default - changed from Ukrainian)
+    return `You are an expert in developing educational programs for children. Create a detailed and engaging lesson plan.
 
 ${contextSection}
 
-ВХІДНІ ДАНІ:
-- Тема: ${topic}
-- Вік дітей: ${age}
-- Мова: Українська
+INPUT DATA:
+- Topic: ${topic}
+- Children's age: ${age}
+- Language: English
 
-ОБОВ'ЯЗКОВА СТРУКТУРА ПЛАНУ:
+MANDATORY LESSON PLAN STRUCTURE:
 
-# [Назва уроку]
+# [Lesson Title]
 
-**Цільова аудиторія:** ${age}
-**Тривалість:** 30-45 хвилин
-**Мета уроку:** [Основна мета]
+**Target Audience:** ${age}
+**Duration:** 30-45 minutes
+**Lesson Goal:** [Main goal]
 
-## 🎯 Навчальні цілі
-- [Ціль 1]
-- [Ціль 2]
-- [Ціль 3]
+## 🎯 Learning Objectives
+- [Objective 1]
+- [Objective 2]
+- [Objective 3]
 
-## 📋 Структура уроку
+## 📋 Lesson Structure
 
-### Слайд 1: Вітання та знайомство з темою
-**Тип:** Вступний
-**Мета:** [Мета слайду]
-**Зміст:** [Детальний опис контенту]
-**Інтерактивні елементи:** [Опис інтерактивності]
+### Slide 1: Greeting and Introduction to Topic
+**Type:** Introduction
+**Goal:** [Slide goal]
+**Content:** [Detailed content description]
+**Interactive Elements:** [Description of interactivity]
 
-### Слайд 2: Основний матеріал - частина 1
-**Тип:** Навчальний
-**Мета:** [Мета слайду]
-**Зміст:** [Детальний опис контенту]
-**Інтерактивні елементи:** [Опис інтерактивності]
+### Slide 2: Main Material - Part 1
+**Type:** Educational
+**Goal:** [Slide goal]
+**Content:** [Detailed content description]
+**Interactive Elements:** [Description of interactivity]
 
-### Слайд 3: Основний матеріал - частина 2
-**Тип:** Навчальний
-**Мета:** [Мета слайду]
-**Зміст:** [Детальний опис контенту]
-**Інтерактивні елементи:** [Опис інтерактивності]
+### Slide 3: Main Material - Part 2
+**Type:** Educational
+**Goal:** [Slide goal]
+**Content:** [Detailed content description]
+**Interactive Elements:** [Description of interactivity]
 
-### Слайд 4: Практичне завдання
-**Тип:** Активність
-**Мета:** [Мета слайду]
-**Зміст:** [Детальний опис активності]
-**Інтерактивні елементи:** [Опис ігрових елементів]
+### Slide 4: Practical Task
+**Type:** Activity
+**Goal:** [Slide goal]
+**Content:** [Detailed activity description]
+**Interactive Elements:** [Description of game elements]
 
-### Слайд 5: Підсумок та закріплення
-**Тип:** Підсумок
-**Мета:** [Мета слайду]
-**Зміст:** [Детальний опис підсумкових дій]
-**Інтерактивні елементи:** [Опис інтерактивності]
+### Slide 5: Summary and Reinforcement
+**Type:** Summary
+**Goal:** [Slide goal]
+**Content:** [Detailed summary description]
+**Interactive Elements:** [Description of interactivity]
 
-## 🎮 Ігрові елементи
-- [Гра/активність 1]
-- [Гра/активність 2]
+## 🎮 Game Elements
+- [Game/activity 1]
+- [Game/activity 2]
 
-## 📚 Необхідні матеріали
-- [Матеріал 1]
-- [Матеріал 2]
+## 📚 Required Materials
+- [Material 1]
+- [Material 2]
 
-## 💡 Рекомендації вчителю
-- [Рекомендація 1]
-- [Рекомендація 2]
+## 💡 Teacher Recommendations
+- [Recommendation 1]
+- [Recommendation 2]
 
-ВАЖЛИВО:
-- СТРОГО дотримуйтесь структури "### Слайд X: [Назва]"
-- Кожен слайд має містити детальний опис (мінімум 100 слів)
-- Адаптуйте контент під вік ${age}
-- Включіть інтерактивні елементи для кожного слайду
-- Зробіть урок захоплюючим та освітнім`;
+IMPORTANT:
+- STRICTLY follow the structure "### Slide X: [Title]"
+- Each slide must contain detailed description (minimum 100 words)
+- Adapt content for age ${age}
+- Include interactive elements for each slide
+- Make the lesson engaging and educational`;
   }
 
   async generateSlideContent(slideDescription: string, topic: string, age: string): Promise<string> {
@@ -262,7 +262,7 @@ ${contextSection}
   }
 
   private async buildSlideContentPrompt(slideDescription: string, topic: string, age: string): Promise<string> {
-    // Отримуємо age-specific шаблон компонентів
+    // Get age-specific template components
     let ageTemplate = '';
     try {
       const ageGroup = this.mapAgeToAgeGroup(age);
@@ -273,102 +273,102 @@ ${contextSection}
       ageTemplate = '<!-- No age-specific template available -->';
     }
 
-    return `Ти експерт з створення інтерактивних HTML слайдів для дітей. 
+    return `You are an expert in creating interactive HTML slides for children.
 
-**ЗАВДАННЯ:** Створити повноцінний HTML слайд для дітей віку ${age} на основі опису.
+**TASK:** Create a complete HTML slide for children aged ${age} based on the description.
 
-**ОПИС СЛАЙДУ:**
+**SLIDE DESCRIPTION:**
 ${slideDescription}
 
-**КОНТЕКСТ:**
-- Тема уроку: ${topic}
-- Цільова аудиторія: діти ${age}
+**CONTEXT:**
+- Lesson topic: ${topic}
+- Target audience: children aged ${age}
 
-**ПРИКЛАДИ КОМПОНЕНТІВ ДЛЯ ЦІЄЇ ВІКОВОЇ ГРУПИ:**
-Використовуй наступні приклади компонентів як референс для створення відповідних візуальних елементів:
+**AGE-SPECIFIC COMPONENT EXAMPLES:**
+Use the following component examples as reference for creating appropriate visual elements:
 
 ${ageTemplate}
 
-**ІНСТРУКЦІЇ З ВИКОРИСТАННЯ ШАБЛОНУ:**
-- Вивчи стилі та компоненти з прикладу вище
-- Адаптуй дизайн під свій контент
-- Використовуй схожі кольори, шрифти та розміри
-- Повторюй інтерактивні паттерни (hover ефекти, анімації)
-- Зберігай стиль кнопок та інтерфейсних елементів
-- Адаптуй складність під вікову групу
+**TEMPLATE USAGE INSTRUCTIONS:**
+- Study the styles and components from the example above
+- Adapt the design to your content
+- Use similar colors, fonts, and sizes
+- Repeat interactive patterns (hover effects, animations)
+- Maintain button and interface element styles
+- Adapt complexity to age group
 
-**ТЕХНІЧНІ ВИМОГИ:**
-1. Створи ПОВНИЙ HTML документ з <!DOCTYPE html>
-2. Використай CSS-in-style для всього стилізування
-3. Додай JavaScript для інтерактивності
-4. Формат: 4:3 (800x600px або схожий)
-5. Шрифти великі та читабельні для дітей
-6. Яскраві кольори та привабливий дизайн
+**TECHNICAL REQUIREMENTS:**
+1. Create a COMPLETE HTML document with <!DOCTYPE html>
+2. Use CSS-in-style for all styling
+3. Add JavaScript for interactivity
+4. Format: 4:3 (800x600px or similar)
+5. Large, readable fonts for children
+6. Bright colors and attractive design
 
-**ГЕНЕРАЦІЯ ЗОБРАЖЕНЬ:**
-ЗАМІСТЬ того, щоб додавати реальні зображення, використовуй СПЕЦІАЛЬНІ КОМЕНТАРІ для кожного місця де потрібне зображення:
+**IMAGE GENERATION:**
+INSTEAD of adding real images, use SPECIAL COMMENTS for each place where an image is needed:
 
-**ФОРМАТ КОМЕНТАРЯ ДЛЯ ЗОБРАЖЕННЯ:**
-<!-- IMAGE_PROMPT: "детальний опис зображення англійською мовою" WIDTH: XXX HEIGHT: YYY -->
+**IMAGE COMMENT FORMAT:**
+<!-- IMAGE_PROMPT: "detailed image description in English" WIDTH: XXX HEIGHT: YYY -->
 
-**ПРАВИЛА ДЛЯ ЗОБРАЖЕНЬ:**
-1. Розміри WIDTH та HEIGHT МАЮТЬ БУТИ КРАТНІ 16 (наприклад: 512, 528, 640, 768, 800)
-2. Мінімальні розміри: 256x256
-3. Максимальні розміри: 1536x1536
-4. Промпт ОБОВ'ЯЗКОВО англійською мовою
-5. Промпт має бути детальним та описувати:
-   - Що зображено
-   - Стиль (cartoon, illustration, realistic)
-   - Кольори та настрій
-   - Вікова група (for children aged X-Y)
+**IMAGE RULES:**
+1. WIDTH and HEIGHT MUST be multiples of 16 (e.g.: 512, 528, 640, 768, 800)
+2. Minimum size: 256x256
+3. Maximum size: 1536x1536
+4. Prompt MUST be in English
+5. Prompt should be detailed and describe:
+   - What is depicted
+   - Style (cartoon, illustration, realistic)
+   - Colors and mood
+   - Age group (for children aged X-Y)
 
-**ПРИКЛАДИ ПРАВИЛЬНИХ КОМЕНТАРІВ:**
+**CORRECT COMMENT EXAMPLES:**
 <!-- IMAGE_PROMPT: "colorful cartoon illustration of happy children counting numbers 1 to 10, bright colors, educational style, for children aged 6-8" WIDTH: 640 HEIGHT: 480 -->
 <!-- IMAGE_PROMPT: "cute animated animals learning mathematics, cartoon style, bright and friendly, educational illustration for kids" WIDTH: 512 HEIGHT: 384 -->
 <!-- IMAGE_PROMPT: "simple geometric shapes in vibrant colors, educational poster style, clean and child-friendly design" WIDTH: 800 HEIGHT: 600 -->
 
-**РОЗМІЩЕННЯ КОМЕНТАРІВ:**
-- Розмісти коментарі там, де в макеті має з'явитися зображення
-- Після коментаря одразу добав пустий div з placeholder стилем
-- Приклад розміщення:
-  <!-- IMAGE_PROMPT: "опис" WIDTH: 640 HEIGHT: 480 -->
+**COMMENT PLACEMENT:**
+- Place comments where images should appear in the layout
+- Add an empty div with placeholder style immediately after the comment
+- Example placement:
+  <!-- IMAGE_PROMPT: "description" WIDTH: 640 HEIGHT: 480 -->
   <div style="width: 640px; height: 480px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999;">🖼️ Image will be generated here</div>
 
-**ОБОВ'ЯЗКОВІ ЕЛЕМЕНТИ:**
-- Заголовок слайду
-- Основний контент відповідно до опису
-- МІНІМУМ 1-2 зображення через IMAGE_PROMPT коментарі
-- Мінімум 2-3 інтерактивні елементи (кнопки, анімації, ігри)
-- Навігація або кнопки дій
-- Адаптивність під планшети
+**MANDATORY ELEMENTS:**
+- Slide title
+- Main content according to description
+- MINIMUM 1-2 images via IMAGE_PROMPT comments
+- Minimum 2-3 interactive elements (buttons, animations, games)
+- Navigation or action buttons
+- Tablet responsiveness
 
-**ОБОВ'ЯЗКОВЕ ВИКОРИСТАННЯ ЗОБРАЖЕНЬ:**
-- Кожен слайд МАЄ містити хоча б 1 зображення
-- Для навчальних слайдів додавай 2-3 зображення
-- Зображення мають бути релевантними до контенту
-- Використовуй зображення для ілюстрації ключових понять
-- Розміщуй зображення логічно в макеті
+**MANDATORY IMAGE USAGE:**
+- Each slide MUST contain at least 1 image
+- For educational slides add 2-3 images
+- Images must be relevant to the content
+- Use images to illustrate key concepts
+- Place images logically in the layout
 
-**СТИЛЬ ДИЗАЙНУ:**
-- Дитячий, яскравий, дружелюбний
-- Великі кнопки та елементи для дотику
-- Анімації та візуальні ефекти
-- Ігрові елементи відповідно до віку
+**DESIGN STYLE:**
+- Child-friendly, bright, welcoming
+- Large buttons and touch elements
+- Animations and visual effects
+- Game elements appropriate to age
 
-**ІНТЕРАКТИВНІСТЬ:**
-- Кнопки з hover ефектами
-- Анімації при кліку
-- Можливість взаємодії (drag&drop, click, hover)
-- Звукові ефекти (за можливості)
+**INTERACTIVITY:**
+- Buttons with hover effects
+- Click animations
+- Interaction possibilities (drag&drop, click, hover)
+- Sound effects (when possible)
 
-**СТРУКТУРА ВІДПОВІДІ:**
-Надай тільки готовий HTML код без жодних пояснень. Код має бути повністю самостійним та готовим до використання.
+**RESPONSE STRUCTURE:**
+Provide only the ready HTML code without any explanations. The code must be completely self-contained and ready for immediate use.
 
-**УВАГА:** 
-- НЕ використовуй зовнішні бібліотеки (jQuery, Bootstrap тощо)
-- Всі стилі - inline або в <style> секції
-- Весь JavaScript - в <script> секції
-- Готовий для негайного відображення в браузері`;
+**ATTENTION:** 
+- DO NOT use external libraries (jQuery, Bootstrap, etc.)
+- All styles - inline or in <style> section
+- All JavaScript - in <script> section
+- Ready for immediate display in browser`;
   }
 
   private cleanHtmlFromMarkdown(content: string): string {
@@ -417,35 +417,35 @@ Consider the conversation history when making edits to ensure consistency with u
 `;
     }
 
-    const prompt = `Ти експерт з створення освітніх програм для дітей. Тобі потрібно оновити існуючий план уроку на основі запитів користувача.
+    const prompt = `You are an expert in creating educational programs for children. You need to update an existing lesson plan based on user requests.
 
 ${contextSection}
 
-ПОТОЧНИЙ ПЛАН УРОКУ:
+CURRENT LESSON PLAN:
 ${currentPlan}
 
-ЗМІНИ ВІД КОРИСТУВАЧА:
+USER CHANGES:
 ${userChanges}
 
-КОНТЕКСТ:
-- Тема: ${topic}
-- Вік дітей: ${age}
+CONTEXT:
+- Topic: ${topic}
+- Children's age: ${age}
 
-**ІНСТРУКЦІЇ:**
-1. Проаналізуй поточний план і зміни користувача
-2. Внеси відповідні модифікації зберігаючи структуру та якість
-3. Переконайся що план залишається педагогічно обґрунтованим
-4. Зберігай відповідний віку рівень складності
-5. Якщо зміни суперечать педагогічним принципам, запропонуй альтернативи
+**INSTRUCTIONS:**
+1. Analyze the current plan and user changes
+2. Make appropriate modifications while preserving structure and quality
+3. Ensure the plan remains pedagogically sound
+4. Maintain age-appropriate complexity level
+5. If changes contradict pedagogical principles, suggest alternatives
 
-**ФОРМАТ ВІДПОВІДІ:**
-Надай оновлений план у тому ж форматі що й оригінал, з чіткою структурою слайдів 1-6, рекомендаціями для вчителя, необхідними матеріалами та очікуваними результатами.
+**RESPONSE FORMAT:**
+Provide the updated plan in the same format as the original, with clear slide structure 1-6, teacher recommendations, required materials, and expected outcomes.
 
-**ДОДАТКОВІ ВИМОГИ:**
-- Забезпечуй оптимальне відображення контенту на різних пристроях
-- Всі інтерактивні елементи мають бути зручними для використання дітьми
+**ADDITIONAL REQUIREMENTS:**
+- Ensure optimal content display on different devices
+- All interactive elements must be child-friendly and easy to use
 
-**ОНОВЛЕНИЙ ПЛАН УРОКУ:**`;
+**UPDATED LESSON PLAN:**`;
 
     try {
       const response = await this.client.models.generateContent({

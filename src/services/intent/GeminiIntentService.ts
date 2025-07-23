@@ -121,8 +121,8 @@ Examples:
 - "I mentioned animals earlier" → "Create lesson about them" = CREATE_LESSON with topic="animals"
 
 1. **CREATE_LESSON** - if user explicitly wants to create a lesson:
-   - EXPLICIT phrases: "create lesson", "make lesson", "lesson about", "teach children", "створи урок", "зроби урок"
-   - **CONTEXTUAL phrases**: "lesson about it", "lesson about that", "урок про це", "урок про те"
+   - EXPLICIT phrases: "create lesson", "make lesson", "lesson about", "teach children"
+   - **CONTEXTUAL phrases**: "lesson about it", "lesson about that"
    - Must have CLEAR intent to create educational content
    - **IMPORTANT**: If user says "about it/that/this", resolve the reference from conversation history
    - Just asking about a topic (like "tell me about dinosaurs") is NOT lesson creation
@@ -141,8 +141,8 @@ Examples:
    - Phrases: "help", "how to use", "what can you do"
 
 5. **FREE_CHAT** - general communication and questions:
-   - Greetings: "hello", "hi", "good day", "привіт", "добрий день"
-   - General questions about topics: "tell me about X", "what is Y", "підкажи про X"
+   - Greetings: "hello", "hi", "good day"
+   - General questions about topics: "tell me about X", "what is Y"
    - Casual conversation without explicit lesson creation intent
    - Any question that's not explicitly asking to create educational content
 
@@ -180,23 +180,6 @@ RESPONSE:
   "isDataSufficient": false,
   "missingData": ["age"],
   "suggestedQuestion": "For what age should I create a lesson about dinosaurs?"
-}
-
-MESSAGE: "Створи урок про динозаврів"
-ANALYSIS: has topic="динозаври", but missing age
-RESPONSE:
-{
-  "intent": "CREATE_LESSON",
-  "confidence": 0.95,
-  "language": "uk",
-  "parameters": {
-    "topic": "динозаври",
-    "age": null,
-    "rawMessage": "Створи урок про динозаврів"
-  },
-  "isDataSufficient": false,
-  "missingData": ["age"],
-  "suggestedQuestion": "Для дітей якого віку створити урок про динозаврів?"
 }
 
 MESSAGE: "Next slide" (with active lesson)
@@ -246,21 +229,21 @@ RESPONSE:
   "suggestedQuestion": "For what age should I create a lesson about dinosaurs?"
 }
 
-MESSAGE: "створи урок про це" (after talking about space)
-ANALYSIS: contextual reference - "це" refers to "space" from conversation history  
+MESSAGE: "create lesson about it" (after talking about space)
+ANALYSIS: has topic="space" (from context), but missing age
 RESPONSE:
 {
   "intent": "CREATE_LESSON",
   "confidence": 0.95,
-  "language": "uk",
+  "language": "en",
   "parameters": {
-    "topic": "космос",
+    "topic": "space",
     "age": null,
-    "rawMessage": "створи урок про це"
+    "rawMessage": "create lesson about it"
   },
   "isDataSufficient": false,
   "missingData": ["age"],
-  "suggestedQuestion": "Для дітей якого віку створити урок про космос?"
+  "suggestedQuestion": "For what age should I create a lesson about space?"
 }
 
 ANALYZE THIS MESSAGE:

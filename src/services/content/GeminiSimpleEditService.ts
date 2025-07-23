@@ -73,34 +73,25 @@ export class GeminiSimpleEditService {
     topic: string,
     age: string
   ): string {
-    return `Ти експерт з редагування HTML слайдів для дітей. Отримай HTML слайд та інструкцію, зроби точні зміни.
+    return `You are an expert in editing HTML slides for children. Receive an HTML slide and instruction, make precise changes.
 
-**ПОТОЧНИЙ СЛАЙД (HTML):**
+**CURRENT HTML SLIDE:**
 ${compressedHTML}
 
-**ІНСТРУКЦІЯ КОРИСТУВАЧА:**
+**EDIT INSTRUCTION:**
 ${userInstruction}
 
-**КОНТЕКСТ:**
-- Тема: ${topic}
-- Вік дітей: ${age}
+**REQUIREMENTS:**
+1. Make ONLY the requested changes
+2. Preserve all existing functionality
+3. Maintain responsive design
+4. Keep child-friendly style
+5. Ensure all interactions work properly
 
-**ПРАВИЛА РЕДАГУВАННЯ:**
-1. Зроби ТІЛЬКИ ті зміни, які запросив користувач
-2. Зберігай всю структуру HTML та CSS
-3. НЕ змінюй загальний дизайн без явної вказівки
-4. Зберігай всі існуючі стилі та JavaScript
-5. Відповідь ТІЛЬКИ готовий HTML код
+**RESPONSE:**
+Provide ONLY the updated HTML code, without any explanations or comments.
 
-**ТЕХНІЧНІ ВИМОГИ:**
-- Формат: повний HTML документ
-- Зберігай <!DOCTYPE html>
-- Всі стилі в <style> секції
-- JavaScript в <script> секції
-- Готовий для браузера
-
-**ВІДПОВІДЬ:**
-Надай тільки оновлений HTML код без пояснень або markdown обгортки.`;
+**UPDATED HTML:**`;
   }
 
   private cleanHtmlFromMarkdown(content: string): string {

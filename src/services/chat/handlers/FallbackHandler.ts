@@ -90,29 +90,13 @@ export class FallbackHandler implements IIntentHandler {
   }
 
   private buildUniversalPrompt(language: string, userMessage: string, isFriendlyChat: boolean, conversationHistory?: ConversationHistory): string {
-    // Determine response language based on user's language
+    // Use English as the universal language for prompts
     let responseLanguage = 'in English';
     let exampleCommands = [
       '"Create lesson about [topic] for [age] year old children"',
       '"Help" - to see all commands',
       '"Improve slide [number]" - for editing'
     ];
-    
-    if (language === 'uk') {
-      responseLanguage = 'українською мовою';
-      exampleCommands = [
-        '"Створи урок про [тема] для дітей [вік] років"',
-        '"Допоможи" - для перегляду всіх команд',
-        '"Покращ слайд [номер]" - для редагування'
-      ];
-    } else if (language === 'ru') {
-      responseLanguage = 'на русском языке';
-      exampleCommands = [
-        '"Создай урок о [тема] для детей [возраст] лет"',
-        '"Помощь" - для просмотра всех команд',
-        '"Улучши слайд [номер]" - для редактирования'
-      ];
-    }
 
     const chatType = isFriendlyChat ? 'friendly_chat' : 'unclear_request';
     
@@ -221,15 +205,8 @@ Create a helpful teacher-like response that:
   }
 
   private getEmergencyFallback(language: string): string {
-    // Ultra-simple fallback when AI completely fails
-    switch (language) {
-      case 'uk':
-        return `🤖 Вибачте, виникла технічна проблема. Спробуйте "Допоможи" або "Створи урок про [тема]".`;
-      case 'ru':
-        return `🤖 Извините, возникла техническая проблема. Попробуйте "Помощь" или "Создай урок о [тема]".`;
-      default:
-        return `🤖 Sorry, technical issue occurred. Try "Help" or "Create lesson about [topic]".`;
-    }
+    // Use English as the universal fallback language
+    return `🤖 Sorry, technical issue occurred. Try "Help" or "Create lesson about [topic]".`;
   }
 
 } 
