@@ -111,11 +111,11 @@ STRUCTURE:
 
 ### 📋 Lesson Plan
 
-#### Slide 1: Introduction (5 minutes)
+#### Slide 1: Introduction
 - [Content description]
 - [Interactive element]
 
-#### Slide 2: Main Content (10 minutes)
+#### Slide 2: Main Content
 - [Content description]
 - [Activities]
 
@@ -135,6 +135,10 @@ STRUCTURE:
 ### 💡 Recommendations
 - [Teaching tips]
 - [Adaptation suggestions]
+
+IMPORTANT:
+- Use clear slide structure: "#### Slide X: [Title]"
+- DO NOT include duration in slide titles (e.g. use "Introduction" not "Introduction (5 minutes)")
 
 Create a complete, detailed lesson plan that is engaging and educational for the specified age group.`;
     }
@@ -211,7 +215,8 @@ IMPORTANT:
 - Each slide must contain detailed description (minimum 100 words)
 - Adapt content for age ${age}
 - Include interactive elements for each slide
-- Make the lesson engaging and educational`;
+- Make the lesson engaging and educational
+- DO NOT include duration or time information in slide titles (e.g. use "Introduction" not "Introduction (5 minutes)")`;
   }
 
   async generateSlideContent(slideDescription: string, topic: string, age: string): Promise<string> {
