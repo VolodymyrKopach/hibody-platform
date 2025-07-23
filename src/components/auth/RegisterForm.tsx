@@ -94,7 +94,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess 
       if (result.error) {
         setError(result.error.message)
       } else {
-        // Успішна реєстрація - перенаправляємо користувача
+        // Successful registration - redirect the user
         const redirectTo = searchParams?.get('redirectTo')
         if (redirectTo && redirectTo !== '/auth/login' && redirectTo !== '/auth/register') {
           router.push(redirectTo)

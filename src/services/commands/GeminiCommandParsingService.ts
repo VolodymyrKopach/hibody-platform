@@ -56,7 +56,7 @@ export class GeminiCommandParsingService {
       
     } catch (error) {
       console.error('Gemini command parsing error:', error);
-      throw new Error('Помилка сервісу команд. Спробуйте пізніше.');
+      throw new Error('Command service error. Please try again later.');
     }
   }
 
@@ -98,9 +98,9 @@ RESPONSE FORMAT (JSON only):
 }
 
 EXAMPLES:
-- "Покращ слайд 2" → {"type": "improve_slide", "slideNumber": 2, "instruction": "покращити слайд"}
+- "Improve slide 2" → {"type": "improve_slide", "slideNumber": 2, "instruction": "improve slide"}
 - "Make the elephant bigger" → {"type": "edit_slide", "targetElement": "elephant", "instruction": "make the elephant bigger"}
-- "Створи новий слайд про космос" → {"type": "create_slide", "instruction": "створити слайд про космос"}
+- "Create a new slide about space" → {"type": "create_slide", "instruction": "create a slide about space"}
 
 Analyze this command: "${message}"
 

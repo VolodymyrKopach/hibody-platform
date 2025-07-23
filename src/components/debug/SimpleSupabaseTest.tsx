@@ -74,7 +74,7 @@ export const SimpleSupabaseTest: React.FC = () => {
         </Typography>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Перевірка підключення до бази даних
+          Check database connection
         </Typography>
 
         <Button
@@ -83,18 +83,18 @@ export const SimpleSupabaseTest: React.FC = () => {
           disabled={isLoading}
           sx={{ mb: 3 }}
         >
-          {isLoading ? <CircularProgress size={20} /> : 'Запустити тест'}
+          {isLoading ? <CircularProgress size={20} /> : 'Run Test'}
         </Button>
 
         {user && (
           <Alert severity="info" sx={{ mb: 2 }}>
-            <strong>Користувач:</strong> {user.email}
+            <strong>User:</strong> {user.email}
             {profile && (
               <>
                 <br />
-                <strong>Ім'я:</strong> {profile.full_name || 'Не вказано'}
+                <strong>Name:</strong> {profile.full_name || 'Not specified'}
                 <br />
-                <strong>Роль:</strong> {profile.role}
+                <strong>Role:</strong> {profile.role}
               </>
             )}
           </Alert>
@@ -102,7 +102,7 @@ export const SimpleSupabaseTest: React.FC = () => {
 
         {!user && (
           <Alert severity="warning" sx={{ mb: 2 }}>
-            Увійдіть в систему для повного тестування
+            Log in to the system for full testing
           </Alert>
         )}
 
@@ -110,7 +110,7 @@ export const SimpleSupabaseTest: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Результат:
+                Result:
               </Typography>
               <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
                 {testResult}

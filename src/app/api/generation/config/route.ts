@@ -113,8 +113,8 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         title: configData.name,
-        description: configData.description || 'Конфігурація створена конструктором',
-        subject: 'Конфігурація',
+        description: configData.description || 'Configuration created by constructor',
+        subject: 'Configuration',
         age_group: configData.ageGroupId,
         duration: 0,
         difficulty: 'medium',
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
         createdAt: data.created_at,
         updatedAt: data.updated_at
       },
-      message: 'Конфігурація успішно збережена'
+      message: 'Configuration saved successfully'
     };
     
     return NextResponse.json(response, { status: 201 });
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: 'Internal server error',
-      message: 'Внутрішня помилка сервера'
+      message: 'Internal server error'
     }, { status: 500 });
   }
 }
@@ -196,7 +196,7 @@ export async function GET(request: NextRequest) {
       .from('lessons')
       .select('*')
       .eq('user_id', user.id)
-      .eq('subject', 'Конфігурація');
+      .eq('subject', 'Configuration');
     
     if (ageGroupId) {
       query = query.eq('age_group', ageGroupId);
@@ -275,7 +275,7 @@ export async function DELETE(request: NextRequest) {
       .delete()
       .eq('id', configId)
       .eq('user_id', user.id)
-      .eq('subject', 'Конфігурація');
+      .eq('subject', 'Configuration');
     
     if (error) {
       console.error('❌ CONFIG API: Error deleting configuration:', error);
@@ -286,7 +286,7 @@ export async function DELETE(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      message: 'Конфігурація успішно видалена'
+      message: 'Configuration deleted successfully'
     }, { status: 200 });
     
   } catch (error) {

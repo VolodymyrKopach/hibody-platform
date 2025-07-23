@@ -146,10 +146,10 @@ export class PreviewGenerationService {
 
     const slides: PreviewSlide[] = [];
     const slideTemplates = [
-      { title: 'Вітання', type: 'welcome', baseContent: 'Привіт! Сьогодні ми вивчаємо' },
-      { title: 'Основний матеріал', type: 'content', baseContent: 'Давайте дізнаємося про' },
-      { title: 'Практичне завдання', type: 'activity', baseContent: 'Тепер спробуймо самі' },
-      { title: 'Підсумок', type: 'summary', baseContent: 'Що ми сьогодні вивчили?' }
+      { title: 'Welcome', type: 'welcome', baseContent: 'Hi! Today we are learning about' },
+      { title: 'Main Material', type: 'content', baseContent: 'Let\'s learn about' },
+      { title: 'Practical Task', type: 'activity', baseContent: 'Now let\'s try it ourselves' },
+      { title: 'Summary', type: 'summary', baseContent: 'What did we learn today?' }
     ];
 
     for (let i = 0; i < slideCount; i++) {
@@ -165,13 +165,13 @@ export class PreviewGenerationService {
           const prompt = this.buildSlidePrompt(template, ageConfig, formValues, i + 1);
           htmlContent = await this.contentService.generateSlideContent(
             prompt,
-            formValues.subject as string || 'урок',
+            formValues.subject as string || 'lesson',
             ageConfig.ageRange || ageConfig.id
           );
           content = this.extractTextFromHtml(htmlContent);
         } else {
           // Mock generation
-          content = `${template.baseContent} ${formValues.subject || 'цікаву тему'}`;
+          content = `${template.baseContent} ${formValues.subject || 'interesting topic'}`;
           htmlContent = this.generateMockHtml(content, ageConfig);
         }
 
@@ -207,11 +207,11 @@ export class PreviewGenerationService {
     slideNumber: number
   ): string {
     const parts = [
-      `Створи ${template.title.toLowerCase()} для дітей ${ageConfig.name} (${ageConfig.ageRange}).`,
-      `Тема: ${formValues.subject || 'загальна тема'}`,
-      `Слайд ${slideNumber}`,
-      `Тип: ${template.type}`,
-      `Базовий контент: ${template.baseContent}`
+      `Create ${template.title.toLowerCase()} for children ${ageConfig.name} (${ageConfig.ageRange}).`,
+      `Topic: ${formValues.subject || 'general topic'}`,
+      `Slide ${slideNumber}`,
+      `Type: ${template.type}`,
+      `Base content: ${template.baseContent}`
     ];
 
     // === SOLID: SRP - Add form-specific instructions ===
@@ -222,9 +222,9 @@ export class PreviewGenerationService {
     });
 
     // === SOLID: SRP - Add age-specific constraints ===
-    parts.push(`Розмір шрифту: ${ageConfig.fontSize.primary}`);
-    parts.push(`Максимум елементів: ${ageConfig.layout.elementsPerSlide}`);
-    parts.push(`Максимум слів: ${ageConfig.layout.maxWords}`);
+    parts.push(`Font size: ${ageConfig.fontSize.primary}`);
+    parts.push(`Max elements: ${ageConfig.layout.elementsPerSlide}`);
+    parts.push(`Max words: ${ageConfig.layout.maxWords}`);
 
     return parts.join('\n');
   }
@@ -281,7 +281,7 @@ export class PreviewGenerationService {
       elements.push({
         id: 'activity-button',
         type: 'interactive',
-        content: 'Натисни мене! 🎯',
+        content: 'Click me! 🎯',
         position: { x: 25, y: 70, width: 50, height: 15 },
         style: {
           fontSize: ageConfig.fontSize.secondary,
@@ -345,7 +345,7 @@ export class PreviewGenerationService {
     template: any,
     ageConfig: AgeGroupConfig
   ): PreviewSlide {
-    const content = `${template.baseContent} - це прикладовий слайд ${slideNumber}`;
+    const content = `${template.baseContent} - this is an example slide ${slideNumber}`;
     
     return {
       id: `fallback-slide-${slideNumber}`,
@@ -378,10 +378,10 @@ export class PreviewGenerationService {
     const remainingSeconds = seconds % 60;
     
     if (minutes === 0) {
-      return `${remainingSeconds} сек`;
+      return `${remainingSeconds} sec`;
     }
     
-    return `${minutes} хв ${remainingSeconds} сек`;
+    return `${minutes} min ${remainingSeconds} sec`;
   }
 
   // === SOLID: SRP - Generate mock preview for fallback ===
@@ -398,7 +398,7 @@ export class PreviewGenerationService {
         fontSize: ageConfig.fontSize,
         layout: ageConfig.layout,
         audio: ageConfig.audio,
-        estimatedDuration: '3-5 хвилин',
+        estimatedDuration: '3-5 minutes',
         complexity: ageConfig.complexity
       },
       slides: [],

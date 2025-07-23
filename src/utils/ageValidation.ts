@@ -1,10 +1,10 @@
 // Age validation and group determination for adaptive content generation
 
 export enum AgeGroup {
-  TODDLERS = 'toddlers',      // 3-4 роки
-  PRESCHOOL = 'preschool',    // 5-6 років
-  EARLY_SCHOOL = 'early',     // 7-8 років
-  MIDDLE_SCHOOL = 'middle',   // 9-10 років
+  TODDLERS = 'toddlers',      // 3-4 years
+  PRESCHOOL = 'preschool',    // 5-6 years
+  EARLY_SCHOOL = 'early',     // 7-8 years
+  MIDDLE_SCHOOL = 'middle',   // 9-10 years
 }
 
 export interface AgeGroupConfig {
@@ -20,127 +20,127 @@ export interface AgeGroupConfig {
 
 export const AGE_GROUP_CONFIGS: Record<AgeGroup, AgeGroupConfig> = {
   [AgeGroup.TODDLERS]: {
-    name: '🐣 Малюки',
-    description: 'Дуже прості взаємодії, великі кнопки, яскраві кольори',
+    name: '🐣 Toddlers',
+    description: 'Very simple interactions, large buttons, bright colors',
     minAge: 3,
     maxAge: 4,
     characteristics: [
-      'Короткий період уваги (3-5 хвилин)',
-      'Люблять великі яскраві елементи',
-      'Потребують простих дій (клік, торкання)',
-      'Реагують на звуки та анімації',
-      'Навчаються через повторення'
+      'Short attention span (3-5 minutes)',
+      'Love large bright elements',
+      'Need simple actions (click, tap)',
+      'React to sounds and animations',
+      'Learn through repetition'
     ],
     interactiveElements: [
-      'Великі кнопки з анімацією',
-      'Простий drag & drop',
-      'Звукові ефекти при кліку',
-      'Яскраві спалахи та анімації',
-      'Великі емоджі та картинки',
-      'Прості hover ефекти'
+      'Large animated buttons',
+      'Simple drag & drop',
+      'Sound effects on click',
+      'Bright flashes and animations',
+      'Large emojis and pictures',
+      'Simple hover effects'
     ],
     attentionSpan: 5,
     preferredStyles: [
-      'Дуже великі шрифти (24px+)',
-      'Яскраві контрастні кольори',
-      'Багато білого простору',
-      'Прості форми та контури',
-      'Великі тактильні елементи'
+      'Very large fonts (24px+)',
+      'Bright contrasting colors',
+      'Lots of white space',
+      'Simple shapes and contours',
+      'Large tactile elements'
     ]
   },
   
   [AgeGroup.PRESCHOOL]: {
-    name: '🎨 Дошкільнята',
-    description: 'Ігрові елементи, персонажі, прості завдання',
+    name: '🎨 Preschoolers',
+    description: 'Game elements, characters, simple tasks',
     minAge: 5,
     maxAge: 6,
     characteristics: [
-      'Період уваги 5-10 хвилин',
-      'Люблять персонажів та історії',
-      'Можуть виконувати прості завдання',
-      'Цікавляться кольорами та формами',
-      'Навчаються через гру'
+      'Attention span 5-10 minutes',
+      'Love characters and stories',
+      'Can perform simple tasks',
+      'Interested in colors and shapes',
+      'Learn through play'
     ],
     interactiveElements: [
-      'Інтерактивні персонажі',
-      'Мітті-ігри з завданнями',
-      'Прості квізи з картинками',
-      'Перетягування елементів',
-      'Анімовані нагороди',
-      'Інтерактивні історії',
-      'Простий підрахунок балів'
+      'Interactive characters',
+      'Mini-games with tasks',
+      'Simple quizzes with pictures',
+      'Dragging elements',
+      'Animated rewards',
+      'Interactive stories',
+      'Simple score counting'
     ],
     attentionSpan: 8,
     preferredStyles: [
-      'Великі шрифти (20px+)',
-      'Яскраві веселі кольори',
-      'Закруглені кути',
-      'Дитячі ілюстрації',
-      'Плавні анімації'
+      'Large fonts (20px+)',
+      'Bright cheerful colors',
+      'Rounded corners',
+      'Children\'s illustrations',
+      'Smooth animations'
     ]
   },
   
   [AgeGroup.EARLY_SCHOOL]: {
-    name: '📚 Молодші школярі',
-    description: 'Навчальні ігри, простий текст, базова інтерактивність',
+    name: '📚 Early Schoolers',
+    description: 'Educational games, simple text, basic interactivity',
     minAge: 7,
     maxAge: 8,
     characteristics: [
-      'Період уваги 10-15 хвилин',
-      'Вміють читати прості слова',
-      'Можуть виконувати послідовні дії',
-      'Цікавляться досягненнями',
-      'Розуміють прості правила'
+      'Attention span 10-15 minutes',
+      'Can read simple words',
+      'Can perform sequential actions',
+      'Interested in achievements',
+      'Understand simple rules'
     ],
     interactiveElements: [
-      'Освітні міні-ігри',
-      'Інтерактивні вправи',
-      'Система балів та рівнів',
-      'Прогрес-бари',
-      'Інтерактивні тести',
-      'Drag&drop з логікою',
-      'Збір предметів',
-      'Прості пазли'
+      'Educational mini-games',
+      'Interactive exercises',
+      'Point and level system',
+      'Progress bars',
+      'Interactive tests',
+      'Drag&drop with logic',
+      'Collecting items',
+      'Simple puzzles'
     ],
     attentionSpan: 12,
     preferredStyles: [
-      'Середні шрифти (18px+)',
-      'Збалансовані кольори',
-      'Структурований макет',
-      'Чіткі інструкції',
-      'Візуальний фідбек'
+      'Medium fonts (18px+)',
+      'Balanced colors',
+      'Structured layout',
+      'Clear instructions',
+      'Visual feedback'
     ]
   },
   
   [AgeGroup.MIDDLE_SCHOOL]: {
-    name: '🎯 Старші школярі',
-    description: 'Складні завдання, тексти, інтерактивні експерименти',
+    name: '🎯 Middle Schoolers',
+    description: 'Complex tasks, texts, interactive experiments',
     minAge: 9,
     maxAge: 10,
     characteristics: [
-      'Період уваги 15-20 хвилин',
-      'Добре читають та розуміють',
-      'Можуть виконувати складні завдання',
-      'Цікавляться деталями',
-      'Розуміють складні концепції'
+      'Attention span 15-20 minutes',
+      'Read and understand well',
+      'Can perform complex tasks',
+      'Interested in details',
+      'Understand complex concepts'
     ],
     interactiveElements: [
-      'Інтерактивні симуляції',
-      'Складні ігри з правилами',
-      'Детальна система досягнень',
-      'Мультистадійні завдання',
-      'Інтерактивні діаграми',
-      'Віртуальні експерименти',
-      'Квести з сюжетом',
-      'Творчі завдання'
+      'Interactive simulations',
+      'Complex games with rules',
+      'Detailed achievement system',
+      'Multi-stage tasks',
+      'Interactive diagrams',
+      'Virtual experiments',
+      'Story-driven quests',
+      'Creative tasks'
     ],
     attentionSpan: 18,
     preferredStyles: [
-      'Стандартні шрифти (16px+)',
-      'Професійні кольори',
-      'Детальний контент',
-      'Інформативні елементи',
-      'Складна навігація'
+      'Standard fonts (16px+)',
+      'Professional colors',
+      'Detailed content',
+      'Informative elements',
+      'Complex navigation'
     ]
   }
 };
@@ -157,7 +157,7 @@ export function determineAgeGroup(age: number): AgeGroup {
 }
 
 export function extractAgeFromText(text: string): number | null {
-  // Шукаємо вік у тексті
+  // Search for age in text
   const agePatterns = [
     /(\d+)\s*(?:років?|рік|year?s?|old)/i,
     /для\s*дітей\s*(\d+)/i,
@@ -184,14 +184,14 @@ export function validateAge(age: number): { valid: boolean; message?: string } {
   if (age < 3) {
     return {
       valid: false,
-      message: 'Система розрахована на дітей від 3 років. Для молодших дітей потрібен особливий підхід.'
+      message: 'The system is designed for children aged 3 and older. Younger children require a special approach.'
     };
   }
   
   if (age > 10) {
     return {
       valid: false,
-      message: 'Система оптимізована для дітей до 10 років. Для старших дітей рекомендуємо інші методи навчання.'
+      message: 'The system is optimized for children up to 10 years old. For older children, we recommend other learning methods.'
     };
   }
   
@@ -207,22 +207,22 @@ export function generateAgePrompt(age: number): string {
   const config = getAgeGroupConfig(age);
   
   return `
-**ВІКОВА ГРУПА:** ${config.name} (${age} ${age === 1 ? 'рік' : age < 5 ? 'роки' : 'років'})
+**AGE GROUP:** ${config.name} (${age} ${age === 1 ? 'year' : age < 5 ? 'years' : 'years'} old)
 
-**ХАРАКТЕРИСТИКИ ВІКУ:**
+**AGE CHARACTERISTICS:**
 ${config.characteristics.map(char => `• ${char}`).join('\n')}
 
-**ОБОВ'ЯЗКОВІ ІНТЕРАКТИВНІ ЕЛЕМЕНТИ:**
+**MANDATORY INTERACTIVE ELEMENTS:**
 ${config.interactiveElements.map(elem => `• ${elem}`).join('\n')}
 
-**СТИЛІСТИЧНІ ВИМОГИ:**
+**STYLISTIC REQUIREMENTS:**
 ${config.preferredStyles.map(style => `• ${style}`).join('\n')}
 
-**ТРИВАЛІСТЬ УВАГИ:** ${config.attentionSpan} хвилин максимум
+**ATTENTION SPAN:** ${config.attentionSpan} minutes maximum
 
-**АДАПТАЦІЯ КОНТЕНТУ:**
-- Розділи контент на сегменти по ${Math.ceil(config.attentionSpan / 3)} хвилини
-- Використовуй ${config.name.toLowerCase()} мову та приклади
-- Періодично додавай інтерактивні елементи кожні 2-3 хвилини
+**CONTENT ADAPTATION:**
+- Divide content into segments of ${Math.ceil(config.attentionSpan / 3)} minutes
+- Use ${config.name.toLowerCase()} language and examples
+- Periodically add interactive elements every 2-3 minutes
 `;
 } 

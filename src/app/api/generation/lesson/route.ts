@@ -120,9 +120,9 @@ export async function POST(request: NextRequest) {
     // Create a basic lesson using existing services
     const lessonData = {
       user_id: user.id,
-      title: validatedRequest.metadata?.title || 'Урок створений конструктором',
-      description: validatedRequest.metadata?.description || 'Урок створено за допомогою конструктора',
-      subject: validatedRequest.formValues.subject as string || 'Загальна освіта',
+      title: validatedRequest.metadata?.title || 'Lesson created by constructor',
+      description: validatedRequest.metadata?.description || 'Lesson created using the constructor',
+      subject: validatedRequest.formValues.subject as string || 'General education',
       age_group: validatedRequest.ageGroupConfig.id,
       duration: parseInt(validatedRequest.formValues.duration as string) || 45,
       difficulty: 'medium' as const,
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         description: lesson.description || '',
         slides: [] // Slides will be generated in a separate process
       },
-      message: 'Урок успішно згенеровано'
+      message: 'Lesson successfully generated'
     };
     
     return NextResponse.json(response, { status: 200 });
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
     const response: GenerateLessonResponse = {
       success: false,
       error: 'Internal server error',
-      message: 'Внутрішня помилка сервера'
+      message: 'Internal server error'
     };
     
     return NextResponse.json(response, { status: 500 });

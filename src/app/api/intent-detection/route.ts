@@ -30,6 +30,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// ВИДАЛЕНО: всі fallback функції з regex patterns
-// ВСЕ має йти через нейронну мережу! 

@@ -12,10 +12,10 @@ export interface InteractiveTemplate {
 }
 
 export const INTERACTIVE_TEMPLATES: Record<string, InteractiveTemplate> = {
-  // Для малюків (3-4 роки)
+  // For toddlers (3-4 years old)
   bigButtons: {
-    name: 'Великі анімовані кнопки',
-    description: 'Дуже великі кнопки з простими анімаціями',
+    name: 'Large Animated Buttons',
+    description: 'Very large buttons with simple animations',
     ageGroups: [AgeGroup.TODDLERS],
     cssTemplate: `
       .big-button {
@@ -66,15 +66,15 @@ export const INTERACTIVE_TEMPLATES: Record<string, InteractiveTemplate> = {
     `,
     htmlStructure: `
       <button class="big-button" onclick="handleBigButtonClick(this)">
-        🎈 Натисни мене!
+        🎈 Click me!
       </button>
     `
   },
 
-  // Для дошкільнят (5-6 років)
+  // For preschoolers (5-6 years old)
   characterInteraction: {
-    name: 'Інтерактивні персонажі',
-    description: 'Персонажі що реагують на дії дитини',
+    name: 'Interactive Characters',
+    description: 'Characters that react to child actions',
     ageGroups: [AgeGroup.PRESCHOOL],
     cssTemplate: `
       .character-container {
@@ -155,16 +155,16 @@ export const INTERACTIVE_TEMPLATES: Record<string, InteractiveTemplate> = {
       <div class="character-container">
         <div class="character" onclick="characterSpeak(this)">
           🐱
-          <div class="speech-bubble">Привіт!</div>
+          <div class="speech-bubble">Hello!</div>
         </div>
       </div>
     `
   },
 
-  // Для молодших школярів (7-8 років)
+  // For early schoolers (7-8 years old)
   progressGame: {
-    name: 'Гра з прогресом',
-    description: 'Освітня гра з системою балів та прогресу',
+    name: 'Game with Progress',
+    description: 'Educational game with a scoring and progress system',
     ageGroups: [AgeGroup.EARLY_SCHOOL],
     cssTemplate: `
       .game-container {
@@ -258,7 +258,7 @@ export const INTERACTIVE_TEMPLATES: Record<string, InteractiveTemplate> = {
         updateProgress() {
           const percentage = (this.score / this.maxScore) * 100;
           this.progressFill.style.width = percentage + '%';
-          this.scoreDisplay.textContent = \`Бали: \${this.score}/\${this.maxScore}\`;
+          this.scoreDisplay.textContent = \`Score: \${this.score}/\${this.maxScore}\`;
         }
         
         celebrate() {
@@ -269,19 +269,19 @@ export const INTERACTIVE_TEMPLATES: Record<string, InteractiveTemplate> = {
     `,
     htmlStructure: `
       <div class="game-container">
-        <div class="score-display">Бали: 0/100</div>
+        <div class="score-display">Score: 0/100</div>
         <div class="progress-bar">
           <div class="progress-fill" style="width: 0%"></div>
         </div>
-        <button class="game-button" onclick="game.addScore(10)">+10 балів</button>
+        <button class="game-button" onclick="game.addScore(10)">+10 points</button>
       </div>
     `
   },
 
-  // Для старших школярів (9-10 років)
+  // For middle schoolers (9-10 years old)
   interactiveSimulation: {
-    name: 'Інтерактивна симуляція',
-    description: 'Складна інтерактивна симуляція з експериментами',
+    name: 'Interactive Simulation',
+    description: 'Complex interactive simulation with experiments',
     ageGroups: [AgeGroup.MIDDLE_SCHOOL],
     cssTemplate: `
       .simulation-container {
@@ -372,20 +372,20 @@ export const INTERACTIVE_TEMPLATES: Record<string, InteractiveTemplate> = {
         
         updateDisplay() {
           const display = this.container.querySelector('.result-display');
-          display.innerHTML = \`Результат: \${JSON.stringify(this.values)}\`;
+          display.innerHTML = \`Result: \${JSON.stringify(this.values)}\`;
         }
       }
     `,
     htmlStructure: `
       <div class="simulation-container">
-        <h3>Інтерактивний експеримент</h3>
+        <h3>Interactive Experiment</h3>
         <div class="control-panel">
           <div class="control-group">
-            <label>Параметр 1</label>
+            <label>Parameter 1</label>
             <input type="range" class="slider" data-param="param1" min="0" max="100">
           </div>
         </div>
-        <div class="result-display">Результат буде тут</div>
+        <div class="result-display">Result will be here</div>
         <div class="experiment-area"></div>
       </div>
     `
@@ -430,7 +430,7 @@ export const SOUND_EFFECTS_JS = `
     }
     
     static playCorrect() {
-      // Web Audio API для генерації звуків
+      // Web Audio API for sound generation
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();

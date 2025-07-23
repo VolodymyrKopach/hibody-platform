@@ -17,7 +17,7 @@ interface SimpleSlide {
   type: 'title' | 'content' | 'interactive' | 'summary';
   status: 'completed' | 'draft';
   previewUrl?: string;
-  thumbnailUrl?: string; // Додаємо thumbnailUrl з бази даних
+  thumbnailUrl?: string; // Add thumbnailUrl from database
 }
 
 interface SlideCardProps {
@@ -45,10 +45,10 @@ const SlideCard: React.FC<SlideCardProps> = ({
     <Paper
       elevation={0}
       sx={{
-        width: '100%',       // Залишаємо гнучкість для менших екранів
-        minHeight: '140px',  // Зменшено з 200px до 140px через менше превью
-        height: 'auto',      // Автоматична висота залежно від контенту
-        flexShrink: 0,       // Не дозволяємо картці стискатися
+        width: '100%',       // Maintain flexibility for smaller screens
+        minHeight: '140px',  // Reduced from 200px to 140px due to smaller preview
+        height: 'auto',      // Automatic height depending on content
+        flexShrink: 0,       // Prevent card from shrinking
         border: `1px solid ${isSelected ? theme.palette.primary.main : alpha(theme.palette.divider, 0.1)}`,
         borderRadius: '12px',
         overflow: 'hidden',
@@ -64,23 +64,24 @@ const SlideCard: React.FC<SlideCardProps> = ({
         }
       }}
     >
-      {/* Превью слайду */}
+      {/* Slide Preview */}
       <Box sx={{ 
         position: 'relative',
-        width: '100%',        // Займаємо всю ширину картки
-        aspectRatio: '2/1',   // Ще більш компактне відображення
+        width: '100%',        // Occupy full card width
+        aspectRatio: '2/1',   // Even more compact display
         overflow: 'hidden',
         backgroundColor: alpha(theme.palette.grey[100], 0.3),
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: '12px 12px 0 0'   // Округлені кути тільки зверху
+        position: 'relative',
+        bgcolor: alpha(theme.palette.grey[100], 0.5)
       }}>
-        {/* Реальне превью слайду */}
+        {/* Actual slide preview */}
         {(previewUrl || slide.thumbnailUrl) && !isUpdating ? (
           <img
             src={previewUrl || slide.thumbnailUrl}
-            alt={`Превью слайду ${index + 1}`}
+            alt={`Slide preview ${index + 1}`}
             style={{
               width: '100%',
               height: '100%',
@@ -113,21 +114,21 @@ const SlideCard: React.FC<SlideCardProps> = ({
               opacity: 0.6,
               fontSize: '0.7rem'
             }}>
-              {isUpdating ? 'Оновлення...' : 'Генерація...'}
+              {isUpdating ? 'Updating...' : 'Generating...'}
             </Typography>
           </Box>
         )}
         
 
 
-        {/* Статус індикатор */}
+        {/* Status indicator */}
         <Box
           sx={{
             position: 'absolute',
-            top: 4,              // Зменшено з 8 до 4
-            left: 4,             // Зменшено з 8 до 4
-            width: 6,            // Зменшено з 8 до 6
-            height: 6,           // Зменшено з 8 до 6
+            top: 4,              // Reduced from 8 to 4
+            left: 4,             // Reduced from 8 to 4
+            width: 6,            // Reduced from 8 to 6
+            height: 6,           // Reduced from 8 to 6
             borderRadius: '50%',
             backgroundColor: slide.status === 'completed' 
               ? theme.palette.success.main 
@@ -138,7 +139,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
 
 
         
-        {/* Кнопка перегляду по центру */}
+        {/* View button in center */}
         <Box
           onClick={() => onOpenDialog(index)}
           sx={{
@@ -182,10 +183,10 @@ const SlideCard: React.FC<SlideCardProps> = ({
         </Box>
       </Box>
 
-      {/* Інформація про слайд */}
-      <Box sx={{ p: 1.5 }}>    {/* Зменшено з 2.5 до 1.5 */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>   {/* Зменшено mb з 1.5 до 1 */}
-          {/* Checkbox для вибору слайду */}
+      {/* Slide Information */}
+      <Box sx={{ p: 1.5 }}>    {/* Reduced from 2.5 to 1.5 */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>   {/* Reduced mb from 1.5 to 1 */}
+          {/* Checkbox for slide selection */}
           <Checkbox
             checked={isSelected}
             onChange={(e) => {

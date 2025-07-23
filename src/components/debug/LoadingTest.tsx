@@ -12,10 +12,10 @@ export const LoadingTest: React.FC = () => {
 
   const handleShowFullScreenLoader = () => {
     if (infiniteFullScreen) {
-      // Якщо включений вічний режим, просто перемикаємо
+      // If infinite mode is enabled, just toggle
       setShowFullScreenLoader(!showFullScreenLoader)
     } else {
-      // Звичайний режим з таймером
+      // Normal mode with timer
       setShowFullScreenLoader(true)
       setTimeout(() => {
         setShowFullScreenLoader(false)
@@ -25,10 +25,10 @@ export const LoadingTest: React.FC = () => {
 
   const handleShowPageLoader = () => {
     if (infinitePageLoader) {
-      // Якщо включений вічний режим, просто перемикаємо
+      // If infinite mode is enabled, just toggle
       setShowPageLoader(!showPageLoader)
     } else {
-      // Звичайний режим з таймером
+      // Normal mode with timer
       setShowPageLoader(true)
       setTimeout(() => {
         setShowPageLoader(false)
@@ -39,11 +39,11 @@ export const LoadingTest: React.FC = () => {
   const toggleInfiniteFullScreen = () => {
     setInfiniteFullScreen(!infiniteFullScreen)
     if (showFullScreenLoader && !infiniteFullScreen) {
-      // Якщо лоадер активний і ми переходимо в вічний режим, залишаємо його
+      // If the loader is active and we switch to infinite mode, keep it active
       return
     }
     if (showFullScreenLoader && infiniteFullScreen) {
-      // Якщо виходимо з вічного режиму, вимикаємо лоадер
+      // If exiting infinite mode, turn off the loader
       setShowFullScreenLoader(false)
     }
   }
@@ -51,11 +51,11 @@ export const LoadingTest: React.FC = () => {
   const toggleInfinitePageLoader = () => {
     setInfinitePageLoader(!infinitePageLoader)
     if (showPageLoader && !infinitePageLoader) {
-      // Якщо лоадер активний і ми переходимо в вічний режим, залишаємо його
+      // If the loader is active and we switch to infinite mode, keep it active
       return
     }
     if (showPageLoader && infinitePageLoader) {
-      // Якщо виходимо з вічного режиму, вимикаємо лоадер
+      // If exiting infinite mode, turn off the loader
       setShowPageLoader(false)
     }
   }
@@ -64,7 +64,7 @@ export const LoadingTest: React.FC = () => {
     <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Тестування Loading компонентів з анімаціями
+          Loading Components Testing with Animations
         </Typography>
         
         <Stack spacing={3}>
@@ -72,11 +72,11 @@ export const LoadingTest: React.FC = () => {
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                🌊 Хвиляста анімація повноекранного логотипу (Hi)
+                🌊 Wavy full-screen logo animation (Hi)
               </Typography>
               {infiniteFullScreen && (
                 <Chip 
-                  label="♾️ Вічний режим" 
+                  label="♾️ Infinite Mode" 
                   size="small" 
                   color="primary" 
                   variant="outlined"
@@ -91,8 +91,8 @@ export const LoadingTest: React.FC = () => {
                 disabled={showFullScreenLoader && !infiniteFullScreen}
               >
                 {showFullScreenLoader 
-                  ? (infiniteFullScreen ? 'Сховати Loading Screen' : 'Loading Screen активний') 
-                  : (infiniteFullScreen ? 'Показати Loading Screen' : 'Показати Loading Screen (4 сек)')
+                  ? (infiniteFullScreen ? 'Hide Loading Screen' : 'Loading Screen Active') 
+                  : (infiniteFullScreen ? 'Show Loading Screen' : 'Show Loading Screen (4 sec)')
                 }
               </Button>
               
@@ -101,7 +101,7 @@ export const LoadingTest: React.FC = () => {
                 color={infiniteFullScreen ? "secondary" : "primary"}
                 onClick={toggleInfiniteFullScreen}
               >
-                {infiniteFullScreen ? '⏹️ Вимкнути вічний' : '♾️ Вічний режим'}
+                {infiniteFullScreen ? '⏹️ Disable Infinite' : '♾️ Infinite Mode'}
               </Button>
             </Stack>
           </Box>
@@ -110,11 +110,11 @@ export const LoadingTest: React.FC = () => {
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                ✨ Анімовані крапки для вбудованого завантаження
+                ✨ Animated dots for embedded loading
               </Typography>
               {infinitePageLoader && (
                 <Chip 
-                  label="♾️ Вічний режим" 
+                  label="♾️ Infinite Mode" 
                   size="small" 
                   color="primary" 
                   variant="outlined"
@@ -129,8 +129,8 @@ export const LoadingTest: React.FC = () => {
                 disabled={showPageLoader && !infinitePageLoader}
               >
                 {showPageLoader 
-                  ? (infinitePageLoader ? 'Сховати Page Loader' : 'Page Loader активний') 
-                  : (infinitePageLoader ? 'Показати Page Loader' : 'Показати Page Loader (3 сек)')
+                  ? (infinitePageLoader ? 'Hide Page Loader' : 'Page Loader Active') 
+                  : (infinitePageLoader ? 'Show Page Loader' : 'Show Page Loader (3 sec)')
                 }
               </Button>
               
@@ -140,7 +140,7 @@ export const LoadingTest: React.FC = () => {
                 onClick={toggleInfinitePageLoader}
                 size="small"
               >
-                {infinitePageLoader ? '⏹️ Вимкнути вічний' : '♾️ Вічний режим'}
+                {infinitePageLoader ? '⏹️ Disable Infinite' : '♾️ Infinite Mode'}
               </Button>
             </Stack>
 
@@ -154,24 +154,24 @@ export const LoadingTest: React.FC = () => {
           {/* Size Examples */}
           <Box>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              📏 Різні розміри анімованих крапок:
+              📏 Different sizes of animated dots:
             </Typography>
             <Stack direction="row" spacing={2} alignItems="center">
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="caption" display="block" gutterBottom>
-                  Малий
+                  Small
                 </Typography>
                 <PageLoader size="small" />
               </Box>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="caption" display="block" gutterBottom>
-                  Середній
+                  Medium
                 </Typography>
                 <PageLoader size="medium" />
               </Box>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="caption" display="block" gutterBottom>
-                  Великий
+                  Large
                 </Typography>
                 <PageLoader size="large" />
               </Box>
@@ -181,19 +181,19 @@ export const LoadingTest: React.FC = () => {
           {/* Features Info */}
           <Box>
             <Typography variant="body2" color="text.secondary">
-              💡 Особливості нових анімацій:
+              💡 Features of new animations:
               <br />
-              • Логотип "Hi" має хвилясту анімацію з ротацією та масштабуванням
+              • The "Hi" logo has a wavy animation with rotation and scaling
               <br />
-              • Градієнтний фон змінює кольори плавно
+              • Gradient background changes colors smoothly
               <br />
-              • Круглий "halo" ефект навколо логотипу замість квадратного
+              • Round "halo" effect around the logo instead of square
               <br />
-              • Крапки в PageLoader пульсують з затримкою для створення хвилі
+              • Dots in PageLoader pulsate with delay to create a wave
               <br />
-              • Прибрано всі текстові повідомлення для чистого дизайну
+              • All text messages removed for a clean design
               <br />
-              • ♾️ <strong>Вічний режим</strong> - для детального тестування анімацій
+              • ♾️ <strong>Infinite Mode</strong> - for detailed animation testing
             </Typography>
           </Box>
         </Stack>

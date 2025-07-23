@@ -1,4 +1,4 @@
-// Утиліти для обробки зображень в слайдах
+// Utilities for processing images in slides
 import { generateImage, type ImageGenerationRequest, type ImageGenerationResponse } from './imageGeneration';
 
 export interface ImagePromptComment {
@@ -6,7 +6,7 @@ export interface ImagePromptComment {
   prompt: string;
   width: number;
   height: number;
-  index: number; // позиція в HTML
+  index: number; // position in HTML
 }
 
 export interface ProcessedSlideData {
@@ -24,19 +24,19 @@ export interface GeneratedImageInfo {
   success: boolean;
 }
 
-// Regex для витягування IMAGE_PROMPT коментарів
+// Regex for extracting IMAGE_PROMPT comments
 const IMAGE_COMMENT_REGEX = /<!--\s*IMAGE_PROMPT:\s*"([^"]+)"\s+WIDTH:\s*(\d+)\s+HEIGHT:\s*(\d+)\s*-->/gi;
 
 /**
- * Валідує та корегує розміри зображення для FLUX API
+ * Validates and corrects image dimensions for FLUX API
  */
 function validateAndCorrectDimensions(width: number, height: number): { width: number; height: number; corrected: boolean } {
   const original = { width, height };
   let corrected = false;
   
-  // 1. Спочатку переконуємось що розміри в допустимих межах
-  const MIN_SIZE = 256; // Мінімум для FLUX
-  const MAX_SIZE = 1536; // Максимум для швидкості
+  // 1. First, make sure the dimensions are within acceptable limits
+  const MIN_SIZE = 256; // Minimum for FLUX
+  const MAX_SIZE = 1536; // Maximum for speed
   
   if (width < MIN_SIZE || height < MIN_SIZE || width > MAX_SIZE || height > MAX_SIZE) {
     width = Math.min(Math.max(width, MIN_SIZE), MAX_SIZE);
@@ -44,7 +44,7 @@ function validateAndCorrectDimensions(width: number, height: number): { width: n
     corrected = true;
   }
   
-  // 2. Переконуємось що розміри кратні 16 (обов'язково для FLUX)
+  // 2. Make sure the dimensions are a multiple of 16 (required for FLUX)
   if (width % 16 !== 0) {
     width = Math.round(width / 16) * 16;
     corrected = true;
@@ -55,7 +55,7 @@ function validateAndCorrectDimensions(width: number, height: number): { width: n
     corrected = true;
   }
   
-  // 3. Ще раз перевіряємо межі після корекції кратності
+  // 3. Re-check limits after correcting for multiplicity
   if (width < MIN_SIZE) {
     width = MIN_SIZE;
     corrected = true;
@@ -73,7 +73,7 @@ function validateAndCorrectDimensions(width: number, height: number): { width: n
 }
 
 /**
- * Витягує всі IMAGE_PROMPT коментарі з HTML
+ * Extracts all IMAGE_PROMPT comments from HTML
  */
 export function extractImagePrompts(htmlContent: string): ImagePromptComment[] {
   const prompts: ImagePromptComment[] = [];
@@ -87,20 +87,20 @@ export function extractImagePrompts(htmlContent: string): ImagePromptComment[] {
     const originalWidth = parseInt(widthStr);
     const originalHeight = parseInt(heightStr);
     
-    // Валідуємо та корегуємо розміри
+    // Validate and correct dimensions
     const { width, height, corrected } = validateAndCorrectDimensions(originalWidth, originalHeight);
     
     if (corrected) {
       console.warn(`⚠️ Image dimensions corrected for FLUX compatibility`);
     }
     
-    // Валідуємо промпт
+    // Validate the prompt
     if (!prompt || prompt.trim().length === 0) {
       console.warn(`⚠️ Empty image prompt found, skipping`);
       continue;
     }
     
-    // Додаємо до результату
+    // Add to the result
     prompts.push({
       fullComment,
       prompt: prompt.trim(),
@@ -117,14 +117,14 @@ export function extractImagePrompts(htmlContent: string): ImagePromptComment[] {
 
 
 /**
- * Функція затримки для rate limiting
+ * Delay function for rate limiting
  */
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
- * Генерує зображення з retry логікою
+ * Generates an image with retry logic
  */
 async function generateImageWithRetry(imageRequest: ImageGenerationRequest, maxRetries: number = 3): Promise<ImageGenerationResponse> {
   let lastError = '';
@@ -145,7 +145,7 @@ async function generateImageWithRetry(imageRequest: ImageGenerationRequest, maxR
       lastError = result.error || 'Unknown error';
       console.log(`❌ Attempt ${attempt} failed: ${lastError}`);
       
-      // Якщо це не остання спроба, чекаємо перед наступною
+      // If this is not the last attempt, wait before the next one
       if (attempt < maxRetries) {
         const delayTime = attempt === 1 && lastError.includes('rate limit') ? 2000 : 1000;
         console.log(`⏱️ Waiting ${delayTime/1000} seconds before retry...`);
@@ -163,7 +163,7 @@ async function generateImageWithRetry(imageRequest: ImageGenerationRequest, maxR
     }
   }
   
-  // Всі спроби не вдалися
+  // All attempts failed
   return {
     success: false,
     error: `Failed after ${maxRetries} attempts. Last error: ${lastError}`
@@ -171,7 +171,7 @@ async function generateImageWithRetry(imageRequest: ImageGenerationRequest, maxR
 }
 
 /**
- * Генерує всі зображення послідовно з затримками для уникнення rate limiting
+ * Generates all images sequentially with delays to avoid rate limiting
  */
 export async function generateAllImages(prompts: ImagePromptComment[]): Promise<GeneratedImageInfo[]> {
   if (prompts.length === 0) {
@@ -183,7 +183,7 @@ export async function generateAllImages(prompts: ImagePromptComment[]): Promise<
   
   const results: GeneratedImageInfo[] = [];
   
-  // Генеруємо зображення послідовно з затримкою 1.5 секунди між запитами
+  // Generate images sequentially with a 1.5 second delay between requests
   for (let index = 0; index < prompts.length; index++) {
     const promptData = prompts[index];
     const { width, height } = validateAndCorrectDimensions(promptData.width, promptData.height);
@@ -197,7 +197,7 @@ export async function generateAllImages(prompts: ImagePromptComment[]): Promise<
         height
       };
       
-      // Генеруємо зображення з автоматичними retry спробами
+      // Generate images with automatic retry attempts
       const result = await generateImageWithRetry(imageRequest, 3);
       
       if (result.success && result.image) {
@@ -233,7 +233,7 @@ export async function generateAllImages(prompts: ImagePromptComment[]): Promise<
       });
     }
     
-    // Затримка між запитами (крім останнього)
+    // Delay between requests (except the last one)
     if (index < prompts.length - 1) {
       console.log(`⏱️ Waiting 2 seconds before next image (rate limiting)...`);
       await delay(2000);
@@ -245,7 +245,7 @@ export async function generateAllImages(prompts: ImagePromptComment[]): Promise<
   
   console.log(`🎯 Image generation complete: ${successful} successful, ${failed} failed`);
   
-  // Додаткова інформація про неуспішні спроби
+  // Additional information about failed attempts
   if (failed > 0) {
     console.log(`❌ Failed images details:`);
     results.forEach((result, index) => {
@@ -259,7 +259,7 @@ export async function generateAllImages(prompts: ImagePromptComment[]): Promise<
 }
 
 /**
- * Замінює IMAGE_PROMPT коментарі на реальні img теги з base64 зображеннями
+ * Replaces IMAGE_PROMPT comments with actual img tags with base64 images
  */
 export function replaceImageComments(
   htmlContent: string, 
@@ -276,7 +276,7 @@ export function replaceImageComments(
   
   console.log(`🔄 Processing ${prompts.length} image prompts with ${generatedImages.length} generated images`);
   
-  // Обробляємо коментарі від кінця до початку щоб не зіпсувати індекси
+  // Process comments from end to beginning to avoid breaking indices
   for (let i = prompts.length - 1; i >= 0; i--) {
     const prompt = prompts[i];
     const imageData = generatedImages[i];
@@ -284,7 +284,7 @@ export function replaceImageComments(
     let replacement: string;
     
     if (imageData && imageData.success && imageData.base64Image) {
-      // Успішно згенероване зображення
+      // Successfully generated image
       replacement = `<img src="data:image/webp;base64,${imageData.base64Image}" 
         alt="${imageData.prompt.replace(/"/g, '&quot;')}" 
         width="${imageData.width}" 
@@ -305,7 +305,7 @@ export function replaceImageComments(
       
       console.log(`✅ Replacing comment ${i + 1} with generated image (${imageData.width}x${imageData.height})`);
     } else {
-      // Невдала генерація або відсутнє зображення
+      // Failed generation or missing image
       const errorInfo = imageData ? 'Generation failed' : 'No image data';
       replacement = `<div style="
         width: ${prompt.width}px; 
@@ -327,7 +327,7 @@ export function replaceImageComments(
         overflow: hidden;
       " data-failed-prompt="${prompt.prompt.replace(/"/g, '&quot;')}">
         <div style="font-size: 32px; margin-bottom: 8px;">🎨</div>
-        <div style="font-weight: bold; margin-bottom: 4px;">Зображення генерується...</div>
+        <div style="font-weight: bold; margin-bottom: 4px;">Image is being generated...</div>
         <div style="font-size: 12px; opacity: 0.8; max-width: 80%; word-wrap: break-word;">
           ${prompt.prompt.substring(0, 60)}${prompt.prompt.length > 60 ? '...' : ''}
         </div>
@@ -337,7 +337,7 @@ export function replaceImageComments(
       console.log(`⚠️ Replacing comment ${i + 1} with placeholder: ${errorInfo}`);
     }
     
-    // Перевіряємо чи коментар ще існує в HTML
+    // Check if the comment still exists in HTML
     if (processedHtml.includes(prompt.fullComment)) {
       processedHtml = processedHtml.replace(prompt.fullComment, replacement);
       replacements++;
@@ -348,7 +348,7 @@ export function replaceImageComments(
   
   console.log(`🎯 Completed ${replacements}/${prompts.length} image replacements`);
   
-  // Також шукаємо та замінюємо placeholder div'и, які могли бути створені Gemini
+  // Also find and replace placeholder divs that might have been created by Gemini
   const placeholderRegex = /<div[^>]*>🖼️[^<]*Image will be generated here[^<]*<\/div>/gi;
   const placeholderMatches = processedHtml.match(placeholderRegex);
   
@@ -361,7 +361,7 @@ export function replaceImageComments(
 }
 
 /**
- * Основна функція для обробки слайду з зображеннями
+ * Main function for processing slides with images
  */
 export async function processSlideWithImages(htmlContent: string): Promise<ProcessedSlideData> {
   const processingErrors: string[] = [];
@@ -369,7 +369,7 @@ export async function processSlideWithImages(htmlContent: string): Promise<Proce
   try {
     console.log('🎨 Starting slide image processing...');
     
-    // 1. Витягуємо всі IMAGE_PROMPT коментарі
+    // 1. Extract all IMAGE_PROMPT comments
     const imagePrompts = extractImagePrompts(htmlContent);
     
     if (imagePrompts.length === 0) {
@@ -381,13 +381,13 @@ export async function processSlideWithImages(htmlContent: string): Promise<Proce
       };
     }
     
-    // 2. Генеруємо всі зображення паралельно
+    // 2. Generate all images in parallel
     const generatedImages = await generateAllImages(imagePrompts);
     
-    // 3. Замінюємо коментарі на реальні зображення
+    // 3. Replace comments with actual images
     const htmlWithImages = replaceImageComments(htmlContent, imagePrompts, generatedImages);
     
-    // 4. Збираємо інформацію про помилки
+    // 4. Collect error information
     generatedImages.forEach((img, index) => {
       if (!img.success) {
         processingErrors.push(`Failed to generate image ${index + 1}: "${img.prompt.substring(0, 50)}..."`);
@@ -407,7 +407,7 @@ export async function processSlideWithImages(htmlContent: string): Promise<Proce
     processingErrors.push(`Processing error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     
     return {
-      htmlWithImages: htmlContent, // повертаємо оригінальний HTML
+      htmlWithImages: htmlContent, // return original HTML
       generatedImages: [],
       processingErrors
     };

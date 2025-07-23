@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-// Функція для отримання користувача з аутентифікації
+// Function to get authenticated user
 async function getAuthenticatedUser(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
   
   if (error || !user) {
-    throw new Error('Користувач не аутентифікований');
+    throw new Error('User not authenticated');
   }
   
   return user;
 }
 
-// GET /api/user/profile - отримати профіль користувача
+// GET /api/user/profile - get user profile
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
     const supabase = await createClient();
 
-    // Отримуємо повний профіль користувача
+    // Get full user profile
     const { data: profile, error } = await supabase
       .from('user_profiles')
       .select('*')
@@ -31,13 +31,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Помилка при отриманні профілю',
+          message: 'Error fetching profile',
           code: 'PROFILE_FETCH_ERROR'
         }
       }, { status: 500 });
     }
 
-    // Додаємо основну інформацію з auth
+    // Add basic auth information
     const fullProfile = {
       ...profile,
       email: user.email,
@@ -48,17 +48,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       profile: fullProfile,
-      message: 'Профіль завантажено'
+      message: 'Profile loaded'
     });
 
   } catch (error) {
     console.error('Error in profile GET:', error);
     
-    if (error instanceof Error && error.message.includes('аутентифікований')) {
+    if (error instanceof Error && error.message.includes('authenticated')) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Необхідна аутентифікація',
+          message: 'Authentication required',
           code: 'AUTHENTICATION_REQUIRED'
         }
       }, { status: 401 });
@@ -67,21 +67,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: { 
-        message: 'Внутрішня помилка сервера',
+        message: 'Internal server error',
         code: 'INTERNAL_ERROR'
       }
     }, { status: 500 });
   }
 }
 
-// PUT /api/user/profile - оновити профіль користувача
+// PUT /api/user/profile - update user profile
 export async function PUT(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
     const supabase = await createClient();
     const body = await request.json();
 
-    // Валідація вхідних даних
+    // Validate input data
     const allowedFields = ['full_name', 'avatar_url'];
     const updateData: any = {};
 
@@ -91,20 +91,20 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // Додаємо updated_at
+    // Add updated_at timestamp
     updateData.updated_at = new Date().toISOString();
 
-    if (Object.keys(updateData).length === 1) { // тільки updated_at
+    if (Object.keys(updateData).length === 1) { // only updated_at
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Немає даних для оновлення',
+          message: 'No data to update',
           code: 'NO_DATA_TO_UPDATE'
         }
       }, { status: 400 });
     }
 
-    // Оновлюємо профіль
+    // Update profile
     const { data, error } = await supabase
       .from('user_profiles')
       .update(updateData)
@@ -117,7 +117,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Помилка при оновленні профілю',
+          message: 'Error updating profile',
           code: 'PROFILE_UPDATE_ERROR'
         }
       }, { status: 500 });
@@ -126,17 +126,17 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       profile: data,
-      message: 'Профіль оновлено успішно'
+      message: 'Profile updated successfully'
     });
 
   } catch (error) {
     console.error('Error in profile PUT:', error);
     
-    if (error instanceof Error && error.message.includes('аутентифікований')) {
+    if (error instanceof Error && error.message.includes('authenticated')) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Необхідна аутентифікація',
+          message: 'Authentication required',
           code: 'AUTHENTICATION_REQUIRED'
         }
       }, { status: 401 });
@@ -145,7 +145,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: { 
-        message: 'Внутрішня помилка сервера',
+        message: 'Internal server error',
         code: 'INTERNAL_ERROR'
       }
     }, { status: 500 });

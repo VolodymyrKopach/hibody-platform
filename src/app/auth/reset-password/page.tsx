@@ -21,7 +21,7 @@ function ResetPasswordPageContent() {
     const handleAuthCallback = async () => {
       const supabase = createClient()
       
-      // Отримуємо параметри з URL
+      // Get parameters from URL
       const accessToken = searchParams?.get('access_token')
       const refreshToken = searchParams?.get('refresh_token')
       const tokenType = searchParams?.get('token_type')
@@ -35,10 +35,10 @@ function ResetPasswordPageContent() {
         allParams: Object.fromEntries(searchParams?.entries() || [])
       })
 
-      // Якщо є access_token та refresh_token з URL (Supabase redirect)
+      // If access_token and refresh_token are present in URL (Supabase redirect)
       if (accessToken && refreshToken && type === 'recovery') {
         try {
-          // Встановлюємо сесію з токенами
+          // Set session with tokens
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
@@ -46,33 +46,33 @@ function ResetPasswordPageContent() {
           
           if (error) {
             console.error('Error setting session:', error)
-            setError('Помилка при встановленні сесії: ' + error.message)
+            setError('Error setting session: ' + error.message)
             setLoading(false)
             return
           }
           
           if (data.user) {
             console.log('Session set successfully for user:', data.user.email)
-            // Встановлюємо токен для подальшого використання
+            // Set token for future use
             setToken(accessToken)
             setLoading(false)
             return
           }
         } catch (err) {
           console.error('Session setup error:', err)
-          setError('Помилка при налаштуванні сесії')
+          setError('Error setting up session')
           setLoading(false)
           return
         }
       }
 
-      // Перевіряємо чи користувач вже автентифікований
+      // Check if user is already authenticated
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
         if (user && !userError) {
           console.log('User already authenticated:', user.email)
-          // Якщо користувач автентифікований, встановлюємо будь-який токен
+          // If user is authenticated, set any token
           setToken(accessToken || 'authenticated-user-token')
           setLoading(false)
           return
@@ -81,14 +81,14 @@ function ResetPasswordPageContent() {
         console.error('User check error:', err)
       }
 
-      // Якщо немає токенів або сесії
+      // If no tokens or session
       if (!accessToken && !refreshToken) {
-        setError('Відсутні токени для скидання пароля. Спробуйте перейти за посиланням з email ще раз.')
+        setError('Missing password reset tokens. Please try the link from email again.')
         setLoading(false)
         return
       }
 
-      setError('Не вдалося встановити сесію для скидання пароля')
+      setError('Failed to set session for password reset')
       setLoading(false)
     }
 
@@ -125,10 +125,10 @@ function ResetPasswordPageContent() {
         >
           <AlertTriangle size={48} color="#f44336" style={{ marginBottom: '16px' }} />
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
-            Невалідне посилання
+            Invalid link
           </Typography>
           <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
-            {error || 'Посилання для скидання пароля недійсне або застаріле.'}
+            {error || 'Password reset link is invalid or outdated.'}
           </Typography>
           
           <Button
@@ -146,7 +146,7 @@ function ResetPasswordPageContent() {
               },
             }}
           >
-            Повернутися до входу
+            Back to login
           </Button>
         </Paper>
       )
@@ -209,7 +209,7 @@ function ResetPasswordPageContent() {
               HiBody Platform
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-              Платформа для створення інтерактивних освітніх матеріалів
+              Platform for creating interactive educational materials
             </Typography>
           </Box>
 

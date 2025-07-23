@@ -4,7 +4,7 @@ import React from 'react'
 import { Box, keyframes } from '@mui/material'
 import { styled } from '@mui/material/styles'
 
-// Хвиляста анімація з двома збалансованими хвилями - індиго палітра
+// Wavy animation with two balanced waves - indigo palette
 const waveAnimation = keyframes`
   0% {
     transform: scale(1) rotate(0deg);
@@ -38,7 +38,7 @@ const waveAnimation = keyframes`
   }
 `
 
-// Градієнтна анімація фону - індиго палітра
+// Gradient background animation - indigo palette
 const backgroundPulse = keyframes`
   0% {
     background: linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(129, 140, 248) 100%);
@@ -67,7 +67,7 @@ const LoadingContainer = styled(Box)(({ theme }) => ({
 export const LoadingScreen: React.FC = () => {
   return (
     <LoadingContainer>
-      {/* Іконка з двома збалансованими хвилями - індиго палітра */}
+      {/* Icon with two balanced waves - indigo palette */}
       <Box
         sx={{
           width: 80,

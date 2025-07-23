@@ -136,7 +136,7 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
 
       <DialogContent sx={{ pt: 4, pb: 3, px: 3 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
-          {/* Назва уроку */}
+          {/* Lesson Title */}
           <TextField
             label={t('lessons:saveDialog.nameLabel')}
             variant="outlined"
@@ -163,7 +163,7 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
             required
           />
 
-          {/* Опис уроку */}
+          {/* Lesson Description */}
           <TextField
             label={t('lessons:saveDialog.descriptionLabel')}
             variant="outlined"
@@ -191,7 +191,7 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
             placeholder={t('lessons:saveDialog.descriptionPlaceholder')}
           />
 
-          {/* Предмет/жанр */}
+          {/* Subject/Genre */}
           <TextField
             label={t('lessons:saveDialog.subjectLabel')}
             variant="outlined"
@@ -223,7 +223,7 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
             ))}
           </TextField>
 
-          {/* Вікова група */}
+          {/* Age Group */}
           <TextField
             label={t('lessons:saveDialog.ageGroupLabel')}
             variant="outlined"
@@ -255,7 +255,7 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
             ))}
           </TextField>
 
-          {/* Превью селектор */}
+          {/* Preview Selector */}
           {selectedSlides.length > 0 && (
             <PreviewSelector
               slides={selectedSlides.map(slide => ({

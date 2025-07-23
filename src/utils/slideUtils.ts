@@ -1,4 +1,4 @@
-// Utilities для роботи з slide-oriented системою
+// Utilities for working with the slide-oriented system
 
 import { 
   LessonSlide, 
@@ -18,7 +18,7 @@ function getGeminiCommandService(): GeminiCommandParsingService {
   return geminiCommandService;
 }
 
-// Функція для парсингу команд через Gemini 2.5 Flash Lite
+// Function for parsing commands via Gemini 2.5 Flash Lite
 async function parseCommandWithAI(message: string, currentSlide?: LessonSlide): Promise<SlideCommand> {
   const service = getGeminiCommandService();
   const result = await service.parseCommand(message, currentSlide);
@@ -32,20 +32,20 @@ async function parseCommandWithAI(message: string, currentSlide?: LessonSlide): 
 export const slideUtils = {
   
   /**
-   * Парсинг природних команд користувача ЧЕРЕЗ GEMINI 2.5 FLASH LITE
+   * Parsing natural user commands VIA GEMINI 2.5 FLASH LITE
    */
   parseCommand: async (message: string, currentSlide?: LessonSlide): Promise<SlideCommand> => {
-    // ВСЕ через Gemini нейронну мережу - НІЯКИХ regex patterns!
+    // EVERYTHING through Gemini neural network - NO regex patterns!
     return await parseCommandWithAI(message, currentSlide);
   },
   
   /**
-   * Генерація превью слайду для користувача
+   * Generating slide preview for the user
    */
   generateSlidePreview: (slide: LessonSlide): string => {
     const { title, description, type } = slide;
     
-    // Базовий HTML для превью
+    // Base HTML for preview
     const preview = `
       <div style="padding: 20px; font-family: Arial, sans-serif; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; min-height: 200px;">
         <div style="display: flex; align-items: center; margin-bottom: 15px;">
@@ -63,7 +63,7 @@ export const slideUtils = {
   },
   
   /**
-   * Емодзі для типів слайдів
+   * Emojis for slide types
    */
   getSlideTypeEmoji: (type: LessonSlide['type']): string => {
     const emojiMap = {
@@ -77,7 +77,7 @@ export const slideUtils = {
   },
   
   /**
-   * Генерація іконки статусу
+   * Status icon generation
    */
   getStatusIcon: (status: LessonSlide['status']): string => {
     const statusMap = {
@@ -90,7 +90,7 @@ export const slideUtils = {
   },
   
   /**
-   * Синхронізація слайду з файлами (файли → слайд)
+   * Synchronizing slide with files (files → slide)
    */
   syncSlideFromFiles: (files: ProjectFile[], slideId: string): LessonSlide => {
     const slideFile = files.find(f => f.slideId === slideId && f.type === 'html');
@@ -101,11 +101,11 @@ export const slideUtils = {
       throw new Error(`Slide file not found for slideId: ${slideId}`);
     }
 
-    // Витягуємо інформацію з HTML файлу
+    // Extract information from HTML file
     const titleMatch = slideFile.content.match(/<h1[^>]*>([^<]+)<\/h1>/i);
     const title = titleMatch ? titleMatch[1] : slideFile.name;
 
-    // Визначаємо тип слайду за іменем файлу
+    // Determine slide type by file name
     let type: LessonSlide['type'] = 'content';
     if (slideFile.name.includes('welcome')) type = 'welcome';
     else if (slideFile.name.includes('game')) type = 'game';
@@ -138,12 +138,12 @@ export const slideUtils = {
   },
   
   /**
-   * Синхронізація файлів зі слайду (слайд → файли)
+   * Synchronizing files from slide (slide → files)
    */
   syncFilesFromSlide: (slide: LessonSlide): ProjectFile[] => {
     const files: ProjectFile[] = [];
 
-    // HTML файл
+    // HTML file
     files.push({
       id: `${slide.id}_html`,
       name: slide._internal.filename,
@@ -159,7 +159,7 @@ export const slideUtils = {
       tags: [slide.type, `slide-${slide.number}`],
     });
 
-    // CSS файл якщо є
+    // CSS file if exists
     if (slide._internal.cssContent) {
       files.push({
         id: `${slide.id}_css`,
@@ -177,7 +177,7 @@ export const slideUtils = {
       });
     }
 
-    // JS файл якщо є
+    // JS file if exists
     if (slide._internal.jsContent) {
       files.push({
         id: `${slide.id}_js`,
@@ -199,40 +199,40 @@ export const slideUtils = {
   },
   
   /**
-   * Валідація слайду
+   * Slide validation
    */
   validateSlide: (slide: LessonSlide): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
-    // Перевіряємо обов'язкові поля
+    // Check required fields
     if (!slide.title?.trim()) {
-      errors.push('Назва слайду не може бути порожньою');
+      errors.push('Slide title cannot be empty');
     }
 
     if (!slide.description?.trim()) {
-      errors.push('Опис слайду не може бути порожнім');
+      errors.push('Slide description cannot be empty');
     }
 
     if (!slide._internal?.htmlContent?.trim()) {
-      errors.push('HTML контент слайду не може бути порожнім');
+      errors.push('Slide HTML content cannot be empty');
     }
 
-    // Перевіряємо валідність HTML
+    // Check HTML validity
     if (slide._internal?.htmlContent) {
       try {
         const parser = new DOMParser();
         const doc = parser.parseFromString(slide._internal.htmlContent, 'text/html');
         if (doc.querySelector('parsererror')) {
-          errors.push('HTML контент містить помилки синтаксису');
+          errors.push('HTML content contains syntax errors');
         }
       } catch (error) {
-        errors.push('Неможливо розпарсити HTML контент');
+        errors.push('Could not parse HTML content');
       }
     }
 
-    // Перевіряємо номер слайду
+    // Check slide number
     if (slide.number < 1) {
-      errors.push('Номер слайду повинен бути більше 0');
+      errors.push('Slide number must be greater than 0');
     }
 
     return {
@@ -242,7 +242,7 @@ export const slideUtils = {
   },
   
   /**
-   * Генерація унікального імені файлу для слайду
+   * Generating unique filename for slide
    */
   generateSlideFilename: (slideNumber: number, title: string, type: LessonSlide['type']): string => {
     const sanitizedTitle = title
@@ -255,7 +255,7 @@ export const slideUtils = {
   },
   
   /**
-   * Екстракт номеру слайду з команди
+   * Extract slide number from command
    */
   extractSlideNumber: (filename: string): number => {
     const match = filename.match(/slide[_-]?(\d+)/i);
@@ -263,41 +263,41 @@ export const slideUtils = {
   },
   
   /**
-   * Генерація контексту для AI промпту
+   * Generating context for AI prompt
    */
   generateSlideContext: (slide: LessonSlide, allSlides: LessonSlide[], lessonTitle: string): string => {
-    const slideInfo = `Слайд ${slide.number}: "${slide.title}" (${slide.type})`;
+    const slideInfo = `Slide ${slide.number}: "${slide.title}" (${slide.type})`;
     const totalSlides = allSlides.length;
-    const position = `${slide.number} з ${totalSlides}`;
+    const position = `${slide.number} of ${totalSlides}`;
     
     const prevSlide = allSlides.find(s => s.number === slide.number - 1);
     const nextSlide = allSlides.find(s => s.number === slide.number + 1);
     
     let context = `
-Урок: "${lessonTitle}"
-Поточний слайд: ${slideInfo}
-Позиція: ${position}
-Статус: ${slide.status}
+Lesson: "${lessonTitle}"
+Current slide: ${slideInfo}
+Position: ${position}
+Status: ${slide.status}
 `;
     
     if (prevSlide) {
-      context += `Попередній слайд: "${prevSlide.title}" (${prevSlide.type})\n`;
+      context += `Previous slide: "${prevSlide.title}" (${prevSlide.type})\n`;
     }
     
     if (nextSlide) {
-      context += `Наступний слайд: "${nextSlide.title}" (${nextSlide.type})\n`;
+      context += `Next slide: "${nextSlide.title}" (${nextSlide.type})\n`;
     }
     
-    context += `\nОпис поточного слайду: ${slide.description}`;
+    context += `\nDescription of current slide: ${slide.description}`;
     
     return context;
   },
   
   /**
-   * Конвертація HTML в текстовий превью
+   * Convert HTML to text preview
    */
   htmlToPreview: (htmlContent: string, maxLength: number = 150): string => {
-    // Видаляємо HTML теги
+    // Remove HTML tags
     const textOnly = htmlContent
       .replace(/<[^>]*>/g, ' ')
       .replace(/\s+/g, ' ')
@@ -311,14 +311,14 @@ export const slideUtils = {
   },
   
   /**
-   * Перевірка чи команда стосується конкретного слайду
+   * Check if the command concerns a specific slide
    */
   isSlideSpecificCommand: (command: SlideCommand): boolean => {
     return !!(command.slideNumber || command.slideId || command.targetElement);
   },
   
   /**
-   * Генерація швидких команд для UI (мова береться з i18n контексту)
+   * Generate quick commands for UI (language is taken from i18n context)
    */
   generateQuickCommands: (currentSlide?: LessonSlide, interfaceLanguage: 'uk' | 'en' = 'uk'): string[] => {
     const service = getGeminiCommandService();
@@ -326,12 +326,12 @@ export const slideUtils = {
   },
 };
 
-// Допоміжні функції
+// Helper functions
 function getTypeIcon(type: LessonSlide['type']): string {
   switch (type) {
     case 'welcome': return '🎬';
     case 'content': return '📚';
-    case 'activity': return '🎮';
+    case 'activity': return '🎯';
     case 'game': return '🕹️';
     case 'summary': return '🏆';
     default: return '📄';
@@ -344,7 +344,7 @@ function extractSlideNumberHelper(filename: string): number {
 }
 
 function extractDescription(htmlContent: string): string {
-  // Витягуємо опис з мета-тегу або першого параграфу
+  // Extract description from meta tag or first paragraph
   const metaDescMatch = htmlContent.match(/<meta[^>]*name="description"[^>]*content="([^"]*)"[^>]*>/i);
   if (metaDescMatch) {
     return metaDescMatch[1];
@@ -355,7 +355,7 @@ function extractDescription(htmlContent: string): string {
     return pMatch[1].substring(0, 100) + (pMatch[1].length > 100 ? '...' : '');
   }
 
-  return 'Опис слайду';
+  return 'Slide description';
 }
 
 // Responsive slide constants
@@ -370,7 +370,7 @@ export const SLIDE_DEFAULTS = {
 } as const;
 
 /**
- * Генерує CSS стилі для responsive слайдів
+ * Generates CSS styles for responsive slides
  */
 export function generateResponsiveSlideStyles(): string {
   return `
@@ -401,18 +401,18 @@ export function generateResponsiveSlideStyles(): string {
 }
 
 /**
- * Генерує viewport meta tag для responsive слайдів
+ * Generates viewport meta tag for responsive slides
  */
 export function generateResponsiveViewportMeta(): string {
   return `<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">`;
 }
 
 /**
- * Генерує базовий HTML template для responsive слайду
+ * Generates a basic HTML template for a responsive slide
  */
 export function generateResponsiveSlideTemplate(title: string, content: string): string {
   return `<!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     ${generateResponsiveViewportMeta()}

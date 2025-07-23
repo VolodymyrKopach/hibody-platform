@@ -16,14 +16,14 @@ export const RedirectTest: React.FC = () => {
     <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Тестування редиректів авторизації
+          Authorization Redirect Testing
         </Typography>
         
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Поточний стан: {' '}
+            Current Status: {' '}
             <Chip 
-              label={user ? `Авторизований (${user.email})` : 'Не авторизований'} 
+              label={user ? `Authenticated (${user.email})` : 'Not Authenticated'} 
               color={user ? 'success' : 'default'}
               size="small"
             />
@@ -33,7 +33,7 @@ export const RedirectTest: React.FC = () => {
         <Stack spacing={2}>
           <Box>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Тест 1: Спроба доступу до захищеної сторінки без авторизації
+              Test 1: Attempt to access a protected page without authentication
             </Typography>
             <Button 
               component={Link}
@@ -41,13 +41,13 @@ export const RedirectTest: React.FC = () => {
               variant="outlined"
               size="small"
             >
-              Перейти на /chat
+              Go to /chat
             </Button>
           </Box>
 
           <Box>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Тест 2: Спроба доступу до матеріалів без авторизації
+              Test 2: Attempt to access materials without authentication
             </Typography>
             <Button 
               component={Link}
@@ -55,13 +55,13 @@ export const RedirectTest: React.FC = () => {
               variant="outlined"
               size="small"
             >
-              Перейти на /materials
+              Go to /materials
             </Button>
           </Box>
 
           <Box>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Тест 3: Прямий перехід на сторінку логіну
+              Test 3: Direct navigation to the login page
             </Typography>
             <Button 
               component={Link}
@@ -69,13 +69,13 @@ export const RedirectTest: React.FC = () => {
               variant="outlined"
               size="small"
             >
-              Перейти на /auth/login
+              Go to /auth/login
             </Button>
           </Box>
 
           <Box>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Тест 4: Логін з редиректом на /chat
+              Test 4: Login with redirect to /chat
             </Typography>
             <Button 
               component={Link}
@@ -83,13 +83,13 @@ export const RedirectTest: React.FC = () => {
               variant="outlined"
               size="small"
             >
-              Логін → /chat
+              Login → /chat
             </Button>
           </Box>
 
           <Box>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Тест 5: Реєстрація з редиректом на /materials
+              Test 5: Registration with redirect to /materials
             </Typography>
             <Button 
               component={Link}
@@ -97,14 +97,14 @@ export const RedirectTest: React.FC = () => {
               variant="outlined"
               size="small"
             >
-              Реєстрація → /materials
+              Register → /materials
             </Button>
           </Box>
 
           {user && (
             <Box>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Вийти з системи
+                Log out of the system
               </Typography>
               <Button 
                 onClick={handleSignOut}
@@ -112,20 +112,20 @@ export const RedirectTest: React.FC = () => {
                 color="secondary"
                 size="small"
               >
-                Вийти
+                Logout
               </Button>
             </Box>
           )}
 
           <Box>
             <Typography variant="body2" color="text.secondary">
-              💡 Очікувана поведінка:
+              💡 Expected behavior:
               <br />
-              • Без авторизації: редирект на /auth/login з параметром redirectTo
+              • Without authentication: redirect to /auth/login with redirectTo parameter
               <br />
-              • З авторизацією: доступ до запитаної сторінки
+              • With authentication: access to the requested page
               <br />
-              • Після входу/реєстрації: редирект на збережену сторінку або на головну
+              • After login/registration: redirect to the saved page or home
             </Typography>
           </Box>
         </Stack>

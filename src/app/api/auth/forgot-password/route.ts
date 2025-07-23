@@ -6,24 +6,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { email } = body
 
-    // Валідація вхідних даних
+    // Validate input data
     if (!email || typeof email !== 'string') {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Електронна пошта обов\'язкова',
+          message: 'Email is required',
           code: 'MISSING_EMAIL'
         }
       }, { status: 400 })
     }
 
-    // Валідація формату email
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Введіть коректну електронну адресу',
+          message: 'Please enter a valid email address',
           code: 'INVALID_EMAIL'
         }
       }, { status: 400 })
@@ -31,12 +31,12 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Динамічно отримуємо host з request
+    // Dynamically get host from request
     const protocol = request.headers.get('x-forwarded-proto') || 'http'
     const host = request.headers.get('host') || 'localhost:3000'
     const baseUrl = `${protocol}://${host}`
 
-    // Відправляємо запит на скидання пароля через Supabase
+    // Send password reset request via Supabase
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${baseUrl}/auth/reset-password`,
     })
@@ -44,29 +44,29 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error sending reset password email:', error)
       
-      // Специфічні помилки Supabase
+      // Supabase specific errors
       if (error.message.includes('rate limit')) {
         return NextResponse.json({
           success: false,
           error: { 
-            message: 'Забагато спроб. Спробуйте пізніше',
+            message: 'Too many attempts. Please try again later',
             code: 'RATE_LIMIT'
           }
         }, { status: 429 })
       }
 
       if (error.message.includes('User not found')) {
-        // З міркувань безпеки, не повідомляємо що користувача не знайдено
+        // For security reasons, do not inform if user is not found
         return NextResponse.json({
           success: true,
-          message: 'Якщо користувач з такою поштою існує, лист буде відправлено'
+          message: 'If a user with this email exists, a reset link will be sent'
         })
       }
 
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Помилка при відправці листа',
+          message: 'Error sending email',
           code: 'EMAIL_SEND_ERROR'
         }
       }, { status: 500 })
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Лист для скидання пароля відправлено'
+      message: 'Password reset email sent'
     })
 
   } catch (error) {
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: { 
-        message: 'Внутрішня помилка сервера',
+        message: 'Internal server error',
         code: 'INTERNAL_ERROR'
       }
     }, { status: 500 })

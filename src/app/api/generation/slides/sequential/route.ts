@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       title: lesson?.title || 'Generated Lesson',
       description: lesson?.description || `Lesson about ${topic}`,
       subject: 'General',
-      ageGroup: age || '8-9 років',
+      ageGroup: age || '8-9 years',
       duration: 30,
       slides: [],
       createdAt: new Date(),
@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
     // Generate slides with progress tracking
     const result = await chatService.generateAllSlides(
       slideDescriptions,
-      topic || 'загальна тема',
-      age || '8-9 років',
+      topic || 'general topic',
+      age || '8-9 years',
       (progress: SlideGenerationProgress[]) => {
         // Update progress state
         currentProgress = progress;
@@ -77,13 +77,13 @@ export async function POST(request: NextRequest) {
         }
       },
       (slide: SimpleSlide, allSlides: SimpleSlide[]) => {
-        // === ДОДАЄМО СЛАЙД ДО УРОКУ ВІДРАЗУ ===
+        // === ADD SLIDE TO LESSON IMMEDIATELY ===
         lessonObject.slides = [...allSlides];
         lessonObject.updatedAt = new Date();
         
         console.log(`✅ SEQUENTIAL API: Slide "${slide.title}" ready, total slides now: ${lessonObject.slides.length}`);
         
-        // === ВІДПРАВЛЯЄМО ОНОВЛЕНИЙ УРОК ЧЕРЕЗ SSE ===
+        // === SEND UPDATED LESSON VIA SSE ===
         if (sessionId) {
           sendProgressUpdate(sessionId, {
             progress: currentProgress,
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
             currentSlide: currentProgress.find(p => p.status === 'generating'),
             totalSlides: slideDescriptions.length,
             completedSlides: lessonObject.slides.length,
-            newSlide: slide  // Додаємо інформацію про новий слайд
+            newSlide: slide  // Add information about the new slide
           });
         }
       }

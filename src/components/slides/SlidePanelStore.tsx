@@ -20,12 +20,12 @@ import {
 } from '@/hooks/useSlideStore';
 import { useContextSlideStore } from '@/providers/SlideStoreProvider';
 
-// === SOLID: SRP - SlidePanelStore відповідає тільки за відображення слайдів ===
+// === SOLID: SRP - SlidePanelStore is only responsible for rendering slides ===
 const SlidePanelStore: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation(['slides', 'common']);
   
-  // === SOLID: DIP - Використання Store через абстракцію ===
+  // === SOLID: DIP - Using Store through abstraction ===
   const store = useContextSlideStore();
   const { currentLesson, slides } = useLessonManagement(store);
   const { 
@@ -45,7 +45,7 @@ const SlidePanelStore: React.FC = () => {
     setSaving
   } = useSlideUI(store);
 
-  // === SOLID: SRP - Компонент для відображення інформації про урок ===
+  // === SOLID: SRP - Component for displaying lesson information ===
   const LessonInfo = () => {
     if (!currentLesson) return null;
 
@@ -104,7 +104,7 @@ const SlidePanelStore: React.FC = () => {
     );
   };
 
-  // === SOLID: SRP - Компонент для управління вибором слайдів ===
+  // === SOLID: SRP - Component for managing slide selection ===
   const SelectionControls = () => {
     if (!currentLesson) return null;
 
@@ -122,7 +122,7 @@ const SlidePanelStore: React.FC = () => {
           flexWrap: 'wrap',
           gap: 1
         }}>
-          {/* Лічильник */}
+          {/* Counter */}
           <Typography variant="caption" color="text.secondary" sx={{ 
             fontSize: '0.75rem',
             minWidth: 'fit-content',
@@ -146,7 +146,7 @@ const SlidePanelStore: React.FC = () => {
                 py: 0.25
               }}
             >
-              Всі
+              All
             </Button>
             <Button
               size="small"
@@ -161,7 +161,7 @@ const SlidePanelStore: React.FC = () => {
                 py: 0.25
               }}
             >
-              Очистити
+              Clear
             </Button>
           </Box>
 
@@ -181,10 +181,10 @@ const SlidePanelStore: React.FC = () => {
                 py: 0.5
               }}
             >
-              {isSavingLesson ? 'Зберігання...' : 'Зберегти'}
+              {isSavingLesson ? 'Saving...' : 'Save'}
             </Button>
             
-            <Tooltip title="Експорт уроку в HTML">
+            <Tooltip title="Export lesson to HTML">
               <IconButton
                 size="small"
                 onClick={handleExportLesson}
@@ -206,7 +206,7 @@ const SlidePanelStore: React.FC = () => {
     );
   };
 
-  // === SOLID: SRP - Компонент для пустого стану ===
+  // === SOLID: SRP - Component for empty state ===
   const EmptyState = () => (
     <Box sx={{ 
       display: 'flex', 
@@ -219,17 +219,17 @@ const SlidePanelStore: React.FC = () => {
       p: 3
     }}>
       <Typography variant="h6" sx={{ mb: 1, fontSize: '1rem' }}>
-        📝 Немає слайдів
+        📝 No slides
       </Typography>
       <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-        Розпочніть чат для створення слайдів
+        Start a chat to create slides
       </Typography>
     </Box>
   );
 
   // === Event Handlers ===
   const handleOpenSaveDialog = () => {
-    // TODO: Інтегрувати з Save Dialog через Store
+    // TODO: Integrate with Save Dialog via Store
     console.log('🎯 Opening save dialog with selected slides:', Array.from(selectedSlides));
   };
 
@@ -260,7 +260,7 @@ const SlidePanelStore: React.FC = () => {
       backgroundColor: theme.palette.background.paper,
       borderLeft: `1px solid ${theme.palette.divider}`
     }}>
-      {/* Заголовок панелі */}
+      {/* Panel header */}
       <Box sx={{ 
         p: 1.5, 
         borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
@@ -273,10 +273,10 @@ const SlidePanelStore: React.FC = () => {
           fontWeight: 600,
           color: 'text.primary'
         }}>
-          🎨 Слайди уроку
+          🎨 Lesson Slides
         </Typography>
         
-        <Tooltip title="Закрити панель">
+        <Tooltip title="Close panel">
           <IconButton
             size="small"
             onClick={togglePanel}
@@ -293,7 +293,7 @@ const SlidePanelStore: React.FC = () => {
         </Tooltip>
       </Box>
 
-      {/* Контент панелі */}
+      {/* Panel content */}
       <Box sx={{ 
         flex: 1, 
         overflow: 'hidden',
@@ -306,7 +306,7 @@ const SlidePanelStore: React.FC = () => {
             <LessonInfo />
             <SelectionControls />
             
-            {/* Список слайдів */}
+            {/* List of slides */}
             <Box sx={{ 
               flex: 1, 
               overflowY: 'auto',

@@ -33,18 +33,18 @@ const SlideTestComponent: React.FC = () => {
   const [results, setResults] = useState<any[]>([]);
   const [message, setMessage] = useState('');
   
-  // Параметри тестового слайду
+  // Test slide parameters
   const [slideData, setSlideData] = useState({
-    title: 'Тестовий слайд',
-    description: 'Опис тестового слайду',
+    title: 'Test Slide',
+    description: 'Description of the test slide',
     type: 'content' as 'welcome' | 'content' | 'activity' | 'game' | 'summary',
     htmlContent: `
       <div style="padding: 40px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; height: 100%; display: flex; flex-direction: column; justify-content: center;">
-        <h1 style="font-size: 3em; margin-bottom: 20px;">🚀 Тестовий Слайд</h1>
-        <p style="font-size: 1.5em; opacity: 0.9;">Це тестовий слайд для перевірки збереження в базі даних</p>
+        <h1 style="font-size: 3em; margin-bottom: 20px;">🚀 Test Slide</h1>
+        <p style="font-size: 1.5em; opacity: 0.9;">This is a test slide to check saving to the database</p>
         <div style="margin-top: 30px;">
           <span style="background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 25px; font-size: 1.2em;">
-            ✅ Успішно збережено!
+            ✅ Successfully saved!
           </span>
         </div>
       </div>
@@ -62,9 +62,9 @@ const SlideTestComponent: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: 'Тестовий урок для слайдів',
-          description: 'Автоматично створений урок для тестування API слайдів',
-          subject: 'Тестування',
+          title: 'Test Lesson for Slides',
+          description: 'Automatically created lesson for testing slide API',
+          subject: 'Testing',
           ageGroup: '10-11',
           duration: 15
         })
@@ -74,13 +74,13 @@ const SlideTestComponent: React.FC = () => {
       
       if (data.success && data.lesson) {
         setTestLessonId(data.lesson.id);
-        setMessage('✅ Тестовий урок створено успішно!');
+        setMessage('✅ Test lesson created successfully!');
       } else {
-        setMessage(`❌ Помилка: ${data.error?.message || 'Не вдалося створити урок'}`);
+        setMessage(`❌ Error: ${data.error?.message || 'Failed to create lesson'}`);
       }
     } catch (error) {
       console.error('Error creating test lesson:', error);
-      setMessage('❌ Помилка підключення до API');
+      setMessage('❌ API connection error');
     } finally {
       setLoading(false);
     }
@@ -108,15 +108,15 @@ const SlideTestComponent: React.FC = () => {
       const data = await response.json();
       
       if (data.success) {
-        setMessage('✅ Слайд створено успішно!');
-        // Автоматично отримуємо оновлений список
+        setMessage('✅ Slide created successfully!');
+        // Automatically retrieve updated list
         getSlides();
       } else {
-        setMessage(`❌ Помилка створення слайду: ${data.error?.message || 'Невідома помилка'}`);
+        setMessage(`❌ Slide creation error: ${data.error?.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error creating slide:', error);
-      setMessage('❌ Помилка підключення до API');
+      setMessage('❌ API connection error');
     } finally {
       setLoading(false);
     }
@@ -137,14 +137,14 @@ const SlideTestComponent: React.FC = () => {
       
       if (data.success) {
         setResults(data.slides || []);
-        setMessage(`✅ Отримано ${data.slides?.length || 0} слайдів`);
+        setMessage(`✅ Retrieved ${data.slides?.length || 0} slides`);
       } else {
-        setMessage(`❌ Помилка отримання слайдів: ${data.error?.message || 'Невідома помилка'}`);
+        setMessage(`❌ Error retrieving slides: ${data.error?.message || 'Unknown error'}`);
         setResults([]);
       }
     } catch (error) {
       console.error('Error getting slides:', error);
-      setMessage('❌ Помилка підключення до API');
+      setMessage('❌ API connection error');
       setResults([]);
     } finally {
       setLoading(false);
@@ -169,11 +169,11 @@ const SlideTestComponent: React.FC = () => {
         setResults([]);
         setMessage(t('debug:slideTest.messages.testDataCleared'));
       } else {
-        setMessage(`❌ Помилка видалення: ${data.error?.message || 'Невідома помилка'}`);
+        setMessage(`❌ Deletion error: ${data.error?.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error deleting test data:', error);
-      setMessage('❌ Помилка підключення до API');
+      setMessage('❌ API connection error');
     } finally {
       setLoading(false);
     }
@@ -186,7 +186,7 @@ const SlideTestComponent: React.FC = () => {
       background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
     }}>
       <CardContent sx={{ p: 3 }}>
-        {/* Заголовок */}
+        {/* Title */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <Box
             sx={{
@@ -209,7 +209,7 @@ const SlideTestComponent: React.FC = () => {
           </Box>
         </Box>
 
-        {/* Повідомлення */}
+        {/* Message */}
         {message && (
           <Alert 
             severity={message.includes('❌') ? 'error' : 'success'} 
@@ -219,23 +219,23 @@ const SlideTestComponent: React.FC = () => {
           </Alert>
         )}
 
-        {/* Інформація про поточний стан */}
+        {/* Current State Information */}
         <Paper sx={{ p: 2, mb: 3, borderRadius: '12px', bgcolor: alpha(theme.palette.info.main, 0.05) }}>
           <Stack direction="row" spacing={2} alignItems="center">
             <Database size={20} color={theme.palette.info.main} />
             <Box>
               <Typography variant="body2" color="info.main" sx={{ fontWeight: 500 }}>
-                {t('debug:common.lessonId')} {testLessonId || 'Не створено'}
+                {t('debug:common.lessonId')} {testLessonId || 'Not Created'}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Слайдів знайдено: {results.length}
+                Slides found: {results.length}
               </Typography>
             </Box>
           </Stack>
         </Paper>
 
         <Stack spacing={3}>
-          {/* Секція 1: Створення тестового уроку */}
+          {/* Section 1: Create Test Lesson */}
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
               {t('debug:slideTest.sections.createLesson')}
@@ -251,14 +251,14 @@ const SlideTestComponent: React.FC = () => {
             </Button>
           </Box>
 
-          {/* Секція 2: Налаштування тестового слайду */}
+          {/* Section 2: Configure Test Slide */}
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
               {t('debug:slideTest.sections.slideSettings')}
             </Typography>
             <Stack spacing={2}>
               <TextField
-                label="Назва слайду"
+                label="Slide Title"
                 value={slideData.title}
                 onChange={(e) => setSlideData(prev => ({ ...prev, title: e.target.value }))}
                 size="small"
@@ -266,7 +266,7 @@ const SlideTestComponent: React.FC = () => {
               />
               
               <TextField
-                label="Опис"
+                label="Description"
                 value={slideData.description}
                 onChange={(e) => setSlideData(prev => ({ ...prev, description: e.target.value }))}
                 size="small"
@@ -274,10 +274,10 @@ const SlideTestComponent: React.FC = () => {
               />
               
               <FormControl size="small">
-                <InputLabel>Тип слайду</InputLabel>
+                <InputLabel>Slide Type</InputLabel>
                 <Select
                   value={slideData.type}
-                  label="Тип слайду"
+                  label="Slide Type"
                   onChange={(e) => setSlideData(prev => ({ ...prev, type: e.target.value as any }))}
                   sx={{ borderRadius: '8px' }}
                 >
@@ -291,7 +291,7 @@ const SlideTestComponent: React.FC = () => {
             </Stack>
           </Box>
 
-          {/* Секція 3: Операції зі слайдами */}
+          {/* Section 3: Slide Operations */}
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
               {t('debug:slideTest.sections.slideOperations')}
@@ -330,11 +330,11 @@ const SlideTestComponent: React.FC = () => {
             </Stack>
           </Box>
 
-          {/* Результати */}
+          {/* Results */}
           {results.length > 0 && (
             <Box>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                Результати ({results.length} слайдів):
+                Results ({results.length} slides):
               </Typography>
               <Stack spacing={1}>
                 {results.map((slide: any, index: number) => (
@@ -345,7 +345,7 @@ const SlideTestComponent: React.FC = () => {
                           {slide.title}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          ID: {slide.id} • Тип: {slide.type}
+                          ID: {slide.id} • Type: {slide.type}
                         </Typography>
                       </Box>
                       <Chip 

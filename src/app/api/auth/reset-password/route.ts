@@ -8,12 +8,12 @@ export async function POST(request: NextRequest) {
 
     console.log('Reset password API called')
 
-    // Валідація пароля
+    // Password validation
     if (!password || typeof password !== 'string') {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Новий пароль обов\'язковий',
+          message: 'New password is required',
           code: 'MISSING_PASSWORD'
         }
       }, { status: 400 })
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Пароль повинен містити щонайменше 6 символів',
+          message: 'Password must be at least 6 characters long',
           code: 'PASSWORD_TOO_SHORT'
         }
       }, { status: 400 })
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Пароль повинен містити щонайменше одну малу літеру',
+          message: 'Password must contain at least one lowercase letter',
           code: 'PASSWORD_MISSING_LOWERCASE'
         }
       }, { status: 400 })
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Пароль повинен містити щонайменше одну велику літеру',
+          message: 'Password must contain at least one uppercase letter',
           code: 'PASSWORD_MISSING_UPPERCASE'
         }
       }, { status: 400 })
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Пароль повинен містити щонайменше одну цифру',
+          message: 'Password must contain at least one digit',
           code: 'PASSWORD_MISSING_NUMBER'
         }
       }, { status: 400 })
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Перевіряємо чи користувач автентифікований
+    // Check if the user is authenticated
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Користувач не автентифікований. Перейдіть за посиланням з email ще раз.',
+          message: 'User not authenticated. Please try the link from email again.',
           code: 'USER_NOT_AUTHENTICATED'
         }
       }, { status: 401 })
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     console.log('User authenticated for password reset:', user.email)
 
-    // Оновлюємо пароль для автентифікованого користувача
+    // Update password for the authenticated user
     try {
       const { error: updateError } = await supabase.auth.updateUser({
         password: password
@@ -86,11 +86,12 @@ export async function POST(request: NextRequest) {
       if (updateError) {
         console.error('Password update failed:', updateError)
         
+        // Supabase specific errors
         if (updateError.message.includes('same as the old password')) {
           return NextResponse.json({
             success: false,
             error: { 
-              message: 'Новий пароль повинен відрізнятися від поточного',
+              message: 'New password must be different from the current one',
               code: 'SAME_PASSWORD'
             }
           }, { status: 400 })
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           success: false,
           error: { 
-            message: 'Помилка при оновленні пароля: ' + updateError.message,
+            message: 'Error updating password: ' + updateError.message,
             code: 'PASSWORD_UPDATE_ERROR'
           }
         }, { status: 500 })
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
       console.log('Password reset successful for user:', user.email)
       return NextResponse.json({
         success: true,
-        message: 'Пароль успішно оновлено'
+        message: 'Password updated successfully'
       })
 
     } catch (updateErr) {
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Помилка при оновленні пароля',
+          message: 'Error updating password',
           code: 'PASSWORD_UPDATE_ERROR'
         }
       }, { status: 500 })
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: { 
-        message: 'Внутрішня помилка сервера',
+        message: 'Internal server error',
         code: 'INTERNAL_ERROR'
       }
     }, { status: 500 })

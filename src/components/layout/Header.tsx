@@ -57,7 +57,7 @@ const Header: React.FC<HeaderProps> = ({
   const router = useRouter();
   const { user, profile, signOut, loading } = useAuth();
 
-  // Логи для відстеження стану в Header (можна видалити для production)
+  // Logs for tracking state in Header (can be removed for production)
   // React.useEffect(() => {
   //   console.log('🎯 Header: User state in header:', user ? `${user.email} (${user.id})` : 'null')
   // }, [user])
@@ -230,7 +230,7 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Right Section */}
         <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1, justifyContent: 'flex-end' }}>
-          {/* Quick Actions - показуємо тільки для авторизованих користувачів */}
+          {/* Quick Actions - show only for authorized users */}
           {user && (
             <Button
               startIcon={<Sparkles size={18} />}
@@ -254,7 +254,7 @@ const Header: React.FC<HeaderProps> = ({
             </Button>
           )}
 
-          {/* User Menu або Login Button */}
+          {/* User Menu or Login Button */}
           {user ? (
             <IconButton
               onClick={handleUserMenuOpen}

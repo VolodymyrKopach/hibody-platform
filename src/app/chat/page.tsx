@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 // Layout
 import Layout from '@/components/layout/Layout';
 
-// Нові модульні компоненти
+// New modular components
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatMessage from '@/components/chat/ChatMessage';
 import ChatInput from '@/components/chat/ChatInput';
@@ -18,11 +18,11 @@ import { SlideDialog } from '@/components/slides';
 import SaveLessonDialog from '@/components/dialogs/SaveLessonDialog';
 import SimpleGenerationDialog from '@/components/dialogs/SimpleGenerationDialog';
 
-// Хуки
+// Hooks
 import { useChatLogic } from '@/hooks/useChatLogic';
 import useSlideManagement from '@/hooks/useSlideManagement';
 
-// Типи
+// Types
 import { Message } from '@/types/chat';
 import { generateMessageId } from '@/utils/messageUtils';
 
@@ -30,7 +30,7 @@ const ChatInterface: React.FC = () => {
   const { t } = useTranslation('common');
   const theme = useTheme();
 
-  // Основна логіка чату
+  // Main chat logic
   const {
     messages,
     setMessages,
@@ -45,7 +45,7 @@ const ChatInterface: React.FC = () => {
     setOnLessonUpdate
   } = useChatLogic();
 
-  // Управління слайдами
+  // Slide management
   const {
     slideUIState,
     saveDialogData,
@@ -70,12 +70,12 @@ const ChatInterface: React.FC = () => {
     exportLesson
   } = useSlideManagement(messages, setMessages);
 
-  // Встановлюємо callback для оновлення уроку після ініціалізації
+  // Set callback for lesson update after initialization
   useEffect(() => {
     setOnLessonUpdate(updateCurrentLesson);
   }, [setOnLessonUpdate, updateCurrentLesson]);
 
-  // Стан для діалогу конструктора генерації
+  // State for generation constructor dialog
   const [generationConstructorOpen, setGenerationConstructorOpen] = React.useState(false);
 
   const handleOpenGenerationConstructor = () => {
@@ -87,12 +87,12 @@ const ChatInterface: React.FC = () => {
   };
 
   const handleGenerate = (parameters: any) => {
-    console.log('🎯 Генерація запущена з параметрами:', parameters);
-    // Тут буде логіка передачі параметрів у ChatService
+    console.log('🎯 Generation started with parameters:', parameters);
+    // Logic to pass parameters to ChatService will go here
     setGenerationConstructorOpen(false);
   };
 
-  // 🔥 ВИПРАВЛЕННЯ: Відстежуємо зміни в lesson об'єктах повідомлень для оновлення слайд-панелі
+  // 🔥 FIX: Track changes in lesson message objects to update the slide panel
   React.useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.sender === 'ai' && (lastMessage as any).lesson) {
@@ -103,7 +103,7 @@ const ChatInterface: React.FC = () => {
     }
   }, [messages, updateCurrentLesson]);
 
-    // Обробка збереження уроку з результатом
+    // Handle lesson saving with result
   const handleSaveLesson = async () => {
     console.log('💾 CHAT PAGE: Save lesson triggered');
     console.log('📋 CHAT PAGE: Save dialog data:', saveDialogData);
@@ -116,7 +116,7 @@ const ChatInterface: React.FC = () => {
       console.error('❌ CHAT PAGE: Save failed:', error);
       const errorMessage: Message = {
         id: generateMessageId(),
-        text: `❌ **Помилка збереження**\n\n${error instanceof Error ? error.message : 'Невідома помилка'}`,
+        text: `❌ **Save Error**\n\n${error instanceof Error ? error.message : 'Unknown error'}`,
         sender: 'ai',
         timestamp: new Date(),
         status: 'sent',
@@ -134,7 +134,7 @@ const ChatInterface: React.FC = () => {
     >
             <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          {/* Основна область чату */}
+          {/* Main chat area */}
           <Box 
             sx={{ 
               flex: 1,
@@ -144,14 +144,14 @@ const ChatInterface: React.FC = () => {
               backgroundColor: theme.palette.background.default
             }}
           >
-            {/* Заголовок чату */}
+            {/* Chat header */}
             <ChatHeader 
               slidePanelOpen={slideUIState.slidePanelOpen}
               hasSlides={(slideUIState.currentLesson?.slides.length || 0) > 0}
               onToggleSlidePanel={toggleSlidePanelOpen}
             />
 
-            {/* Область повідомлень */}
+            {/* Messages area */}
             <Box 
               sx={{ 
                 flex: 1, 
@@ -183,12 +183,12 @@ const ChatInterface: React.FC = () => {
                   />
                 ))}
                 
-                {/* Індикатор друку */}
+                {/* Typing indicator */}
                 {isTyping && <TypingIndicator isTyping={isTyping} />}
               </Box>
             </Box>
 
-            {/* Поле введення */}
+            {/* Input field */}
             <Box sx={{ 
               p: 3, 
               backgroundColor: theme.palette.background.paper,
@@ -211,11 +211,11 @@ const ChatInterface: React.FC = () => {
             </Box>
           </Box>
 
-          {/* Панель слайдів */}
+          {/* Slides panel */}
           {slideUIState.slidePanelOpen && (
             <Box sx={{ 
-              width: 400,          // Оптимальна ширина для карток 300px + відступи
-              flexShrink: 0,       // Не зменшувати ширину
+              width: 400,          // Optimal width for 300px cards + padding
+              flexShrink: 0,       // Do not shrink width
               borderLeft: `1px solid ${theme.palette.divider}`,
               backgroundColor: theme.palette.background.paper
             }}>
@@ -237,7 +237,7 @@ const ChatInterface: React.FC = () => {
           )}
         </Box>
 
-        {/* Діалог перегляду слайдів */}
+        {/* Slide preview dialog */}
         <SlideDialog
           open={slideUIState.slideDialogOpen}
           currentLesson={slideUIState.currentLesson}
@@ -247,7 +247,7 @@ const ChatInterface: React.FC = () => {
           onPrevSlide={goToPrevSlide}
         />
 
-        {/* Діалог збереження уроку */}
+        {/* Lesson save dialog */}
         <SaveLessonDialog
           open={slideUIState.saveDialogOpen}
           dialogData={saveDialogData}
@@ -260,7 +260,7 @@ const ChatInterface: React.FC = () => {
           isSaving={slideUIState.isSavingLesson}
         />
 
-        {/* Діалог конструктора генерації */}
+        {/* Generation constructor dialog */}
         <SimpleGenerationDialog
           open={generationConstructorOpen}
           onClose={handleCloseGenerationConstructor}

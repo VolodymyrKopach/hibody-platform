@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Функція для покращення освітніх промптів
+// Function to enhance educational prompts
 function enhanceEducationalPrompt(originalPrompt: string): string {
-  // Базові модифікатори для освітніх зображень
+  // Basic modifiers for educational images
   const educationalModifiers = [
     'educational content',
     'child-friendly',
@@ -13,7 +13,7 @@ function enhanceEducationalPrompt(originalPrompt: string): string {
     'positive learning environment'
   ];
   
-  // Технічні модифікатори для FLUX
+  // Technical modifiers for FLUX
   const technicalModifiers = [
     'professional digital art',
     'vibrant colors',
@@ -23,17 +23,17 @@ function enhanceEducationalPrompt(originalPrompt: string): string {
     'highly detailed'
   ];
   
-  // Перевіряємо чи промпт вже містить освітні елементи
+  // Check if the prompt already contains educational elements
   const hasEducationalTerms = educationalModifiers.some(term => 
     originalPrompt.toLowerCase().includes(term.toLowerCase())
   );
   
-  // Якщо вже містить освітні терміни, додаємо тільки технічні
+  // If it already contains educational terms, add only technical ones
   if (hasEducationalTerms) {
     return `${originalPrompt}, ${technicalModifiers.slice(0, 3).join(', ')}`;
   }
   
-  // Інакше додаємо і освітні і технічні модифікатори
+  // Otherwise, add both educational and technical modifiers
   const selectedEducational = educationalModifiers.slice(0, 3);
   const selectedTechnical = technicalModifiers.slice(0, 2);
   
@@ -67,12 +67,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Валідація та корекція розмірів для FLUX API
-    // FLUX вимагає щоб розміри були кратні 16
+    // Validate and correct dimensions for FLUX API
+    // FLUX requires dimensions to be multiples of 16
     const adjustedWidth = Math.round(width / 16) * 16;
     const adjustedHeight = Math.round(height / 16) * 16;
     
-    // Мінімальні та максимальні розміри для FLUX
+    // Minimum and maximum dimensions for FLUX
     const finalWidth = Math.max(256, Math.min(2048, adjustedWidth));
     const finalHeight = Math.max(256, Math.min(2048, adjustedHeight));
     
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       adjusted: `${finalWidth}x${finalHeight}`
     });
 
-    // Покращуємо промпт для освітнього контенту
+    // Enhance prompt for educational content
     const enhancedPrompt = enhanceEducationalPrompt(prompt);
     
     console.log('📤 [Images API] Calling FLUX API...');
@@ -98,12 +98,12 @@ export async function POST(request: NextRequest) {
         prompt: enhancedPrompt,
         width: finalWidth,
         height: finalHeight,
-        steps: 4, // Швидка генерація
+        steps: 4, // Fast generation
         n: 1,
         response_format: 'b64_json',
-        // Додаткові параметри для кращої якості освітніх зображень
-        guidance_scale: 3.5, // Помірне дотримання промпту
-        seed: Math.floor(Math.random() * 1000000), // Випадкове зерно для різноманітності
+        // Additional parameters for better quality educational images
+        guidance_scale: 3.5, // Moderate adherence to prompt
+        seed: Math.floor(Math.random() * 1000000), // Random seed for diversity
       }),
     });
 

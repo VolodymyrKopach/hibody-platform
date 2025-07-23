@@ -1,5 +1,4 @@
-// === SOLID: SRP - Single Responsibility Principle ===
-// Компонент відповідає тільки за вибір вікової групи
+// Component is only responsible for age group selection
 
 import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
@@ -7,7 +6,7 @@ import { styled } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import { AgeGroup, AgeGroupConfig } from '../../../types/generation';
 
-// === SOLID: SRP - Стилізований компонент ===
+// === SOLID: SRP - Styled Component ===
 const AgeButton = styled(Button)(({ theme }) => ({
   borderRadius: typeof theme.shape.borderRadius === 'number' ? theme.shape.borderRadius * 1.5 : 12,
   padding: theme.spacing(2, 3),

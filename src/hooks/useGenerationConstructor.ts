@@ -11,63 +11,63 @@ import { usePreview } from './usePreview';
 import { configManager } from '@/services/generation/ConfigManager';
 
 /**
- * Головний хук для конструктора генерації
- * SOLID: SRP - відповідає тільки за координацію інших хуків
- * SOLID: DIP - залежить від абстрактних хуків, не від конкретних реалізацій
+ * Main hook for the generation constructor
+ * SOLID: SRP - responsible only for coordinating other hooks
+ * SOLID: DIP - depends on abstract hooks, not concrete implementations
  */
 export function useGenerationConstructor(initialAgeGroup: AgeGroupId = '4-6') {
-  // === SOLID: SRP - Використання інших хуків ===
+  // === SOLID: SRP - Using other hooks ===
   
   /**
-   * Хук для управління формою
-   * SOLID: DIP - залежимо від абстрактного хука
+   * Hook for form management
+   * SOLID: DIP - depends on an abstract hook
    */
   const form = useGenerationForm(initialAgeGroup);
   
   /**
-   * Хук для валідації
-   * SOLID: DIP - залежимо від абстрактного хука
+   * Hook for validation
+   * SOLID: DIP - depends on an abstract hook
    */
   const validation = useFormValidation(
     form.values,
     form.getCurrentFilters(),
-    true // автоматична валідація
+    true // automatic validation
   );
   
   /**
-   * Хук для превю
-   * SOLID: DIP - залежимо від абстрактного хука
+   * Hook for preview
+   * SOLID: DIP - depends on an abstract hook
    */
   const preview = usePreview(
     form.getCurrentAgeGroupConfig(),
     form.values
   );
 
-  // === SOLID: SRP - Синхронізація стану ===
+  // === SOLID: SRP - State synchronization ===
   
   /**
-   * Синхронізувати помилки валідації з формою
-   * SOLID: SRP - одна відповідальність: синхронізувати помилки
+   * Synchronize validation errors with the form
+   * SOLID: SRP - single responsibility: synchronize errors
    */
   useEffect(() => {
     form.setErrors(validation.errors);
   }, [validation.errors, form.setErrors]);
 
   /**
-   * Оновити превю при зміні вікової групи
-   * SOLID: SRP - одна відповідальність: оновити превю
+   * Update preview on age group change
+   * SOLID: SRP - single responsibility: update preview
    */
   useEffect(() => {
     if (preview.isVisible) {
       preview.refreshPreview();
     }
-  }, [form.selectedAgeGroup]); // Реагуємо тільки на зміну вікової групи
+  }, [form.selectedAgeGroup]); // Respond only to age group change
 
-  // === SOLID: SRP - Об'єднаний стан ===
+  // === SOLID: SRP - Combined state ===
   
   /**
-   * Створити об'єднаний стан конструктора
-   * SOLID: SRP - одна відповідальність: створити стан
+   * Create combined constructor state
+   * SOLID: SRP - single responsibility: create state
    */
   const constructorState: GenerationConstructorState = useMemo(() => ({
     form: form.state,
@@ -76,27 +76,27 @@ export function useGenerationConstructor(initialAgeGroup: AgeGroupId = '4-6') {
     availableFilters: configManager.getAllFilters()
   }), [form.state, preview.previewState]);
 
-  // === SOLID: SRP - Основні дії ===
+  // === SOLID: SRP - Main actions ===
   
   /**
-   * Змінити вікову групу з валідацією
-   * SOLID: SRP - одна відповідальність: змінити групу
+   * Change age group with validation
+   * SOLID: SRP - single responsibility: change group
    */
   const changeAgeGroup = useCallback((ageGroupId: string) => {
     form.setAgeGroup(ageGroupId);
   }, [form.setAgeGroup]);
 
   /**
-   * Змінити значення поля з валідацією
-   * SOLID: SRP - одна відповідальність: змінити поле
+   * Change field value with validation
+   * SOLID: SRP - single responsibility: change field
    */
   const changeFieldValue = useCallback((fieldId: string, value: any) => {
     form.setFieldValue(fieldId, value);
   }, [form.setFieldValue]);
 
   /**
-   * Показати превю з перевірками
-   * SOLID: SRP - одна відповідальність: показати превю
+   * Show preview with checks
+   * SOLID: SRP - single responsibility: show preview
    */
   const showPreview = useCallback(() => {
     if (!preview.canShowPreview) return;
@@ -104,42 +104,42 @@ export function useGenerationConstructor(initialAgeGroup: AgeGroupId = '4-6') {
   }, [preview.canShowPreview, preview.showPreview]);
 
   /**
-   * Скинути форму до початкового стану
-   * SOLID: SRP - одна відповідальність: скинути форму
+   * Reset form to initial state
+   * SOLID: SRP - single responsibility: reset form
    */
   const resetForm = useCallback(() => {
     form.resetForm();
     preview.hidePreview();
   }, [form.resetForm, preview.hidePreview]);
 
-  // === SOLID: SRP - Підготовка до генерації ===
+  // === SOLID: SRP - Preparation for generation ===
   
   /**
-   * Перевірити готовність до генерації
-   * SOLID: SRP - одна відповідальність: перевірити готовність
+   * Check readiness for generation
+   * SOLID: SRP - single responsibility: check readiness
    */
   const canGenerate = useMemo(() => {
     return validation.isFormComplete && form.canSubmit();
   }, [validation.isFormComplete, form.canSubmit]);
 
   /**
-   * Підготувати параметри для генерації
-   * SOLID: SRP - одна відповідальність: підготувати параметри
+   * Prepare parameters for generation
+   * SOLID: SRP - single responsibility: prepare parameters
    */
   const prepareGenerationParameters = useCallback((): GenerationParameters => {
     if (!canGenerate) {
-      throw new Error('Форма не готова для генерації');
+      throw new Error('Form is not ready for generation');
     }
     return form.createGenerationParameters();
   }, [canGenerate, form.createGenerationParameters]);
 
   /**
-   * Виконати генерацію
-   * SOLID: SRP - одна відповідальність: виконати генерацію
+   * Execute generation
+   * SOLID: SRP - single responsibility: execute generation
    */
   const generate = useCallback(async (): Promise<GenerationParameters> => {
     if (!canGenerate) {
-      throw new Error('Форма не готова для генерації');
+      throw new Error('Form is not ready for generation');
     }
 
     form.startSubmit();
@@ -149,17 +149,17 @@ export function useGenerationConstructor(initialAgeGroup: AgeGroupId = '4-6') {
       form.submitSuccess();
       return parameters;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Помилка генерації';
+      const errorMessage = error instanceof Error ? error.message : 'Generation error';
       form.submitError(errorMessage);
       throw error;
     }
   }, [canGenerate, form, prepareGenerationParameters]);
 
-  // === SOLID: SRP - Допоміжні функції ===
+  // === SOLID: SRP - Helper functions ===
   
   /**
-   * Отримати статус конструктора
-   * SOLID: SRP - одна відповідальність: отримати статус
+   * Get constructor status
+   * SOLID: SRP - single responsibility: get status
    */
   const getStatus = useCallback(() => {
     if (form.isSubmitting) return 'generating';
@@ -170,8 +170,8 @@ export function useGenerationConstructor(initialAgeGroup: AgeGroupId = '4-6') {
   }, [form.isSubmitting, preview.isLoading, validation.errorCount, canGenerate]);
 
   /**
-   * Отримати прогрес заповнення форми
-   * SOLID: SRP - одна відповідальність: розрахувати прогрес
+   * Get form filling progress
+   * SOLID: SRP - single responsibility: calculate progress
    */
   const getProgress = useCallback(() => {
     const filters = form.getCurrentFilters();
@@ -188,28 +188,28 @@ export function useGenerationConstructor(initialAgeGroup: AgeGroupId = '4-6') {
   }, [form.getCurrentFilters, form.values]);
 
   /**
-   * Отримати поточну вікову групу
-   * SOLID: SRP - одна відповідальність: отримати групу
+   * Get current age group
+   * SOLID: SRP - single responsibility: get group
    */
   const getCurrentAgeGroup = useCallback((): AgeGroupConfig | null => {
     return form.getCurrentAgeGroupConfig();
   }, [form.getCurrentAgeGroupConfig]);
 
-  // === API хука ===
+  // === Hook API ===
   return {
-    // Стан
+    // State
     state: constructorState,
     status: getStatus(),
     progress: getProgress(),
     
-    // Основні дії
+    // Main actions
     changeAgeGroup,
     changeFieldValue,
     showPreview,
     resetForm,
     generate,
     
-    // Превю
+    // Preview
     preview: {
       show: showPreview,
       hide: preview.hidePreview,
@@ -222,7 +222,7 @@ export function useGenerationConstructor(initialAgeGroup: AgeGroupId = '4-6') {
       error: preview.error
     },
     
-    // Валідація
+    // Validation
     validation: {
       errors: validation.errors,
       isValid: validation.isValid,
@@ -233,7 +233,7 @@ export function useGenerationConstructor(initialAgeGroup: AgeGroupId = '4-6') {
       getFirstFieldError: validation.getFirstFieldError
     },
     
-    // Форма
+    // Form
     form: {
       selectedAgeGroup: form.selectedAgeGroup,
       values: form.values,
@@ -243,14 +243,14 @@ export function useGenerationConstructor(initialAgeGroup: AgeGroupId = '4-6') {
       getCurrentFilters: form.getCurrentFilters
     },
     
-    // Перевірки
+    // Checks
     canGenerate,
     canShowPreview: preview.canShowPreview,
     
-    // Допоміжні функції
+    // Helper functions
     prepareGenerationParameters,
     
-    // Розширені властивості для зручності
+    // Extended properties for convenience
     selectedAgeGroup: form.selectedAgeGroup,
     values: form.values,
     errors: validation.errors,
@@ -258,7 +258,7 @@ export function useGenerationConstructor(initialAgeGroup: AgeGroupId = '4-6') {
     isDirty: form.isDirty,
     isSubmitting: form.isSubmitting,
     
-    // Внутрішні хуки для розширення
+    // Internal hooks for extension
     _internal: {
       form,
       validation,
@@ -267,5 +267,5 @@ export function useGenerationConstructor(initialAgeGroup: AgeGroupId = '4-6') {
   };
 }
 
-// === Типи для експорту ===
+// === Exported types ===
 export type UseGenerationConstructorReturn = ReturnType<typeof useGenerationConstructor>; 

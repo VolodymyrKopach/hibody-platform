@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Перевіряємо що imageData є base64 зображенням
+    // Check if imageData is a base64 image
     if (!imageData.startsWith('data:image/')) {
       console.error('❌ PREVIEW API: Invalid image data format:', imageData.substring(0, 50) + '...');
       return NextResponse.json(
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ PREVIEW API: Image data validation passed');
 
-    // Витягуємо base64 дані без префіксу
+    // Extract base64 data without prefix
     const base64Data = imageData.split(',')[1];
     if (!base64Data) {
       console.error('❌ PREVIEW API: Invalid base64 data - no data after comma');
@@ -50,26 +50,26 @@ export async function POST(request: NextRequest) {
 
     console.log('📏 PREVIEW API: Base64 data extracted, size:', Math.round(base64Data.length / 1024) + 'KB');
 
-    // Створюємо буфер з base64 даних
+    // Create buffer from base64 data
     const buffer = Buffer.from(base64Data, 'base64');
     console.log('🗂️ PREVIEW API: Buffer created, size:', Math.round(buffer.length / 1024) + 'KB');
 
-    // Ініціалізуємо Supabase клієнт
+    // Initialize Supabase client
     const supabase = await createClient();
     
-    // Перевіряємо авторизацію користувача
+    // Check user authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       console.error('❌ PREVIEW API: User not authenticated:', authError);
       return NextResponse.json(
-        { error: 'Користувач не авторизований' },
+        { error: 'User not authorized' },
         { status: 401 }
       );
     }
 
     console.log('👤 PREVIEW API: User authenticated:', user.id);
 
-    // Генеруємо ім'я файлу для Supabase Storage
+    // Generate filename for Supabase Storage
     const timestamp = Date.now();
     const fileName = `${slideId}-${type}-${timestamp}.png`;
     const filePath = `lesson-thumbnails/${lessonId}/${fileName}`;
@@ -81,12 +81,12 @@ export async function POST(request: NextRequest) {
       fileSize: Math.round(buffer.length / 1024) + 'KB'
     });
 
-    // Завантажуємо файл в Supabase Storage
+    // Upload file to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('lesson-assets')
       .upload(filePath, buffer, {
         contentType: 'image/png',
-        upsert: true // Перезаписуємо файл якщо існує
+        upsert: true // Overwrite file if it exists
       });
 
     if (uploadError) {
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ PREVIEW API: File uploaded to storage:', uploadData.path);
 
-    // Отримуємо публічний URL файлу
+    // Get public URL of the file
     const { data: urlData } = supabase.storage
       .from('lesson-assets')
       .getPublicUrl(filePath);
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Отримуємо параметри з URL
+    // Get parameters from URL
     const { searchParams } = new URL(request.url);
     const lessonId = searchParams.get('lessonId');
 
@@ -152,19 +152,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Ініціалізуємо Supabase клієнт
+    // Initialize Supabase client
     const supabase = await createClient();
     
-    // Перевіряємо авторизацію користувача
+    // Check user authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Користувач не авторизований' },
+        { error: 'User not authorized' },
         { status: 401 }
       );
     }
 
-    // Отримуємо список файлів з Supabase Storage
+    // Get list of files from Supabase Storage
     const { data: files, error: listError } = await supabase.storage
       .from('lesson-assets')
       .list(`lesson-thumbnails/${lessonId}`, {
@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Генеруємо публічні URL для файлів
+    // Generate public URLs for files
     const previews = files?.map(file => {
       const filePath = `lesson-thumbnails/${lessonId}/${file.name}`;
       const { data: urlData } = supabase.storage

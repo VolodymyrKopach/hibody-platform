@@ -13,14 +13,14 @@ export interface ImageGenerationResponse {
   error?: string;
 }
 
-// Функція для отримання базового URL
+// Function to get the base URL
 function getBaseUrl(): string {
-  // Якщо ми в браузері, використовуємо window.location
+  // If we are in the browser, use window.location
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
   
-  // Якщо ми на сервері, використовуємо змінні середовища або localhost
+  // If we are on the server, use environment variables or localhost
   const vercelUrl = process.env.VERCEL_URL;
   const nextPublicUrl = process.env.NEXT_PUBLIC_SITE_URL;
   
@@ -32,7 +32,7 @@ function getBaseUrl(): string {
     return nextPublicUrl;
   }
   
-  // Fallback для локальної розробки
+  // Fallback for local development
   return 'http://localhost:3000';
 }
 
@@ -61,7 +61,7 @@ export async function generateImage(params: ImageGenerationRequest): Promise<Ima
         const errorData = await response.json();
         errorMessage = errorData.error || errorMessage;
       } catch (parseError) {
-        // Якщо не можемо парсити JSON, використовуємо status text
+        // If we cannot parse JSON, use status text
         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         console.error('Failed to parse error response as JSON:', parseError);
       }
@@ -83,7 +83,7 @@ export async function generateImage(params: ImageGenerationRequest): Promise<Ima
   }
 }
 
-// Освітні теми та їх характеристики
+// Educational topics and their characteristics
 const educationalTopics = {
   math: {
     keywords: ['numbers', 'counting', 'shapes', 'addition', 'subtraction', 'geometry'],
@@ -111,7 +111,7 @@ const educationalTopics = {
   }
 };
 
-// Вікові групи та їх характеристики
+// Age groups and their characteristics
 const ageGroupStyles = {
   '2-3': 'very simple shapes, large elements, primary colors, minimal detail, baby-friendly',
   '4-6': 'cartoon style, bright primary colors, simple characters, playful elements',
@@ -121,13 +121,13 @@ const ageGroupStyles = {
   '14+': 'professional educational graphics, complex visual information, mature design'
 };
 
-// Функція для створення освітніх промптів для дітей
+// Function to create educational prompts for children
 export function createEducationalImagePrompt(
   topic: string, 
   ageGroup: string, 
   style: 'cartoon' | 'realistic' | 'illustration' = 'cartoon'
 ): string {
-  // Визначаємо тематику
+  // Determine the topic
   const topicLower = topic.toLowerCase();
   let topicInfo = educationalTopics.default;
   
@@ -138,20 +138,20 @@ export function createEducationalImagePrompt(
     }
   }
   
-  // Визначаємо стиль для вікової групи
+  // Determine the style for the age group
   const ageStyle = ageGroupStyles[ageGroup as keyof typeof ageGroupStyles] || ageGroupStyles['7-8'];
   
-  // Базовий промпт
+  // Base prompt
   const basePrompt = `Educational ${style} illustration for children aged ${ageGroup}`;
   
-  // Стильові модифікатори
+  // Style modifiers
   const styleModifiers = {
     cartoon: 'cartoon style, animated characters, fun and playful',
     realistic: 'realistic but child-friendly, clear and detailed',
     illustration: 'digital art illustration, vibrant and engaging'
   };
   
-  // Формуємо фінальний промпт
+  // Form the final prompt
   const finalPrompt = [
     basePrompt,
     `about "${topic}"`,
@@ -167,13 +167,13 @@ export function createEducationalImagePrompt(
   return finalPrompt;
 }
 
-// Функція для визначення оптимальних розмірів зображення для освітнього контенту
+// Function to determine optimal image sizes for educational content
 export function getOptimalImageSize(purpose: 'slide' | 'thumbnail' | 'hero' | 'activity') {
   const sizes = {
-    slide: { width: 1024, height: 768 }, // стандартний розмір для слайдів
-    thumbnail: { width: 512, height: 512 }, // квадратне для мініатюр
-    hero: { width: 1200, height: 630 }, // широкий формат для заголовків
-    activity: { width: 800, height: 600 } // для інтерактивних завдань
+    slide: { width: 1024, height: 768 }, // standard size for slides
+    thumbnail: { width: 512, height: 512 }, // square for thumbnails
+    hero: { width: 1200, height: 630 }, // wide format for headers
+    activity: { width: 800, height: 600 } // for interactive tasks
   };
 
   return sizes[purpose] || sizes.slide;

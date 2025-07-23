@@ -19,11 +19,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Автоматичне створення промпту на основі контенту слайду
+    // Automatically create prompt based on slide content
     let imagePrompt: string;
     
     if (autoPrompt && slideContent) {
-      // Витягуємо ключові слова з контенту слайду для створення промпту
+      // Extract keywords from slide content to create prompt
       const keywords = extractKeywords(slideContent);
       imagePrompt = createEducationalImagePrompt(
         keywords.join(', ') || topic,
@@ -38,13 +38,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Додаємо контекстні модифікатори залежно від типу зображення
+    // Add contextual modifiers depending on image type
     const contextualPrompt = addContextualModifiers(imagePrompt, imageType, ageGroup);
 
-    // Отримуємо оптимальний розмір для типу зображення
+    // Get optimal size for image type
     const { width, height } = getOptimalImageSize(imageType as any);
 
-    // Генерація зображення через FLUX.1 schnell
+    // Generate image via FLUX.1 schnell
     const fluxResponse = await fetch('https://api.together.xyz/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -106,26 +106,26 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Функція для витягування ключових слів з контенту слайду
+// Function to extract keywords from slide content
 function extractKeywords(content: string): string[] {
-  // Прибираємо HTML теги та форматування
+  // Remove HTML tags and formatting
   const cleanContent = content.replace(/<[^>]*>/g, ' ').replace(/[^\w\s]/g, ' ');
   
-  // Ключові слова української мови для освітнього контенту
+  // Ukrainian keywords for educational content
   const educationalKeywords = [
-    'математика', 'додавання', 'віднімання', 'числа', 'рахунок',
-    'українська', 'літери', 'слова', 'читання', 'письмо',
-    'природознавство', 'тварини', 'рослини', 'погода', 'сезони',
-    'історія', 'географія', 'мистецтво', 'музика', 'спорт',
-    'кольори', 'форми', 'розміри', 'порівняння'
+    'mathematics', 'addition', 'subtraction', 'numbers', 'counting',
+    'Ukrainian', 'letters', 'words', 'reading', 'writing',
+    'natural science', 'animals', 'plants', 'weather', 'seasons',
+    'history', 'geography', 'art', 'music', 'sports',
+    'colors', 'shapes', 'sizes', 'comparison'
   ];
 
-  // Знаходимо збіги з освітніми ключовими словами
+  // Find matches with educational keywords
   const foundKeywords = educationalKeywords.filter(keyword => 
     cleanContent.toLowerCase().includes(keyword)
   );
 
-  // Якщо немає збігів, витягуємо загальні іменники
+  // If no matches, extract general nouns
   if (foundKeywords.length === 0) {
     const words = cleanContent.toLowerCase().split(/\s+/)
       .filter(word => word.length > 3)
@@ -136,7 +136,7 @@ function extractKeywords(content: string): string[] {
   return foundKeywords.slice(0, 3);
 }
 
-// Функція для додавання контекстних модифікаторів
+// Function to add contextual modifiers
 function addContextualModifiers(prompt: string, imageType: string, ageGroup?: string): string {
   const age = ageGroup || '6-12';
   
@@ -155,12 +155,12 @@ function addContextualModifiers(prompt: string, imageType: string, ageGroup?: st
 
   let contextualPrompt = prompt;
 
-  // Додаємо модифікатори типу зображення
+  // Add image type modifiers
   if (typeModifiers[imageType as keyof typeof typeModifiers]) {
     contextualPrompt += `. ${typeModifiers[imageType as keyof typeof typeModifiers]}`;
   }
 
-  // Додаємо модифікатори віку
+  // Add age modifiers
   const ageKey = Object.keys(ageModifiers).find(range => {
     const [min, max] = range.split('-').map(Number);
     const userAge = parseInt(age.split('-')[0]) || 8;
@@ -171,7 +171,7 @@ function addContextualModifiers(prompt: string, imageType: string, ageGroup?: st
     contextualPrompt += `. ${ageModifiers[ageKey as keyof typeof ageModifiers]}`;
   }
 
-  // Додаємо базові вимоги безпеки для дітей
+  // Add basic child safety requirements
   contextualPrompt += '. Child-safe content, no violence, positive atmosphere, educational value, high quality digital art.';
 
   return contextualPrompt;

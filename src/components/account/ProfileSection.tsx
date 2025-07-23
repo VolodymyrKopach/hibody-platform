@@ -48,7 +48,7 @@ const ProfileSection: React.FC = () => {
     avatar_url: '',
   });
 
-  // Завантажуємо повний профіль з API
+  // Loads the full profile from the API
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
@@ -216,7 +216,7 @@ const ProfileSection: React.FC = () => {
       )}
 
       <Stack spacing={3}>
-        {/* Аватар */}
+        {/* Avatar */}
         <Card sx={{ 
           borderRadius: '12px',
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
@@ -287,7 +287,7 @@ const ProfileSection: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Основна інформація */}
+        {/* Basic Information */}
         <Card sx={{ 
           borderRadius: '12px',
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
@@ -298,7 +298,7 @@ const ProfileSection: React.FC = () => {
             </Typography>
             
             <Stack spacing={3}>
-              {/* Повне ім'я */}
+              {/* Full Name */}
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
                   {t('profile.fullName')}
@@ -324,7 +324,7 @@ const ProfileSection: React.FC = () => {
                 )}
               </Box>
 
-              {/* Email (тільки для читання) */}
+              {/* Email (read-only) */}
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
                   {t('profile.email')}
@@ -334,7 +334,7 @@ const ProfileSection: React.FC = () => {
                 </Typography>
               </Box>
 
-              {/* Роль (тільки для читання) */}
+              {/* Role (read-only) */}
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
                   {t('profile.role')}
@@ -344,7 +344,7 @@ const ProfileSection: React.FC = () => {
                 </Typography>
               </Box>
 
-              {/* Підписка (тільки для читання) */}
+              {/* Subscription (read-only) */}
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
                   {t('profile.subscriptionType')}
@@ -355,7 +355,7 @@ const ProfileSection: React.FC = () => {
               </Box>
             </Stack>
 
-            {/* Кнопки збереження/скасування */}
+            {/* Save/Cancel Buttons */}
             {isEditing && (
               <Box sx={{ 
                 display: 'flex', 
@@ -393,7 +393,7 @@ const ProfileSection: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Додаткова інформація (тільки для читання) */}
+        {/* Additional Information (read-only) */}
         <Card sx={{ 
           borderRadius: '12px',
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,

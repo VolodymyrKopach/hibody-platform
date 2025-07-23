@@ -65,11 +65,11 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
       if (data.success) {
         setSuccess(true)
       } else {
-        setError(data.error?.message || 'Помилка при відправці листа')
+        setError(data.error?.message || 'Error sending email')
       }
     } catch (err) {
       console.error('Forgot password error:', err)
-      setError('Помилка підключення до сервера')
+      setError('Server connection error')
     } finally {
       setLoading(false)
     }
@@ -100,7 +100,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
             {t('auth:forgotPassword.success')}
           </Typography>
           <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-            Перевірте свою електронну пошту {email} для подальших інструкцій.
+            Check your email {email} for further instructions.
           </Typography>
         </Box>
 

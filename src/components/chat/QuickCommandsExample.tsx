@@ -12,9 +12,9 @@ interface QuickCommandsExampleProps {
 }
 
 /**
- * Приклад правильного використання швидких команд з i18n
- * Мова для кнопок береться з інтерфейсу користувача (i18n.language),
- * а не з детекції мови повідомлення
+ * Example of correct usage of quick commands with i18n
+ * The language for the buttons is taken from the user interface (i18n.language),
+ * not from message language detection
  */
 export const QuickCommandsExample: React.FC<QuickCommandsExampleProps> = ({
   currentSlide,
@@ -22,10 +22,10 @@ export const QuickCommandsExample: React.FC<QuickCommandsExampleProps> = ({
 }) => {
   const { i18n } = useTranslation();
 
-  // ✅ Правильно: використовуємо мову інтерфейсу
+  // ✅ Correct: use interface language
   const interfaceLanguage = i18n.language as 'uk' | 'en';
   
-  // ✅ Правильно: передаємо мову з i18n, а не детектимо з повідомлення
+  // ✅ Correct: pass language from i18n, do not detect from message
   const quickCommands = slideUtils.generateQuickCommands(currentSlide, interfaceLanguage);
 
   return (

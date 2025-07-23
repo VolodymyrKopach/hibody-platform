@@ -3,7 +3,7 @@
 import React from 'react'
 import { Box, keyframes } from '@mui/material'
 
-// Елегантна анімація крапок
+// Elegant dot animation
 const dotPulse = keyframes`
   0% {
     transform: scale(1);

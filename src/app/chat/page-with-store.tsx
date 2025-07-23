@@ -16,7 +16,7 @@ import ChatMessage from '@/components/chat/ChatMessage';
 import ChatInput from '@/components/chat/ChatInput';
 import { useChatLogic } from '@/hooks/useChatLogic';
 
-// === SOLID: SRP - ChatInterface відповідає тільки за layout та інтеграцію ===
+// === SOLID: SRP - ChatInterface is only responsible for layout and integration ===
 const ChatInterfaceWithStore: React.FC = () => {
   const { t } = useTranslation('common');
   const theme = useTheme();
@@ -54,7 +54,7 @@ const ChatInterfaceWithStore: React.FC = () => {
   );
 };
 
-// === SOLID: SRP - Розділяємо layout logic від Provider setup ===
+// === SOLID: SRP - Separating layout logic from Provider setup ===
 interface ChatInterfaceContentProps {
   messages: any[];
   isTyping: boolean;
@@ -80,7 +80,7 @@ const ChatInterfaceContent: React.FC<ChatInterfaceContentProps> = ({
 }) => {
   const theme = useTheme();
   
-  // === SOLID: DIP - Використання Store через абстракцію ===
+  // === SOLID: DIP - Using Store through abstraction ===
   const { 
     slidePanelOpen, 
     slideDialogOpen, 
@@ -153,7 +153,7 @@ const ChatInterfaceContent: React.FC<ChatInterfaceContentProps> = ({
                   <span></span>
                   <span></span>
                 </div>
-                AI обробляє ваш запит...
+                AI is processing your request...
               </Box>
             )}
           </Box>
@@ -193,5 +193,5 @@ const ChatInterfaceContent: React.FC<ChatInterfaceContentProps> = ({
 
 export default ChatInterfaceWithStore;
 
-// === SOLID: LSP - Компонент можна використовувати замість оригінального ===
+// === SOLID: LSP - Component can be used instead of the original ===
 export { ChatInterfaceWithStore as ChatInterface }; 

@@ -10,15 +10,15 @@ export interface SlidePreviewOptions {
 }
 
 /**
- * Генерує превью слайду з HTML контенту
+ * Generates a slide preview from HTML content
  */
 export async function generateSlidePreview(
   htmlContent: string,
   options: SlidePreviewOptions = {}
 ): Promise<string> {
   const {
-    width = 1600,        // Стандартна ширина для превью
-    height = 1200,       // Стандартна висота для превью
+    width = 1600,        // Standard width for preview
+    height = 1200,       // Standard height for preview
     quality = 0.8,
     scale = 1,
     background = '#ffffff'
@@ -26,7 +26,7 @@ export async function generateSlidePreview(
 
   return new Promise((resolve, reject) => {
     try {
-      // Створюємо тимчасовий iframe для рендерингу HTML
+      // Create a temporary iframe for HTML rendering
       const iframe = document.createElement('iframe');
       iframe.style.position = 'absolute';
       iframe.style.top = '-9999px';
@@ -39,29 +39,29 @@ export async function generateSlidePreview(
       
       document.body.appendChild(iframe);
 
-      // Timeout для безпеки (збільшуємо до 20 секунд)
+      // Timeout for safety (increased to 20 seconds)
       const timeoutId = setTimeout(() => {
-        console.warn('Timeout при генерації превью слайду');
+        console.warn('Timeout during slide preview generation');
         if (document.body.contains(iframe)) {
           document.body.removeChild(iframe);
         }
-        reject(new Error('Timeout при генерації превью'));
+        reject(new Error('Timeout during preview generation'));
       }, 20000);
 
       iframe.onload = async () => {
         try {
           const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
           if (!iframeDocument) {
-            throw new Error('Не вдалося отримати доступ до iframe документу');
+            throw new Error('Could not access iframe document');
           }
 
-          console.log('⏰ Чекаємо 5 секунд для завершення анімацій...');
-          // Просто чекаємо 5 секунд для завершення всіх анімацій
+          console.log('⏰ Waiting 5 seconds for animations to complete...');
+          // Just wait 5 seconds for all animations to complete
           await new Promise(resolve => setTimeout(resolve, 5000));
 
-          console.log('📸 Створюємо скріншот після завершення анімацій...');
+          console.log('📸 Creating screenshot after animations complete...');
 
-          // Генеруємо превью за допомогою html2canvas
+          // Generate preview using html2canvas
           const canvas = await html2canvas(iframeDocument.body, {
             width,
             height,
@@ -75,23 +75,23 @@ export async function generateSlidePreview(
             imageTimeout: 8000
           });
 
-          // Конвертуємо в base64
+          // Convert to base64
           const dataUrl = canvas.toDataURL('image/png', quality);
           
-          // Очищуємо ресурси
+          // Clean up resources
           clearTimeout(timeoutId);
           if (document.body.contains(iframe)) {
             document.body.removeChild(iframe);
           }
           
-          console.log('✅ Превью успішно створено після 5-секундного очікування');
+          console.log('✅ Preview successfully created after 5-second wait');
           resolve(dataUrl);
         } catch (error) {
           clearTimeout(timeoutId);
           if (document.body.contains(iframe)) {
             document.body.removeChild(iframe);
           }
-          console.error('Помилка html2canvas:', error);
+          console.error('html2canvas error:', error);
           reject(error);
         }
       };
@@ -101,30 +101,30 @@ export async function generateSlidePreview(
         if (document.body.contains(iframe)) {
           document.body.removeChild(iframe);
         }
-        console.error('Помилка завантаження iframe:', error);
-        reject(new Error('Помилка завантаження iframe'));
+        console.error('iframe loading error:', error);
+        reject(new Error('iframe loading error'));
       };
 
-      // Оптимізуємо HTML контент для кращої генерації превью
+      // Optimize HTML content for better preview generation
       const optimizedHtml = optimizeHtmlForPreviewWithAnimations(htmlContent);
       iframe.srcdoc = optimizedHtml;
     } catch (error) {
-      console.error('Помилка створення iframe:', error);
+      console.error('iframe creation error:', error);
       reject(error);
     }
   });
 }
 
 /**
- * Альтернативний метод генерації превью з менш агресивною обробкою
+ * Alternative method for preview generation with less aggressive processing
  */
 export async function generateSlidePreviewAlt(
   htmlContent: string,
   options: SlidePreviewOptions = {}
 ): Promise<string> {
   const {
-    width = 1600,        // Стандартна ширина для превью
-    height = 1200,       // Стандартна висота для превью
+    width = 1600,        // Standard width for preview
+    height = 1200,       // Standard height for preview
     quality = 0.8,
     scale = 1,
     background = '#ffffff'
@@ -132,7 +132,7 @@ export async function generateSlidePreviewAlt(
 
   return new Promise((resolve, reject) => {
     try {
-      // Створюємо контейнер для превью
+      // Create a container for preview
       const container = document.createElement('div');
       container.style.position = 'absolute';
       container.style.top = '-9999px';
@@ -145,23 +145,23 @@ export async function generateSlidePreviewAlt(
       
       document.body.appendChild(container);
 
-      // Timeout для безпеки
+      // Timeout for safety
       const timeoutId = setTimeout(() => {
-        console.warn('Timeout при альтернативній генерації превью');
+        console.warn('Timeout during alternative preview generation');
         if (document.body.contains(container)) {
           document.body.removeChild(container);
         }
-        reject(new Error('Timeout при альтернативній генерації превью'));
+        reject(new Error('Timeout during alternative preview generation'));
       }, 15000);
 
       try {
-        // Додаємо HTML контент
+        // Add HTML content
         container.innerHTML = htmlContent;
 
-        // Простий метод - чекаємо 5 секунд і робимо скріншот
+        // Simple method - wait 5 seconds and take a screenshot
         setTimeout(async () => {
           try {
-            console.log('📸 Альтернативний метод: створюємо скріншот через 5 секунд...');
+            console.log('📸 Alternative method: creating screenshot after 5 seconds...');
 
             const canvas = await html2canvas(container, {
               width,
@@ -183,14 +183,14 @@ export async function generateSlidePreviewAlt(
               document.body.removeChild(container);
             }
             
-            console.log('✅ Альтернативне превью успішно створено');
+            console.log('✅ Alternative preview successfully created');
             resolve(dataUrl);
           } catch (error) {
             clearTimeout(timeoutId);
             if (document.body.contains(container)) {
               document.body.removeChild(container);
             }
-            console.error('Помилка альтернативного html2canvas:', error);
+            console.error('Alternative html2canvas error:', error);
             reject(error);
           }
         }, 5000);
@@ -200,51 +200,51 @@ export async function generateSlidePreviewAlt(
         if (document.body.contains(container)) {
           document.body.removeChild(container);
         }
-        console.error('Помилка створення контейнера:', error);
+        console.error('Container creation error:', error);
         reject(error);
       }
     } catch (error) {
-      console.error('Помилка альтернативного методу:', error);
+      console.error('Alternative method error:', error);
       reject(error);
     }
   });
 }
 
 /**
- * Генерує мініатюру слайду з автоматичним fallback
+ * Generates a slide thumbnail with automatic fallback
  */
 export async function generateSlideThumbnail(
   htmlContent: string, 
   options: SlidePreviewOptions = {}
 ): Promise<string> {
-  console.log('🖼️ Починаємо генерацію превью слайду...');
+  console.log('🖼️ Starting slide preview generation...');
   
   try {
-    // Спочатку пробуємо основний метод з 5-секундним очікуванням
+    // First, try the main method with a 5-second wait
     const preview = await generateSlidePreview(htmlContent, options);
-    console.log('✅ Основний метод успішно створив превью');
+    console.log('✅ Main method successfully created preview');
     return preview;
   } catch (error) {
-    console.warn('⚠️ Основний метод не вдався, пробуємо альтернативний...', error);
+    console.warn('⚠️ Main method failed, trying alternative...', error);
     
     try {
-      // Якщо основний метод не вдався, пробуємо альтернативний
+      // If the main method failed, try the alternative
       const alternativePreview = await generateSlidePreviewAlt(htmlContent, options);
-      console.log('✅ Альтернативний метод успішно створив превью');
+      console.log('✅ Alternative method successfully created preview');
       return alternativePreview;
     } catch (altError) {
-      console.warn('⚠️ Альтернативний метод теж не вдався, створюємо fallback превью...', altError);
+      console.warn('⚠️ Alternative method also failed, creating fallback preview...', altError);
       
-      // Якщо обидва методи не вдалися, створюємо fallback превью
+      // If both methods failed, create a fallback preview
       const fallbackPreview = generateFallbackPreview(options);
-      console.log('✅ Створено fallback превью');
+      console.log('✅ Fallback preview created');
       return fallbackPreview;
     }
   }
 }
 
 /**
- * Генерує превью для всіх слайдів уроку
+ * Generates previews for all lesson slides
  */
 export async function generateLessonPreviews(
   slides: Array<{ id: string; htmlContent: string }>,
@@ -254,7 +254,7 @@ export async function generateLessonPreviews(
   
   for (const slide of slides) {
     try {
-      console.log(`Генерую превью для слайду ${slide.id}...`);
+      console.log(`Generating preview for slide ${slide.id}...`);
       
       const [preview, thumbnail] = await Promise.all([
         generateSlidePreview(slide.htmlContent, options),
@@ -267,9 +267,9 @@ export async function generateLessonPreviews(
         thumbnail
       });
     } catch (error) {
-      console.error(`Помилка генерації превью для слайду ${slide.id}:`, error);
+      console.error(`Error generating preview for slide ${slide.id}:`, error);
       
-      // Генеруємо fallback превью
+      // Generate fallback preview
       const fallbackPreview = generateFallbackPreview(options);
       results.push({
         slideId: slide.id,
@@ -283,12 +283,12 @@ export async function generateLessonPreviews(
 }
 
 /**
- * Створює fallback превью у вигляді градієнту з текстом
+ * Creates a fallback preview as a gradient with text
  */
 export function generateFallbackPreview(options: SlidePreviewOptions = {}): string {
   const {
-    width = 640,         // Стандартна ширина для fallback превью
-    height = 480,        // Стандартна висота для fallback превью
+    width = 640,         // Standard width for fallback preview
+    height = 480,        // Standard height for fallback preview
     background = '#ffffff'
   } = options;
   
@@ -298,31 +298,31 @@ export function generateFallbackPreview(options: SlidePreviewOptions = {}): stri
   
   const ctx = canvas.getContext('2d');
   if (!ctx) {
-    console.error('Не вдалося створити 2D контекст для fallback превью');
+    console.error('Could not create 2D context for fallback preview');
     return '';
   }
   
-  // Створюємо красивий градієнт
+  // Create a beautiful gradient
   const gradient = ctx.createLinearGradient(0, 0, width, height);
   gradient.addColorStop(0, '#667eea');
   gradient.addColorStop(0.5, '#764ba2');
   gradient.addColorStop(1, '#f093fb');
   
-  // Заливаємо фон градієнтом
+  // Fill the background with gradient
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
   
-  // Додаємо напівпрозорий фон для тексту
+  // Add a translucent background for text
   ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
   ctx.fillRect(width * 0.2, height * 0.4, width * 0.6, height * 0.2);
   
-  // Додаємо текст
+  // Add text
   ctx.fillStyle = '#333333';
   ctx.font = `${Math.floor(width / 20)}px Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
-  const text = 'Прев\'ю слайду';
+  const text = 'Slide Preview';
   const emoji = '📋';
   
   ctx.fillText(emoji, width / 2, height / 2 - 20);
@@ -332,7 +332,7 @@ export function generateFallbackPreview(options: SlidePreviewOptions = {}): stri
 }
 
 /**
- * Зберігає превью як файл у публічній директорії
+ * Saves the preview as a file in the public directory
  */
 export async function savePreviewAsFile(
   previewDataUrl: string,
@@ -354,25 +354,25 @@ export async function savePreviewAsFile(
     });
 
     if (!response.ok) {
-      throw new Error('Помилка збереження превью');
+      throw new Error('Error saving preview');
     }
 
     const result = await response.json();
     return result.imagePath;
   } catch (error) {
-    console.error('Помилка збереження превью як файл:', error);
+    console.error('Error saving preview as file:', error);
     throw error;
   }
 }
 
 /**
- * Витягує DOM елемент з HTML рядка для превью
+ * Extracts DOM element from HTML string for preview
  */
 export function extractPreviewElement(htmlContent: string): HTMLElement | null {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlContent, 'text/html');
   
-  // Шукаємо основний контейнер слайду
+  // Search for the main slide container
   let slideElement = doc.querySelector('.slide') as HTMLElement;
   
   if (!slideElement) {
@@ -387,20 +387,20 @@ export function extractPreviewElement(htmlContent: string): HTMLElement | null {
 }
 
 /**
- * Оптимізує HTML для генерації превью (видаляє інтерактивні елементи)
+ * Optimizes HTML for preview generation (removes interactive elements)
  */
 export function optimizeHtmlForPreview(htmlContent: string): string {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlContent, 'text/html');
 
-  // Видаляємо скрипти
+  // Remove scripts
   const scripts = doc.querySelectorAll('script');
   scripts.forEach(script => script.remove());
 
-  // Видаляємо інтерактивні елементи
+  // Remove interactive elements
   const interactive = doc.querySelectorAll('button, input, select, textarea, video, audio');
   interactive.forEach(el => {
-    // Замінюємо на статичні елементи
+    // Replace with static elements
     const staticEl = doc.createElement('div');
     staticEl.className = el.className;
     staticEl.style.cssText = (el as HTMLElement).style.cssText;
@@ -412,7 +412,7 @@ export function optimizeHtmlForPreview(htmlContent: string): string {
 }
 
 /**
- * Перевіряє чи містить HTML контент анімації
+ * Checks if HTML content contains animations
  */
 export function hasAnimations(htmlContent: string): boolean {
   const animationPatterns = [
@@ -433,15 +433,15 @@ export function hasAnimations(htmlContent: string): boolean {
 }
 
 /**
- * Оптимізує HTML для генерації превью з урахуванням анімацій та зображень
+ * Optimizes HTML for preview generation taking into account animations and images
  */
 export function optimizeHtmlForPreviewWithAnimations(htmlContent: string): string {
   let optimizedHtml = optimizeHtmlForPreview(htmlContent);
   
-  // Замінюємо проблемні зображення на CSS placeholder'и
+  // Replace problematic images with CSS placeholders
   optimizedHtml = replaceImagesWithPlaceholders(optimizedHtml);
   
-  // Якщо є анімації, додаємо CSS для прискорення
+  // If there are animations, add CSS to speed them up
   if (hasAnimations(optimizedHtml)) {
     const speedUpAnimationsCSS = `
       <style>
@@ -455,7 +455,7 @@ export function optimizeHtmlForPreviewWithAnimations(htmlContent: string): strin
           animation-duration: 0.1s !important;
         }
         
-        /* Стилі для placeholder зображень */
+        /* Styles for image placeholders */
         .image-placeholder {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           border-radius: 8px;
@@ -471,7 +471,7 @@ export function optimizeHtmlForPreviewWithAnimations(htmlContent: string): strin
       </style>
     `;
     
-    // Додаємо CSS перед закриваючим тегом head або body
+    // Add CSS before closing head or body tag
     if (optimizedHtml.includes('</head>')) {
       optimizedHtml = optimizedHtml.replace('</head>', speedUpAnimationsCSS + '</head>');
     } else if (optimizedHtml.includes('</body>')) {
@@ -485,7 +485,7 @@ export function optimizeHtmlForPreviewWithAnimations(htmlContent: string): strin
 }
 
 /**
- * Замінює зображення з зовнішніх джерел на CSS placeholder'и
+ * Replaces images from external sources with CSS placeholders
  */
 function replaceImagesWithPlaceholders(htmlContent: string): string {
   const parser = new DOMParser();
@@ -496,7 +496,7 @@ function replaceImagesWithPlaceholders(htmlContent: string): string {
   images.forEach((img, index) => {
     const src = img.getAttribute('src');
     
-    // Перевіряємо чи зображення з зовнішнього джерела або може бути проблемним
+    // Check if the image is from an external source or might be problematic
     const isExternal = src && (
       src.startsWith('http://') || 
       src.startsWith('https://') ||
@@ -511,13 +511,13 @@ function replaceImagesWithPlaceholders(htmlContent: string): string {
     const isEmpty = !src || src.trim() === '';
     
     if (isExternal || isEmpty) {
-      console.log(`🔄 Замінюю зображення ${index + 1} на placeholder (src: ${src?.substring(0, 50)}...)`);
+      console.log(`🔄 Replacing image ${index + 1} with placeholder (src: ${src?.substring(0, 50)}...)`);
       
-      // Отримуємо розміри з атрибутів або CSS
+      // Get dimensions from attributes or CSS
       const width = img.getAttribute('width') || img.style.width || '200px';
       const height = img.getAttribute('height') || img.style.height || '150px';
       
-      // Створюємо placeholder div
+      // Create placeholder div
       const placeholder = doc.createElement('div');
       placeholder.className = `image-placeholder ${img.className}`;
       placeholder.style.cssText = `
@@ -537,11 +537,11 @@ function replaceImagesWithPlaceholders(htmlContent: string): string {
       `;
       placeholder.textContent = '🖼️';
       
-      // Замінюємо img на placeholder
+      // Replace img with placeholder
       img.parentNode?.replaceChild(placeholder, img);
     } else if (isDataUrl) {
-      console.log(`✅ Залишаю data URL зображення ${index + 1}`);
-      // Data URL зображення залишаємо як є
+      console.log(`✅ Keeping data URL image ${index + 1}`);
+      // Data URL images are kept as is
     }
   });
   

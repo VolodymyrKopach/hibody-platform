@@ -1,4 +1,4 @@
-// Утиліти для роботи з localStorage
+// Utilities for working with localStorage
 export interface SavedLesson {
   id: string;
   title: string;
@@ -126,7 +126,7 @@ export class LessonStorage {
     }
   }
 
-  // Функції для роботи зі слайдами
+  // Functions for working with slides
   static updateSlideOrder(lessonId: string, newSlideOrder: SavedSlide[]): boolean {
     try {
       return this.updateLesson(lessonId, { slides: newSlideOrder });
@@ -372,7 +372,7 @@ export class FolderStorage {
     localStorage.removeItem(FOLDERS_STORAGE_KEY);
   }
 
-  // Функція для очищення дублікатів матеріалів в папках
+  // Function to clean up duplicate materials in folders
   static cleanupDuplicateMaterials(): boolean {
     try {
       const folders = this.getAllFolders();
@@ -383,7 +383,7 @@ export class FolderStorage {
         const originalLength = folder.materialIds.length;
         const uniqueMaterials = folder.materialIds.filter(materialId => {
           if (seenMaterials.has(materialId)) {
-            return false; // Видаляємо дублікат
+            return false; // Remove duplicate
           }
           seenMaterials.add(materialId);
           return true;
@@ -412,7 +412,7 @@ export class FolderStorage {
     }
   }
 
-  // Функція для видалення матеріалу з усіх папок
+  // Function to remove material from all folders
   static removeMaterialFromAllFolders(materialId: string): boolean {
     try {
       console.log('FolderStorage.removeMaterialFromAllFolders called with materialId:', materialId);
@@ -451,7 +451,7 @@ export class FolderStorage {
     }
   }
 
-  // Функція для майбутньої міграції на PostgreSQL
+  // Function for future migration to PostgreSQL
   static getDataForMigration() {
     return {
       lessons: LessonStorage.getAllLessons(),
@@ -461,13 +461,13 @@ export class FolderStorage {
     };
   }
 
-  // Функція для валідації цілісності даних
+  // Function for data integrity validation
   static validateDataIntegrity(): { isValid: boolean; errors: string[] } {
     const lessons = LessonStorage.getAllLessons();
     const folders = this.getAllFolders();
     const errors: string[] = [];
 
-    // Перевіряємо чи всі матеріали в папках існують
+    // Check if all materials in folders exist
     folders.forEach(folder => {
       folder.materialIds.forEach(materialId => {
         const lesson = lessons.find(l => l.id === materialId);
@@ -477,7 +477,7 @@ export class FolderStorage {
       });
     });
 
-    // Перевіряємо дублікати матеріалів в папках
+    // Check for duplicate materials in folders
     const allMaterialIds: string[] = [];
     folders.forEach(folder => {
       folder.materialIds.forEach(materialId => {
@@ -495,9 +495,9 @@ export class FolderStorage {
   }
 }
 
-// Додаткові функції для майбутнього PostgreSQL API
+// Additional functions for future PostgreSQL API
 export class DataMigrationHelper {
-  // Структура для PostgreSQL schemas
+  // Structure for PostgreSQL schemas
   static getLessonSchema() {
     return {
       id: 'TEXT PRIMARY KEY',
@@ -532,7 +532,7 @@ export class DataMigrationHelper {
     };
   }
 
-  // Конвертер для PostgreSQL-сумісного формату
+  // Converter for PostgreSQL-compatible format
   static convertToPostgreSQLFormat(data: any) {
     if (data.createdAt) {
       data.created_at = data.createdAt;

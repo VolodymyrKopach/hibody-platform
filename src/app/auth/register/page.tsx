@@ -14,7 +14,7 @@ export default function RegisterPage() {
   const { user, loading } = useAuth()
 
   useEffect(() => {
-    // Якщо користувач вже авторизований, перенаправляємо
+    // If user is already authenticated, redirect
     if (user && !loading) {
       router.push('/')
     }
@@ -33,7 +33,7 @@ export default function RegisterPage() {
   }
 
   if (user) {
-    return null // Буде перенаправлено в useEffect
+    return null // Will be redirected in useEffect
   }
 
   return (
@@ -90,7 +90,7 @@ export default function RegisterPage() {
               HiBody Platform
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-              Приєднуйтесь до спільноти освітніх інноваторів
+              Join the community of educational innovators
             </Typography>
           </Box>
 

@@ -59,40 +59,40 @@ const FieldIcon = styled(Box)(({ theme }) => ({
 type AgeGroup = '2-3' | '4-6' | '7-8' | '9-10';
 
 interface FormData {
-  // Базовые поля
+  // Basic fields
   topic: string;
   difficulty: string;
   duration: string;
   activities: string;
   goals: string;
   
-  // Поля для 4-6 лет
-  // Базовые фильтры
+  // Fields for 4-6 years
+  // Basic filters
   thematic?: string;
   taskTypes?: string[];
   language?: string;
   
-  // Специализированные фильтры
+  // Specialized filters
   learningGoal?: string;
   complexityLevel?: string;
   lessonDuration?: string;
   
-  // Интерактивные настройки
+  // Interactive settings
   presentationStyle?: string;
   audioSupport?: string[];
   participationFormat?: string;
   
-  // Технические параметры
+  // Technical parameters
   visualDesign?: string[];
   presentationSpeed?: string;
   interactivity?: string;
   
-  // Образовательные стандарты
+  // Educational standards
   educationalProgram?: string;
   gradingSystem?: string;
   
-  // Новые поля для 2-4 лет
-  // Основные фильтры
+  // New fields for 2-4 years
+  // Primary filters
   lessonGoal?: string;
   activityType?: string[];
   thematic24?: string;
@@ -100,69 +100,69 @@ interface FormData {
   complexityLevel24?: string;
   lessonDuration24?: string;
   
-  // Специальные фильтры
+  // Special filters
   presentationStyle24?: string;
   participationFormat24?: string;
   
-  // Технические настройки
+  // Technical settings
   visualEffects?: string[];
   presentationSpeed24?: string;
   
-  // Новые поля для 7-8 лет (молодші школярі)
-  // Основные предметы
+  // New fields for 7-8 years (junior schoolchildren)
+  // Main subjects
   subject78?: string;
   lessonFormat78?: string[];
   skills78?: string[];
   
-  // Специализированные фильтры
+  // Specialized filters
   complexityLevel78?: string;
   lessonDuration78?: string;
   thematicOrientation78?: string;
   
-  // Методические параметры
+  // Methodological parameters
   pedagogicalGoal78?: string;
   assessmentMethod78?: string;
   audioSettings78?: string[];
   
-  // Интерактивные элементы
+  // Interactive elements
   interactionType78?: string;
   presentationStyle78?: string;
   socialFormat78?: string;
   
-  // Технические параметры
+  // Technical parameters
   platform78?: string[];
   visualStyle78?: string;
   
-  // Образовательные стандарты
+  // Educational standards
   educationalProgram78?: string;
   competencies78?: string[];
 
-  // Новые поля для 9-10 лет (старші школярі)
-  // Академические предметы
+  // New fields for 9-10 years (senior schoolchildren)
+  // Academic subjects
   subject910?: string;
   complexity910?: string;
   taskTypes910?: string[];
   
-  // Специализированные фильтры
+  // Specialized filters
   learningGoal910?: string;
   lessonDuration910?: string;
   thematicOrientation910?: string;
   
-  // Методические параметры
+  // Methodological parameters
   pedagogicalApproach910?: string;
   independenceLevel910?: string;
   gradingSystem910?: string;
   
-  // Технологические параметры
+  // Technological parameters
   digitalTools910?: string[];
   visualDesign910?: string;
   audioSettings910?: string;
   
-  // Социальные параметры
+  // Social parameters
   interactionFormat910?: string;
   studentRole910?: string;
   
-  // Образовательные стандарты
+  // Educational standards
   educationalProgram910?: string;
   keyCompetencies910?: string[];
 }
@@ -181,10 +181,10 @@ interface SimplePreviewModalProps {
 // === SOLID: SRP - Age group configurations ===
 const getAgeGroupLabel = (ageGroup: AgeGroup) => {
   const labels = {
-    '2-3': '2-3 роки',
-    '4-6': '4-6 років',
-    '7-8': '7-8 років',
-    '9-10': '9-10 років'
+    '2-3': '2-3 years',
+    '4-6': '4-6 years',
+    '7-8': '7-8 years',
+    '9-10': '9-10 years'
   };
   return labels[ageGroup];
 };
@@ -211,31 +211,31 @@ const getFieldIcon = (fieldKey: string) => {
 const getFieldLabel = (fieldKey: string, ageGroup: AgeGroup) => {
   const labelMap: Record<AgeGroup, Record<string, string>> = {
     '2-3': {
-      topic: 'Тема заняття',
-      activities: 'Активності',
-      duration: 'Тривалість',
-      goals: 'Цілі'
+      topic: 'Lesson Topic',
+      activities: 'Activities',
+      duration: 'Duration',
+      goals: 'Goals'
     },
     '4-6': {
-      topic: 'Тема уроку',
-      difficulty: 'Складність',
-      activities: 'Типи активностей',
-      duration: 'Тривалість',
-      goals: 'Навчальні цілі'
+      topic: 'Lesson Topic',
+      difficulty: 'Difficulty',
+      activities: 'Activity Types',
+      duration: 'Duration',
+      goals: 'Learning Goals'
     },
     '7-8': {
-      topic: 'Предмет/Тема',
-      difficulty: 'Рівень складності',
-      activities: 'Методи навчання',
-      duration: 'Тривалість',
-      goals: 'Освітні результати'
+      topic: 'Subject/Topic',
+      difficulty: 'Difficulty Level',
+      activities: 'Teaching Methods',
+      duration: 'Duration',
+      goals: 'Educational Outcomes'
     },
     '9-10': {
-      topic: 'Дисципліна',
-      difficulty: 'Академічний рівень',
-      activities: 'Навчальні активності',
-      duration: 'Тривалість',
-      goals: 'Компетентності'
+      topic: 'Discipline',
+      difficulty: 'Academic Level',
+      activities: 'Learning Activities',
+      duration: 'Duration',
+      goals: 'Competencies'
     }
   };
   
@@ -267,7 +267,7 @@ const SimplePreviewModal: React.FC<SimplePreviewModalProps> = ({
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="h6" component="span">
-            Попередній перегляд уроку
+            Lesson Preview
           </Typography>
           <IconButton onClick={onClose} size="small">
             <X size={20} />
@@ -279,7 +279,7 @@ const SimplePreviewModal: React.FC<SimplePreviewModalProps> = ({
         {/* Age Group */}
         <Box sx={{ mb: 3, textAlign: 'center' }}>
           <Chip 
-            label={`Вікова група: ${getAgeGroupLabel(data.ageGroup)}`}
+            label={`Age Group: ${getAgeGroupLabel(data.ageGroup)}`}
             color="primary"
             variant="outlined"
             size="medium"
@@ -289,7 +289,7 @@ const SimplePreviewModal: React.FC<SimplePreviewModalProps> = ({
         {/* Form Data Preview */}
         <SectionContainer>
           <Typography variant="h6" gutterBottom>
-            Деталі уроку
+            Lesson Details
           </Typography>
           
           {Object.entries(data.formData).map(([fieldKey, value]) => {
@@ -321,21 +321,21 @@ const SimplePreviewModal: React.FC<SimplePreviewModalProps> = ({
         {/* Generated Prompt Preview */}
         <SectionContainer>
           <Typography variant="h6" gutterBottom>
-            Що буде відправлено в чат
+            What will be sent to chat
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-            Буде створено детальний запит для генерації персоналізованого уроку 
-            на основі вказаних параметрів. Урок буде адаптований для вікової групи {getAgeGroupLabel(data.ageGroup)}.
+            A detailed request will be created to generate a personalized lesson 
+            based on the specified parameters. The lesson will be adapted for age group {getAgeGroupLabel(data.ageGroup)}.
           </Typography>
         </SectionContainer>
       </DialogContent>
       
       <DialogActions sx={{ p: 3 }}>
         <Button onClick={onClose} variant="outlined">
-          Закрити
+          Close
         </Button>
         <Button onClick={onClose} variant="contained">
-          Зрозуміло
+          Understand
         </Button>
       </DialogActions>
     </Dialog>

@@ -285,7 +285,7 @@ export const SupabaseTest: React.FC = () => {
         </Stack>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Цей компонент тестує підключення до Supabase та перевіряє функціональність бази даних.
+          This component tests the connection to Supabase and checks database functionality.
         </Typography>
 
         <Button
@@ -295,21 +295,21 @@ export const SupabaseTest: React.FC = () => {
           startIcon={isRunning ? <CircularProgress size={20} /> : <Settings />}
           sx={{ mb: 3 }}
         >
-          {isRunning ? 'Тестування...' : 'Запустити тести'}
+          {isRunning ? 'Testing...' : 'Run Tests'}
         </Button>
 
         {/* Current User Info */}
         {user && (
           <Alert severity="info" sx={{ mb: 3 }}>
-            <Typography variant="subtitle2">Поточний користувач:</Typography>
+            <Typography variant="subtitle2">Current User:</Typography>
             <Typography variant="body2">
               Email: {user.email}<br />
               ID: {user.id}<br />
               {profile && (
                 <>
-                  Ім'я: {profile.full_name || 'Не вказано'}<br />
-                  Роль: {profile.role}<br />
-                  Підписка: {profile.subscription_type}
+                  Name: {profile.full_name || 'Not specified'}<br />
+                  Role: {profile.role}<br />
+                  Subscription: {profile.subscription_type}
                 </>
               )}
             </Typography>
@@ -318,7 +318,7 @@ export const SupabaseTest: React.FC = () => {
 
         {!user && (
           <Alert severity="warning" sx={{ mb: 3 }}>
-            Увійдіть в систему для повного тестування функціональності
+            Log in to the system for full functionality testing
           </Alert>
         )}
       </Paper>
@@ -327,12 +327,12 @@ export const SupabaseTest: React.FC = () => {
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Результати тестування
+            Test Results
           </Typography>
 
           {tests.length === 0 && !isRunning && (
             <Alert severity="info">
-              Натисніть "Запустити тести" для перевірки системи
+              Click "Run Tests" to check the system
             </Alert>
           )}
 

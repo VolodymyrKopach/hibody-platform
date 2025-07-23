@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-// Функція для отримання користувача з аутентифікації
+// Function to get authenticated user
 async function getAuthenticatedUser(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
   
   if (error || !user) {
-    throw new Error('Користувач не аутентифікований');
+    throw new Error('User not authenticated');
   }
   
   return user;
 }
 
-// GET /api/user/stats - отримати статистику користувача
+// GET /api/user/stats - get user statistics
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
     const supabase = await createClient();
 
-    // Отримуємо кількість уроків
+    // Get lesson count
     const { count: lessonsCount, error: lessonsError } = await supabase
       .from('lessons')
       .select('*', { count: 'exact', head: true })
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       console.error('Error counting lessons:', lessonsError);
     }
 
-    // Отримуємо кількість слайдів через JOIN
+    // Get slide count via JOIN
     const { count: slidesCount, error: slidesError } = await supabase
       .from('slides')
       .select(`
@@ -38,19 +38,19 @@ export async function GET(request: NextRequest) {
       `, { count: 'exact', head: true })
       .eq('lessons.user_id', user.id);
 
-    // Альтернативний запит для слайдів (якщо перший не працює)
+    // Alternative query for slides (if the first one doesn't work)
     let totalSlides = 0;
     if (slidesError) {
       console.error('Error counting slides with JOIN, trying alternative:', slidesError);
       
-      // Отримуємо всі уроки користувача
+      // Get all user lessons
       const { data: lessons, error: lessonsListError } = await supabase
         .from('lessons')
         .select('id')
         .eq('user_id', user.id);
 
       if (!lessonsListError && lessons) {
-        // Підраховуємо слайди для кожного уроку
+        // Count slides for each lesson
         for (const lesson of lessons) {
           const { count: lessonSlidesCount } = await supabase
             .from('slides')
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       totalSlides = slidesCount || 0;
     }
 
-    // Отримуємо дату останнього створеного уроку
+    // Get date of last created lesson
     const { data: lastLesson, error: lastLessonError } = await supabase
       .from('lessons')
       .select('created_at')
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       .limit(1)
       .single();
 
-    // Отримуємо уроки за останній місяць
+    // Get lessons from last month
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       console.error('Error counting monthly lessons:', monthlyError);
     }
 
-    // Отримуємо інформацію про профіль для дати реєстрації
+    // Get profile information for registration date
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('created_at, subscription_type')
@@ -107,17 +107,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       stats,
-      message: 'Статистика завантажена'
+      message: 'Statistics loaded'
     });
 
   } catch (error) {
     console.error('Error in stats GET:', error);
     
-    if (error instanceof Error && error.message.includes('аутентифікований')) {
+    if (error instanceof Error && error.message.includes('authenticated')) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Необхідна аутентифікація',
+          message: 'Authentication required',
           code: 'AUTHENTICATION_REQUIRED'
         }
       }, { status: 401 });
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: { 
-        message: 'Внутрішня помилка сервера',
+        message: 'Internal server error',
         code: 'INTERNAL_ERROR'
       }
     }, { status: 500 });

@@ -1,19 +1,19 @@
-# Виправлення відображення слайдів в панелі
+# Slide Panel Display Fix
 
-## Проблема
+## Problem
 
-Слайди не з'являлися в секції слайдів по мірі готовності під час генерації через SSE, оскільки:
+Slides were not appearing in the slide section as they became ready during generation via SSE because:
 
-1. SSE оновлення в `useChatLogic` оновлювали `data.lesson` в повідомленні
-2. Але не викликали `onLessonUpdate` callback для оновлення слайд-панелі
-3. `updateCurrentLesson` викликався тільки в `ChatMessage.useEffect` при зміні тексту
+1. SSE updates in `useChatLogic` updated `data.lesson` in the message
+2. But did not call the `onLessonUpdate` callback to update the slide panel
+3. `updateCurrentLesson` was only called in `ChatMessage.useEffect` when the text changed
 
-## Рішення
+## Solution
 
-### 1. Модифіковано `src/hooks/useChatLogic.ts`:
+### 1. Modified `src/hooks/useChatLogic.ts`:
 
 ```typescript
-// Додано interface для props
+// Added interface for props
 interface UseChatLogicProps {
   onLessonUpdate?: (lesson: SimpleLesson) => void;
 }
@@ -21,16 +21,16 @@ interface UseChatLogicProps {
 export const useChatLogic = ({ onLessonUpdate }: UseChatLogicProps = {}) => {
   // ... existing code ...
   
-  // В SSE callbacks додано виклик onLessonUpdate:
+  // In SSE callbacks, added onLessonUpdate call:
   const { ... } = useSlideProgressSSE({
     onProgressUpdate: (data) => {
       // ... existing code ...
       if (data.lesson) {
         lastMessage.lesson = data.lesson;
         
-        // 🔥 ВИПРАВЛЕННЯ: Викликаємо onLessonUpdate при кожному оновленні
+        // 🔥 FIX: Call onLessonUpdate on each update
         if (onLessonUpdate) {
-          console.log('�� [CHAT] Calling onLessonUpdate with updated lesson from SSE progress');
+          console.log(' [CHAT] Calling onLessonUpdate with updated lesson from SSE progress');
           onLessonUpdate(data.lesson);
         }
       }
@@ -39,7 +39,7 @@ export const useChatLogic = ({ onLessonUpdate }: UseChatLogicProps = {}) => {
       // ... existing code ...
       lastMessage.lesson = data.lesson;
       
-      // 🔥 ВИПРАВЛЕННЯ: Викликаємо onLessonUpdate при завершенні
+      // 🔥 FIX: Call onLessonUpdate on completion
       if (onLessonUpdate) {
         console.log('🎯 [CHAT] Calling onLessonUpdate with final lesson from SSE completion');
         onLessonUpdate(data.lesson);
@@ -48,16 +48,16 @@ export const useChatLogic = ({ onLessonUpdate }: UseChatLogicProps = {}) => {
   });
 ```
 
-### 2. Модифіковано `src/app/chat/page.tsx`:
+### 2. Modified `src/app/chat/page.tsx`:
 
 ```typescript
-// Передано callback в useChatLogic
+// Passed callback to useChatLogic
 const {
   messages,
   // ... other properties
 } = useChatLogic({ onLessonUpdate: updateCurrentLesson });
 
-// Додано додатковий useEffect як fallback
+// Added an additional useEffect as a fallback
 React.useEffect(() => {
   const lastMessage = messages[messages.length - 1];
   if (lastMessage?.sender === 'ai' && (lastMessage as any).lesson) {
@@ -69,31 +69,31 @@ React.useEffect(() => {
 }, [messages, updateCurrentLesson]);
 ```
 
-## Результат
+## Result
 
-Тепер слайди з'являються в панелі слайдів в реальному часі:
+Now slides appear in the slide panel in real-time:
 
-1. ✅ **При кожному SSE progress update** - викликається `onLessonUpdate`
-2. ✅ **При завершенні генерації** - викликається `onLessonUpdate` з фінальним уроком
-3. ✅ **Fallback через useEffect** - якщо SSE не спрацював, useEffect підхопить зміни
+1. ✅ **On each SSE progress update** - `onLessonUpdate` is called
+2. ✅ **On generation completion** - `onLessonUpdate` is called with the final lesson
+3. ✅ **Fallback via useEffect** - if SSE fails, useEffect will catch the changes
 
-## Тестування
+## Testing
 
-1. Запустіть генерацію слайдів через чат
-2. Панель слайдів повинна відкритися автоматично
-3. Слайди повинні з'являтися один за одним з прогресом
-4. В консолі повинні з'являтися логи:
+1. Start slide generation via chat
+2. The slide panel should open automatically
+3. Slides should appear one by one with progress
+4. Logs should appear in the console:
    ```
    🎯 [CHAT] Calling onLessonUpdate with updated lesson from SSE progress
    📊 [CHAT] Lesson has X slides
    ```
 
-## Файли змінено
+## Files changed
 
-- `src/hooks/useChatLogic.ts` - додано onLessonUpdate callback
-- `src/app/chat/page.tsx` - передано callback та додано fallback useEffect
+- `src/hooks/useChatLogic.ts` - added onLessonUpdate callback
+- `src/app/chat/page.tsx` - passed callback and added fallback useEffect
 
-## Backup файли
+## Backup files
 
 - `src/hooks/useChatLogic.ts.backup`
 - `src/app/chat/page.tsx.backup`

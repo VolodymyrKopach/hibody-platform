@@ -41,13 +41,13 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
   const theme = useTheme();
   const breakpoint = useBreakpoint();
   
-  // === SOLID: SRP - Використання головного хука ===
+  // === SOLID: SRP - Using the main hook ===
   const constructor = useGenerationConstructor();
 
   // === SOLID: SRP - Mobile navigation state ===
   const [mobileStep, setMobileStep] = React.useState<'select' | 'form' | 'preview'>('select');
 
-  // === SOLID: SRP - Обробка подій ===
+  // === SOLID: SRP - Event handlers ===
 
   const handleConfirm = async () => {
     try {
@@ -113,20 +113,20 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
     }
   };
 
-  // === SOLID: SRP - Отримання поточної вікової групи ===
+  // === SOLID: SRP - Get current age group ===
   const currentAgeGroup = constructor.form.getCurrentAgeGroup();
 
   // === SOLID: SRP - Mobile step titles ===
   const getMobileStepTitle = () => {
     switch (mobileStep) {
       case 'select':
-        return t('constructor.selectAgeGroup', 'Оберіть вікову групу');
+        return t('constructor.selectAgeGroup', 'Select Age Group');
       case 'form':
-        return currentAgeGroup ? `${currentAgeGroup.name} (${currentAgeGroup.ageRange})` : t('constructor.setupParameters', 'Налаштування параметрів');
+        return currentAgeGroup ? `${currentAgeGroup.name} (${currentAgeGroup.ageRange})` : t('constructor.setupParameters', 'Parameter Setup');
       case 'preview':
-        return t('constructor.preview', 'Попередній перегляд');
+        return t('constructor.preview', 'Preview');
       default:
-        return t('constructor.title', 'Конструктор генерації');
+        return t('constructor.title', 'Generation Constructor');
     }
   };
 
@@ -189,11 +189,11 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
             fontWeight: 600,
             fontSize: breakpoint.isMobile ? '1.125rem' : '1.25rem'
           }}>
-            {breakpoint.isMobile ? getMobileStepTitle() : t('constructor.title', 'Конструктор генерації')}
+            {breakpoint.isMobile ? getMobileStepTitle() : t('constructor.title', 'Generation Constructor')}
           </Typography>
           {!breakpoint.isMobile && constructor.status !== 'filling' && (
             <Chip 
-              label={constructor.status === 'ready' ? 'Готово' : 'Заповнюється'} 
+              label={constructor.status === 'ready' ? 'Ready' : 'Filling'} 
               color={constructor.status === 'ready' ? 'success' : 'default'}
               size="small"
             />
@@ -210,12 +210,12 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
         display: breakpoint.isMobile ? 'flex' : 'block',
         flexDirection: 'column',
       }}>
-        {/* Прогрес заповнення */}
+        {/* Filling progress */}
         {(!breakpoint.isMobile || mobileStep === 'form') && (
           <Box sx={{ px: 3, py: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
               <Typography variant="caption" color="text.secondary">
-                Прогрес заповнення: {constructor.progress}%
+                Filling Progress: {constructor.progress}%
               </Typography>
               <Box sx={{ flex: 1 }}>
                 <LinearProgress 
@@ -227,7 +227,7 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
             </Box>
             {constructor.validation.errorCount > 0 && (
               <Alert severity="warning" sx={{ mt: 1 }}>
-                {constructor.validation.errorCount} помилок потребують виправлення
+                {constructor.validation.errorCount} errors need correction
               </Alert>
             )}
           </Box>
@@ -304,7 +304,7 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
                       textAlign: 'center'
                     }}>
                       <Typography variant="body2" color="text.secondary">
-                        Оберіть вікову групу для продовження
+                        Select an age group to continue
                       </Typography>
                     </Box>
                   )}
@@ -315,7 +315,7 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
         ) : (
           <>
             {/* Desktop Layout */}
-            {/* Табова навігація по віковим групам */}
+            {/* Tabbed navigation for age groups */}
             <Box sx={{ px: 3, py: 2 }}>
               <AgeGroupTabs
                 selectedAgeGroup={constructor.selectedAgeGroup}
@@ -326,7 +326,7 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
               />
             </Box>
 
-            {/* Контент форми */}
+            {/* Form content */}
             <Box sx={{ px: 3, py: 3, minHeight: 300 }}>
               {currentAgeGroup ? (
                 <Box sx={{ display: 'flex', gap: 3 }}>
@@ -364,7 +364,7 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
                   textAlign: 'center'
                 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Оберіть вікову групу для продовження
+                    Select an age group to continue
                   </Typography>
                 </Box>
               )}
@@ -404,14 +404,14 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
                 size="large"
                 startIcon={<Wand2 size={16} />}
               >
-                Продовжити налаштування
+                Continue setup
               </Button>
             )}
             
             {mobileStep === 'form' && (
               <Box sx={{ width: '100%', display: 'flex', gap: 1 }}>
                 <Button onClick={handleReset} variant="outlined" sx={{ flex: 1 }}>
-                  Скинути
+                  Reset
                 </Button>
                 <Button 
                   onClick={handleShowPreview} 
@@ -420,7 +420,7 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
                   disabled={constructor.status === 'generating'}
                   sx={{ flex: 1 }}
                 >
-                  Превю
+                  Preview
                 </Button>
                 <Button 
                   onClick={handleConfirm} 
@@ -429,7 +429,7 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
                   disabled={constructor.status !== 'ready'}
                   sx={{ flex: 2 }}
                 >
-                  {constructor.status === 'generating' ? 'Генерація...' : 'Згенерувати'}
+                  {constructor.status === 'generating' ? 'Generating...' : 'Generate'}
                 </Button>
               </Box>
             )}
@@ -438,7 +438,7 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
           // Desktop Action Buttons
           <>
             <Button onClick={handleReset} variant="outlined" color="inherit">
-              Скинути
+              Reset
             </Button>
             <Button 
               onClick={handleShowPreview} 
@@ -446,7 +446,7 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
               startIcon={<Eye size={16} />}
               disabled={constructor.status === 'generating'}
             >
-              Попередній перегляд
+              Preview
             </Button>
             <Button 
               onClick={handleConfirm} 
@@ -454,7 +454,7 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
               startIcon={constructor.status === 'generating' ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
               disabled={constructor.status !== 'ready'}
             >
-              {constructor.status === 'generating' ? 'Генерація...' : 'Згенерувати'}
+              {constructor.status === 'generating' ? 'Generating...' : 'Generate'}
             </Button>
           </>
         )}

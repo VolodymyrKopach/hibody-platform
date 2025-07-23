@@ -97,7 +97,7 @@ const MyMaterials = () => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   
-  // Стани для редагування метаданих
+  // States for metadata editing
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingLesson, setEditingLesson] = useState<DatabaseLesson | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -107,13 +107,13 @@ const MyMaterials = () => {
     ageGroup: ''
   });
 
-  // Стейт тільки для UI відображення
+  // State for UI display only
   const [materials, setMaterials] = useState<Material[]>([]);
   
-  // Стейт для FAB меню
+  // State for FAB menu
   const [fabMenuAnchorEl, setFabMenuAnchorEl] = useState<null | HTMLElement>(null);
 
-  // Використовуємо хук для роботи з базою даних
+  // Use hook for database operations
   const { 
     lessons: dbLessons, 
     loading: isLoading, 
@@ -123,26 +123,26 @@ const MyMaterials = () => {
     updateLesson: updateLessonInDb
   } = useSupabaseLessons();
 
-  // Додаємо стейт для контролю таймауту
+  // Add state to control timeout
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   
-  // Додаємо стейт для відстеження ініціалізації
+  // Add state to track initialization
   const [isInitialized, setIsInitialized] = useState(false);
-  // Додаємо стейт для відстеження першого завантаження
+  // Add state to track first load
   const [hasStartedLoading, setHasStartedLoading] = useState(false);
 
-  // Функція для очистки ageGroup від приставки "років"
+  // Function to clean ageGroup from " years" suffix
   const cleanAgeGroup = (ageGroup: string): string => {
     return ageGroup.replace(/\s+років$/i, '').trim();
   };
 
-  // Функція конвертації уроку з бази в формат SimpleLesson для SlideDialog
+  // Function to convert lesson from database to SimpleLesson format for SlideDialog
   const convertToSimpleLesson = (dbLesson: any): SimpleLesson => {
     const slides: SimpleSlide[] = (dbLesson.slides || []).map((slide: any) => ({
       id: slide.id,
       title: slide.title || t('slides:messages.slideWithoutTitle'),
       content: slide.description || '',
-      htmlContent: slide.html_content || `<div style="padding: 20px; text-align: center;">${t('slides:errors.contentUnavailable', { defaultValue: 'Контент слайду недоступний' })}</div>`,
+      htmlContent: slide.html_content || `<div style="padding: 20px; text-align: center;">${t('slides:errors.contentUnavailable', { defaultValue: 'Slide content unavailable' })}</div>`,
       type: slide.type || 'content',
       status: slide.status || 'ready'
     }));
@@ -161,7 +161,7 @@ const MyMaterials = () => {
     };
   };
 
-  // Функція для перетворення database lessons в materials
+  // Function to convert database lessons to materials
   const convertDatabaseLessonsToMaterials = (lessons: DatabaseLesson[]): Material[] => {
     console.log('🔄 MATERIALS PAGE: Converting database lessons to materials');
     console.log('📊 Raw database lessons:', lessons);
@@ -175,8 +175,8 @@ const MyMaterials = () => {
         type: 'lesson',
         subject: lesson.subject.toLowerCase(),
         ageGroup: cleanAgeGroup(lesson.age_group),
-        createdAt: new Date(lesson.created_at).toLocaleDateString('uk-UA'),
-        lastModified: new Date(lesson.updated_at).toLocaleDateString('uk-UA'),
+        createdAt: new Date(lesson.created_at).toLocaleDateString('en-US'),
+        lastModified: new Date(lesson.updated_at).toLocaleDateString('en-US'),
         status: lesson.status,
         views: lesson.views,
         rating: lesson.rating,
@@ -188,7 +188,7 @@ const MyMaterials = () => {
         lessonId: lesson.id,
       };
       
-      // Детальне логування для кожного уроку
+      // Detailed logging for each lesson
       console.log(`📝 Lesson ${index + 1} (${lesson.id}):`, {
         title: lesson.title,
         thumbnail_url: lesson.thumbnail_url,
@@ -203,7 +203,7 @@ const MyMaterials = () => {
       return material;
     });
     
-    // Підсумкова статистика
+    // Summary statistics
     const thumbnailStats = {
       total: convertedMaterials.length,
       with_thumbnails: convertedMaterials.filter(m => m.thumbnail !== '/images/default-lesson.png').length,
@@ -216,14 +216,14 @@ const MyMaterials = () => {
     return convertedMaterials;
   };
 
-  // Відстежуємо початок завантаження
+  // Track start of loading
   useEffect(() => {
     if (isLoading && !hasStartedLoading) {
       setHasStartedLoading(true);
     }
   }, [isLoading, hasStartedLoading]);
 
-  // Оновлюємо materials коли змінюються dbLessons
+  // Update materials when dbLessons change
   useEffect(() => {
     console.log('🔄 MATERIALS PAGE: useEffect triggered');
     
@@ -237,20 +237,20 @@ const MyMaterials = () => {
       setMaterials([]);
     }
     
-    // Позначаємо як ініціалізовано коли завантаження почалося і завершилося
+    // Mark as initialized when loading has started and finished
     if (hasStartedLoading && !isLoading && !isInitialized) {
       console.log('🚀 Setting page as initialized');
       setIsInitialized(true);
     }
   }, [dbLessons, isLoading, dbError, isInitialized, hasStartedLoading, user]);
 
-  // Додаємо таймаут для loading стану
+  // Add timeout for loading state
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     
     if (isLoading) {
       setLoadingTimeout(false);
-      // Якщо loading триває більше 10 секунд, показуємо помилку
+      // If loading takes more than 10 seconds, show error
       timeoutId = setTimeout(() => {
         setLoadingTimeout(true);
       }, 10000);
@@ -265,12 +265,12 @@ const MyMaterials = () => {
     };
   }, [isLoading]);
 
-  // Обробка ресайзінгу вікна - запобігаємо повторному завантаженню
+  // Handle window resizing - prevent re-fetching
   useEffect(() => {
     const handleResize = () => {
-      // Просто форсуємо перерендерінг без повторного завантаження
+      // Just force re-render without re-fetching
       if (isInitialized) {
-        // Можна додати логіку для оптимізації відображення при зміні розміру
+        // Can add logic here to optimize display on resize
         console.log('Window resized, but preventing unnecessary reload');
       }
     };
@@ -303,7 +303,7 @@ const MyMaterials = () => {
 
 
 
-  // Фільтрація та сортування
+  // Filtering and sorting
   const filteredMaterials = materials.filter(material => {
     const matchesSearch = material.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          material.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -366,7 +366,7 @@ const MyMaterials = () => {
       
       if (!lessonId) {
         console.error('No lessonId found in material');
-        alert(t('materials:errors.noLessonId', { defaultValue: 'Помилка: не знайдено ID уроку для видалення' }));
+        alert(t('materials:errors.noLessonId', { defaultValue: 'Error: No lesson ID found for deletion' }));
         setDeleteDialogOpen(false);
         setMaterialToDelete(null);
         return;
@@ -375,7 +375,7 @@ const MyMaterials = () => {
       const deleteSuccess = await deleteLessonFromDb(lessonId);
       
       if (!deleteSuccess) {
-        alert(t('materials:errors.deleteError', { defaultValue: 'Помилка при видаленні уроку' }));
+        alert(t('materials:errors.deleteError', { defaultValue: 'Error deleting lesson' }));
       }
     } else {
       console.error('No material to delete');
@@ -384,10 +384,10 @@ const MyMaterials = () => {
     setMaterialToDelete(null);
   };
 
-  // Функції редагування метаданих
+  // Metadata editing functions
   const handleEditClick = () => {
     if (selectedMaterial) {
-      // Знаходимо урок в базі даних за ID
+      // Find lesson in database by ID
       const lesson = dbLessons.find(l => l.id === selectedMaterial.lessonId);
       
       if (lesson) {
@@ -435,7 +435,7 @@ const MyMaterials = () => {
     try {
       console.log('🔍 Loading lesson with slides for ID:', material.lessonId);
       
-      // Завантажуємо урок зі слайдами через API
+      // Load lesson with slides via API
       const response = await fetch(`/api/lessons?id=${material.lessonId}`);
       
       if (!response.ok) {
@@ -467,7 +467,7 @@ const MyMaterials = () => {
       setCurrentSlideIndex(0);
       setPreviewDialogOpen(true);
       
-      // Додаткове логування при відкритті діалогу
+      // Additional logging when opening dialog
       console.log('🔍 Dialog opened with lesson:', {
         lessonTitle: simpleLesson.title,
         slidesArray: simpleLesson.slides,
@@ -480,8 +480,8 @@ const MyMaterials = () => {
       // TODO: Implement view increment in API
     } catch (error) {
       console.error('❌ Error loading lesson:', error);
-      // Показуємо повідомлення про помилку користувачу
-      // Тут можна додати показ snackbar або іншого повідомлення
+      // Show error message to user
+      // Here you can add displaying a snackbar or another message
     }
   };
 
@@ -519,7 +519,7 @@ const MyMaterials = () => {
   const renderMaterialCard = (material: Material) => {
     const SubjectIcon = getSubjectIcon(material.subject);
     
-    // Логування інформації про картку матеріалу
+    // Logging material card information
     console.log(`🎨 RENDER: Material card for "${material.title}":`, {
       id: material.id,
       lessonId: material.lessonId,
@@ -562,7 +562,7 @@ const MyMaterials = () => {
             backgroundColor: alpha(theme.palette.grey[100], 0.5),
           }}
         >
-          {/* Thumbnail Image або Fallback */}
+          {/* Thumbnail Image or Fallback */}
           {material.thumbnail && material.thumbnail !== '/images/default-lesson.png' ? (
             <Box
               component="img"
@@ -575,7 +575,7 @@ const MyMaterials = () => {
                 objectPosition: 'center',
               }}
               onError={(e) => {
-                // Fallback до іконки предмету якщо зображення не завантажилося
+                // Fallback to subject icon if image fails to load
                 e.currentTarget.style.display = 'none';
                 const fallbackContainer = e.currentTarget.nextElementSibling as HTMLElement;
                 if (fallbackContainer) {
@@ -585,7 +585,7 @@ const MyMaterials = () => {
             />
           ) : null}
           
-          {/* Fallback з іконкою предмету */}
+          {/* Fallback with subject icon */}
           <Box
             sx={{
               position: material.thumbnail && material.thumbnail !== '/images/default-lesson.png' ? 'absolute' : 'static',
@@ -692,7 +692,7 @@ const MyMaterials = () => {
     );
   };
 
-  // Loading state з таймаутом - показуємо тільки якщо не ініціалізовано
+  // Loading state with timeout - show only if not initialized
   if (isLoading && !loadingTimeout && !isInitialized) {
     return (
       
@@ -809,7 +809,7 @@ const MyMaterials = () => {
               </Typography>
             </Box>
             
-            {/* Міні-лоадер для оновлення */}
+            {/* Mini-loader for updates */}
             {isLoading && isInitialized && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CircularProgress size={20} thickness={4} />
@@ -1161,7 +1161,7 @@ const MyMaterials = () => {
             </DialogActions>
           </Dialog>
 
-          {/* Lesson Preview Dialog - використовуємо SlideDialog як в чаті */}
+          {/* Lesson Preview Dialog - using SlideDialog as in chat */}
           <SlideDialog
             open={previewDialogOpen}
             currentLesson={selectedLessonForPreview}

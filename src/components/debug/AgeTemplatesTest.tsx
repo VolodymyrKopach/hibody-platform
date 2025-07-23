@@ -3,7 +3,7 @@ import { ageComponentTemplatesService } from '@/services/templates/AgeComponentT
 import { AgeGroup } from '@/types/generation';
 
 /**
- * === SOLID: SRP - Компонент для тестування age-specific шаблонів ===
+ * === SOLID: SRP - Component for testing age-specific templates ===
  */
 export const AgeTemplatesTest: React.FC = () => {
   const [templates, setTemplates] = useState<Record<AgeGroup, string>>({} as Record<AgeGroup, string>);
@@ -20,52 +20,52 @@ export const AgeTemplatesTest: React.FC = () => {
   const testTemplates = async () => {
     setLoading(true);
     setTestResults([]);
-    addTestResult('🧪 Починаємо тестування age-specific шаблонів...');
+    addTestResult('🧪 Starting age-specific template testing...');
 
     try {
-      // Тест 1: Завантаження окремих шаблонів
+      // Test 1: Loading individual templates
       for (const ageGroup of ageGroups) {
-        addTestResult(`\n📋 Тестування групи: ${ageGroup}`);
+        addTestResult(`\n📋 Testing group: ${ageGroup}`);
         
         try {
           const template = await ageComponentTemplatesService.getTemplateForAge(ageGroup);
-          addTestResult(`✅ Шаблон завантажено, розмір: ${template.length} символів`);
+          addTestResult(`✅ Template loaded, size: ${template.length} characters`);
           
           const description = ageComponentTemplatesService.getTemplateDescription(ageGroup);
-          addTestResult(`📝 Опис: ${description.substring(0, 100)}...`);
+          addTestResult(`📝 Description: ${description.substring(0, 100)}...`);
           
-          // Перевірка структури
+          // Structure check
           const hasHTML = template.includes('<!DOCTYPE html>');
           const hasCSS = template.includes('<style>');
           const hasJS = template.includes('<script>');
-          const hasTitle = template.includes('роки') || template.includes('років');
+          const hasTitle = template.includes('years') || template.includes('years old'); // Adjusted for English
           
-          addTestResult(`🔍 Структура: HTML(${hasHTML ? '✅' : '❌'}) CSS(${hasCSS ? '✅' : '❌'}) JS(${hasJS ? '✅' : '❌'}) Title(${hasTitle ? '✅' : '❌'})`);
+          addTestResult(`🔍 Structure: HTML(${hasHTML ? '✅' : '❌'}) CSS(${hasCSS ? '✅' : '❌'}) JS(${hasJS ? '✅' : '❌'}) Title(${hasTitle ? '✅' : '❌'})`);
           
         } catch (error) {
-          addTestResult(`❌ Помилка для групи ${ageGroup}: ${error}`);
+          addTestResult(`❌ Error for group ${ageGroup}: ${error}`);
         }
       }
 
-      // Тест 2: Завантаження всіх шаблонів
-      addTestResult(`\n🔄 Тестування завантаження всіх шаблонів...`);
+      // Test 2: Loading all templates
+      addTestResult(`\n🔄 Testing loading all templates...`);
       const allTemplates = await ageComponentTemplatesService.getAllTemplates();
       setTemplates(allTemplates);
       
       const loadedCount = Object.keys(allTemplates).length;
-      addTestResult(`✅ Завантажено ${loadedCount} шаблонів з ${ageGroups.length} очікуваних`);
+      addTestResult(`✅ Loaded ${loadedCount} templates out of ${ageGroups.length} expected`);
       
       if (loadedCount === ageGroups.length) {
-        addTestResult(`🎉 Всі шаблони завантажено успішно!`);
+        addTestResult(`🎉 All templates loaded successfully!`);
       } else {
-        addTestResult(`⚠️ Деякі шаблони не завантажились`);
+        addTestResult(`⚠️ Some templates failed to load`);
       }
 
     } catch (error) {
-      addTestResult(`❌ Критична помилка: ${error}`);
+      addTestResult(`❌ Critical error: ${error}`);
     } finally {
       setLoading(false);
-      addTestResult(`\n✨ Тестування завершено!`);
+      addTestResult(`\n✨ Testing completed!`);
     }
   };
 
@@ -81,13 +81,13 @@ export const AgeTemplatesTest: React.FC = () => {
   };
 
   useEffect(() => {
-    // Автоматичний тест при завантаженні компонента
+    // Automatic test on component load
     testTemplates();
   }, []);
 
   return (
     <div style={{ padding: '20px', fontFamily: 'monospace' }}>
-      <h1>🧪 Тестування Age-Specific Шаблонів</h1>
+      <h1>🧪 Age-Specific Template Testing</h1>
       
       <div style={{ marginBottom: '20px' }}>
         <button 
@@ -103,7 +103,7 @@ export const AgeTemplatesTest: React.FC = () => {
             cursor: loading ? 'not-allowed' : 'pointer'
           }}
         >
-          {loading ? '⏳ Тестування...' : '🔄 Запустити тест'}
+          {loading ? '⏳ Testing...' : '🔄 Run Test'}
         </button>
 
         <select 
@@ -112,7 +112,7 @@ export const AgeTemplatesTest: React.FC = () => {
           style={{ padding: '10px', marginRight: '10px' }}
         >
           {ageGroups.map(age => (
-            <option key={age} value={age}>{age} років</option>
+            <option key={age} value={age}>{age} years</option>
           ))}
         </select>
 
@@ -128,11 +128,11 @@ export const AgeTemplatesTest: React.FC = () => {
             cursor: !templates[selectedAge] ? 'not-allowed' : 'pointer'
           }}
         >
-          👁️ Переглянути шаблон
+          👁️ View Template
         </button>
       </div>
 
-      {/* Результати тестування */}
+      {/* Test Results */}
       <div style={{ 
         backgroundColor: '#1e1e1e', 
         color: '#00ff00', 
@@ -147,17 +147,17 @@ export const AgeTemplatesTest: React.FC = () => {
         {testResults.map((result, index) => (
           <div key={index}>{result}</div>
         ))}
-        {loading && <div>⏳ Виконується тестування...</div>}
+        {loading && <div>⏳ Executing test...</div>}
       </div>
 
-      {/* Статистика завантажених шаблонів */}
+      {/* Loaded Template Statistics */}
       {Object.keys(templates).length > 0 && (
         <div style={{ marginTop: '20px' }}>
-          <h3>📊 Статистика шаблонів:</h3>
+          <h3>📊 Template Statistics:</h3>
           <ul>
             {ageGroups.map(age => (
               <li key={age} style={{ margin: '5px 0' }}>
-                <strong>{age} років:</strong> {templates[age] ? `✅ ${templates[age].length} символів` : '❌ Не завантажено'}
+                <strong>{age} years:</strong> {templates[age] ? `✅ ${templates[age].length} characters` : '❌ Not loaded'}
               </li>
             ))}
           </ul>

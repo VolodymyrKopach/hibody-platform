@@ -26,10 +26,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
       // Inline code
       .replace(/`(.*?)`/g, '<code>$1</code>')
       
-      // Emoji bullets - залишаємо як div з емодзі
+      // Emoji bullets - keeping as div with emoji
       .replace(/^🔹 (.*$)/gm, '<div class="emoji-item">🔹 $1</div>')
       
-      // Звичайні списки - перетворюємо в стандартні HTML списки
+      // Standard lists - convert to standard HTML lists
       .replace(/^([-•]\s.*(?:\n[-•]\s.*)*)/gm, (match) => {
         const items = match
           .split('\n')
@@ -51,13 +51,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
       
       // Paragraphs and line breaks
       .replace(/\n\n/g, '</p><p>')
-      // Видаляємо br теги після заголовків та елементів блоків
+      // Remove br tags after headers and block elements
       .replace(/(<\/h[1-6]>)\n/g, '$1')
       .replace(/(<\/hr>)\n/g, '$1')
       .replace(/(<\/ul>)\n/g, '$1')
       .replace(/(<\/div>)\n/g, '$1')
       .replace(/(<\/blockquote>)\n/g, '$1')
-      // Заміняємо решту нових рядків на br
+      // Replace remaining newlines with br
       .replace(/\n/g, '<br>');
   };
 
@@ -109,7 +109,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           '&:empty': { display: 'none' },
         },
         
-        // Стандартні HTML списки
+        // Standard HTML lists
         '& ul': {
           margin: '12px 0',
           paddingLeft: '20px',

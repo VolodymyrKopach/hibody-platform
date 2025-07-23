@@ -88,58 +88,58 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
     }
     
     if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-      return 'Пароль повинен містити великі та малі літери, цифри'
+      return 'Password must contain uppercase and lowercase letters, and numbers';
     }
     
-    return null
-  }
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     
-    // Валідація
-    const passwordError = validatePassword(formData.password)
+    // Validation
+    const passwordError = validatePassword(formData.password);
     if (passwordError) {
-      setError(passwordError)
-      return
+      setError(passwordError);
+      return;
     }
     
     if (formData.password !== formData.confirmPassword) {
-      setError(t('auth:validation.passwordsDoNotMatch'))
-      return
+      setError(t('auth:validation.passwordsDoNotMatch'));
+      return;
     }
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
 
     try {
-      // Оновлюємо пароль користувача
+      // Update user password
       const { error } = await supabase.auth.updateUser({
         password: formData.password
-      })
+      });
 
       if (error) {
-        throw error
+        throw error;
       }
 
-      setSuccess(true)
+      setSuccess(true);
       
-      // Перенаправляємо користувача через 2 секунди
+      // Redirect user after 2 seconds
       setTimeout(() => {
-        router.push('/auth/login')
-        onSuccess()
-      }, 2000)
+        router.push('/auth/login');
+        onSuccess();
+      }, 2000);
 
     } catch (err: any) {
-      console.error('Reset password error:', err)
-      setError('Помилка підключення до сервера')
+      console.error('Reset password error:', err);
+      setError('Server connection error');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const isFormValid = formData.password && formData.confirmPassword && formData.password === formData.confirmPassword
-  const passwordStrength = getPasswordStrength(formData.password)
+  const isFormValid = formData.password && formData.confirmPassword && formData.password === formData.confirmPassword;
+  const passwordStrength = getPasswordStrength(formData.password);
 
   if (success) {
     return (
@@ -166,11 +166,11 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
             {t('auth:resetPassword.success')}
           </Typography>
           <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-            Ваш пароль успішно оновлено. Зараз ви будете перенаправлені до сторінки входу.
+            Your password has been successfully updated. You will be redirected to the login page.
           </Typography>
         </Box>
       </Paper>
-    )
+    );
   }
 
   return (
@@ -192,7 +192,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
           {t('auth:resetPassword.title')}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Введіть новий пароль для свого облікового запису
+          Enter a new password for your account
         </Typography>
       </Box>
 
@@ -233,7 +233,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
           }}
         />
 
-        {/* Індикатор надійності пароля */}
+        {/* Password strength indicator */}
         {formData.password && (
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>

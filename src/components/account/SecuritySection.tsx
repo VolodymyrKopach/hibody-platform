@@ -160,26 +160,26 @@ const SecuritySection: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-      {/* Заголовок секції */}
+      {/* Section Title */}
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
         {t('security:title')}
       </Typography>
 
-      {/* Повідомлення про успіх */}
+      {/* Success Message */}
       {successMessage && (
         <Alert severity="success" sx={{ mb: 3 }}>
           {successMessage}
         </Alert>
       )}
 
-      {/* Повідомлення про помилку */}
+      {/* Error Message */}
       {errorMessage && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {errorMessage}
         </Alert>
       )}
 
-      {/* Карточка зміни пароля */}
+      {/* Password Change Card */}
       <Card sx={{ 
         borderRadius: '12px',
         border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
@@ -222,7 +222,7 @@ const SecuritySection: React.FC = () => {
 
           {isChangingPassword && (
             <Stack spacing={3}>
-              {/* Новий пароль */}
+              {/* New Password */}
               <Box>
                 <TextField
                   label={t('security:form.newPassword')}
@@ -250,7 +250,7 @@ const SecuritySection: React.FC = () => {
                   }}
                 />
                 
-                {/* Індикатор надійності пароля */}
+                {/* Password Strength Indicator */}
                 {passwordForm.newPassword && (
                   <Box sx={{ mt: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -286,7 +286,7 @@ const SecuritySection: React.FC = () => {
                 )}
               </Box>
 
-              {/* Підтвердження пароля */}
+              {/* Confirm Password */}
               <TextField
                 label={t('security:form.confirmNewPassword')}
                 type={showPasswords.confirm ? 'text' : 'password'}
@@ -323,7 +323,7 @@ const SecuritySection: React.FC = () => {
                 }
               />
 
-              {/* Кнопки */}
+              {/* Buttons */}
               <Box sx={{ 
                 display: 'flex', 
                 gap: 2, 
@@ -371,7 +371,7 @@ const SecuritySection: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Рекомендації з безпеки */}
+      {/* Security Recommendations */}
       <Card sx={{ 
         borderRadius: '12px',
         border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
@@ -419,7 +419,7 @@ const SecuritySection: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
               <AlertTriangle size={16} color={theme.palette.info.main} />
               <Typography variant="body2" color="text.secondary">
-                {t('account:security.recommendations.updateRegularly', { defaultValue: 'Регулярно оновлюйте пароль для максимальної безпеки' })}
+                {t('account:security.recommendations.updateRegularly', { defaultValue: 'Regularly update your password for maximum security' })}
               </Typography>
             </Box>
           </Stack>

@@ -3,9 +3,9 @@
 import { useSessionRefresh } from '@/hooks/useSessionRefresh'
 
 export const SessionManager = () => {
-  // Використовуємо хук для автоматичного оновлення сесії
+  // Use hook for automatic session refresh
   useSessionRefresh()
   
-  // Цей компонент не рендерить нічого, він просто керує сесією в фоні
+  // This component does not render anything, it simply manages the session in the background
   return null
 } 

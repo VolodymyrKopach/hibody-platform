@@ -5,19 +5,19 @@ import { LessonInsert, LessonFilters, LessonWithSlides } from '@/types/database'
 import { CreateLessonRequest, CreateLessonResponse } from '@/types/api';
 import { Lesson } from '@/types/lesson';
 
-// Функція для отримання користувача з аутентифікації
+// Function to get authenticated user
 async function getAuthenticatedUser(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
   
   if (error || !user) {
-    throw new Error('Користувач не аутентифікований');
+    throw new Error('User not authenticated');
   }
   
   return user;
 }
 
-// Функція для конвертації LessonWithSlides в Lesson
+// Function to convert LessonWithSlides to Lesson (legacy format)
 function convertToLegacyLesson(dbLesson: LessonWithSlides): Lesson {
   return {
     id: dbLesson.id,
@@ -67,7 +67,7 @@ function convertToLegacyLesson(dbLesson: LessonWithSlides): Lesson {
   };
 }
 
-// GET /api/lessons - отримати уроки користувача
+// GET /api/lessons - get user lessons
 export async function GET(request: NextRequest) {
   console.log('🚀 API: GET /api/lessons called');
   
@@ -95,13 +95,13 @@ export async function GET(request: NextRequest) {
 
     if (lessonId) {
       console.log('📖 API: Fetching single lesson with ID:', lessonId);
-      // Отримати конкретний урок з слайдами
+      // Get a specific lesson with slides
       const lesson = await lessonService.getLessonWithSlides(lessonId);
       if (!lesson) {
         console.log('❌ API: Lesson not found');
         return NextResponse.json({
           success: false,
-          error: { message: 'Урок не знайдено', code: 'LESSON_NOT_FOUND' }
+          error: { message: 'Lesson not found', code: 'LESSON_NOT_FOUND' }
         }, { status: 404 });
       }
 
@@ -114,11 +114,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         lesson,
         success: true,
-        message: 'Урок знайдено'
+        message: 'Lesson found'
       });
     }
 
-    // Отримати уроки користувача з фільтрацією
+    // Get user lessons with filtering
     console.log('📚 API: Fetching user lessons with filters');
     const filters: LessonFilters = {
       search,
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
       total_pages: result.totalPages
     });
 
-         // Детальне логування кожного уроку
+         // Detailed logging of each lesson
      result.data.forEach((lesson, index) => {
        console.log(`📖 API: Lesson ${index + 1}:`, {
          id: lesson.id,
@@ -164,20 +164,20 @@ export async function GET(request: NextRequest) {
       page: result.page,
       totalPages: result.totalPages,
       success: true,
-      message: 'Уроки завантажено'
+      message: 'Lessons loaded'
     };
 
     console.log('📤 API: Sending response with', result.data.length, 'lessons');
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('Помилка при отриманні уроків:', error);
+    console.error('Error fetching lessons:', error);
     
-    if (error instanceof Error && error.message.includes('аутентифікований')) {
+    if (error instanceof Error && error.message.includes('authenticated')) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Необхідна аутентифікація',
+          message: 'Authentication required',
           code: 'AUTHENTICATION_REQUIRED'
         }
       }, { status: 401 });
@@ -186,14 +186,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: { 
-        message: 'Внутрішня помилка сервера',
+        message: 'Internal server error',
         code: 'INTERNAL_ERROR'
       }
     }, { status: 500 });
   }
 }
 
-// POST /api/lessons - створити новий урок
+// POST /api/lessons - create new lesson
 export async function POST(request: NextRequest) {
   try {
     console.log('📝 LESSONS API: POST request received');
@@ -225,13 +225,13 @@ export async function POST(request: NextRequest) {
       })));
     }
     
-    // Валідація
+    // Validation
     if (!body.title?.trim()) {
       console.error('❌ LESSONS API: Validation error - missing title');
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Назва уроку обов\'язкова',
+          message: 'Lesson title is required',
           code: 'VALIDATION_ERROR'
         }
       }, { status: 400 });
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Цільовий вік обов\'язковий',
+          message: 'Target age is required',
           code: 'VALIDATION_ERROR'
         }
       }, { status: 400 });
@@ -250,14 +250,14 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ LESSONS API: Validation passed');
 
-    // Перевіряємо, чи може користувач створити урок
+    // Check if user can create a lesson
     const canCreate = await lessonService.canCreateLesson(user.id);
     if (!canCreate) {
       console.error('❌ LESSONS API: Subscription limit reached for user:', user.id);
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Досягнуто ліміт уроків для вашої підписки',
+          message: 'Lesson limit reached for your subscription',
           code: 'SUBSCRIPTION_LIMIT_REACHED'
         }
       }, { status: 403 });
@@ -265,12 +265,12 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ LESSONS API: User can create lesson');
 
-         // Підготовка даних для створення уроку
+         // Prepare data for lesson creation
      const lessonData: LessonInsert = {
        user_id: user.id,
        title: body.title.trim(),
        description: body.description?.trim() || null,
-       subject: body.subject || 'Загальна освіта',
+       subject: body.subject || 'General education',
        age_group: body.targetAge,
        duration: body.duration || 45,
        difficulty: 'medium',
@@ -300,12 +300,12 @@ export async function POST(request: NextRequest) {
       status: lessonData.status
     });
 
-    // Створюємо урок
+    // Create lesson
     console.log('🔄 LESSONS API: Creating lesson in database...');
     const lesson = await lessonService.createLesson(lessonData);
     console.log('✅ LESSONS API: Lesson created with ID:', lesson.id);
 
-    // Якщо передані слайди, створюємо їх
+    // If slides are provided, create them
     if (body.slides && body.slides.length > 0) {
       console.log('🎯 LESSONS API: Creating slides from request data...');
       const { slideService } = await import('@/services/database');
@@ -320,7 +320,7 @@ export async function POST(request: NextRequest) {
         
         const createdSlide = await slideService.createSlide({
           lesson_id: lesson.id,
-          title: slideData.title || `Слайд ${i + 1}`,
+          title: slideData.title || `Slide ${i + 1}`,
           description: slideData.description || slideData.content || null,
                      type: slideData.type === 'title' ? 'welcome' as const : 
                  slideData.type === 'interactive' ? 'activity' as const : 
@@ -340,13 +340,13 @@ export async function POST(request: NextRequest) {
       console.log('🎉 LESSONS API: All slides created successfully');
     } else {
       console.log('📝 LESSONS API: Creating default slides...');
-      // Створюємо базові слайди
+      // Create default slides
       const { slideService } = await import('@/services/database');
       const baseSlides = [
-        { title: 'Вітання', description: 'Знайомство з темою уроку', type: 'welcome', icon: '👋' },
-        { title: 'Основний матеріал', description: 'Подача нового матеріалу', type: 'content', icon: '📚' },
-        { title: 'Практичне завдання', description: 'Закріплення знань', type: 'activity', icon: '🎯' },
-        { title: 'Підсумок', description: 'Узагальнення вивченого', type: 'summary', icon: '📝' }
+        { title: 'Welcome', description: 'Introduction to the lesson topic', type: 'welcome', icon: '👋' },
+        { title: 'Main Material', description: 'Presentation of new material', type: 'content', icon: '📚' },
+        { title: 'Practical Task', description: 'Reinforcement of knowledge', type: 'activity', icon: '🎯' },
+        { title: 'Summary', description: 'Generalization of learned material', type: 'summary', icon: '📝' }
       ];
 
       for (let i = 0; i < baseSlides.length; i++) {
@@ -364,7 +364,7 @@ export async function POST(request: NextRequest) {
       console.log('✅ LESSONS API: Default slides created');
     }
 
-    // Отримуємо створений урок з слайдами
+    // Get the created lesson with slides
     console.log('🔄 LESSONS API: Fetching lesson with slides...');
     const lessonWithSlides = await lessonService.getLessonWithSlides(lesson.id);
     console.log('📊 LESSONS API: Lesson with slides retrieved:', {
@@ -376,7 +376,7 @@ export async function POST(request: NextRequest) {
          const response: CreateLessonResponse = {
        lesson: convertToLegacyLesson(lessonWithSlides!),
        success: true,
-       message: 'Урок створено успішно'
+       message: 'Lesson created successfully'
      };
 
     console.log('🎉 LESSONS API: Lesson creation completed successfully');
@@ -393,11 +393,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('❌ LESSONS API: Error during lesson creation:', error);
     
-    if (error instanceof Error && error.message.includes('аутентифікований')) {
+    if (error instanceof Error && error.message.includes('authenticated')) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Необхідна аутентифікація',
+          message: 'Authentication required',
           code: 'AUTHENTICATION_REQUIRED'
         }
       }, { status: 401 });
@@ -406,14 +406,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: { 
-        message: 'Помилка при створенні уроку',
+        message: 'Error creating lesson',
         code: 'CREATE_ERROR'
       }
     }, { status: 500 });
   }
 }
 
-// PUT /api/lessons - оновити урок
+// PUT /api/lessons - update lesson
 export async function PUT(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
@@ -423,19 +423,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'ID уроку обов\'язковий',
+          message: 'Lesson ID is required',
           code: 'VALIDATION_ERROR'
         }
       }, { status: 400 });
     }
 
-    // Перевіряємо, чи існує урок і чи належить він користувачу
+    // Check if lesson exists and belongs to user
     const existingLesson = await lessonService.getLessonById(body.id);
     if (!existingLesson) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Урок не знайдено',
+          message: 'Lesson not found',
           code: 'LESSON_NOT_FOUND'
         }
       }, { status: 404 });
@@ -445,13 +445,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Немає прав для редагування цього уроку',
+          message: 'No rights to edit this lesson',
           code: 'FORBIDDEN'
         }
       }, { status: 403 });
     }
 
-    // Оновлюємо урок
+    // Update lesson
     const updatedLesson = await lessonService.updateLesson(body.id, {
       title: body.title?.trim(),
       description: body.description?.trim() || null,
@@ -467,17 +467,17 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       lesson: updatedLesson,
       success: true,
-      message: 'Урок оновлено'
+      message: 'Lesson updated'
     });
 
   } catch (error) {
-    console.error('Помилка при оновленні уроку:', error);
+    console.error('Error updating lesson:', error);
     
-    if (error instanceof Error && error.message.includes('аутентифікований')) {
+    if (error instanceof Error && error.message.includes('authenticated')) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Необхідна аутентифікація',
+          message: 'Authentication required',
           code: 'AUTHENTICATION_REQUIRED'
         }
       }, { status: 401 });
@@ -486,14 +486,14 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: { 
-        message: 'Помилка при оновленні уроку',
+        message: 'Error updating lesson',
         code: 'UPDATE_ERROR'
       }
     }, { status: 500 });
   }
 }
 
-// DELETE /api/lessons - видалити урок
+// DELETE /api/lessons - delete lesson
 export async function DELETE(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
@@ -504,19 +504,19 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'ID уроку обов\'язковий',
+          message: 'Lesson ID is required',
           code: 'VALIDATION_ERROR'
         }
       }, { status: 400 });
     }
 
-    // Перевіряємо, чи існує урок і чи належить він користувачу
+    // Check if lesson exists and belongs to user
     const existingLesson = await lessonService.getLessonById(lessonId);
     if (!existingLesson) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Урок не знайдено',
+          message: 'Lesson not found',
           code: 'LESSON_NOT_FOUND'
         }
       }, { status: 404 });
@@ -526,28 +526,28 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Немає прав для видалення цього уроку',
+          message: 'No rights to delete this lesson',
           code: 'FORBIDDEN'
         }
       }, { status: 403 });
     }
 
-    // Видаляємо урок (слайди видаляться автоматично через CASCADE)
+    // Delete lesson (slides will be deleted automatically via CASCADE)
     await lessonService.deleteLesson(lessonId);
 
     return NextResponse.json({
       success: true,
-      message: 'Урок видалено'
+      message: 'Lesson deleted'
     });
 
   } catch (error) {
-    console.error('Помилка при видаленні уроку:', error);
+    console.error('Error deleting lesson:', error);
     
-    if (error instanceof Error && error.message.includes('аутентифікований')) {
+    if (error instanceof Error && error.message.includes('authenticated')) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Необхідна аутентифікація',
+          message: 'Authentication required',
           code: 'AUTHENTICATION_REQUIRED'
         }
       }, { status: 401 });
@@ -556,14 +556,14 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: { 
-        message: 'Помилка при видаленні уроку',
+        message: 'Error deleting lesson',
         code: 'DELETE_ERROR'
       }
     }, { status: 500 });
   }
 }
 
-// Допоміжна функція для отримання іконки слайду
+// Helper function to get slide icon
 function getSlideIcon(type: string): string {
   switch (type) {
     case 'welcome': return '👋';

@@ -20,25 +20,25 @@ export const CreateTestData: React.FC = () => {
     const testLessons = [
       {
         id: 'lesson_test_1',
-        title: 'Тестовий урок математики',
-        description: 'Урок про основи математики для дітей',
+        title: 'Test Math Lesson',
+        description: 'Lesson about the basics of mathematics for children',
         targetAge: '6-7',
-        subject: 'математика',
+        subject: 'mathematics',
         duration: 45,
         status: 'planning',
         slides: [
           {
             id: 'slide_test_1_1',
             number: 1,
-            title: 'Вступ до математики',
-            description: 'Знайомство з цифрами',
+            title: 'Introduction to Mathematics',
+            description: 'Introduction to numbers',
             type: 'welcome',
             icon: '🔢',
             status: 'ready',
-            preview: 'Привіт! Сьогодні ми вивчаємо цифри!',
+            preview: 'Hello! Today we are learning numbers!',
             _internal: {
               filename: 'slide_1.html',
-              htmlContent: '<h1>Привіт! Сьогодні ми вивчаємо цифри!</h1>',
+              htmlContent: '<h1>Hello! Today we are learning numbers!</h1>',
               dependencies: [],
               lastModified: new Date(),
               version: 1
@@ -49,15 +49,15 @@ export const CreateTestData: React.FC = () => {
           {
             id: 'slide_test_1_2',
             number: 2,
-            title: 'Цифра 1',
-            description: 'Вивчаємо цифру один',
+            title: 'Number 1',
+            description: 'Learning the number one',
             type: 'content',
             icon: '1️⃣',
             status: 'ready',
-            preview: 'Це цифра 1. Вона означає один предмет.',
+            preview: 'This is the number 1. It means one item.',
             _internal: {
               filename: 'slide_2.html',
-              htmlContent: '<h1>Це цифра 1</h1><p>Вона означає один предмет.</p>',
+              htmlContent: '<h1>This is the number 1</h1><p>It means one item.</p>',
               dependencies: [],
               lastModified: new Date(),
               version: 1
@@ -71,12 +71,12 @@ export const CreateTestData: React.FC = () => {
           files: [],
           structure: {},
           metadata: {
-            lessonTitle: 'Тестовий урок математики',
+            lessonTitle: 'Test Math Lesson',
             targetAge: '6-7',
-            subject: 'математика',
+            subject: 'mathematics',
             duration: 45,
             slidesCount: 2,
-            language: 'uk',
+            language: 'en',
             createdBy: 'test',
             version: '1.0'
           },
@@ -87,25 +87,25 @@ export const CreateTestData: React.FC = () => {
       },
       {
         id: 'lesson_test_2',
-        title: 'Урок природознавства',
-        description: 'Вивчаємо тварин лісу',
+        title: 'Nature Study Lesson',
+        description: 'Learning forest animals',
         targetAge: '8-9',
-        subject: 'природознавство',
+        subject: 'nature study',
         duration: 30,
         status: 'ready',
         slides: [
           {
             id: 'slide_test_2_1',
             number: 1,
-            title: 'Тварини лісу',
-            description: 'Знайомство з лісовими тваринами',
+            title: 'Forest Animals',
+            description: 'Introduction to forest animals',
             type: 'welcome',
             icon: '🐻',
             status: 'ready',
-            preview: 'Давайте дізнаємося про тварин, що живуть у лісі!',
+            preview: 'Let\'s learn about animals that live in the forest!',
             _internal: {
               filename: 'slide_1.html',
-              htmlContent: '<h1>Тварини лісу</h1><p>Давайте дізнаємося про тварин, що живуть у лісі!</p>',
+              htmlContent: '<h1>Forest Animals</h1><p>Let\'s learn about animals that live in the forest!</p>',
               dependencies: [],
               lastModified: new Date(),
               version: 1
@@ -119,12 +119,12 @@ export const CreateTestData: React.FC = () => {
           files: [],
           structure: {},
           metadata: {
-            lessonTitle: 'Урок природознавства',
+            lessonTitle: 'Nature Study Lesson',
             targetAge: '8-9',
-            subject: 'природознавство',
+            subject: 'nature study',
             duration: 30,
             slidesCount: 1,
-            language: 'uk',
+            language: 'en',
             createdBy: 'test',
             version: '1.0'
           },
@@ -137,9 +137,9 @@ export const CreateTestData: React.FC = () => {
 
     try {
       localStorage.setItem('lessons', JSON.stringify(testLessons));
-      setMessage('✅ Тестові уроки створені в localStorage');
+      setMessage('✅ Test lessons created in localStorage');
     } catch (error) {
-      setMessage('❌ Помилка створення тестових даних: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      setMessage('❌ Error creating test data: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -148,9 +148,9 @@ export const CreateTestData: React.FC = () => {
       localStorage.removeItem('lessons');
       localStorage.removeItem('slides');
       localStorage.removeItem('currentLesson');
-      setMessage('🗑️ localStorage очищено');
+      setMessage('🗑️ localStorage cleared');
     } catch (error) {
-      setMessage('❌ Помилка очищення: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      setMessage('❌ Error clearing: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -161,12 +161,12 @@ export const CreateTestData: React.FC = () => {
       
       if (lessons) {
         const parsedLessons = JSON.parse(lessons);
-        setMessage(`📊 Знайдено ${parsedLessons.length} уроків в localStorage`);
+        setMessage(`📊 Found ${parsedLessons.length} lessons in localStorage`);
       } else {
-        setMessage('📭 Немає уроків в localStorage');
+        setMessage('📭 No lessons found in localStorage');
       }
     } catch (error) {
-      setMessage('❌ Помилка перевірки: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      setMessage('❌ Error checking: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -174,11 +174,11 @@ export const CreateTestData: React.FC = () => {
     <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
       <Paper sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom>
-          🧪 Тестові дані для міграції
+          🧪 Test Data for Migration
         </Typography>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Створення тестових уроків в localStorage для тестування міграції до Supabase
+          Creating test lessons in localStorage for testing migration to Supabase
         </Typography>
 
         <Stack spacing={2} sx={{ mb: 3 }}>
@@ -187,7 +187,7 @@ export const CreateTestData: React.FC = () => {
             onClick={createTestLessons}
             color="primary"
           >
-            Створити тестові уроки
+            Create Test Lessons
           </Button>
 
           <Button
@@ -195,7 +195,7 @@ export const CreateTestData: React.FC = () => {
             onClick={checkLocalStorage}
             color="info"
           >
-            Перевірити localStorage
+            Check localStorage
           </Button>
 
           <Button
@@ -203,20 +203,20 @@ export const CreateTestData: React.FC = () => {
             onClick={clearLocalStorage}
             color="error"
           >
-            Очистити localStorage
+            Clear localStorage
           </Button>
         </Stack>
 
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="h6" gutterBottom>
-          Що буде створено:
+          What will be created:
         </Typography>
 
         <Typography variant="body2" component="div" sx={{ mb: 2 }}>
-          • 2 тестових уроки<br />
-          • 3 тестових слайди<br />
-          • Правильна структура даних для міграції
+          • 2 test lessons<br />
+          • 3 test slides<br />
+          • Correct data structure for migration
         </Typography>
 
         {message && (

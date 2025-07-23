@@ -14,21 +14,21 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Публічні маршрути - доступні без авторизації
+  // Public routes - accessible without authentication
   const publicRoutes = [
     '/auth/login',
     '/auth/register', 
     '/test',
-    '/not-found'  // 404 сторінка доступна всім
+    '/not-found'  // 404 page is accessible to all
   ];
 
-  // Маршрути тільки для неавторизованих - авторизовані користувачі будуть перенаправлені
+  // Routes for unauthenticated users only - authenticated users will be redirected
   const authOnlyRoutes = [
     '/auth/login',
     '/auth/register'
   ];
 
-  // Захищені маршрути - потребують авторизації
+  // Protected routes - require authentication
   const protectedRoutes = [
     '/',
     '/chat',
@@ -40,17 +40,17 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
   const isAuthOnlyRoute = authOnlyRoutes.some(route => pathname?.startsWith(route));
   const isProtectedRoute = protectedRoutes.some(route => pathname === route || pathname?.startsWith(route + '/'));
   
-  // Перевіряємо чи це відома сторінка (не 404)
+  // Check if this is a known page (not 404)
   const isKnownRoute = isPublicRoute || isProtectedRoute;
 
   useEffect(() => {
-    // Не робимо нічого поки йде завантаження
+    // Do nothing while loading
     if (loading) return;
 
     console.log(`🛡️ RouteGuard: Checking access to ${pathname}`);
     console.log(`🛡️ RouteGuard: User status: ${user ? `Authenticated (${user.email})` : 'Not authenticated'}`);
     
-    // Визначаємо тип маршруту для логування
+    // Determine route type for logging
     let routeType = 'Unknown';
     if (isPublicRoute) routeType = 'Public';
     else if (isProtectedRoute) routeType = 'Protected';
@@ -58,13 +58,13 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     
     console.log(`🛡️ RouteGuard: Route type: ${routeType}`);
 
-    // Якщо це невідомий маршрут (404), дозволяємо показати сторінку 404
+    // If this is an unknown route (404), allow the 404 page to show
     if (!isKnownRoute) {
       console.log(`📄 RouteGuard: Unknown route, allowing 404 page to show`);
       return;
     }
 
-    // Якщо користувач не авторизований і намагається потрапити на захищену сторінку
+    // If the user is not authenticated and tries to access a protected page
     if (!user && isProtectedRoute) {
       console.log(`🔄 RouteGuard: Redirecting unauthorized user to login`);
       const redirectUrl = `/auth/login?redirectTo=${encodeURIComponent(pathname)}`;
@@ -72,9 +72,9 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
       return;
     }
 
-    // Якщо користувач авторизований і намагається потрапити на сторінку авторизації
+    // If the user is authenticated and tries to access an authentication page
     if (user && isAuthOnlyRoute) {
-      // Перевіряємо чи є redirectTo параметр
+      // Check if redirectTo parameter exists
       const urlParams = new URLSearchParams(window.location.search);
       const redirectTo = urlParams.get('redirectTo');
       
@@ -91,24 +91,24 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     console.log(`✅ RouteGuard: Access granted to ${pathname}`);
   }, [user, loading, pathname, router, isPublicRoute, isAuthOnlyRoute, isProtectedRoute, isKnownRoute]);
 
-  // Показуємо loading screen поки йде перевірка авторизації
+  // Show loading screen while authentication is being checked
   if (loading) {
     return <LoadingScreen />;
   }
 
-  // Для неавторизованих користувачів на захищених сторінках показуємо loading
-  // поки відбувається редирект
+  // For unauthenticated users on protected pages, show loading
+  // while the redirect is in progress
   if (!user && isProtectedRoute) {
     return <LoadingScreen />;
   }
 
-  // Для авторизованих користувачів на сторінках авторизації показуємо loading
-  // поки відбувається редирект
+  // For authenticated users on authentication pages, show loading
+  // while the redirect is in progress
   if (user && isAuthOnlyRoute) {
     return <LoadingScreen />;
   }
 
-  // В інших випадках показуємо контент (включаючи 404)
+  // In other cases, show content (including 404)
   return <>{children}</>;
 };
 

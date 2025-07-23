@@ -18,7 +18,7 @@ interface SlideData {
   title: string;
   htmlContent: string;
   type: string;
-  thumbnailUrl?: string; // Додаємо thumbnailUrl з бази даних
+  thumbnailUrl?: string; // Add thumbnailUrl from database
 }
 
 interface PreviewSelectorProps {
@@ -26,7 +26,7 @@ interface PreviewSelectorProps {
   selectedPreviewId: string | null;
   onPreviewSelect: (slideId: string, previewUrl: string) => void;
   disabled?: boolean;
-  cachedPreviews?: Record<string, string>; // Зовнішні кешовані превью
+  cachedPreviews?: Record<string, string>; // External cached previews
 }
 
 interface PreviewState {
@@ -49,7 +49,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
   // Memoize slides to prevent unnecessary re-renders
   const memoizedSlides = useMemo(() => slides, [slides]);
 
-  // Спрощена логіка завантаження превью - використовуємо тільки кешовані/DB превью
+  // Simplified preview loading logic - use only cached/DB previews
   useEffect(() => {
     console.log('🎯 PREVIEW SELECTOR: Loading cached previews', {
       slidesCount: memoizedSlides.length,
@@ -65,13 +65,13 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
       return;
     }
 
-    // Ініціалізуємо превью з кешу або з thumbnailUrl слайдів
+    // Initialize previews from cache or slide.thumbnailUrl
     const initialPreviews: Record<string, PreviewState> = {};
     
     memoizedSlides.forEach(slide => {
       let previewUrl = '';
       
-      // Пріоритет: 1) cachedPreviews, 2) slide.thumbnailUrl, 3) fallback
+      // Priority: 1) cachedPreviews, 2) slide.thumbnailUrl, 3) fallback
       if (cachedPreviews[slide.id]) {
         previewUrl = cachedPreviews[slide.id];
         console.log(`✅ PREVIEW SELECTOR: Using cached preview for slide ${slide.id}`);
@@ -92,7 +92,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
 
     setPreviews(initialPreviews);
 
-    // Автоматично вибираємо перший слайд якщо нічого не вибрано
+    // Automatically select the first slide if nothing is selected
     if (!selectedPreviewId && memoizedSlides.length > 0) {
       const firstSlide = memoizedSlides[0];
       const firstPreview = initialPreviews[firstSlide.id];
@@ -113,7 +113,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
     return icons[type as keyof typeof icons] || '📄';
   }, []);
 
-  // Навігація слайдера
+  // Slider navigation
   const goToPrevSlide = useCallback(() => {
     const newIndex = currentSlideIndex > 0 ? currentSlideIndex - 1 : memoizedSlides.length - 1;
     setCurrentSlideIndex(newIndex);
@@ -132,7 +132,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
     }
   }, [currentSlideIndex, memoizedSlides, previews, onPreviewSelect]);
 
-  // Синхронізуємо currentSlideIndex з selectedPreviewId
+  // Synchronize currentSlideIndex with selectedPreviewId
   useEffect(() => {
     if (selectedPreviewId) {
       const index = memoizedSlides.findIndex(slide => slide.id === selectedPreviewId);
@@ -142,11 +142,11 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
     }
   }, [selectedPreviewId, memoizedSlides, currentSlideIndex]);
 
-  // Отримуємо поточний слайд
+  // Get current slide
   const currentSlide = memoizedSlides[currentSlideIndex];
   const currentPreview = currentSlide ? previews[currentSlide.id] : null;
 
-  // Клавіатурна навігація
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (memoizedSlides.length <= 1) return;
@@ -175,10 +175,10 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
         alignItems: 'center',
         gap: 1
       }}>
-        🖼️ Оберіть превью для уроку
+        🖼️ Select preview for lesson
       </Typography>
 
-      {/* Слайдер превью */}
+      {/* Preview slider */}
       <Card sx={{ 
         borderRadius: '16px',
         overflow: 'hidden',
@@ -187,14 +187,14 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
       }}>
         <Box sx={{ 
           width: '100%',
-          aspectRatio: '4/3',  // Встановлюємо пропорції для превью
+          aspectRatio: '4/3',  // Set proportions for preview
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
           bgcolor: alpha(theme.palette.grey[100], 0.5)
         }}>
-          {/* Кнопка попереднього слайду */}
+          {/* Previous slide button */}
           {memoizedSlides.length > 1 && (
             <IconButton
               onClick={goToPrevSlide}
@@ -220,11 +220,11 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
             </IconButton>
           )}
 
-          {/* Превью контент */}
+          {/* Preview content */}
           {currentPreview?.url ? (
             <img
               src={currentPreview.url}
-              alt={`Превью слайду ${currentSlideIndex + 1}`}
+              alt={`Slide preview ${currentSlideIndex + 1}`}
               style={{
                 maxWidth: '80%',
                 maxHeight: '90%',
@@ -242,7 +242,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
             }}>
               <CircularProgress size={48} />
               <Typography variant="body1">
-                Генерація превью...
+                Generating preview...
               </Typography>
             </Box>
           ) : (
@@ -255,12 +255,12 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
             }}>
               <AlertCircle size={48} />
               <Typography variant="body1">
-                Помилка генерації превью
+                Preview generation error
               </Typography>
             </Box>
           )}
 
-          {/* Кнопка наступного слайду */}
+          {/* Next slide button */}
           {memoizedSlides.length > 1 && (
             <IconButton
               onClick={goToNextSlide}
@@ -286,7 +286,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
             </IconButton>
           )}
 
-          {/* Вибір поточного слайду */}
+          {/* Select current slide */}
           <Box sx={{
             position: 'absolute',
             top: 16,
@@ -304,12 +304,12 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
           }}>
             <Check size={16} />
-            Вибрано
+            Selected
           </Box>
         </Box>
       </Card>
 
-      {/* Навігаційні точки */}
+      {/* Navigation dots */}
       {memoizedSlides.length > 1 && (
         <Box sx={{ 
           display: 'flex', 
@@ -350,7 +350,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
         </Box>
       )}
 
-      {/* Повідомлення про відсутність слайдів */}
+      {/* Message about no slides */}
       {memoizedSlides.length === 0 && (
         <Box sx={{ 
           textAlign: 'center', 
@@ -359,7 +359,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
         }}>
           <ImageIcon size={48} />
           <Typography variant="body1" sx={{ mt: 2 }}>
-            Немає слайдів для генерації превью
+            No slides to generate preview
           </Typography>
         </Box>
       )}

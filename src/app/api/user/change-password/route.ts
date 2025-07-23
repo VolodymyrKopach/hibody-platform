@@ -1,33 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-// Функція для отримання користувача з аутентифікації
+// Function to get authenticated user
 async function getAuthenticatedUser(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
   
   if (error || !user) {
-    throw new Error('Користувач не аутентифікований');
+    throw new Error('User not authenticated');
   }
   
   return user;
 }
 
-// POST /api/user/change-password - змінити пароль користувача
+// POST /api/user/change-password - change user password
 export async function POST(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
     const supabase = await createClient();
     const body = await request.json();
 
-    // Валідація вхідних даних
+    // Validate input data
     const { newPassword } = body;
 
     if (!newPassword || typeof newPassword !== 'string') {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Новий пароль обов\'язковий',
+          message: 'New password is required',
           code: 'MISSING_PASSWORD'
         }
       }, { status: 400 });
@@ -37,13 +37,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Пароль повинен містити щонайменше 6 символів',
+          message: 'Password must be at least 6 characters long',
           code: 'PASSWORD_TOO_SHORT'
         }
       }, { status: 400 });
     }
 
-    // Змінюємо пароль через Supabase Auth
+    // Change password via Supabase Auth
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword
     });
@@ -51,12 +51,12 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error changing password:', error);
       
-      // Специфічні помилки Supabase
+      // Supabase specific errors
       if (error.message.includes('same as the old password')) {
         return NextResponse.json({
           success: false,
           error: { 
-            message: 'Новий пароль повинен відрізнятися від поточного',
+            message: 'New password must be different from the current one',
             code: 'SAME_PASSWORD'
           }
         }, { status: 400 });
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Помилка при зміні пароля',
+          message: 'Error changing password',
           code: 'PASSWORD_UPDATE_ERROR'
         }
       }, { status: 500 });
@@ -73,17 +73,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Пароль успішно змінено'
+      message: 'Password successfully changed'
     });
 
   } catch (error) {
     console.error('Error in change-password POST:', error);
     
-    if (error instanceof Error && error.message.includes('аутентифікований')) {
+    if (error instanceof Error && error.message.includes('authenticated')) {
       return NextResponse.json({
         success: false,
         error: { 
-          message: 'Необхідна аутентифікація',
+          message: 'Authentication required',
           code: 'AUTHENTICATION_REQUIRED'
         }
       }, { status: 401 });
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: { 
-        message: 'Внутрішня помилка сервера',
+        message: 'Internal server error',
         code: 'INTERNAL_ERROR'
       }
     }, { status: 500 });

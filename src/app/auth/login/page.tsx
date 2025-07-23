@@ -17,7 +17,7 @@ function LoginPageContent() {
   const redirectTo = searchParams.get('redirectTo') || '/'
 
   useEffect(() => {
-    // Якщо користувач вже авторизований, перенаправляємо
+    // If user is already authenticated, redirect
     if (user && !loading) {
       router.push(redirectTo)
     }
@@ -36,7 +36,7 @@ function LoginPageContent() {
   }
 
   if (user) {
-    return null // Буде перенаправлено в useEffect
+    return null // Will be redirected in useEffect
   }
 
   return (
@@ -93,7 +93,7 @@ function LoginPageContent() {
               HiBody Platform
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-              Платформа для створення інтерактивних освітніх матеріалів
+              Platform for creating interactive educational materials
             </Typography>
           </Box>
 

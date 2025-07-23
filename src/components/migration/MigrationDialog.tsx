@@ -89,10 +89,10 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
       setStep('completed');
       
       if (result.success) {
-        // Очищаємо localStorage після успішної міграції
+        // Clear localStorage after successful migration
         await migrationService.clearLocalStorageAfterMigration();
         
-        // Оновлюємо статус
+        // Update status
         await checkMigrationStatus();
       }
       
@@ -121,7 +121,7 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
     <Box sx={{ py: 3, textAlign: 'center' }}>
       <Storage sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
       <Typography variant="h6" gutterBottom>
-        Перевірка даних...
+        Checking data...
       </Typography>
       <LinearProgress sx={{ mt: 2 }} />
     </Box>
@@ -137,10 +137,10 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
         <Box sx={{ py: 3, textAlign: 'center' }}>
           <CheckCircle sx={{ fontSize: 48, color: 'success.main', mb: 2 }} />
           <Typography variant="h6" gutterBottom>
-            Дані для міграції не знайдено
+            No data for migration found
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            У вашому localStorage немає даних для міграції до бази даних.
+            There is no data in your localStorage for migration to the database.
           </Typography>
         </Box>
       );
@@ -150,29 +150,29 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
       <Box sx={{ py: 2 }}>
         <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CloudUpload color="primary" />
-          Міграція даних до бази даних
+          Migrate data to database
         </Typography>
         
         <Alert severity="info" sx={{ mb: 3 }}>
-          Знайдено дані у вашому локальному сховищі. Рекомендуємо мігрувати їх до бази даних для безпеки та синхронізації між пристроями.
+          Data found in your local storage. We recommend migrating it to the database for security and synchronization across devices.
         </Alert>
 
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           <Typography variant="subtitle1" gutterBottom>
-            Локальні дані:
+            Local Data:
           </Typography>
           <List dense>
             <ListItem>
               <ListItemText
-                primary={`Уроки: ${localLessonsCount}`}
-                secondary="Будуть мігровані до бази даних"
+                primary={`Lessons: ${localLessonsCount}`}
+                secondary="Will be migrated to the database"
               />
               <Chip label={localLessonsCount} color="primary" size="small" />
             </ListItem>
             <ListItem>
               <ListItemText
-                primary={`Слайди: ${localSlidesCount}`}
-                secondary="Будуть мігровані разом з уроками"
+                primary={`Slides: ${localSlidesCount}`}
+                secondary="Will be migrated along with the lessons"
               />
               <Chip label={localSlidesCount} color="secondary" size="small" />
             </ListItem>
@@ -182,13 +182,13 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
         {hasDatabaseData && (
           <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
             <Typography variant="subtitle1" gutterBottom>
-              Дані в базі даних:
+              Data in Database:
             </Typography>
             <List dense>
               <ListItem>
                 <ListItemText
-                  primary={`Існуючі уроки: ${databaseLessonsCount}`}
-                  secondary="Дублікати будуть пропущені"
+                  primary={`Existing lessons: ${databaseLessonsCount}`}
+                  secondary="Duplicates will be skipped"
                 />
                 <Chip label={databaseLessonsCount} color="default" size="small" />
               </ListItem>
@@ -198,8 +198,8 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
 
         <Alert severity="warning" sx={{ mb: 2 }}>
           <Typography variant="body2">
-            <strong>Увага:</strong> Після успішної міграції локальні дані будуть видалені. 
-            Переконайтеся, що у вас є резервна копія важливих даних.
+            <strong>Warning:</strong> After successful migration, local data will be deleted. 
+            Make sure you have a backup of important data.
           </Typography>
         </Alert>
       </Box>
@@ -210,10 +210,10 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
     <Box sx={{ py: 3, textAlign: 'center' }}>
       <CloudUpload sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
       <Typography variant="h6" gutterBottom>
-        Міграція даних...
+        Migrating data...
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Будь ласка, зачекайте. Процес може зайняти кілька хвилин.
+        Please wait. The process may take a few minutes.
       </Typography>
       <LinearProgress sx={{ mt: 2 }} />
     </Box>
@@ -233,19 +233,19 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
             <Error sx={{ fontSize: 48, color: 'error.main', mb: 2 }} />
           )}
           <Typography variant="h6" gutterBottom>
-            {success ? 'Міграція завершена успішно!' : 'Міграція завершена з помилками'}
+            {success ? 'Migration completed successfully!' : 'Migration completed with errors'}
           </Typography>
         </Box>
 
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           <Typography variant="subtitle1" gutterBottom>
-            Результати міграції:
+            Migration Results:
           </Typography>
           <List dense>
             <ListItem>
               <ListItemText
-                primary={`Мігровано уроків: ${migratedLessons}`}
-                secondary="Успішно збережено в базі даних"
+                primary={`Migrated lessons: ${migratedLessons}`}
+                secondary="Successfully saved to the database"
               />
               <Chip 
                 label={migratedLessons} 
@@ -255,8 +255,8 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
             </ListItem>
             <ListItem>
               <ListItemText
-                primary={`Мігровано слайдів: ${migratedSlides}`}
-                secondary="Успішно збережено в базі даних"
+                primary={`Migrated slides: ${migratedSlides}`}
+                secondary="Successfully saved to the database"
               />
               <Chip 
                 label={migratedSlides} 
@@ -270,7 +270,7 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
         {errors.length > 0 && (
           <Alert severity="error" sx={{ mb: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
-              Помилки під час міграції:
+              Errors during migration:
             </Typography>
             <List dense>
               {errors.map((error, index) => (
@@ -288,7 +288,7 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
         {success && (
           <Alert severity="success">
             <Typography variant="body2">
-              Всі дані успішно мігровані до бази даних. Локальні дані видалено для безпеки.
+              All data successfully migrated to the database. Local data has been deleted for security.
             </Typography>
           </Alert>
         )}
@@ -316,14 +316,14 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
       case 'checking':
         return (
           <Button onClick={handleClose} disabled={isLoading}>
-            Скасувати
+            Cancel
           </Button>
         );
       case 'ready':
         return (
           <>
             <Button onClick={handleClose}>
-              Скасувати
+              Cancel
             </Button>
             {migrationStatus?.hasLocalData && (
               <Button
@@ -332,7 +332,7 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
                 onClick={handleMigration}
                 disabled={isMigrating}
               >
-                Почати міграцію
+                Start Migration
               </Button>
             )}
           </>
@@ -340,13 +340,13 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
       case 'migrating':
         return (
           <Button disabled>
-            Міграція...
+            Migrating...
           </Button>
         );
       case 'completed':
         return (
           <Button variant="contained" onClick={handleClose}>
-            Закрити
+            Close
           </Button>
         );
       default:
@@ -363,7 +363,7 @@ export const MigrationDialog: React.FC<MigrationDialogProps> = ({
       disableEscapeKeyDown={isMigrating}
     >
       <DialogTitle>
-        Міграція даних
+        Data Migration
       </DialogTitle>
       <DialogContent>
         {renderContent()}

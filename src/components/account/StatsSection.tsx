@@ -129,7 +129,7 @@ const StatsSection: React.FC = () => {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return t('account:stats.unknown');
-    return new Date(dateString).toLocaleDateString('uk-UA', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

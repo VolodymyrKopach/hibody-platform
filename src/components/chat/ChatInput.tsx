@@ -39,9 +39,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end', width: '100%' }}>
-      {/* Кнопка конструктора генерації */}
-      {/* ЗАКОМЕНТОВАНО: поки неактивна в цій версії проекту
-      <Tooltip title="Конструктор генерації">
+      {/* Generation constructor button */}
+      {/* COMMENTED OUT: currently inactive in this project version
+      <Tooltip title="Generation constructor">
         <IconButton
           onClick={onOpenGenerationConstructor}
           disabled={disabled}

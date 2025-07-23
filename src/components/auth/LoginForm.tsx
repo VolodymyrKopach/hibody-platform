@@ -46,7 +46,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
       ...prev,
       [name]: value,
     }))
-    // Очищаємо помилку при зміні полів
+    // Clear error when fields change
     if (error) setError(null)
   }
 
@@ -166,7 +166,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
           }}
         />
 
-        {/* Посилання "Забули пароль?" */}
+        {/* "Forgot password?" link */}
         <Box sx={{ textAlign: 'right', mb: 3 }}>
           <Link
             component="button"

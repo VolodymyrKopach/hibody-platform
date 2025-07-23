@@ -23,8 +23,8 @@ interface ChatMessageProps {
   onFeedback?: (messageId: number, feedback: 'like' | 'dislike') => void;
   onLessonCreate?: (lesson: SimpleLesson) => void;
   onActionClick?: (action: string, description: string) => void;
-  slideGenerationProgress?: SlideGenerationProgress[]; // Прогрес генерації слайдів
-  isGeneratingSlides?: boolean; // Флаг генерації слайдів
+  slideGenerationProgress?: SlideGenerationProgress[]; // Slide generation progress
+  isGeneratingSlides?: boolean; // Slide generation flag
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -39,22 +39,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const { t } = useTranslation('chat');
   const theme = useTheme();
 
-  // Обробка створення уроку з повідомлення
+  // Handle lesson creation from message
   const handleLessonCreate = () => {
     if (message.text.includes('```html') && onLessonCreate) {
-      // Парсинг уроку з відповіді AI
+      // Parsing lesson from AI response
       const lessonMatch = message.text.match(/## 📚 (.*?)\n/);
-      const title = lessonMatch ? lessonMatch[1] : 'Новий урок';
+      const title = lessonMatch ? lessonMatch[1] : 'New lesson';
       
-      // Простий парсер для створення слайдів з HTML
+      // Simple parser for creating slides from HTML
       const htmlMatch = message.text.match(/```html\n([\s\S]*?)\n```/);
       if (htmlMatch) {
         const lesson: SimpleLesson = {
           id: `lesson_${Date.now()}`,
           title,
-          description: `Урок створений з чату`,
-          subject: 'Загальне навчання',
-          ageGroup: '6-12 років',
+          description: `Lesson created from chat`,
+          subject: 'General education',
+          ageGroup: '6-12 years',
           duration: 30,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -73,37 +73,37 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   };
 
-  // Автоматичне створення уроку при отриманні повідомлення зі слайдом
+  // Automatic lesson creation when a message with a slide is received
   React.useEffect(() => {
     console.log('🔍 ChatMessage useEffect triggered:', {
       messageId: message.id,
       sender: message.sender,
-      hasFirstSlideText: message.text.includes('✅ **Перший слайд готовий!**'),
-      hasSlideReadyText: message.text.includes('готовий!**'),
+      hasFirstSlideText: message.text.includes('✅ **First slide ready!**'),
+      hasSlideReadyText: message.text.includes('ready!**'),
       hasLessonObject: !!(message as any).lesson,
       messagePreview: message.text.substring(0, 100) + '...'
     });
     
-    // Розширена умова для обробки як першого, так і наступних слайдів та редагування
+    // Extended condition for handling first, subsequent slides, and editing
     if (message.sender === 'ai' && onLessonCreate && (message as any).lesson) {
-      // Перевіряємо чи є текст про готовий/оновлений слайд (будь-який номер)
-      const isSlideReady = message.text.includes('готовий!**') || 
-                          message.text.includes('✅ **Перший слайд готовий!**') ||
-                          (message.text.includes('✅ **Слайд') && message.text.includes('готовий!**'));
+      // Check if there is text about a ready/updated slide (any number)
+      const isSlideReady = message.text.includes('ready!**') || 
+                          message.text.includes('✅ **First slide ready!**') ||
+                          (message.text.includes('✅ **Slide') && message.text.includes('ready!**'));
       
-      // Перевіряємо чи є текст про редагування/покращення слайду
-      const isSlideEdited = message.text.includes('покращено!**') ||
-                           message.text.includes('перегенеровано!**') ||
-                           message.text.includes('відредаговано!**') ||
-                           (message.text.includes('✏️ **Слайд') && message.text.includes('покращено!**')) ||
-                           (message.text.includes('🔄 **Слайд') && message.text.includes('перегенеровано!**')) ||
-                           (message.text.includes('📝 **Слайд') && message.text.includes('відредаговано!**')) ||
-                           (message.text.includes('🎨 **Слайд') && message.text.includes('покращено!**')) ||
-                           // Додаткові умови для реальних повідомлень з ChatService
-                           message.text.includes('Новий варіант слайду створено') ||
-                           message.text.includes('Слайд оновлено з використанням') ||
-                           message.text.includes('замінено** попередній слайд') ||
-                           (message.text.includes('**Що змінилося:**') && message.text.includes('Той же слайд'));
+      // Check if there is text about editing/improving the slide
+      const isSlideEdited = message.text.includes('improved!**') ||
+                           message.text.includes('regenerated!**') ||
+                           message.text.includes('edited!**') ||
+                           (message.text.includes('✏️ **Slide') && message.text.includes('improved!**')) ||
+                           (message.text.includes('🔄 **Slide') && message.text.includes('regenerated!**')) ||
+                           (message.text.includes('📝 **Slide') && message.text.includes('edited!**')) ||
+                           (message.text.includes('🎨 **Slide') && message.text.includes('improved!**')) ||
+                           // Additional conditions for actual messages from ChatService
+                           message.text.includes('New slide variant created') ||
+                           message.text.includes('Slide updated using') ||
+                           message.text.includes('replaced** previous slide') ||
+                           (message.text.includes('**What changed:**') && message.text.includes('Same slide'));
       
       if (isSlideReady || isSlideEdited) {
         console.log(`🎨 Auto-updating lesson from ${isSlideEdited ? 'slide editing' : 'slide generation'}...`);
@@ -115,13 +115,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           console.log('🎯 Last slide htmlContent preview:', 
             (message as any).lesson.slides[lastSlideIndex]?.htmlContent?.substring(0, 100) + '...');
           
-          // Якщо це редагування слайда, встановлюємо поточний час як updatedAt
+          // If this is a slide edit, set the current time as updatedAt
           if (isSlideEdited) {
             const updatedLesson = {
               ...(message as any).lesson,
               slides: (message as any).lesson.slides.map((slide: any) => ({
                 ...slide,
-                updatedAt: new Date() // Встановлюємо поточний час для примусового оновлення превью
+                updatedAt: new Date() // Set current time to force preview update
               }))
             };
             console.log('🔄 Setting current time as updatedAt for edited slides');
@@ -136,31 +136,31 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       }
     }
     
-    // Старий код для сумісності (для першого слайду без lesson об'єкта)
-    if (message.sender === 'ai' && message.text.includes('✅ **Перший слайд готовий!**') && onLessonCreate && !(message as any).lesson) {
+    // Old code for compatibility (for the first slide without a lesson object)
+    if (message.sender === 'ai' && message.text.includes('✅ **First slide ready!**') && onLessonCreate && !(message as any).lesson) {
       console.log('🎨 Auto-creating lesson from approved plan (fallback)...');
       
-      // Резервний варіант - створення уроку без реальних HTML даних (НЕ РЕКОМЕНДУЄТЬСЯ)
+      // Fallback option - creating a lesson without real HTML data (NOT RECOMMENDED)
       console.warn('⚠️ No lesson object found in message, creating fallback lesson');
       
       const topicMatch = message.text.match(/про\s+([^"]+?)[\s]*для/i);
-      const topic = topicMatch ? topicMatch[1].trim() : 'Новий урок';
+      const topic = topicMatch ? topicMatch[1].trim() : 'New lesson';
       
       const lesson: SimpleLesson = {
         id: `lesson_${Date.now()}`,
-        title: topic || 'Новий урок',
-        description: `Урок створений з чату`,
-        subject: 'Загальне навчання',
-        ageGroup: '6-12 років',
+        title: topic || 'New lesson',
+        description: `Lesson created from chat`,
+        subject: 'General education',
+        ageGroup: '6-12 years',
         duration: 30,
         createdAt: new Date(),
         updatedAt: new Date(),
         authorId: 'ai-chat',
         slides: [{
           id: `slide_${Date.now()}`,
-          title: `${topic} - Вступ`,
-          content: 'Вступний слайд згенеровано',
-          htmlContent: '<div>Слайд генерується...</div>',
+          title: `${topic} - Introduction`,
+          content: 'Introductory slide generated',
+          htmlContent: '<div>Slide generating...</div>',
           type: 'content',
           status: 'completed'
         }]
@@ -223,7 +223,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 <Box sx={{ mt: 3, mb: 2 }}>
                   <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Clock size={16} />
-                    📊 Прогрес генерації слайдів
+                    📊 Slide Generation Progress
                   </Typography>
                   
                   {slideGenerationProgress.map((slide, index) => (
@@ -241,10 +241,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                             <Clock size={14} />
                           }
                           label={
-                            slide.status === 'completed' ? 'Готово' :
-                            slide.status === 'error' ? 'Помилка' :
-                            slide.status === 'generating' ? 'Генерується' :
-                            'Очікує'
+                            slide.status === 'completed' ? 'Ready' :
+                            slide.status === 'error' ? 'Error' :
+                            slide.status === 'generating' ? 'Generating' :
+                            'Pending'
                           }
                           color={
                             slide.status === 'completed' ? 'success' :
@@ -283,10 +283,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                     </Box>
                   ))}
                   
-                  {/* Загальний прогрес */}
+                  {/* Overall progress */}
                   <Box sx={{ mt: 2, p: 2, backgroundColor: alpha(theme.palette.primary.main, 0.05), borderRadius: 2 }}>
                     <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                      Загальний прогрес: {slideGenerationProgress.filter(s => s.status === 'completed').length} / {slideGenerationProgress.length} слайдів
+                      Overall Progress: {slideGenerationProgress.filter(s => s.status === 'completed').length} / {slideGenerationProgress.length} slides
                     </Typography>
                     <LinearProgress
                       variant="determinate"

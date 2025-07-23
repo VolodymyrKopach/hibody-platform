@@ -10,36 +10,36 @@ export const AuthTest: React.FC = () => {
 
   const handleTestLogin = async () => {
     try {
-      setTestResult('Спроба входу...')
+      setTestResult('Attempting to log in...')
       const result = await signIn('test@example.com', 'password123')
       
       if (result.error) {
-        setTestResult(`Помилка входу: ${result.error.message}`)
+        setTestResult(`Login error: ${result.error.message}`)
       } else {
-        setTestResult('Вхід успішний!')
+        setTestResult('Login successful!')
       }
     } catch (error) {
-      setTestResult(`Помилка: ${error instanceof Error ? error.message : 'Невідома помилка'}`)
+      setTestResult(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
   const handleTestRefresh = async () => {
     try {
-      setTestResult('Оновлення сесії...')
+      setTestResult('Refreshing session...')
       const success = await refreshSession()
-      setTestResult(success ? 'Сесія оновлена успішно!' : 'Не вдалося оновити сесію')
+      setTestResult(success ? 'Session refreshed successfully!' : 'Failed to refresh session')
     } catch (error) {
-      setTestResult(`Помилка оновлення: ${error instanceof Error ? error.message : 'Невідома помилка'}`)
+      setTestResult(`Refresh error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
   const handleLogout = async () => {
     try {
-      setTestResult('Вихід...')
+      setTestResult('Logging out...')
       await signOut()
-      setTestResult('Вихід успішний!')
+      setTestResult('Logout successful!')
     } catch (error) {
-      setTestResult(`Помилка виходу: ${error instanceof Error ? error.message : 'Невідома помилка'}`)
+      setTestResult(`Logout error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -59,12 +59,12 @@ export const AuthTest: React.FC = () => {
     <Card>
       <CardContent>
         <Typography variant="h5" gutterBottom>
-          Тест авторизації
+          Authorization Test
         </Typography>
         
         <Box sx={{ mb: 2 }}>
           <Typography variant="body1">
-            Статус: {user ? 'Авторизований' : 'Не авторизований'}
+            Status: {user ? 'Authenticated' : 'Not authenticated'}
           </Typography>
           {user && (
             <Typography variant="body2" color="text.secondary">
@@ -73,7 +73,7 @@ export const AuthTest: React.FC = () => {
           )}
           {profile && (
             <Typography variant="body2" color="text.secondary">
-              Ім'я: {profile.full_name || 'Не вказано'}
+              Name: {profile.full_name || 'Not specified'}
             </Typography>
           )}
         </Box>
@@ -81,36 +81,36 @@ export const AuthTest: React.FC = () => {
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
           {!user ? (
             <Button variant="contained" onClick={handleTestLogin}>
-              Тестовий вхід
+              Test Login
             </Button>
           ) : (
             <>
               <Button variant="outlined" onClick={handleTestRefresh}>
-                Оновити сесію
+                Refresh Session
               </Button>
               <Button variant="contained" color="error" onClick={handleLogout}>
-                Вийти
+                Logout
               </Button>
             </>
           )}
         </Box>
 
         {testResult && (
-          <Alert severity={testResult.includes('Помилка') ? 'error' : 'success'}>
+          <Alert severity={testResult.includes('Error') ? 'error' : 'success'}>
             {testResult}
           </Alert>
         )}
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          Інструкції для тестування:
+          Testing Instructions:
           <br />
-          1. Увійдіть в систему
+          1. Log in to the system
           <br />
-          2. Оновіть сторінку (F5)
+          2. Refresh the page (F5)
           <br />
-          3. Перевірте, чи залишилися ви авторизованими
+          3. Check if you remained authenticated
           <br />
-          4. Спробуйте функцію "Оновити сесію"
+          4. Try the "Refresh Session" function
         </Typography>
       </CardContent>
     </Card>

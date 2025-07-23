@@ -1,5 +1,5 @@
 // === SOLID: SRP - Single Responsibility Principle ===
-// Кожен валідатор відповідає тільки за валідацію своєї вікової групи
+// Each validator is responsible only for validating its age group
 
 import { 
   BaseFormData,
@@ -11,7 +11,7 @@ import {
 } from '../../../types/generation';
 
 // === SOLID: DIP - Dependency Inversion Principle ===
-// Реалізуємо абстракцію IFormValidator
+// We implement the IFormValidator abstraction
 
 export abstract class BaseFormValidator<T extends BaseFormData> implements IFormValidator<T> {
   abstract validate(formData: T): boolean;
@@ -32,7 +32,7 @@ export abstract class BaseFormValidator<T extends BaseFormData> implements IForm
 
 export class AgeGroup2to3Validator extends BaseFormValidator<AgeGroup2to3FormData> {
   validate(formData: AgeGroup2to3FormData): boolean {
-    // Для 2-3 років потрібно або тематику, або власну тему
+    // For 2-3 years, either a thematic or a custom theme is required
     return this.hasValidTopic(formData) || !this.isEmpty(formData.thematic24);
   }
   
@@ -40,7 +40,7 @@ export class AgeGroup2to3Validator extends BaseFormValidator<AgeGroup2to3FormDat
     const errors: string[] = [];
     
     if (!this.hasValidTopic(formData) && this.isEmpty(formData.thematic24)) {
-      errors.push('Оберіть тематику або введіть власну тему');
+      errors.push('Select a thematic or enter your own theme');
     }
     
     return errors;
@@ -49,7 +49,7 @@ export class AgeGroup2to3Validator extends BaseFormValidator<AgeGroup2to3FormDat
 
 export class AgeGroup4to6Validator extends BaseFormValidator<AgeGroup4to6FormData> {
   validate(formData: AgeGroup4to6FormData): boolean {
-    // Для 4-6 років потрібно або тематику, або власну тему
+    // For 4-6 years, either a thematic or a custom theme is required
     return this.hasValidTopic(formData) || !this.isEmpty(formData.thematic);
   }
   
@@ -57,7 +57,7 @@ export class AgeGroup4to6Validator extends BaseFormValidator<AgeGroup4to6FormDat
     const errors: string[] = [];
     
     if (!this.hasValidTopic(formData) && this.isEmpty(formData.thematic)) {
-      errors.push('Оберіть тематику або введіть власну тему');
+      errors.push('Select a thematic or enter your own theme');
     }
     
     return errors;
@@ -66,7 +66,7 @@ export class AgeGroup4to6Validator extends BaseFormValidator<AgeGroup4to6FormDat
 
 export class AgeGroup7to8Validator extends BaseFormValidator<AgeGroup7to8FormData> {
   validate(formData: AgeGroup7to8FormData): boolean {
-    // Для 7-8 років потрібно або предмет, або власну тему
+    // For 7-8 years, either a subject or a custom theme is required
     return this.hasValidTopic(formData) || !this.isEmpty(formData.subject78);
   }
   
@@ -74,7 +74,7 @@ export class AgeGroup7to8Validator extends BaseFormValidator<AgeGroup7to8FormDat
     const errors: string[] = [];
     
     if (!this.hasValidTopic(formData) && this.isEmpty(formData.subject78)) {
-      errors.push('Оберіть предмет або введіть власну тему');
+      errors.push('Select a subject or enter your own theme');
     }
     
     return errors;
@@ -83,7 +83,7 @@ export class AgeGroup7to8Validator extends BaseFormValidator<AgeGroup7to8FormDat
 
 export class AgeGroup9to10Validator extends BaseFormValidator<AgeGroup9to10FormData> {
   validate(formData: AgeGroup9to10FormData): boolean {
-    // Для 9-10 років потрібно або предмет, або власну тему
+    // For 9-10 years, either a subject or a custom theme is required
     return this.hasValidTopic(formData) || !this.isEmpty(formData.subject910);
   }
   
@@ -91,7 +91,7 @@ export class AgeGroup9to10Validator extends BaseFormValidator<AgeGroup9to10FormD
     const errors: string[] = [];
     
     if (!this.hasValidTopic(formData) && this.isEmpty(formData.subject910)) {
-      errors.push('Оберіть предмет або введіть власну тему');
+      errors.push('Select a subject or enter your own theme');
     }
     
     return errors;
@@ -99,7 +99,7 @@ export class AgeGroup9to10Validator extends BaseFormValidator<AgeGroup9to10FormD
 }
 
 // === SOLID: Factory Pattern + DIP ===
-// Фабрика для створення валідаторів
+// Factory for creating validators
 
 export class ValidatorFactory {
   static createValidator(ageGroup: string): IFormValidator<any> {

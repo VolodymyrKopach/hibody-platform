@@ -62,7 +62,7 @@ const SlideContent = React.memo(({ htmlContent }: { htmlContent: string }) => {
 
 SlideContent.displayName = 'SlideContent';
 
-// Мемоізований заголовок діалогу
+// Memoized dialog header
 const SlideDialogHeader = React.memo(({ 
   title, 
   currentIndex, 
@@ -145,7 +145,7 @@ const SlideDialogHeader = React.memo(({
             color: isFullscreen ? alpha('#ffffff', 0.7) : 'text.secondary'
           }}
         >
-          ← → для навігації • F11 режим презентації • Esc для закриття
+          ← → for navigation • F11 presentation mode • Esc to close
         </Typography>
       </Box>
       
@@ -253,7 +253,7 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
   const handleToggleFullscreen = React.useCallback(async () => {
     try {
       if (!isFullscreen) {
-        // Входимо в повноекранний режим браузера
+        // Enter browser fullscreen mode
         const element = document.documentElement;
         if (element.requestFullscreen) {
           await element.requestFullscreen();
@@ -264,7 +264,7 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
         }
         setIsFullscreen(true);
       } else {
-        // Виходимо з повноекранного режиму
+        // Exit fullscreen mode
         if (document.exitFullscreen) {
           await document.exitFullscreen();
         } else if ((document as any).webkitExitFullscreen) {
@@ -279,10 +279,10 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
     }
   }, [isFullscreen]);
 
-  // Скидаємо fullscreen при закритті діалогу
+  // Reset fullscreen on dialog close
   useEffect(() => {
     if (!open && isFullscreen) {
-      // Виходимо з повноекранного режиму браузера
+      // Exit browser fullscreen mode
       if (document.exitFullscreen) {
         document.exitFullscreen();
       } else if ((document as any).webkitExitFullscreen) {
@@ -294,7 +294,7 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
     }
   }, [open, isFullscreen]);
 
-  // Відстежуємо зміни повноекранного режиму браузера
+  // Track browser fullscreen changes
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = !!(
@@ -316,7 +316,7 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
     };
   }, []);
 
-  // Обробка клавіш для навігації (переносимо перед ранні return)
+  // Handle key presses for navigation (moved before early returns)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (open && currentLesson && currentLesson.slides[currentSlideIndex]) {
@@ -401,7 +401,7 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
           onToggleFullscreen={handleToggleFullscreen}
         />
 
-        {/* Контент слайду */}
+        {/* Slide content */}
         <Box sx={{ width: '100%', height: '100%', pt: '80px', position: 'relative' }}>
           <SlideContent htmlContent={currentSlide.htmlContent} />
         </Box>

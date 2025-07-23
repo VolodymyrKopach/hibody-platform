@@ -45,40 +45,40 @@ interface SimpleGenerationDialogProps {
 type AgeGroup = '2-3' | '4-6' | '7-8' | '9-10';
 
 interface FormData {
-  // Базовые поля
+  // Basic fields
   topic: string;
   difficulty: string;
   duration: string;
   activities: string;
   goals: string;
   
-  // Поля для 4-6 лет
-  // Базовые фильтры
+  // Fields for 4-6 years
+  // Basic filters
   thematic?: string;
   taskTypes?: string[];
   language?: string;
   
-  // Специализированные фильтры
+  // Specialized filters
   learningGoal?: string;
   complexityLevel?: string;
   lessonDuration?: string;
   
-  // Интерактивные настройки
+  // Interactive settings
   presentationStyle?: string;
   audioSupport?: string[];
   participationFormat?: string;
   
-  // Технические параметры
+  // Technical parameters
   visualDesign?: string[];
   presentationSpeed?: string;
   interactivity?: string;
   
-  // Образовательные стандарты
+  // Educational standards
   educationalProgram?: string;
   gradingSystem?: string;
   
-  // Новые поля для 2-4 лет
-  // Основные фильтры
+  // New fields for 2-4 years
+  // Primary filters
   lessonGoal?: string;
   activityType?: string[];
   thematic24?: string;
@@ -86,69 +86,69 @@ interface FormData {
   complexityLevel24?: string;
   lessonDuration24?: string;
   
-  // Специальные фильтры
+  // Special filters
   presentationStyle24?: string;
   participationFormat24?: string;
   
-  // Технические настройки
+  // Technical settings
   visualEffects?: string[];
   presentationSpeed24?: string;
   
-  // Новые поля для 7-8 лет (молодші школярі)
-  // Основные предметы
+  // New fields for 7-8 years (junior schoolchildren)
+  // Main subjects
   subject78?: string;
   lessonFormat78?: string[];
   skills78?: string[];
   
-  // Специализированные фильтры
+  // Specialized filters
   complexityLevel78?: string;
   lessonDuration78?: string;
   thematicOrientation78?: string;
   
-  // Методические параметры
+  // Methodological parameters
   pedagogicalGoal78?: string;
   assessmentMethod78?: string;
   audioSettings78?: string[];
   
-  // Интерактивные элементы
+  // Interactive elements
   interactionType78?: string;
   presentationStyle78?: string;
   socialFormat78?: string;
   
-  // Технические параметры
+  // Technical parameters
   platform78?: string[];
   visualStyle78?: string;
   
-  // Образовательные стандарты
+  // Educational standards
   educationalProgram78?: string;
   competencies78?: string[];
 
-  // Новые поля для 9-10 лет (старші школярі)
-  // Академические предметы
+  // New fields for 9-10 years (senior schoolchildren)
+  // Academic subjects
   subject910?: string;
   complexity910?: string;
   taskTypes910?: string[];
   
-  // Специализированные фильтры
+  // Specialized filters
   learningGoal910?: string;
   lessonDuration910?: string;
   thematicOrientation910?: string;
   
-  // Методические параметры
+  // Methodological parameters
   pedagogicalApproach910?: string;
   independenceLevel910?: string;
   gradingSystem910?: string;
   
-  // Технологические параметры
+  // Technological parameters
   digitalTools910?: string[];
   visualDesign910?: string;
   audioSettings910?: string;
   
-  // Социальные параметры
+  // Social parameters
   interactionFormat910?: string;
   studentRole910?: string;
   
-  // Образовательные стандарты
+  // Educational standards
   educationalProgram910?: string;
   keyCompetencies910?: string[];
 }
@@ -193,7 +193,7 @@ const SimpleGenerationDialog: React.FC<SimpleGenerationDialogProps> = ({
     onSendToChat(data.detailedPrompt);
     
     // Show success message
-    setSuccessMessage('Запит відправлено в чат! Генерую урок...');
+    setSuccessMessage('Request sent to chat! Generating lesson...');
     
     // Close dialog after short delay
     setTimeout(() => {
@@ -232,7 +232,7 @@ const SimpleGenerationDialog: React.FC<SimpleGenerationDialogProps> = ({
               <ArrowLeft size={20} />
             </IconButton>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Генерація уроку
+              Lesson Generation
             </Typography>
           </Box>
           <IconButton onClick={handleClose} size="small">

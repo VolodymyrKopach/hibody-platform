@@ -46,7 +46,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
   const theme = useTheme();
   const { t } = useTranslation(['slides', 'common']);
 
-  // Компонент для відображення інформації про урок
+  // Component for displaying lesson information
   const LessonInfo = () => {
     if (!currentLesson) return null;
 
@@ -105,7 +105,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
     );
   };
 
-  // Компонент для управління вибором слайдів
+  // Component for managing slide selection
   const SelectionControls = () => {
     if (!currentLesson) return null;
 
@@ -116,7 +116,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
         backgroundColor: alpha(theme.palette.grey[50], 0.3), 
         borderRadius: 1.5 
       }}>
-        {/* Компактний рядок з усіма елементами */}
+        {/* Compact row with all elements */}
         <Box sx={{ 
           display: 'flex', 
           alignItems: 'center', 
@@ -124,7 +124,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
           flexWrap: 'wrap',
           gap: 1
         }}>
-          {/* Лічильник */}
+          {/* Counter */}
           <Typography variant="caption" color="text.secondary" sx={{ 
             fontSize: '0.75rem',
             minWidth: 'fit-content',
@@ -152,7 +152,7 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
                 }
               }}
             >
-              {t('common:buttons.selectAll', 'Всі')}
+              {t('common:buttons.selectAll', 'All')}
             </Button>
             <Button
               size="small"

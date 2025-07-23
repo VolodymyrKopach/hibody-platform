@@ -2,15 +2,17 @@ import { SimpleLesson, SimpleSlide } from '@/types/chat';
 import { ISlideStore } from '@/types/store';
 import { ChatService } from './ChatService';
 import { SlideDescription } from '@/types/chat';
+import { ParallelSlideGenerationService } from './ParallelSlideGenerationService';
+import { SlideGenerationProgress } from '@/types/chat';
 
-// === SOLID: SRP - SlideStoreGenerationAdapter відповідає тільки за інтеграцію генерації з Store ===
+// === SOLID: SRP - SlideStoreGenerationAdapter is responsible only for integrating generation with the Store ===
 export class SlideStoreGenerationAdapter {
   constructor(
     private store: ISlideStore,
     private generationService: ParallelSlideGenerationService
   ) {}
 
-  // === SOLID: DIP - Використання абстракції Store ===
+  // === SOLID: DIP - Using Store Abstraction ===
   async generateSlidesWithStoreUpdates(
     slideDescriptions: SlideDescription[],
     lessonTopic: string,
@@ -19,32 +21,32 @@ export class SlideStoreGenerationAdapter {
   ): Promise<void> {
     console.log('🚀 [SlideStoreAdapter] Starting generation with Store integration');
 
-    // Оновлюємо Store - початок генерації
+    // Update Store - start generation
     this.store.actions.setCurrentLesson(lesson);
     this.store.actions.setGenerating(true);
 
     try {
-      // Запускаємо паралельну генерацію з callbacks для Store
+      // Start parallel generation with callbacks for the Store
       await this.generationService.generateAllSlidesParallel(
         slideDescriptions,
         lessonTopic,
         lessonAge,
         lesson,
         {
-          // === SOLID: OCP - Callbacks для розширення функціональності ===
+          // === SOLID: OCP - Callbacks for extending functionality ===
           onSlideReady: (slide: SimpleSlide, updatedLesson: SimpleLesson) => {
             console.log(`🎨 [SlideStoreAdapter] Slide ready: ${slide.title}`);
             
-            // Додаємо слайд до Store ВІДРАЗУ
+            // Add slide to Store IMMEDIATELY
             this.store.actions.addSlide(slide);
             
-            // Оновлюємо урок
+            // Update lesson
             this.store.actions.updateLesson({
               slides: updatedLesson.slides,
               updatedAt: new Date()
             });
 
-            // Автоматично відкриваємо панель слайдів при першому слайді
+            // Automatically open slide panel for the first slide
             const currentState = this.store.getState();
             if ((currentState.slides?.length || 0) === 1 && !currentState.slidePanelOpen) {
               this.store.actions.setSlidePanelOpen(true);
@@ -52,8 +54,8 @@ export class SlideStoreGenerationAdapter {
             }
           },
 
-                     onProgressUpdate: (progress) => {
-             // Оновлюємо прогрес кожного слайду в Store
+                     onProgressUpdate: (progress: SlideGenerationProgress[]) => {
+             // Update progress of each slide in Store
              progress.forEach(slideProgress => {
                this.store.actions.setSlideGenerationProgress(
                  `slide-${slideProgress.slideNumber}`, 
@@ -64,22 +66,22 @@ export class SlideStoreGenerationAdapter {
 
           onError: (error: string, slideNumber: number) => {
             console.error(`❌ [SlideStoreAdapter] Generation error for slide ${slideNumber}:`, error);
-            // Можемо додати error state до Store при потребі
+            // We can add error state to Store if needed
           },
 
-          onComplete: (finalLesson: SimpleLesson, stats) => {
+          onComplete: (finalLesson: SimpleLesson, stats: any) => {
             console.log(`🎉 [SlideStoreAdapter] Generation completed:`, stats);
             
-            // Завершуємо генерацію
+            // End generation
             this.store.actions.setGenerating(false);
             
-            // Оновлюємо фінальний стан уроку
+            // Update final lesson state
             this.store.actions.updateLesson({
               slides: finalLesson.slides,
               updatedAt: new Date()
             });
 
-            // Очищуємо прогрес генерації
+            // Clear generation progress
             this.clearGenerationProgress();
           }
         }
@@ -88,7 +90,7 @@ export class SlideStoreGenerationAdapter {
     } catch (error) {
       console.error('❌ [SlideStoreAdapter] Generation failed:', error);
       
-      // Скидаємо стан генерації при помилці
+      // Reset generation state on error
       this.store.actions.setGenerating(false);
       this.clearGenerationProgress();
       
@@ -96,9 +98,9 @@ export class SlideStoreGenerationAdapter {
     }
   }
 
-  // === SOLID: SRP - Очищення прогресу генерації ===
+  // === SOLID: SRP - Clearing generation progress ===
   private clearGenerationProgress(): void {
-    // Очищаємо всі прогреси генерації
+    // Clear all generation progress
     const currentState = this.store.getState();
     
     currentState.generationProgress.forEach((_, slideId) => {
@@ -106,9 +108,9 @@ export class SlideStoreGenerationAdapter {
     });
   }
 
-  // === SOLID: OCP - Додаткові методи для розширення ===
+  // === SOLID: OCP - Additional methods for extension ===
   
-  // Генерація окремого слайду з оновленням Store
+  // Generate a single slide with Store updates
   async generateSingleSlide(
     description: string, 
     lessonTopic: string, 
@@ -116,7 +118,7 @@ export class SlideStoreGenerationAdapter {
   ): Promise<SimpleSlide> {
     console.log('🎯 [SlideStoreAdapter] Generating single slide');
 
-    // Використовуємо паралельну генерацію для одного слайду
+    // Use parallel generation for a single slide
     const slideDescription: SlideDescription = {
       slideNumber: 1,
       title: 'Generated Slide',
@@ -145,7 +147,7 @@ export class SlideStoreGenerationAdapter {
         tempLesson,
         {
           onSlideReady: (slide: SimpleSlide) => {
-            // Додаємо до Store
+            // Add to Store
             this.store.actions.addSlide(slide);
             resolve(slide);
           },
@@ -157,7 +159,7 @@ export class SlideStoreGenerationAdapter {
     });
   }
 
-  // Оновлення існуючого слайду з Store
+  // Update existing slide from Store
   async updateSlideContent(
     slideId: string, 
     instruction: string
@@ -171,15 +173,15 @@ export class SlideStoreGenerationAdapter {
       throw new Error(`Slide ${slideId} not found in Store`);
     }
 
-    // Тут можна додати логіку оновлення слайду через AI
-    // Поки що просто оновлюємо статус
+    // Here you can add logic to update the slide via AI
+    // For now, just update the status
     this.store.actions.updateSlide(slideId, {
       status: 'completed',
       updatedAt: new Date()
     });
   }
 
-  // Отримання статистики генерації
+  // Get generation statistics
   getGenerationStats(): {
     isGenerating: boolean;
     totalSlides: number;
@@ -202,7 +204,7 @@ export class SlideStoreGenerationAdapter {
   }
 }
 
-// === SOLID: SRP - Factory для створення адаптера ===
+// === SOLID: SRP - Factory for creating adapter ===
 export class SlideStoreGenerationAdapterFactory {
   static create(
     store: ISlideStore, 
@@ -225,7 +227,7 @@ export class SlideStoreGenerationAdapterFactory {
   }
 }
 
-// === SOLID: ISP - Специфічний інтерфейс для Store-based генерації ===
+// === SOLID: ISP - Specific interface for Store-based generation ===
 export interface ISlideStoreGenerationAdapter {
   generateSlidesWithStoreUpdates(
     slideDescriptions: SlideDescription[],
