@@ -40,20 +40,8 @@ export class EnhancedCreateLessonHandler implements IIntentHandler {
       return {
         success: false,
         message: intent.language === 'uk' 
-          ? `❌ **Недостатньо даних для створення уроку**
-
-Будь ласка, вкажіть:
-${!topic ? '• Тему уроку' : ''}
-${!age ? '• Вік дітей' : ''}
-
-💡 **Приклад:** "Створи урок про тварин для дітей 6 років"`
-          : `❌ **Insufficient data for lesson creation**
-
-Please specify:
-${!topic ? '• Lesson topic' : ''}
-${!age ? '• Children age' : ''}
-
-💡 **Example:** "Create a lesson about animals for 6-year-old children"`,
+          ? `❌ **Недостатньо даних для створення уроку**\n\nБудь ласка, вкажіть:\n${!topic ? '• Тему уроку' : ''}\n${!age ? '• Вік дітей' : ''}\n\n💡 **Приклад:** "Створи урок про тварин для дітей 6 років"` // Translated
+          : `❌ **Insufficient data for lesson creation**\n\nPlease specify:\n${!topic ? '• Lesson topic' : ''}\n${!age ? '• Children age' : ''}\n\n💡 **Example:** "Create a lesson about animals for 6-year-old children"`,
         error: 'Missing required parameters'
       };
     }
@@ -93,18 +81,18 @@ ${!age ? '• Children age' : ''}
         actions: [
           {
             action: 'approve_plan',
-            label: '✅ Почати генерацію слайдів',
-            description: 'Схвалити план і перейти до створення слайдів'
+            label: '✅ Approve plan and generate slides', // Translated
+            description: 'Approve the plan and proceed to slide creation' // Translated
           },
           {
             action: 'edit_plan',
-            label: '✏️ Змінити план',
-            description: 'Внести правки до плану уроку'
+            label: '✏️ Edit plan', // Translated
+            description: 'Make changes to the lesson plan' // Translated
           },
           {
             action: 'regenerate_plan',
-            label: '🔄 Створити новий план',
-            description: 'Згенерувати альтернативний варіант плану'
+            label: '🔄 Create new plan', // Translated
+            description: 'Generate an alternative plan version' // Translated
           }
         ]
       };
@@ -113,7 +101,7 @@ ${!age ? '• Children age' : ''}
       
       return {
         success: false,
-        message: `Вибачте, сталася помилка при генерації плану уроку: ${error instanceof Error ? error.message : 'Невідома помилка'}. Спробуйте ще раз.`,
+        message: `Sorry, an error occurred while generating the lesson plan: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`, // Translated
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }

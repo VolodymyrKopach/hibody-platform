@@ -2,7 +2,7 @@ import { IIntentHandler } from './IIntentHandler';
 import { ConversationHistory, ChatResponse } from '../types';
 import { IntentDetectionResult, UserIntent } from '../../intent/IIntentDetectionService';
 
-// Single Responsibility: Обробка запитів допомоги
+// Single Responsibility: Handling help requests
 export class HelpHandler implements IIntentHandler {
   
   canHandle(intent: IntentDetectionResult): boolean {
@@ -23,60 +23,13 @@ export class HelpHandler implements IIntentHandler {
   private generateHelpMessage(language: string): string {
     switch (language) {
       case 'uk':
-        return `🎓 **Як користуватися HiBody платформою:**
-
-**Створення уроків:**
-• "Створи урок про [тема] для дітей [вік] років"
-• "Зроби урок математики про додавання"
-
-**Редагування:**
-• "Покращ слайд 2"
-• "Заміни слово 'кіт' на 'собака'"
-• "Додай слайд про [тема]"
-
-**Керування слайдами:**
-• "Перегенеруй слайд 3"
-• "Зроби слайд яскравішим"
-
-**Експорт:**
-• "Експортуй урок"
-• "Покажи урок"
-
-**Поради:**
-✨ Будьте конкретними в описах
-🎨 Вказуйте вік дітей для кращого результату
-📚 Можете створювати уроки з будь-якої теми`;
+        return `🎓 **Як користуватися HiBody платформою:**\n\n**Створення уроків:**\n• "Створи урок про [тема] для дітей [вік] років"\n• "Зроби урок математики про додавання"\n\n**Редагування:**\n• "Покращ слайд 2"\n• "Заміни слово \'кіт\' на \'собака\'"\n• "Додай слайд про [тема]"\n\n**Керування слайдами:**\n• "Перегенеруй слайд 3"\n• "Зроби слайд яскравішим"\n\n**Експорт:**\n• "Експортуй урок"\n• "Покажи урок"\n\n**Поради:**\n✨ Будьте конкретними в описах\n🎨 Вказуйте вік дітей для кращого результату\n📚 Можете створювати уроки з будь-якої теми`;
 
       case 'en':
-        return `🎓 **How to use HiBody platform:**
-
-**Creating lessons:**
-• "Create lesson about [topic] for [age] year old children"
-• "Make math lesson about addition"
-
-**Editing:**
-• "Improve slide 2"
-• "Replace word 'cat' with 'dog'"
-• "Add slide about [topic]"
-
-**Managing slides:**
-• "Regenerate slide 3"
-• "Make slide more colorful"
-
-**Export:**
-• "Export lesson"
-• "Preview lesson"
-
-**Tips:**
-✨ Be specific in descriptions
-🎨 Specify children's age for better results
-📚 You can create lessons on any topic`;
+        return `🎓 **How to use HiBody platform:**\n\n**Creating lessons:**\n• "Create lesson about [topic] for [age] year old children"\n• "Make math lesson about addition"\n\n**Editing:**\n• "Improve slide 2"\n• "Replace word \'cat\' with \'dog\'"\n• "Add slide about [topic]"\n\n**Managing slides:**\n• "Regenerate slide 3"\n• "Make slide more colorful"\n\n**Export:**\n• "Export lesson"\n• "Preview lesson"\n\n**Tips:**\n✨ Be specific in descriptions\n🎨 Specify children\'s age for better results\n📚 You can create lessons on any topic`;
 
       default:
-        return `🎓 **HiBody platform help available in:**
-• Ukrainian - "допоможи"
-• English - "help"
-• Russian - "помощь"`;
+        return `🎓 **HiBody platform help available in:**\n• Ukrainian - "допоможи"\n• English - "help"\n• Russian - "помощь"`;
     }
   }
 } 

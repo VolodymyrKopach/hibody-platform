@@ -25,7 +25,7 @@ export class ParallelSlideGenerationService {
   }
 
   /**
-   * Генерує всі слайди ПАРАЛЕЛЬНО з real-time callbacks
+   * Generates all slides PARALLELLY with real-time callbacks
    */
   async generateAllSlidesParallel(
     slideDescriptions: SlideDescription[],
@@ -37,7 +37,7 @@ export class ParallelSlideGenerationService {
     const startTime = new Date();
     console.log(`🚀 [PARALLEL] Starting generation of ${slideDescriptions.length} slides...`);
 
-    // Ініціалізуємо прогрес
+    // Initialize progress
     const progressState: SlideGenerationProgress[] = slideDescriptions.map(desc => ({
       slideNumber: desc.slideNumber,
       title: desc.title,
@@ -50,28 +50,28 @@ export class ParallelSlideGenerationService {
     let completedSlides = 0;
     let failedSlides = 0;
 
-    // Створюємо всі промиси відразу (ПАРАЛЕЛЬНА ГЕНЕРАЦІЯ)
+    // Create all promises at once (PARALLEL GENERATION)
     const slidePromises = slideDescriptions.map(async (slideDesc, index) => {
       try {
         console.log(`📄 [PARALLEL] Starting slide ${slideDesc.slideNumber}: "${slideDesc.title}"`);
         
-        // Оновлюємо прогрес - почали генерацію
+        // Update progress - started generation
         progressState[index].status = 'generating';
         progressState[index].progress = 25;
         callbacks.onProgressUpdate([...progressState]);
 
-        // Генеруємо HTML контент слайду
+        // Generate HTML content of the slide
         const slideHTML = await this.contentService.generateSlideContent(
           slideDesc.description,
           lessonTopic,
           lessonAge
         );
 
-        // Оновлюємо прогрес - HTML згенеровано
+        // Update progress - HTML generated
         progressState[index].progress = 75;
         callbacks.onProgressUpdate([...progressState]);
 
-        // Створюємо об'єкт слайду
+        // Create slide object
         const slide: SimpleSlide = {
           id: `slide_${Date.now()}_${slideDesc.slideNumber}_${Math.random().toString(36).substr(2, 9)}`,
           title: slideDesc.title,
@@ -81,11 +81,11 @@ export class ParallelSlideGenerationService {
           status: 'completed'
         };
 
-        // Додаємо слайд до уроку ВІДРАЗУ
+        // Add slide to lesson IMMEDIATELY
         lesson.slides.push(slide);
         lesson.updatedAt = new Date();
 
-        // Оновлюємо прогрес - слайд завершено
+        // Update progress - slide completed
         progressState[index].status = 'completed';
         progressState[index].progress = 100;
         progressState[index].htmlContent = slideHTML;
@@ -95,7 +95,7 @@ export class ParallelSlideGenerationService {
 
         console.log(`✅ [PARALLEL] Slide ${slideDesc.slideNumber} completed (${completedSlides}/${slideDescriptions.length})`);
 
-        // Викликаємо callback для відображення слайду ВІДРАЗУ
+        // Invoke callback to display slide IMMEDIATELY
         callbacks.onSlideReady(slide, lesson);
 
         return slide;
@@ -115,7 +115,7 @@ export class ParallelSlideGenerationService {
       }
     });
 
-    // Чекаємо завершення всіх слайдів
+    // Wait for all slides to complete
     await Promise.all(slidePromises);
 
     const endTime = new Date();
@@ -138,7 +138,7 @@ export class ParallelSlideGenerationService {
   }
 
   /**
-   * Мапер типів слайдів
+   * Slide type mapper
    */
   private mapSlideTypeToSimple(type: 'welcome' | 'content' | 'activity' | 'summary'): 'title' | 'content' | 'interactive' | 'summary' {
     switch (type) {

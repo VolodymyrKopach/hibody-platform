@@ -54,7 +54,7 @@ export class SlideStoreGenerationAdapter {
             }
           },
 
-                     onProgressUpdate: (progress: SlideGenerationProgress[]) => {
+          onProgressUpdate: (progress: SlideGenerationProgress[]) => {
              // Update progress of each slide in Store
              progress.forEach(slideProgress => {
                this.store.actions.setSlideGenerationProgress(

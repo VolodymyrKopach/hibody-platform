@@ -14,11 +14,11 @@ export class SlideAnalysisService implements ISlideAnalysisService {
       const newImages = (newSlideHTML.match(/<img[^>]*>/g) || []).length;
       
       if (newImages > oldImages) {
-        changes.push(`➕ Додано ${newImages - oldImages} нових зображень`);
+        changes.push(`➕ Added ${newImages - oldImages} new images`); // Translated
       } else if (newImages < oldImages) {
-        changes.push(`➖ Видалено ${oldImages - newImages} зображень`);
+        changes.push(`➖ Removed ${oldImages - newImages} images`); // Translated
       } else if (newImages > 0) {
-        changes.push(`🔄 Оновлено ${newImages} зображень`);
+        changes.push(`🔄 Updated ${newImages} images`); // Translated
       }
       
       // Analyze text content
@@ -26,11 +26,11 @@ export class SlideAnalysisService implements ISlideAnalysisService {
       const newTextLength = newSlideHTML.replace(/<[^>]*>/g, '').trim().length;
       
       if (newTextLength > oldTextLength * 1.2) {
-        changes.push(`📝 Значно розширено текстовий контент`);
+        changes.push(`📝 Significantly expanded text content`); // Translated
       } else if (newTextLength < oldTextLength * 0.8) {
-        changes.push(`✂️ Скорочено текстовий контент`);
+        changes.push(`✂️ Shortened text content`); // Translated
       } else if (Math.abs(newTextLength - oldTextLength) > 50) {
-        changes.push(`📝 Оновлено текстовий контент`);
+        changes.push(`📝 Updated text content`); // Translated
       }
       
       // Analyze interactive elements
@@ -38,7 +38,7 @@ export class SlideAnalysisService implements ISlideAnalysisService {
       const newButtons = (newSlideHTML.match(/<button[^>]*>/g) || []).length;
       
       if (newButtons > oldButtons) {
-        changes.push(`🎮 Додано ${newButtons - oldButtons} інтерактивних кнопок`);
+        changes.push(`🎮 Added ${newButtons - oldButtons} interactive buttons`); // Translated
       }
       
       // Analyze animations
@@ -46,18 +46,18 @@ export class SlideAnalysisService implements ISlideAnalysisService {
       const hadOldAnimations = oldHTML.includes('animation') || oldHTML.includes('transition');
       
       if (hasNewAnimations && !hadOldAnimations) {
-        changes.push(`✨ Додано анімації та плавні переходи`);
+        changes.push(`✨ Added animations and smooth transitions`); // Translated
       }
       
       // If no specific changes detected, add general changes
       if (changes.length === 0) {
-        changes.push(`🔄 Повністю оновлено контент слайду`);
-        changes.push(`📋 Застосовано інструкцію: "${instruction}"`);
+        changes.push(`🔄 Fully updated slide content`); // Translated
+        changes.push(`📋 Applied instruction: "${instruction}"`); // Translated
       }
       
     } catch (error) {
       console.warn('Error analyzing slide changes:', error);
-      changes.push(`🔄 Оновлено слайд згідно з інструкцією`);
+      changes.push(`🔄 Updated slide according to instruction`); // Translated
     }
     
     return changes;
@@ -68,9 +68,9 @@ export class SlideAnalysisService implements ISlideAnalysisService {
     
     try {
       const slidePatterns = [
-        /###\s*Слайд\s+(\d+):\s*([^\n]+)[^#]*?(?=###\s*Слайд\s+|\s*##|\s*$)/gi,
-        /##\s*Слайд\s+(\d+)[^#]*?(?=##\s*Слайд\s+|\s*$)/gi,
-        /\*\*Слайд\s+(\d+)[^*]*?(?=\*\*Слайд\s+|\s*$)/gi,
+        /###\s*Slide\s+(\d+):\s*([^\n]+)[^#]*?(?=###\s*Slide\s+|\s*##|\s*$)/gi,
+        /##\s*Slide\s+(\d+)[^#]*?(?=##\s*Slide\s+|\s*$)/gi,
+        /\*\*Slide\s+(\d+)[^*]*?(?=\*\*Slide\s+|\s*$)/gi,
         /(\d+)\.\s*[^0-9]*?(?=\d+\.\s*|\s*$)/gi
       ];
 
@@ -82,12 +82,12 @@ export class SlideAnalysisService implements ISlideAnalysisService {
             const slideNumber = parseInt(match[1]);
             if (slideNumber && !slideDescriptions.find(s => s.slideNumber === slideNumber)) {
               let description = match[0].trim();
-              let title = match[2]?.trim() || `Слайд ${slideNumber}`;
+              let title = match[2]?.trim() || `Slide ${slideNumber}`; // Translated
               
               description = description
-                .replace(/^###\s*Слайд\s+\d+:\s*[^\n]+/i, '')
-                .replace(/^##\s*Слайд\s+\d+[:\s]*/i, '')
-                .replace(/^\*\*Слайд\s+\d+[:\s]*/i, '')
+                .replace(/^###\s*Slide\s+\d+:\s*[^\n]+/i, '')
+                .replace(/^##\s*Slide\s+\d+[:\s]*/i, '')
+                .replace(/^\*\*Slide\s+\d+[:\s]*/i, '')
                 .replace(/^\d+\.\s*/, '')
                 .trim();
 
@@ -122,15 +122,15 @@ export class SlideAnalysisService implements ISlideAnalysisService {
     const titleLower = title.toLowerCase();
     const descLower = description.toLowerCase();
     
-    if (slideNumber === 1 || titleLower.includes('вітання') || titleLower.includes('вступ')) {
+    if (slideNumber === 1 || titleLower.includes('welcome') || titleLower.includes('introduction')) {
       return 'welcome';
     }
     
-    if (titleLower.includes('завдання') || titleLower.includes('гра') || descLower.includes('активність')) {
+    if (titleLower.includes('task') || titleLower.includes('game') || descLower.includes('activity')) {
       return 'activity';
     }
     
-    if (titleLower.includes('підсумок') || titleLower.includes('висновок')) {
+    if (titleLower.includes('summary') || titleLower.includes('conclusion')) {
       return 'summary';
     }
     
@@ -143,26 +143,26 @@ export class SlideAnalysisService implements ISlideAnalysisService {
     return [
       {
         slideNumber: 1,
-        title: 'Вітання та знайомство з темою',
-        description: `Вступний слайд для знайомства з темою уроку. ${firstLines}`,
+        title: 'Welcome and introduction to the topic',
+        description: `Introductory slide for familiarization with the lesson topic. ${firstLines}`, // Translated
         type: 'welcome'
       },
       {
         slideNumber: 2,
-        title: 'Основний матеріал',
-        description: `Подача основного навчального матеріалу. ${firstLines}`,
+        title: 'Main material',
+        description: `Presentation of the main educational material. ${firstLines}`, // Translated
         type: 'content'
       },
       {
         slideNumber: 3,
-        title: 'Практичне завдання',
-        description: `Інтерактивне завдання для закріплення знань. ${firstLines}`,
+        title: 'Practical task',
+        description: `Interactive task for knowledge reinforcement. ${firstLines}`, // Translated
         type: 'activity'
       },
       {
         slideNumber: 4,
-        title: 'Підсумок уроку',
-        description: `Узагальнення вивченого матеріалу та висновки. ${firstLines}`,
+        title: 'Lesson summary',
+        description: `Generalization of learned material and conclusions. ${firstLines}`, // Translated
         type: 'summary'
       }
     ];

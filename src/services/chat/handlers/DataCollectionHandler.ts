@@ -71,7 +71,7 @@ export class DataCollectionHandler implements IIntentHandler {
       
       return {
         success: true,
-        message: `🤔 ${enhancedIntent.suggestedQuestion || 'Будь ласка, надайте додаткову інформацію для створення уроку.'}`,
+        message: `🤔 ${enhancedIntent.suggestedQuestion || 'Please provide additional information to create the lesson.'}`, // Translated
         conversationHistory: {
           step: 'data_collection',
           pendingIntent: enhancedIntent,
@@ -126,9 +126,7 @@ export class DataCollectionHandler implements IIntentHandler {
         
         return {
           success: true,
-          message: `🤔 ${reAnalyzedIntent.suggestedQuestion || 'Будь ласка, надайте додаткову інформацію.'}
-
-**Допоможіть уточнити деталі для створення кращого уроку.**`,
+          message: `🤔 ${reAnalyzedIntent.suggestedQuestion || 'Please provide additional information.'}\n\n**Help clarify details for creating a better lesson.**`, // Translated
           conversationHistory: {
             ...conversationHistory,
             pendingIntent: reAnalyzedIntent,
@@ -143,7 +141,7 @@ export class DataCollectionHandler implements IIntentHandler {
       
       return {
         success: false,
-        message: `Вибачте, сталася помилка при обробці вашого запиту: ${error instanceof Error ? error.message : 'Невідома помилка'}. Спробуйте ще раз з повним описом.`,
+        message: `Sorry, an error occurred while processing your request: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again with a complete description.`, // Translated
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }

@@ -101,11 +101,6 @@ export class ChatService {
         return await this.actionHandlerService.handleAction(action, conversationHistory, intentResult);
       }
       
-      // Handle specific intents
-      if (intentResult.intent === 'create_new_slide') {
-        return await this.handleCreateNewSlide(conversationHistory);
-      }
-      
       if (intentResult.intent === 'create_slide') {
         return await this.handleCreateSlide(conversationHistory, intentResult);
       }
@@ -159,15 +154,6 @@ export class ChatService {
     return this.handlers.find(handler => 
       handler.canHandle(intentResult, conversationHistory)
     );
-  }
-
-  private async handleCreateNewSlide(conversationHistory?: ConversationHistory): Promise<ChatResponse> {
-    return {
-      success: false,
-      message: '🤔 Slides are now generated all at once after lesson plan approval.',
-      conversationHistory,
-      error: 'generate_next_slide deprecated - use bulk generation'
-    };
   }
 
   private async handleCreateSlide(conversationHistory?: ConversationHistory, intentResult?: any): Promise<ChatResponse> {
@@ -405,7 +391,7 @@ export class ChatService {
       const newText = intentResult?.parameters?.newText || '';
       
       const finalInstruction = targetText && newText 
-        ? `Replace "${targetText}" with "${newText}"`
+        ? `Replace \"${targetText}\" with \"${newText}\"`
         : editInstruction;
       
       const editedSlide = await this.slideEditingService.editSlide(
@@ -459,8 +445,8 @@ export class ChatService {
     const language = intentResult.language || 'uk';
     
     const message = language === 'uk' 
-      ? `🤔 I'm not yet sure how to help you with this request.\n\n**Here's what I can do:**\n• 📚 Create a new lesson\n• 📝 Edit existing lesson plans\n• 🎨 Add new slides to lessons\n• ❓ Provide help with commands`
-      : `🤔 I'm not sure how to help you with this request yet.\n\n**Here's what I can do:**\n• 📚 Create a new lesson\n• 📝 Edit existing lesson plans\n• 🎨 Add new slides to lessons\n• ❓ Provide help with commands`;
+      ? `🤔 I\'m not yet sure how to help you with this request.\n\n**Here\'s what I can do:**\n• 📚 Create a new lesson\n• 📝 Edit existing lesson plans\n• 🎨 Add new slides to lessons\n• ❓ Provide help with commands`
+      : `🤔 I\'m not sure how to help you with this request yet.\n\n**Here\'s what I can do:**\n• 📚 Create a new lesson\n• 📝 Edit existing lesson plans\n• 🎨 Add new slides to lessons\n• ❓ Provide help with commands`;
 
     return {
       success: true,

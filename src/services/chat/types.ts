@@ -1,4 +1,4 @@
-// Експортуємо типи для використання в інших частинах системи
+// Export types for use in other parts of the system
 import { SimpleLesson, SlideGenerationProgress, SlideDescription } from '@/types/chat';
 import { IntentDetectionResult } from '../intent/IIntentDetectionService';
 
@@ -14,19 +14,19 @@ export interface ConversationHistory {
   pendingIntent?: IntentDetectionResult; // For data collection
   missingData?: string[]; // For data collection
   
-  // Додаткові поля для генерації уроків
+  // Additional fields for lesson generation
   lessonTopic?: string;
   lessonAge?: string;
   currentLesson?: SimpleLesson;
   
-  // === НОВІ ПОЛЯ ДЛЯ МАСОВОЇ ГЕНЕРАЦІЇ СЛАЙДІВ ===
-  slideDescriptions?: SlideDescription[]; // Всі описи слайдів з плану
-  slideGenerationProgress?: SlideGenerationProgress[]; // Прогрес генерації кожного слайду
-  bulkGenerationStartTime?: Date; // Час початку масової генерації
-  isGeneratingAllSlides?: boolean; // Флаг що показує чи генеруються всі слайди
+  // === NEW FIELDS FOR BULK SLIDE GENERATION ===
+  slideDescriptions?: SlideDescription[]; // All slide descriptions from the plan
+  slideGenerationProgress?: SlideGenerationProgress[]; // Progress of each slide generation
+  bulkGenerationStartTime?: Date; // Start time of bulk generation
+  isGeneratingAllSlides?: boolean; // Flag indicating if all slides are being generated
   
-  // === КОНТЕКСТ РОЗМОВИ ===
-  conversationContext?: string; // Стиснений контекст всієї розмови
+  // === CONVERSATION CONTEXT ===
+  conversationContext?: string; // Compressed context of the entire conversation
 }
 
 export interface ChatResponse {
@@ -35,7 +35,7 @@ export interface ChatResponse {
   conversationHistory?: ConversationHistory;
   actions?: ChatAction[];
   error?: string;
-  lesson?: SimpleLesson; // Використовуємо SimpleLesson замість any
+  lesson?: SimpleLesson; // Use SimpleLesson instead of any
 }
 
 export interface ChatAction {

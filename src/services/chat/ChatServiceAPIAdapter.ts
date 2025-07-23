@@ -29,7 +29,7 @@ export class ChatServiceAPIAdapter {
   private async prepareConversationContext(
     conversationHistory?: ConversationHistory,
     conversationContext?: string
-  ): Promise<{ 
+  ): Promise<{
     conversationHistory?: ConversationHistory; 
     compressionApplied: boolean;
   }> {
@@ -157,75 +157,76 @@ export class ChatServiceAPIAdapter {
     }
   }
 
-  /**
-   * Handle plan approval with parallel slide generation via API
-   */
-  async handleApprovePlanParallel(
-    conversationHistory: ConversationHistory,
-    callbacks?: ParallelGenerationCallbacks
-  ): Promise<ChatResponse> {
-    try {
-      if (!conversationHistory?.planningResult) {
-        throw new Error('No plan to approve');
-      }
-
-      console.log('🎨 [API Adapter] Starting parallel generation via API...');
-
-      // Extract slide descriptions from the plan
-      const slideDescriptions = this.extractAllSlideDescriptions(conversationHistory.planningResult);
-      
-      console.log('📋 [API Adapter] Extracted slide descriptions:', slideDescriptions.length);
-
-      // Make API call to sequential generation endpoint
-      const response = await fetch('/api/generation/slides/sequential', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          slideDescriptions,
-          lesson: conversationHistory.currentLesson,
-          topic: conversationHistory.lessonTopic || 'Unknown topic',
-          age: '6-12'
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || errorData.error || 'Parallel generation API request failed');
-      }
-
-      const result = await response.json();
-      
-      console.log('✅ [API Adapter] Parallel generation completed via API');
-
-      // Simulate real-time callbacks since we can't get them from a simple HTTP request
-      // In a real implementation, you'd use WebSockets or Server-Sent Events
-      if (callbacks?.onComplete && result.lesson) {
-        callbacks.onComplete(result.lesson);
-      }
-
-             // Return a chat response format
-       return {
-         message: result.message || 'Slides generated successfully!',
-         lesson: result.lesson,
-         conversationHistory: {
-           ...conversationHistory,
-           currentLesson: result.lesson,
-           step: 'slide_generation'
-         }
-       };
-
-    } catch (error) {
-      console.error('❌ [API Adapter] Parallel generation error:', error);
-      
-      if (callbacks?.onError) {
-        callbacks.onError(error instanceof Error ? error.message : 'Unknown error');
-      }
-      
-      throw error;
-    }
-  }
+  // /**
+  //  * Handle plan approval with parallel slide generation via API
+  //  */
+  // async handleApprovePlanParallel(
+  //   conversationHistory: ConversationHistory,
+  //   callbacks?: ParallelGenerationCallbacks
+  // ): Promise<ChatResponse> {
+  //   try {
+  //     if (!conversationHistory?.planningResult) {
+  //       throw new Error('No plan to approve');
+  //     }
+  //
+  //     console.log('🎨 [API Adapter] Starting parallel generation via API...');
+  //
+  //     // Extract slide descriptions from the plan
+  //     const slideDescriptions = this.extractAllSlideDescriptions(conversationHistory.planningResult);
+  //
+  //     console.log('📋 [API Adapter] Extracted slide descriptions:', slideDescriptions.length);
+  //
+  //     // Make API call to sequential generation endpoint
+  //     const response = await fetch('/api/generation/slides/sequential', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         slideDescriptions,
+  //         lesson: conversationHistory.currentLesson,
+  //         topic: conversationHistory.lessonTopic || 'Unknown topic',
+  //         age: '6-12'
+  //       }),
+  //     });
+  //
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.details || errorData.error || 'Parallel generation API request failed');
+  //     }
+  //
+  //     const result = await response.json();
+  //
+  //     console.log('✅ [API Adapter] Parallel generation completed via API');
+  //
+  //     // Simulate real-time callbacks since we can't get them from a simple HTTP request
+  //     // In a real implementation, you'd use WebSockets or Server-Sent Events
+  //     if (callbacks?.onComplete && result.lesson) {
+  //       callbacks.onComplete(result.lesson);
+  //     }
+  //
+  //     // Return a chat response format
+  //      return {
+  //        success: true,
+  //        message: result.message || 'Slides generated successfully!',
+  //        lesson: result.lesson,
+  //        conversationHistory: {
+  //          ...conversationHistory,
+  //          currentLesson: result.lesson,
+  //          step: 'slide_generation'
+  //        }
+  //      };
+  //
+  //   } catch (error) {
+  //     console.error('❌ [API Adapter] Parallel generation error:', error);
+  //
+  //     if (callbacks?.onError) {
+  //       callbacks.onError(error instanceof Error ? error.message : 'Unknown error');
+  //     }
+  //
+  //     throw error;
+  //   }
+  // }
 
   /**
    * Extract slide descriptions from plan text
@@ -233,7 +234,7 @@ export class ChatServiceAPIAdapter {
    */
   private extractAllSlideDescriptions(planText: string): SlideDescription[] {
     const slideDescriptions: SlideDescription[] = [];
-    const slideRegex = /### Слайд (\d+):\s*([^(]+)(?:\((\d+)-(\d+)\s+хв\))?\s*\*\*Тип:\*\*\s*([^\*]+)\s*\*\*Мета:\*\*\s*([^\*]+)\s*\*\*Зміст:\*\*\s*(.*?)(?=\*\*Інтерактивні елементи:\*\*|\*\*|$)/gs;
+    const slideRegex = /### Slide (\\d+):\\s*([^(]+)(?:\\((\\d+)-(\\d+)\\s+min\\))?\\s*\\*\\*Type:\\*\\*\\s*([^\\*]+)\\s*\\*\\*Goal:\\*\\*\\s*([^\\*]+)\\s*\\*\\*Content:\\*\\*\\s*(.*?)(?=\\*\\*Interactive elements:\\*\\*|\\*\\*|$)/g;
     
     let match;
     while ((match = slideRegex.exec(planText)) !== null) {

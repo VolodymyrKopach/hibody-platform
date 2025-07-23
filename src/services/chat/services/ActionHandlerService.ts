@@ -45,8 +45,8 @@ export class ActionHandlerService implements IActionHandlerService {
 
     const slideDescriptions = this.slideAnalysisService.extractSlideDescriptions(history.planningResult);
     const lesson = this.lessonManagementService.createLesson(
-      history.lessonTopic || 'Новий урок',
-      history.lessonAge || '8-9 років'
+      history.lessonTopic || 'New Lesson',
+      history.lessonAge || '8-9 years'
     );
 
     const initialProgress: SlideGenerationProgress[] = slideDescriptions.map(desc => ({
@@ -71,18 +71,18 @@ export class ActionHandlerService implements IActionHandlerService {
 
     return {
       success: true,
-      message: `🎨 **Розпочинаємо генерацію всіх слайдів!**
+      message: `🎨 **Starting generation of all slides!**
 
-📊 **План генерації:**
+📊 **Generation plan:**
 ${slideDescriptions.map(desc => `${desc.slideNumber}. ${desc.title}`).join('\n')}
 
-⏳ **Прогрес:** Генерується ${slideDescriptions.length} слайд(ів)...`,
+⏳ **Progress:** Generating ${slideDescriptions.length} slide(s)...`,
       conversationHistory: newConversationHistory,
       actions: [
         {
           action: 'cancel_generation',
-          label: '⏹️ Скасувати генерацію',
-          description: 'Зупинити процес генерації слайдів'
+          label: '⏹️ Cancel generation',
+          description: 'Stop the slide generation process'
         }
       ],
       lesson: lesson
@@ -101,12 +101,12 @@ ${slideDescriptions.map(desc => `${desc.slideNumber}. ${desc.title}`).join('\n')
 
     return {
       success: true,
-      message: `Напишіть які зміни хочете внести до плану. Наприклад:
+      message: `Write what changes you want to make to the plan. For example:
         
-- "Додай слайд про літаючих динозаврів"
-- "Зміни вік дітей на 8 років"  
-- "Зроби урок коротшим - 4 слайди"
-- "Додай більше ігор"`,
+- "Add a slide about flying dinosaurs"
+- "Change the children's age to 8 years"  
+- "Make the lesson shorter - 4 slides"
+- "Add more games"`,
       conversationHistory: newConversationHistory,
       actions: []
     };
@@ -116,9 +116,9 @@ ${slideDescriptions.map(desc => `${desc.slideNumber}. ${desc.title}`).join('\n')
     if (!history?.currentLesson) {
       return {
         success: false,
-        message: `❌ **Помилка регенерації**
+        message: `❌ **Regeneration error**
 
-Не знайдено урок для регенерації слайдів.`,
+No lesson found for slide regeneration.`,
         conversationHistory: history,
         error: 'No lesson context for slide regeneration'
       };
@@ -129,9 +129,9 @@ ${slideDescriptions.map(desc => `${desc.slideNumber}. ${desc.title}`).join('\n')
     if (slideNumber < 1 || slideNumber > history.currentLesson.slides.length) {
       return {
         success: false,
-        message: `❌ **Помилка регенерації**
+        message: `❌ **Regeneration error**
 
-Слайд ${slideNumber} не існує.`,
+Slide ${slideNumber} does not exist.`,
         conversationHistory: history,
         error: `Slide ${slideNumber} does not exist`
       };
@@ -141,8 +141,8 @@ ${slideDescriptions.map(desc => `${desc.slideNumber}. ${desc.title}`).join('\n')
       const currentSlide = history.currentLesson.slides[slideNumber - 1];
       const regeneratedSlide = await this.slideEditingService.regenerateSlide(
         currentSlide,
-        history.lessonTopic || 'урок',
-        history.lessonAge || '6-8 років'
+        history.lessonTopic || 'lesson',
+        history.lessonAge || '6-8 years'
       );
 
       // Update lesson with regenerated slide
@@ -157,14 +157,14 @@ ${slideDescriptions.map(desc => `${desc.slideNumber}. ${desc.title}`).join('\n')
       const detectedChanges = this.slideAnalysisService.analyzeSlideChanges(
         currentSlide, 
         regeneratedSlide.htmlContent || '', 
-        'Повна регенерація слайду'
+        'Complete slide regeneration'
       );
 
       return {
         success: true,
-        message: `🔄 **Слайд ${slideNumber} перегенеровано!**
+        message: `🔄 **Slide ${slideNumber} regenerated!**
 
-📋 **Детальний звіт про зміни:**
+📋 **Detailed change report:**
 ${detectedChanges.map(change => `• ${change}`).join('\n')}`,
         conversationHistory: {
           ...history,
@@ -174,13 +174,13 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}`,
         actions: [
           {
             action: 'generate_next_slide',
-            label: '▶️ Наступний слайд',
-            description: `Генерувати слайд ${slideNumber + 1}`
+            label: '▶️ Next slide',
+            description: `Generate slide ${slideNumber + 1}`
           },
           {
             action: 'regenerate_slide',
-            label: '🔄 Перегенерувати ще раз',
-            description: `Створити ще один варіант слайду ${slideNumber}`
+            label: '🔄 Regenerate again',
+            description: `Create another version of slide ${slideNumber}`
           }
         ],
         lesson: updatedLesson
@@ -188,7 +188,7 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}`,
     } catch (error) {
       return {
         success: false,
-        message: `😔 Виникла помилка при перегенерації слайду ${slideNumber}.`,
+        message: `😔 An error occurred while regenerating slide ${slideNumber}.`,
         conversationHistory: history,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
@@ -203,8 +203,8 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}`,
     try {
       const result = await this.slideGenerationService.generateAllSlides(
         slideDescriptions,
-        history.lessonTopic || 'урок',
-        history.lessonAge || '6-8 років'
+        history.lessonTopic || 'lesson',
+        history.lessonAge || '6-8 years'
       );
 
       // Add slides to lesson

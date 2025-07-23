@@ -3,7 +3,7 @@ import { ConversationHistory, ChatResponse } from '../types';
 import { IntentDetectionResult, UserIntent } from '../../intent/IIntentDetectionService';
 import { GeminiContentService } from '../../content/GeminiContentService';
 
-// Single Responsibility: Обробка редагування плану
+// Single Responsibility: Handling plan editing
 export class EditPlanHandler implements IIntentHandler {
   private contentService: GeminiContentService;
 
@@ -25,13 +25,7 @@ export class EditPlanHandler implements IIntentHandler {
     if (!conversationHistory || !conversationHistory.planningResult) {
       return {
         success: true,
-        message: `🤔 Схоже, ви хочете покращити план уроку, але наразі немає активного плану.
-
-💡 **Давайте створимо новий план!** Скажіть мені:
-• Про що має бути урок? (тема)
-• Для якого віку дітей? (вік)
-
-**Приклад:** "Створи урок про динозаврів для дітей 6 років"`,
+        message: `🤔 It seems you want to improve the lesson plan, but there\'s no active plan yet.\n\n💡 **Let\'s create a new plan!** Tell me:\n• What should the lesson be about? (topic)\n• For what age group? (age)\n\n**Example:** "Create a lesson about dinosaurs for 6-year-old children"`,
         conversationHistory: undefined,
         actions: []
       };
@@ -40,7 +34,7 @@ export class EditPlanHandler implements IIntentHandler {
     console.log('🔧 Processing plan modifications with Gemini 2.5 Flash...');
     
     try {
-      // Витягуємо зміни з повідомлення користувача
+      // Extract changes from user message
       const userChanges = this.extractChangesFromMessage(intent.parameters.rawMessage);
       
       // === PASS CONVERSATION CONTEXT TO PLAN EDITING ===
@@ -50,12 +44,12 @@ export class EditPlanHandler implements IIntentHandler {
         console.log(`📝 [EDIT PLAN HANDLER] Using conversation context: ${conversationContext.length} chars`);
       }
       
-      // Генеруємо оновлений план з Gemini 2.5 Flash з урахуванням контексту розмови
+      // Generate updated plan with Gemini 2.5 Flash, considering conversation context
       const updatedPlan = await this.contentService.generateEditedPlan(
         conversationHistory.planningResult!,
         userChanges,
-        conversationHistory.lessonTopic || 'урок',
-        conversationHistory.lessonAge || '6-8 років',
+        conversationHistory.lessonTopic || 'lesson',
+        conversationHistory.lessonAge || '6-8 years',
         conversationContext
       );
 
@@ -67,15 +61,13 @@ export class EditPlanHandler implements IIntentHandler {
 
       return {
         success: true,
-        message: `✨ **План оновлено за допомогою ШІ!**
-
-${updatedPlan}`,
+        message: `✨ **Plan updated with AI!**\n\n${updatedPlan}`,
         conversationHistory: newConversationHistory,
         actions: [
           {
             action: 'approve_plan',
-            label: '✅ Схвалити план і генерувати слайди',
-            description: 'Схвалити оновлений план і почати створення слайдів'
+            label: '✅ Approve plan and generate slides',
+            description: 'Approve the updated plan and start slide creation'
           }
         ]
       };
@@ -84,11 +76,7 @@ ${updatedPlan}`,
       
       return {
         success: false,
-        message: `😔 Виникла помилка при оновленні плану. Спробуйте ще раз.
-
-**Помилка:** ${error instanceof Error ? error.message : 'Невідома помилка'}
-
-💡 **Альтернатива:** Спробуйте переформулювати ваші зміни або створити новий план.`,
+        message: `😔 An error occurred while updating the plan. Please try again.\n\n**Error:** ${error instanceof Error ? error.message : 'Unknown error'}\n\n💡 **Alternative:** Try rephrasing your changes or creating a new plan.`,
         conversationHistory,
         actions: []
       };
@@ -96,7 +84,7 @@ ${updatedPlan}`,
   }
 
   private extractChangesFromMessage(rawMessage: string): string {
-    // Видаляємо префікс якщо він є
+    // Remove prefix if present
     const cleanMessage = rawMessage.replace(/^Внести наступні зміни до плану:\s*/i, '');
     return cleanMessage.trim();
   }

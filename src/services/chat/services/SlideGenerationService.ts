@@ -67,7 +67,7 @@ export class SlideGenerationService implements ISlideGenerationService {
 
   private extractTitleFromDescription(description: string): string {
     const lines = description.split('\n').filter(line => line.trim());
-    return lines[0]?.substring(0, 50) || 'Новий слайд';
+    return lines[0]?.substring(0, 50) || 'New slide';
   }
 
   private mapSlideType(type: 'welcome' | 'content' | 'activity' | 'summary'): 'title' | 'content' | 'interactive' | 'summary' {
@@ -85,11 +85,7 @@ export class SlideGenerationService implements ISlideGenerationService {
       id: `slide_${Date.now()}_${desc.slideNumber}_fallback`,
       title: desc.title,
       content: desc.description,
-      htmlContent: `<div style="text-align: center; padding: 40px;">
-        <h2>${desc.title}</h2>
-        <p>Цей слайд буде згенеровано пізніше.</p>
-        <p><small>Опис: ${desc.description.substring(0, 100)}...</small></p>
-      </div>`,
+      htmlContent: `<div style="text-align: center; padding: 40px;">\n        <h2>${desc.title}</h2>\n        <p>This slide will be generated later.</p>\n        <p><small>Description: ${desc.description.substring(0, 100)}...</small></p>\n      </div>`, // Translated
       type: this.mapSlideType(desc.type),
       status: 'draft'
     };

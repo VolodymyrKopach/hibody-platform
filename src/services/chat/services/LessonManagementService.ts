@@ -6,10 +6,10 @@ export class LessonManagementService implements ILessonManagementService {
   createLesson(topic: string, age: string): SimpleLesson {
     return {
       id: `lesson_${Date.now()}`,
-      title: topic || 'Новий урок',
-      description: `Урок про ${topic} для дітей ${age}`,
-      subject: 'Загальне навчання',
-      ageGroup: age || '8-9 років',
+      title: topic || 'New Lesson',
+      description: `Lesson about ${topic} for children ${age}`,
+      subject: 'General Education',
+      ageGroup: age || '8-9 years',
       duration: 30,
       createdAt: new Date(),
       updatedAt: new Date(),

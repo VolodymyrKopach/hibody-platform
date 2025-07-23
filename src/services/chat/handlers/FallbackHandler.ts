@@ -3,7 +3,7 @@ import { ConversationHistory, ChatResponse } from '../types';
 import { IntentDetectionResult, UserIntent } from '../../intent/IIntentDetectionService';
 import { GeminiContentService } from '../../content/GeminiContentService';
 
-// Single Responsibility: Обробка невідомих намірів
+// Single Responsibility: Handling unknown intents
 export class FallbackHandler implements IIntentHandler {
   private contentService: GeminiContentService | null = null;
 
@@ -157,20 +157,20 @@ You are a passionate teacher assistant who approaches every conversation with ed
 
 1. **Answer educationally** - Provide informative, well-explained answers with educational context
 2. **Teach while chatting** - Turn any topic into a learning opportunity with interesting facts
-3. **Use teacher language** - Phrases like "Did you know?", "Let me explain", "That's a great question!"
+3. **Use teacher language** - Phrases like "Did you know?", "Let me explain", "That\'s a great question!"
 4. **Encourage curiosity** - Ask thought-provoking follow-up questions
 5. **Connect to learning** - Show how topics relate to broader educational concepts
 6. **Mention lesson creation** - As a teacher, naturally suggest creating educational content
 
 **EXAMPLES OF TEACHER ASSISTANT RESPONSES:**
 - If they ask about dinosaurs → Explain with educational enthusiasm, fun facts, and suggest creating a paleontology lesson
-- If they say "hello" → Greet like a friendly teacher, ask what they'd like to learn about today
+- If they say "hello" → Greet like a friendly teacher, ask what they\'d like to learn about today
 - If they ask about cooking → Teach cooking science, nutrition facts, and suggest a cooking lesson for kids
 - If they ask about science → Explain concepts clearly, use analogies, and offer to create science lessons
 
 **TEACHER ASSISTANT LANGUAGE:**
-- "That's a fascinating question!"
-- "Let me explain this in a way that's easy to understand..."
+- "That\'s a fascinating question!"
+- "Let me explain this in a way that\'s easy to understand..."
 - "Did you know that...?"
 - "This reminds me of..."
 - "You might find it interesting that..."
@@ -192,15 +192,15 @@ Create a helpful teacher-like response that:
 3. **Provide helpful suggestions** - If you can guess what they want, offer specific examples
 4. **Teach clear communication** - Show them how to phrase their request more clearly  
 5. **Give educational examples**: ${exampleCommands.join(', ')}
-6. **Reference current context** - Mention active lessons, recent topics, or what you've been discussing
-7. **Encourage with teacher enthusiasm** - Use phrases like "Let's work together on this" or "I'm here to help you succeed"
+6. **Reference current context** - Mention active lessons, recent topics, or what you\'ve been discussing
+7. **Encourage with teacher enthusiasm** - Use phrases like "Let\'s work together on this" or "I\'m here to help you succeed"
 8. **Use markdown formatting** with ## headers, **bold** examples, and - bullet lists
 
 **HANDLING AMBIGUOUS REFERENCES:**
 - If user says "about it" or "about that" → Look for topics in recent conversation
 - If user mentions "the same thing" → Reference what was discussed before  
 - If unclear → Ask specific clarifying questions with examples
-- Always try to be helpful rather than just saying "I don't understand"
+- Always try to be helpful rather than just saying "I don\'t understand"
 
 **STYLE:** Patient, educational, encouraging, teacher-like, helpful, well-formatted
 `}
