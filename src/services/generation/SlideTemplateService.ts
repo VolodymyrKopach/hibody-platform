@@ -154,11 +154,8 @@ export class SlideTemplateService {
 
   private cleanTitle(title: string): string {
     return title
-      .replace(/[\(\)]/g, '')                                    // Remove parentheses
-      .replace(/\s*\(?(\d+)\s*minutes?\)?\s*$/i, '')             // Remove duration at end: "5 minutes", "(5 minutes)"
-      .replace(/\s*-\s*(\d+)\s*minutes?\s*$/i, '')               // Remove duration with dash: "- 5 minutes"
-      .replace(/\s*\(\d+\s*минут[аы]?\)\s*$/i, '')               // Remove Ukrainian duration: "(5 минут)"
-      .replace(/\s+/g, ' ')                                       // Normalize whitespace
+      .replace(/[\(\)]/g, '')           // Remove parentheses
+      .replace(/\s+/g, ' ')             // Normalize whitespace
       .trim();
   }
 
