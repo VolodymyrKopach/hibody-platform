@@ -40,6 +40,7 @@ export class ChatService {
   private slideAnalysisService: ISlideAnalysisService;
   private actionHandlerService: IActionHandlerService;
   private intentMappingService: IIntentMappingService;
+  private onAsyncMessageCallback?: (message: any) => void;
 
   constructor() {
     // Initialize all dependencies
@@ -53,7 +54,7 @@ export class ChatService {
 
     // === SOLID: Dependency Injection ===
     this.intentDetectionService = IntentDetectionServiceFactory.create();
-    this.slideGenerationService = new SlideGenerationService(contentService);
+    this.slideGenerationService = new SlideGenerationService();
     this.slideEditingService = new SlideEditingService(simpleEditService);
     this.lessonManagementService = new LessonManagementService();
     this.slideAnalysisService = new SlideAnalysisService();
@@ -75,6 +76,15 @@ export class ChatService {
       new HelpHandler(),
       new FallbackHandler()
     ];
+  }
+
+  // Set callback for async messages (like slide generation completion)
+  setAsyncMessageCallback(callback: (message: any) => void) {
+    this.onAsyncMessageCallback = callback;
+    // Connect the callback to ActionHandlerService
+    if (this.actionHandlerService && 'setMessageCallback' in this.actionHandlerService) {
+      (this.actionHandlerService as any).setMessageCallback(callback);
+    }
   }
 
   // === SOLID: Single Responsibility ===
@@ -181,6 +191,7 @@ export class ChatService {
     try {
       const newSlide = await this.slideGenerationService.generateSlide(
         slideDescription,
+        slideTitle,
         conversationHistory.lessonTopic || 'lesson',
         conversationHistory.lessonAge || '6-8 years'
       );

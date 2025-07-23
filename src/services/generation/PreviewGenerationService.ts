@@ -406,7 +406,7 @@ export class PreviewGenerationService {
       metadata: {
         generatedAt: new Date().toISOString(),
         generationTime: 100,
-        aiProvider: 'Mock',
+        aiProvider: 'Fallback',
         version: '3.0.0'
       }
     };

@@ -1,27 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ChatService } from '@/services/chat/ChatService';
+import { SlideGenerationService } from '@/services/chat/services/SlideGenerationService';
 import { SlideDescription, SimpleLesson, SimpleSlide, SlideGenerationProgress } from '@/types/chat';
 import { sendProgressUpdate, sendCompletion } from '../progress/route';
 
 export async function POST(request: NextRequest) {
   try {
-    const { slideDescriptions, lesson, topic, age, sessionId } = await request.json();
+    const { slideDescriptions, lesson, topic, age, sessionId, planText } = await request.json();
 
-    console.log('🎨 SEQUENTIAL API: Starting sequential slide generation...');
+    console.log('🎨 SEQUENTIAL API: Starting content-driven slide generation...');
     console.log('📋 SEQUENTIAL API: Request details:', {
       slideCount: slideDescriptions?.length || 0,
       lesson: lesson?.title || 'Unknown',
       topic,
       age,
-      sessionId
+      sessionId,
+      hasPlanText: !!planText
     });
-
-    if (!slideDescriptions || !Array.isArray(slideDescriptions)) {
-      return NextResponse.json(
-        { error: 'slideDescriptions array is required' },
-        { status: 400 }
-      );
-    }
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -30,119 +24,125 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initialize the chat service for sequential generation
-    const chatService = new ChatService();
+    // Create slide generation service
+    const slideGenerationService = new SlideGenerationService();
+    
+    // Progress tracking state
+    let currentProgress: SlideGenerationProgress[] = [];
+    let generatedSlides: SimpleSlide[] = [];
 
-    // Prepare lesson object
-    const lessonObject: SimpleLesson = {
-      id: lesson?.id || `lesson_${Date.now()}`,
-      title: lesson?.title || 'Generated Lesson',
-      description: lesson?.description || `Lesson about ${topic}`,
-      subject: 'General',
-      ageGroup: age || '8-9 years',
-      duration: 30,
-      slides: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      authorId: 'ai-chat'
-    };
+    try {
+      // Use content-driven generation if plan text is available
+      if (planText && typeof planText === 'string') {
+        console.log('🎯 SEQUENTIAL API: Using content-driven generation from lesson plan');
+        
+        generatedSlides = await slideGenerationService.generateSlidesFromPlan(
+          planText,
+          topic || 'general topic',
+          age || '6-8 years'
+        );
 
-    // Track progress state
-    let currentProgress: SlideGenerationProgress[] = slideDescriptions.map(desc => ({
-      slideNumber: desc.slideNumber,
-      title: desc.title,
-      status: 'pending',
-      progress: 0
-    }));
+        // Create progress updates for the generated slides
+        currentProgress = generatedSlides.map((slide, index) => ({
+          slideNumber: index + 1,
+          title: slide.title,
+          status: 'completed' as const,
+          progress: 100,
+          htmlContent: slide.htmlContent
+        }));
 
-    // Generate slides with progress tracking
-    const result = await chatService.generateAllSlides(
-      slideDescriptions,
-      topic || 'general topic',
-      age || '8-9 years',
-      (progress: SlideGenerationProgress[]) => {
-        // Update progress state
-        currentProgress = progress;
-        console.log('📊 SEQUENTIAL API: Progress update:', progress);
+      } else if (slideDescriptions && Array.isArray(slideDescriptions)) {
+        console.log('🔄 SEQUENTIAL API: Falling back to adaptive generation from descriptions');
         
-        // Send progress update via SSE if sessionId provided
-        if (sessionId) {
-          sendProgressUpdate(sessionId, {
-            progress: progress,
-            lesson: lessonObject,
-            currentSlide: progress.find(p => p.status === 'generating'),
-            totalSlides: slideDescriptions.length,
-            completedSlides: progress.filter(p => p.status === 'completed').length
-          });
-        }
-      },
-      (slide: SimpleSlide, allSlides: SimpleSlide[]) => {
-        // === ADD SLIDE TO LESSON IMMEDIATELY ===
-        lessonObject.slides = [...allSlides];
-        lessonObject.updatedAt = new Date();
+        // Fallback: Generate adaptive slides from descriptions
+        const contentText = slideDescriptions.map(desc => 
+          `${desc.title}: ${desc.description}`
+        ).join('\n\n');
         
-        console.log(`✅ SEQUENTIAL API: Slide "${slide.title}" ready, total slides now: ${lessonObject.slides.length}`);
-        
-        // === SEND UPDATED LESSON VIA SSE ===
-        if (sessionId) {
-          sendProgressUpdate(sessionId, {
-            progress: currentProgress,
-            lesson: lessonObject,
-            currentSlide: currentProgress.find(p => p.status === 'generating'),
-            totalSlides: slideDescriptions.length,
-            completedSlides: lessonObject.slides.length,
-            newSlide: slide  // Add information about the new slide
-          });
-        }
+        generatedSlides = await slideGenerationService.generateAdaptiveSlides(
+          contentText,
+          slideDescriptions.length,
+          topic || 'general topic',
+          age || '6-8 years'
+        );
+
+        currentProgress = generatedSlides.map((slide, index) => ({
+          slideNumber: index + 1,
+          title: slide.title,
+          status: 'completed' as const,
+          progress: 100,
+          htmlContent: slide.htmlContent
+        }));
+
+      } else {
+        return NextResponse.json(
+          { error: 'Either planText or slideDescriptions array is required' },
+          { status: 400 }
+        );
       }
-    );
 
-    // Final update - ensure all slides are in lesson
-    lessonObject.slides = result.slides;
-    lessonObject.updatedAt = new Date();
+      // Send progress updates via SSE
+      if (sessionId) {
+        sendProgressUpdate(sessionId, {
+          progress: currentProgress,
+          completed: generatedSlides.length,
+          total: generatedSlides.length
+        });
+      }
 
-    console.log('✅ SEQUENTIAL API: Generation completed successfully');
-    console.log(`📊 SEQUENTIAL API: ${result.completedSlides}/${result.totalSlides} slides generated`);
+      console.log(`✅ SEQUENTIAL API: Successfully generated ${generatedSlides.length} slides`);
 
-    // Send completion message via SSE
-    if (sessionId) {
-      sendCompletion(sessionId, {
-        lesson: lessonObject,
-        statistics: {
-          totalSlides: result.totalSlides,
-          completedSlides: result.completedSlides,
-          failedSlides: result.failedSlides,
-          generationTime: result.generationTime
+      // Send completion notification
+      if (sessionId) {
+        sendCompletion(sessionId, {
+          lesson: {
+            ...lesson,
+            slides: generatedSlides,
+            updatedAt: new Date()
+          },
+          message: `Successfully generated ${generatedSlides.length} slides from lesson content!`
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        lesson: {
+          ...lesson,
+          slides: generatedSlides,
+          updatedAt: new Date()
         },
-        finalProgress: currentProgress
+        message: `Successfully generated ${generatedSlides.length} slides using content-driven approach!`,
+        generationStats: {
+          totalSlides: generatedSlides.length,
+          completedSlides: generatedSlides.length,
+          approach: planText ? 'content-driven' : 'adaptive'
+        }
       });
+
+    } catch (generationError) {
+      console.error('❌ SEQUENTIAL API: Error during generation:', generationError);
+      
+      if (sessionId) {
+        sendProgressUpdate(sessionId, {
+          progress: currentProgress.map(p => ({ ...p, status: 'error' as const })),
+          error: 'Generation failed'
+        });
+      }
+
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to generate slides',
+        details: generationError instanceof Error ? generationError.message : 'Unknown error'
+      }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      lesson: lessonObject,
-      message: `Generated ${result.completedSlides} slides sequentially`,
-      finalProgress: currentProgress,
-      statistics: {
-        totalSlides: result.totalSlides,
-        completedSlides: result.completedSlides,
-        failedSlides: result.failedSlides,
-        generationTime: result.generationTime,
-        generatedAt: new Date().toISOString()
-      }
-    });
-
   } catch (error) {
-    console.error('❌ SEQUENTIAL API: Error during sequential generation:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false,
-        error: 'Failed to generate slides sequentially',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    console.error('❌ SEQUENTIAL API: Request error:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Invalid request',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 400 });
   }
 }
 

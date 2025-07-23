@@ -24,6 +24,7 @@ export interface ConversationHistory {
   slideGenerationProgress?: SlideGenerationProgress[]; // Progress of each slide generation
   bulkGenerationStartTime?: Date; // Start time of bulk generation
   isGeneratingAllSlides?: boolean; // Flag indicating if all slides are being generated
+  sessionId?: string; // SSE session ID for real-time progress tracking
   
   // === CONVERSATION CONTEXT ===
   conversationContext?: string; // Compressed context of the entire conversation
@@ -36,6 +37,7 @@ export interface ChatResponse {
   actions?: ChatAction[];
   error?: string;
   lesson?: SimpleLesson; // Use SimpleLesson instead of any
+  sessionId?: string; // SSE session ID for frontend to listen to progress
 }
 
 export interface ChatAction {

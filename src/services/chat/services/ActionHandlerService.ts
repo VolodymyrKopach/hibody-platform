@@ -1,5 +1,5 @@
 import { type ConversationHistory, type ChatResponse } from '../types';
-import { type SlideDescription, type SlideGenerationProgress, type SimpleLesson } from '@/types/chat';
+import { type SlideDescription, type SlideGenerationProgress, type SimpleLesson, type SimpleSlide } from '@/types/chat';
 import { HelpHandler } from '../handlers/HelpHandler';
 import { 
   IActionHandlerService,
@@ -44,49 +44,67 @@ export class ActionHandlerService implements IActionHandlerService {
     }
 
     const slideDescriptions = this.slideAnalysisService.extractSlideDescriptions(history.planningResult);
-    const lesson = this.lessonManagementService.createLesson(
+    let lesson = this.lessonManagementService.createLesson(
       history.lessonTopic || 'New Lesson',
       history.lessonAge || '8-9 years'
     );
 
-    const initialProgress: SlideGenerationProgress[] = slideDescriptions.map(desc => ({
-      slideNumber: desc.slideNumber,
-      title: desc.title,
-      status: 'pending',
-      progress: 0
-    }));
+    console.log('🎯 Starting synchronous slide generation - waiting for all slides to complete');
 
-    const newConversationHistory: ConversationHistory = {
-      ...history,
-      step: 'bulk_generation',
-      slideDescriptions,
-      slideGenerationProgress: initialProgress,
-      bulkGenerationStartTime: new Date(),
-      isGeneratingAllSlides: true,
-      currentLesson: lesson
-    };
+    try {
+      // Generate all slides synchronously and wait for completion
+      const generatedSlides = await this.generateAllSlidesSync(slideDescriptions, history, lesson);
+      
+      // Add all generated slides to the lesson (capture the returned lesson)
+      for (const slide of generatedSlides) {
+        lesson = this.lessonManagementService.addSlideToLesson(lesson, slide);
+      }
 
-    // Start async generation
-    this.generateAllSlidesAsync(slideDescriptions, history, lesson);
+      console.log(`🎉 All slides generated successfully! Generated ${generatedSlides.length} slides`);
 
-    return {
-      success: true,
-      message: `🎨 **Starting generation of all slides!**
+      const newConversationHistory: ConversationHistory = {
+        ...history,
+        step: 'bulk_generation',
+        slideDescriptions,
+        slideGenerationProgress: slideDescriptions.map(desc => ({
+          slideNumber: desc.slideNumber,
+          title: desc.title,
+          status: 'completed',
+          progress: 100
+        })),
+        bulkGenerationStartTime: new Date(),
+        isGeneratingAllSlides: false, // Generation is now complete
+        currentLesson: lesson
+      };
 
-📊 **Generation plan:**
-${slideDescriptions.map(desc => `${desc.slideNumber}. ${desc.title}`).join('\n')}
+      return {
+        success: true,
+        message: `🎉 **Lesson generation completed!**
 
-⏳ **Progress:** Generating ${slideDescriptions.length} slide(s)...`,
-      conversationHistory: newConversationHistory,
-      actions: [
-        {
-          action: 'cancel_generation',
-          label: '⏹️ Cancel generation',
-          description: 'Stop the slide generation process'
-        }
-      ],
-      lesson: lesson
-    };
+📚 **Generated ${generatedSlides.length} slides:**
+${generatedSlides.map((slide: SimpleSlide, index: number) => {
+  // Remove duration from title (e.g., "Introduction (5 minutes)" -> "Introduction")
+  const titleWithoutDuration = slide.title.replace(/\s*\(?\d+\s*minutes?\)?\s*$/i, '').replace(/\s*-.*?\d+\s*minutes?\s*$/i, '');
+  return `${index + 1}. ${titleWithoutDuration}`;
+}).join('\n')}
+
+✨ Your lesson is ready! Check the slide panel to view and edit your slides.`,
+        conversationHistory: newConversationHistory,
+        lesson: lesson, // Return lesson with generated slides
+        actions: []
+      };
+
+    } catch (error) {
+      console.error('❌ Error generating slides:', error);
+      
+      return {
+        success: false,
+        message: `❌ **Slide generation failed**\n\n${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease try again or contact support if the problem persists.`,
+        conversationHistory: history,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        actions: []
+      };
+    }
   }
 
   private async handleEditPlanAction(history?: ConversationHistory): Promise<ChatResponse> {
@@ -195,26 +213,112 @@ ${detectedChanges.map(change => `• ${change}`).join('\n')}`,
     }
   }
 
-  private async generateAllSlidesAsync(
+  // Synchronous slide generation - waits for all slides to complete
+  private async generateAllSlidesSync(
     slideDescriptions: SlideDescription[],
     history: ConversationHistory,
     lesson: SimpleLesson
+  ): Promise<SimpleSlide[]> {
+    const planText = history.planningResult || '';
+    const topic = history.lessonTopic || 'lesson';
+    const age = history.lessonAge || '6-8 years';
+
+    if (!planText) {
+      throw new Error('No lesson plan available for slide generation');
+    }
+
+    console.log('🎯 Generating slides from lesson plan synchronously');
+    
+    // Generate slides from the actual lesson plan content
+    const slides = await this.slideGenerationService.generateSlidesFromPlan(
+      planText,
+      topic,
+      age
+    );
+
+    return slides;
+  }
+
+  private async generateAllSlidesAsync(
+    slideDescriptions: SlideDescription[],
+    history: ConversationHistory,
+    lesson: SimpleLesson,
+    sessionId: string
   ): Promise<void> {
     try {
-      const result = await this.slideGenerationService.generateAllSlides(
-        slideDescriptions,
-        history.lessonTopic || 'lesson',
-        history.lessonAge || '6-8 years'
-      );
+      // Use the sequential API route which has proper SSE integration
+      const planText = history.planningResult || '';
+      const topic = history.lessonTopic || 'lesson';
+      const age = history.lessonAge || '6-8 years';
 
-      // Add slides to lesson
-      for (const slide of result.slides) {
-        this.lessonManagementService.addSlideToLesson(lesson, slide);
+      if (!planText) {
+        console.error('❌ No lesson plan available for slide generation');
+        return;
       }
 
-      console.log(`🎉 Generation completed! ${result.completedSlides}/${result.totalSlides} slides generated`);
+      console.log('🎯 Starting content-driven slide generation via API route');
+      
+      // Call the sequential API route which handles SSE communication
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const response = await fetch(`${baseUrl}/api/generation/slides/sequential`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          slideDescriptions,
+          lesson,
+          topic,
+          age,
+          sessionId,
+          planText
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.lesson) {
+        // Add slides to the lesson object (capture the returned lesson)
+        for (const slide of result.lesson.slides) {
+          lesson = this.lessonManagementService.addSlideToLesson(lesson, slide);
+        }
+
+        console.log(`🎉 API Generation completed! ${result.lesson.slides.length} slides generated from lesson plan`);
+
+        // The SSE system (via sessionId) will handle sending the completion message to the frontend
+        // No need for manual callback here since the frontend should be listening to SSE events
+        
+      } else {
+        throw new Error(result.error || 'Unknown API error');
+      }
+
     } catch (error) {
-      console.error('❌ Error in async slide generation:', error);
+      console.error('❌ Error in async slide generation via API:', error);
+      
+      // Still send error message via callback if available (fallback)
+      if (this.onMessageCallback) {
+        const errorMessage = {
+          id: `msg_${Date.now()}`,
+          text: `❌ **Slide generation failed**\n\n${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease try again or contact support if the problem persists.`,
+          sender: 'ai' as const,
+          timestamp: new Date(),
+          status: 'delivered' as const,
+          feedback: null
+        };
+
+        this.onMessageCallback(errorMessage);
+      }
     }
+  }
+
+  // Add a callback mechanism to send messages back to the frontend
+  private onMessageCallback?: (message: any) => void;
+
+  setMessageCallback(callback: (message: any) => void) {
+    this.onMessageCallback = callback;
   }
 } 

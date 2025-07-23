@@ -1,93 +1,320 @@
 import { GeminiContentService } from '@/services/content/GeminiContentService';
-import { type SimpleSlide, type SlideDescription, type BulkSlideGenerationResult } from '@/types/chat';
-import { type ProcessedSlideData, processSlideWithImages } from '@/utils/slideImageProcessor';
-import { ISlideGenerationService } from '../interfaces/IChatServices';
+import { SimpleSlide, SlideDescription } from '@/types/chat';
+import { slideTemplateService } from '@/services/generation/SlideTemplateService';
+import { logger } from '@/utils/logger';
 
-// === SOLID: Single Responsibility - Slide Generation ===
-export class SlideGenerationService implements ISlideGenerationService {
-  constructor(private contentService: GeminiContentService) {}
+export class SlideGenerationService {
+  private contentService: GeminiContentService;
 
-  async generateSlide(description: string, topic: string, age: string): Promise<SimpleSlide> {
-    const slideHTML = await this.contentService.generateSlideContent(description, topic, age);
-    
-    // Process images
-    const imageProcessingResult: ProcessedSlideData = await processSlideWithImages(slideHTML);
-    const finalSlideHTML = imageProcessingResult.htmlWithImages;
-
-    return {
-      id: `slide_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      title: this.extractTitleFromDescription(description),
-      content: description,
-      htmlContent: finalSlideHTML,
-      type: 'content',
-      status: 'completed'
-    };
+  constructor() {
+    this.contentService = new GeminiContentService();
   }
 
-  async generateAllSlides(
-    descriptions: SlideDescription[], 
-    topic: string, 
-    age: string
-  ): Promise<BulkSlideGenerationResult> {
-    const startTime = Date.now();
-    const slides: SimpleSlide[] = [];
-    const errors: string[] = [];
+  /**
+   * Generate slides from lesson plan content
+   */
+  async generateSlidesFromPlan(
+    planText: string,
+    lessonTopic: string,
+    lessonAge: string
+  ): Promise<SimpleSlide[]> {
+    logger.chat.info('Generating slides from lesson plan', {
+      method: 'generateSlidesFromPlan',
+      topic: lessonTopic,
+      ageGroup: lessonAge
+    });
 
-    for (let i = 0; i < descriptions.length; i++) {
-      const desc = descriptions[i];
-      try {
-        const slide = await this.generateSlide(desc.description, topic, age);
-        slide.title = desc.title;
-        slide.type = this.mapSlideType(desc.type);
-        slides.push(slide);
+    try {
+      // Extract slide templates from the plan
+      const slideTemplates = slideTemplateService.extractSlidesFromPlan(planText, {
+        ageGroup: lessonAge,
+        language: 'en'
+      });
 
-        // Rate limiting
-        if (i < descriptions.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1500));
-        }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        errors.push(`Slide ${desc.slideNumber} "${desc.title}": ${errorMessage}`);
+      logger.chat.debug(`Extracted ${slideTemplates.length} slide templates from plan`);
+
+      // Generate HTML content for each slide
+      const slides: SimpleSlide[] = [];
+      
+      for (let i = 0; i < slideTemplates.length; i++) {
+        const template = slideTemplates[i];
         
-        // Create fallback slide
-        const fallbackSlide = this.createFallbackSlide(desc);
-        slides.push(fallbackSlide);
+        try {
+          logger.chat.debug(`Generating HTML for slide ${i + 1}: ${template.title}`);
+          
+          // Generate HTML content using AI
+          const htmlContent = await this.contentService.generateSlideContent(
+            template.content || template.description,
+            lessonTopic,
+            lessonAge
+          );
+
+          const slide: SimpleSlide = {
+            id: `slide_${Date.now()}_${i + 1}_${Math.random().toString(36).substr(2, 9)}`,
+            title: template.title,
+            content: template.content || template.description,
+            htmlContent,
+            status: 'completed',
+            estimatedDuration: template.estimatedDuration,
+            interactive: template.interactive,
+            visualElements: template.visualElements,
+            description: template.description,
+            updatedAt: new Date()
+          };
+
+          slides.push(slide);
+          logger.chat.debug(`Slide ${i + 1} generated successfully`);
+
+        } catch (error) {
+          logger.chat.error(`Failed to generate slide ${i + 1}`, error as Error);
+          
+          // Create fallback slide
+          const fallbackSlide: SimpleSlide = {
+            id: `slide_fallback_${Date.now()}_${i + 1}`,
+            title: template.title || `Slide ${i + 1}`,
+            content: template.description || 'Content will be generated',
+            htmlContent: this.generateFallbackHTML(template.title, template.description),
+            status: 'draft',
+            estimatedDuration: template.estimatedDuration || 60,
+            interactive: template.interactive || false,
+            visualElements: template.visualElements || ['text'],
+            description: template.description,
+            updatedAt: new Date()
+          };
+          
+          slides.push(fallbackSlide);
+        }
       }
+
+      logger.chat.info(`Successfully generated ${slides.length} slides from plan`);
+      return slides;
+
+    } catch (error) {
+      logger.chat.error('Failed to generate slides from plan', error as Error);
+      throw error;
     }
-
-    return {
-      totalSlides: descriptions.length,
-      completedSlides: slides.filter(s => s.status === 'completed').length,
-      failedSlides: errors.length,
-      slides,
-      errors,
-      generationTime: Date.now() - startTime
-    };
   }
 
-  private extractTitleFromDescription(description: string): string {
-    const lines = description.split('\n').filter(line => line.trim());
-    return lines[0]?.substring(0, 50) || 'New slide';
+  /**
+   * Generate adaptive slides from content analysis
+   */
+  async generateAdaptiveSlides(
+    content: string,
+    slideCount: number,
+    lessonTopic: string,
+    lessonAge: string
+  ): Promise<SimpleSlide[]> {
+    logger.chat.info('Generating adaptive slides from content', {
+      method: 'generateAdaptiveSlides',
+      slideCount,
+      topic: lessonTopic,
+      ageGroup: lessonAge
+    });
+
+    try {
+      // Use the adaptive slide generation
+      const slideTemplates = slideTemplateService.generateAdaptiveSlides(content, slideCount, {
+        ageGroup: lessonAge,
+        language: 'en'
+      });
+
+      const slides: SimpleSlide[] = [];
+      
+      for (let i = 0; i < slideTemplates.length; i++) {
+        const template = slideTemplates[i];
+        
+        try {
+          const htmlContent = await this.contentService.generateSlideContent(
+            template.content || template.description,
+            lessonTopic,
+            lessonAge
+          );
+
+          const slide: SimpleSlide = {
+            id: `adaptive_slide_${Date.now()}_${i + 1}_${Math.random().toString(36).substr(2, 9)}`,
+            title: template.title,
+            content: template.content || template.description,
+            htmlContent,
+            status: 'completed',
+            estimatedDuration: template.estimatedDuration,
+            interactive: template.interactive,
+            visualElements: template.visualElements,
+            description: template.description,
+            updatedAt: new Date()
+          };
+
+          slides.push(slide);
+
+        } catch (error) {
+          logger.chat.error(`Failed to generate adaptive slide ${i + 1}`, error as Error);
+          
+          const fallbackSlide: SimpleSlide = {
+            id: `adaptive_fallback_${Date.now()}_${i + 1}`,
+            title: template.title || `Slide ${i + 1}`,
+            content: template.description || 'Content will be generated',
+            htmlContent: this.generateFallbackHTML(template.title, template.description),
+            status: 'draft',
+            estimatedDuration: template.estimatedDuration || 60,
+            interactive: template.interactive || false,
+            visualElements: template.visualElements || ['text'],
+            description: template.description,
+            updatedAt: new Date()
+          };
+          
+          slides.push(fallbackSlide);
+        }
+      }
+
+      logger.chat.info(`Successfully generated ${slides.length} adaptive slides`);
+      return slides;
+
+    } catch (error) {
+      logger.chat.error('Failed to generate adaptive slides', error as Error);
+      throw error;
+    }
   }
 
-  private mapSlideType(type: 'welcome' | 'content' | 'activity' | 'summary'): 'title' | 'content' | 'interactive' | 'summary' {
-    const mapping = {
-      'welcome': 'title' as const,
-      'activity': 'interactive' as const,
-      'summary': 'summary' as const,
-      'content': 'content' as const
-    };
-    return mapping[type] || 'content';
+  /**
+   * Extract slide descriptions from lesson plan (legacy support)
+   */
+  extractSlideDescriptionsFromPlan(planText: string): SlideDescription[] {
+    const slideTemplates = slideTemplateService.extractSlidesFromPlan(planText);
+    
+    return slideTemplates.map((template, index) => ({
+      slideNumber: index + 1,
+      title: template.title,
+      description: template.content || template.description,
+      type: this.inferSlideType(template, index, slideTemplates.length)
+    }));
   }
 
-  private createFallbackSlide(desc: SlideDescription): SimpleSlide {
-    return {
-      id: `slide_${Date.now()}_${desc.slideNumber}_fallback`,
-      title: desc.title,
-      content: desc.description,
-      htmlContent: `<div style="text-align: center; padding: 40px;">\n        <h2>${desc.title}</h2>\n        <p>This slide will be generated later.</p>\n        <p><small>Description: ${desc.description.substring(0, 100)}...</small></p>\n      </div>`, // Translated
-      type: this.mapSlideType(desc.type),
-      status: 'draft'
-    };
+  /**
+   * Generate single slide from description
+   */
+  async generateSlide(
+    description: string,
+    title: string,
+    lessonTopic: string,
+    lessonAge: string
+  ): Promise<SimpleSlide> {
+    logger.chat.info('Generating single slide', {
+      method: 'generateSlide',
+      title,
+      topic: lessonTopic
+    });
+
+    try {
+      const htmlContent = await this.contentService.generateSlideContent(
+        description,
+        lessonTopic,
+        lessonAge
+      );
+
+      // Analyze content to determine properties
+      const interactive = this.detectInteractiveContent(description);
+      const visualElements = this.analyzeVisualElements(description);
+      const estimatedDuration = this.estimateSlideDuration(description, lessonAge);
+
+      const slide: SimpleSlide = {
+        id: `single_slide_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: title || 'Generated Slide',
+        content: description,
+        htmlContent,
+        status: 'completed',
+        estimatedDuration,
+        interactive,
+        visualElements,
+        description,
+        updatedAt: new Date()
+      };
+
+      logger.chat.info('Single slide generated successfully');
+      return slide;
+
+    } catch (error) {
+      logger.chat.error('Failed to generate single slide', error as Error);
+      throw error;
+    }
+  }
+
+  // === Private helper methods ===
+
+  private generateFallbackHTML(title?: string, description?: string): string {
+    return `
+      <div style="padding: 40px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; min-height: 400px; display: flex; flex-direction: column; justify-content: center;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+          ${title || 'Slide Title'}
+        </h1>
+        <p style="font-size: 1.2rem; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+          ${description || 'This slide content will be generated. Please try again or provide more specific instructions.'}
+        </p>
+        <div style="margin-top: 30px;">
+          <div style="width: 60px; height: 4px; background: rgba(255,255,255,0.3); margin: 0 auto; border-radius: 2px;"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  private inferSlideType(template: any, index: number, totalSlides: number): string {
+    // Legacy compatibility - infer type based on position and content
+    if (index === 0) return 'introduction';
+    if (index === totalSlides - 1) return 'summary';
+    if (template.interactive) return 'activity';
+    return 'content';
+  }
+
+  private detectInteractiveContent(content: string): boolean {
+    const interactiveKeywords = [
+      'click', 'tap', 'drag', 'select', 'choose', 'answer', 'question',
+      'activity', 'exercise', 'practice', 'try', 'experiment', 'play', 'interactive'
+    ];
+    
+    const lowerContent = content.toLowerCase();
+    return interactiveKeywords.some(keyword => lowerContent.includes(keyword));
+  }
+
+  private analyzeVisualElements(content: string): string[] {
+    const elements: string[] = ['text'];
+    const lowerContent = content.toLowerCase();
+    
+    if (lowerContent.includes('image') || lowerContent.includes('picture') || lowerContent.includes('photo')) {
+      elements.push('image');
+    }
+    if (lowerContent.includes('video') || lowerContent.includes('animation')) {
+      elements.push('video');
+    }
+    if (lowerContent.includes('chart') || lowerContent.includes('graph') || lowerContent.includes('diagram')) {
+      elements.push('chart');
+    }
+    if (lowerContent.includes('button') || lowerContent.includes('click') || lowerContent.includes('interactive')) {
+      elements.push('interactive');
+    }
+    if (lowerContent.includes('quiz') || lowerContent.includes('question') || lowerContent.includes('answer')) {
+      elements.push('quiz');
+    }
+    
+    return elements;
+  }
+
+  private estimateSlideDuration(content: string, ageGroup: string): number {
+    const wordCount = content.split(' ').length;
+    const readingSpeed = this.getReadingSpeedForAge(ageGroup);
+    
+    // Base time for reading + additional time for interaction
+    const baseTime = Math.ceil((wordCount / readingSpeed) * 60); // Convert to seconds
+    const interactionTime = this.detectInteractiveContent(content) ? 30 : 0;
+    
+    return Math.max(30, baseTime + interactionTime);
+  }
+
+  private getReadingSpeedForAge(ageGroup: string): number {
+    // Words per minute based on age group
+    switch (ageGroup) {
+      case '2-3': return 10; // Very slow, with adult help
+      case '4-6': return 25; // Beginning readers
+      case '7-8': return 60; // Elementary level
+      case '9-10': return 90; // More fluent
+      default: return 50;
+    }
   }
 } 

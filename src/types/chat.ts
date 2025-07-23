@@ -18,11 +18,15 @@ export interface SimpleSlide {
   title: string;
   content: string;
   htmlContent: string;
-  type: 'title' | 'content' | 'interactive' | 'summary';
-  status: 'completed' | 'draft';
+  status: 'completed' | 'draft' | 'generating';
   previewUrl?: string;
-  thumbnailUrl?: string; // Додаємо thumbnailUrl з бази даних
+  thumbnailUrl?: string;
   updatedAt?: Date;
+  // Content-driven properties
+  estimatedDuration?: number; // in seconds
+  interactive?: boolean;
+  visualElements?: string[];
+  description?: string;
 }
 
 export interface SimpleLesson {
@@ -66,7 +70,7 @@ export interface SlideDescription {
   slideNumber: number;
   title: string;
   description: string;
-  type: 'welcome' | 'content' | 'activity' | 'summary';
+  type?: string; // Made flexible to support content-driven types
 }
 
 export interface SlideGenerationProgress {

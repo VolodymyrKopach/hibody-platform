@@ -36,6 +36,39 @@ export interface AgeGroupConfig {
   sections: SectionConfig[];
 }
 
+// === Base validator interface ===
+export interface IFormValidator<T> {
+  validate(formData: T): boolean;
+  getValidationErrors(formData: T): string[];
+}
+
+// === Base form data interface ===
+export interface BaseFormData {
+  topic: string;
+  // Common fields that all age groups have
+}
+
+// === Age-specific form data interfaces ===
+export interface AgeGroup2to3FormData extends BaseFormData {
+  thematic24?: string;
+  // Other 2-3 specific fields
+}
+
+export interface AgeGroup4to6FormData extends BaseFormData {
+  thematic?: string;
+  // Other 4-6 specific fields
+}
+
+export interface AgeGroup7to8FormData extends BaseFormData {
+  subject78?: string;
+  // Other 7-8 specific fields
+}
+
+export interface AgeGroup9to10FormData extends BaseFormData {
+  subject910?: string;
+  // Other 9-10 specific fields
+}
+
 // === Форма даних ===
 export interface FormData {
   // Базові поля

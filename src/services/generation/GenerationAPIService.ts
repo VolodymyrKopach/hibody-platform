@@ -1,9 +1,10 @@
-import { AgeGroupConfig, FormValues } from '@/types/generation';
+import { AgeGroupConfig, FormData } from '@/types/generation';
+import { logger } from '@/utils/logger';
 
 // === SOLID: SRP - Types for API communication ===
 interface GenerateLessonRequest {
   ageGroupConfig: AgeGroupConfig;
-  formValues: FormValues;
+  formData: FormData;
   metadata?: {
     title?: string;
     description?: string;
@@ -18,63 +19,76 @@ interface GenerateLessonResponse {
     id: string;
     title: string;
     description: string;
-    slides: Array<{
-      id: string;
-      title: string;
-      content: string;
-      htmlContent?: string;
-      type: 'welcome' | 'content' | 'activity' | 'summary';
-      status: 'ready' | 'generating' | 'error';
-    }>;
+    slides: any[];
   };
   error?: string;
-  message?: string;
+  code?: string;
 }
 
-interface SaveConfigRequest {
-  name: string;
+interface SaveConfigurationRequest {
   ageGroupId: string;
-  formValues: FormValues;
+  configuration: Record<string, any>;
+  name: string;
   description?: string;
-  isTemplate?: boolean;
 }
 
-interface SaveConfigResponse {
+interface SaveConfigurationResponse {
   success: boolean;
-  config?: {
-    id: string;
-    name: string;
-    ageGroupId: string;
-    formValues: FormValues;
-    description?: string;
-    isTemplate: boolean;
-    createdAt: string;
-    updatedAt: string;
-  };
+  configurationId?: string;
   error?: string;
-  message?: string;
+  code?: string;
 }
 
-interface GetConfigsResponse {
+interface GetConfigurationsRequest {
+  ageGroupId?: string;
+  limit?: number;
+  offset?: number;
+}
+
+interface GetConfigurationsResponse {
   success: boolean;
-  configs?: Array<{
+  configurations?: Array<{
     id: string;
     name: string;
-    ageGroupId: string;
-    formValues: FormValues;
     description?: string;
-    isTemplate: boolean;
+    configuration: Record<string, any>;
+    ageGroupId: string;
     createdAt: string;
     updatedAt: string;
   }>;
+  total?: number;
   error?: string;
+  code?: string;
 }
 
-// === SOLID: SRP - API error handling ===
+interface DeleteConfigurationRequest {
+  configurationId: string;
+}
+
+interface DeleteConfigurationResponse {
+  success: boolean;
+  error?: string;
+  code?: string;
+}
+
+interface GetGenerationCapabilitiesResponse {
+  success: boolean;
+  capabilities?: {
+    maxSlideCount: number;
+    supportedAgeGroups: string[];
+    supportedLanguages: string[];
+    supportedFormats: string[];
+    features: string[];
+  };
+  error?: string;
+  code?: string;
+}
+
+// === SOLID: SRP - Custom error class ===
 export class GenerationAPIError extends Error {
   constructor(
     message: string,
-    public statusCode: number = 500,
+    public statusCode: number,
     public code?: string
   ) {
     super(message);
@@ -93,7 +107,10 @@ export class GenerationAPIService {
   // === SOLID: SRP - Generate lesson ===
   async generateLesson(request: GenerateLessonRequest): Promise<GenerateLessonResponse> {
     try {
-      console.log('🚀 API SERVICE: Generating lesson');
+      logger.generation.info('Starting lesson generation', {
+        method: 'generateLesson',
+        ageGroup: request.ageGroupConfig.id || 'unknown'
+      });
       
       const response = await fetch(`${this.baseUrl}/lesson`, {
         method: 'POST',
@@ -113,11 +130,16 @@ export class GenerationAPIService {
         );
       }
 
-      console.log('✅ API SERVICE: Lesson generated successfully');
+      logger.generation.info('Lesson generated successfully', {
+        method: 'generateLesson',
+        lessonId: data.lesson?.id
+      });
       return data;
       
     } catch (error) {
-      console.error('❌ API SERVICE: Error generating lesson:', error);
+      logger.generation.error('Error generating lesson', error as Error, {
+        method: 'generateLesson'
+      });
       
       if (error instanceof GenerationAPIError) {
         throw error;
@@ -132,11 +154,14 @@ export class GenerationAPIService {
   }
 
   // === SOLID: SRP - Save configuration ===
-  async saveConfiguration(request: SaveConfigRequest): Promise<SaveConfigResponse> {
+  async saveConfiguration(request: SaveConfigurationRequest): Promise<SaveConfigurationResponse> {
     try {
-      console.log('💾 API SERVICE: Saving configuration');
+      logger.generation.debug('Saving configuration', {
+        method: 'saveConfiguration',
+        ageGroup: request.ageGroupId
+      });
       
-      const response = await fetch(`${this.baseUrl}/config`, {
+      const response = await fetch(`${this.baseUrl}/configurations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,11 +179,16 @@ export class GenerationAPIService {
         );
       }
 
-      console.log('✅ API SERVICE: Configuration saved successfully');
+      logger.generation.info('Configuration saved successfully', {
+        method: 'saveConfiguration',
+        configId: data.configurationId
+      });
       return data;
       
     } catch (error) {
-      console.error('❌ API SERVICE: Error saving configuration:', error);
+      logger.generation.error('Error saving configuration', error as Error, {
+        method: 'saveConfiguration'
+      });
       
       if (error instanceof GenerationAPIError) {
         throw error;
@@ -173,24 +203,19 @@ export class GenerationAPIService {
   }
 
   // === SOLID: SRP - Get configurations ===
-  async getConfigurations(params?: {
-    ageGroupId?: string;
-    templatesOnly?: boolean;
-  }): Promise<GetConfigsResponse> {
+  async getConfigurations(request: GetConfigurationsRequest = {}): Promise<GetConfigurationsResponse> {
     try {
-      console.log('📋 API SERVICE: Getting configurations');
+      logger.generation.debug('Getting configurations', {
+        method: 'getConfigurations',
+        ageGroup: request.ageGroupId
+      });
       
-      const searchParams = new URLSearchParams();
-      
-      if (params?.ageGroupId) {
-        searchParams.append('ageGroupId', params.ageGroupId);
-      }
-      
-      if (params?.templatesOnly) {
-        searchParams.append('templatesOnly', 'true');
-      }
-      
-      const url = `${this.baseUrl}/config${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+      const params = new URLSearchParams();
+      if (request.ageGroupId) params.append('ageGroupId', request.ageGroupId);
+      if (request.limit) params.append('limit', request.limit.toString());
+      if (request.offset) params.append('offset', request.offset.toString());
+
+      const url = `${this.baseUrl}/configurations${params.toString() ? `?${params.toString()}` : ''}`;
       
       const response = await fetch(url, {
         method: 'GET',
@@ -209,11 +234,16 @@ export class GenerationAPIService {
         );
       }
 
-      console.log('✅ API SERVICE: Configurations retrieved successfully');
+      logger.generation.info('Configurations retrieved successfully', {
+        method: 'getConfigurations',
+        count: data.configurations?.length || 0
+      });
       return data;
       
     } catch (error) {
-      console.error('❌ API SERVICE: Error getting configurations:', error);
+      logger.generation.error('Error getting configurations', error as Error, {
+        method: 'getConfigurations'
+      });
       
       if (error instanceof GenerationAPIError) {
         throw error;
@@ -228,11 +258,14 @@ export class GenerationAPIService {
   }
 
   // === SOLID: SRP - Delete configuration ===
-  async deleteConfiguration(configId: string): Promise<{ success: boolean; message?: string; error?: string }> {
+  async deleteConfiguration(request: DeleteConfigurationRequest): Promise<DeleteConfigurationResponse> {
     try {
-      console.log('🗑️ API SERVICE: Deleting configuration');
+      logger.generation.debug('Deleting configuration', {
+        method: 'deleteConfiguration',
+        configId: request.configurationId
+      });
       
-      const response = await fetch(`${this.baseUrl}/config?id=${configId}`, {
+      const response = await fetch(`${this.baseUrl}/configurations/${request.configurationId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -249,11 +282,17 @@ export class GenerationAPIService {
         );
       }
 
-      console.log('✅ API SERVICE: Configuration deleted successfully');
+      logger.generation.info('Configuration deleted successfully', {
+        method: 'deleteConfiguration',
+        configId: request.configurationId
+      });
       return data;
       
     } catch (error) {
-      console.error('❌ API SERVICE: Error deleting configuration:', error);
+      logger.generation.error('Error deleting configuration', error as Error, {
+        method: 'deleteConfiguration',
+        configId: request.configurationId
+      });
       
       if (error instanceof GenerationAPIError) {
         throw error;
@@ -268,29 +307,13 @@ export class GenerationAPIService {
   }
 
   // === SOLID: SRP - Get generation capabilities ===
-  async getCapabilities(): Promise<{
-    success: boolean;
-    capabilities?: {
-      supportedAgeGroups: string[];
-      maxSlides: number;
-      supportedFormats: string[];
-      features: {
-        aiGeneration: boolean;
-        formPersistence: boolean;
-        preview: boolean;
-        validation: boolean;
-      };
-    };
-    user?: {
-      id: string;
-      email: string;
-    };
-    error?: string;
-  }> {
+  async getGenerationCapabilities(): Promise<GetGenerationCapabilitiesResponse> {
     try {
-      console.log('🔍 API SERVICE: Getting generation capabilities');
+      logger.generation.debug('Getting generation capabilities', {
+        method: 'getGenerationCapabilities'
+      });
       
-      const response = await fetch(`${this.baseUrl}/lesson`, {
+      const response = await fetch(`${this.baseUrl}/capabilities`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -301,17 +324,21 @@ export class GenerationAPIService {
 
       if (!response.ok) {
         throw new GenerationAPIError(
-          data.error || 'Failed to get capabilities',
+          data.error || 'Failed to get generation capabilities',
           response.status,
           data.code
         );
       }
 
-      console.log('✅ API SERVICE: Capabilities retrieved successfully');
+      logger.generation.info('Capabilities retrieved successfully', {
+        method: 'getGenerationCapabilities'
+      });
       return data;
       
     } catch (error) {
-      console.error('❌ API SERVICE: Error getting capabilities:', error);
+      logger.generation.error('Error getting capabilities', error as Error, {
+        method: 'getGenerationCapabilities'
+      });
       
       if (error instanceof GenerationAPIError) {
         throw error;

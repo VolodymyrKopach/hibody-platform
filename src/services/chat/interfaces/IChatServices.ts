@@ -5,8 +5,14 @@ import { type ConversationHistory, type ChatResponse } from '../types';
 // Specific interfaces for different responsibilities
 
 export interface ISlideGenerationService {
-  generateSlide(description: string, topic: string, age: string): Promise<SimpleSlide>;
-  generateAllSlides(descriptions: SlideDescription[], topic: string, age: string): Promise<BulkSlideGenerationResult>;
+  // Legacy methods for backward compatibility
+  generateSlide(description: string, title: string, lessonTopic: string, lessonAge: string): Promise<SimpleSlide>;
+  generateAllSlides?(descriptions: SlideDescription[], topic: string, age: string): Promise<BulkSlideGenerationResult>;
+  
+  // New content-driven methods
+  generateSlidesFromPlan(planText: string, lessonTopic: string, lessonAge: string): Promise<SimpleSlide[]>;
+  generateAdaptiveSlides?(content: string, slideCount: number, lessonTopic: string, lessonAge: string): Promise<SimpleSlide[]>;
+  extractSlideDescriptionsFromPlan?(planText: string): SlideDescription[];
 }
 
 export interface ISlideEditingService {

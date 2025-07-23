@@ -1,27 +1,27 @@
 /**
  * === SOLID: SRP - Single Responsibility ===
- * Хук відповідальний лише за управління станом та логікою форми генерації
+ * Hook responsible only for managing state and logic of generation form
  */
 
 import { useState, useCallback, useMemo } from 'react';
 import { AgeGroup, FormData } from '../types/generation';
 import { formValidator } from '../services/generation/FormValidationService';
-import { promptGenerator } from '../services/generation/PromptGeneratorService';
+import { PromptGeneratorFactory } from '../services/generation/generators/PromptGenerators';
 
-// === SOLID: ISP - Спеціалізований інтерфейс для хука ===
+// === SOLID: ISP - Specialized interface for hook ===
 interface UseGenerationFormOptions {
   onGenerate: (data: { ageGroup: AgeGroup; formData: FormData; detailedPrompt: string }) => void;
   onPreview: (data: { ageGroup: AgeGroup; formData: FormData }) => void;
 }
 
 interface UseGenerationFormReturn {
-  // Стан
+  // State
   selectedAge: AgeGroup | null;
   formData: FormData;
   isFormValid: boolean;
   validationErrors: string[];
   
-  // Дії
+  // Actions
   handleAgeSelect: (age: AgeGroup) => void;
   handleFieldChange: (field: keyof FormData, value: string | string[] | boolean) => void;
   handleGenerate: () => void;
@@ -29,171 +29,175 @@ interface UseGenerationFormReturn {
   resetForm: () => void;
 }
 
-// === SOLID: SRP - Початковий стан форми ===
-const getInitialFormData = (): FormData => ({
-  // Базові поля
-  topic: '',
-  difficulty: '🌟 Початковий рівень',
-  duration: '⚡ Коротка тривалість',
-  activities: '🎮 Інтерактивні активності',
-  goals: '📚 Засвоєння нових знань',
-  
-  // Поля для 2-3 років
-  lessonGoal: '🗣️ Розвиток мови - перші слова і прості речення',
-  activityType: ['👋 Імітація - повтори рухи, звуки, жести'],
-  thematic24: '👨‍👩‍👧‍👦 Сім\'я - мама, тато, бабуся',
-  complexityLevel24: '🌟 Простий - один елемент, одна дія',
-  lessonDuration24: '⚡ Коротка - 2-3 хвилини',
-  audioSupport24: true,
-  presentationStyle24: '🎪 Ігровий - через гру та розвагу',
-  participationFormat24: '👶 Індивідуальний - дитина сама',
-  visualEffects: ['✨ Яскраві кольори - насичена палітра'],
-  presentationSpeed24: '🐌 Повільна - для уважного вивчення',
-  
-  // Поля для 4-6 років  
-  thematic: '🔤 Абетка - букви, звуки, перші слова',
-  taskTypes: ['🔤 Повтори слово - розвиток мови'],
-  language: '🇺🇦 Українська - рідна мова',
-  learningGoal: '📚 Підготовка до школи - базові навички',
-  complexityLevel: '🌟 Початковий - 1-2 елементи, прості завдання',
-  lessonDuration: '⚡ Коротка - 3-5 хвилин',
-  presentationStyle: '🎪 Ігровий - через веселі активності',
-  participationFormat: '👶 Індивідуальний - дитина працює сама',
-  audioSupport: ['🗣️ Дружній диктор - приємний голос'],
-  visualDesign: ['🌈 Яскраві кольори - насичена палітра'],
-  presentationSpeed: '🐌 Повільна - для уважного вивчення',
-  interactivity: '👆 Натискання - прості кліки',
-  educationalProgram: '🇺🇦 Базова програма - державні стандарти',
-  gradingSystem: '🌟 Зірочки - за досягнення',
-  
-  // Поля для 7-8 років
-  subject78: '📖 Українська мова - читання, письмо, граматика',
-  lessonFormat78: ['🎮 Вправа + гра - навчання через гру'],
-  skills78: ['👀 Уважність - концентрація, фокус'],
-  complexityLevel78: '🌟 Початковий - базові поняття для новачків',
-  lessonDuration78: '⚡ Коротка - 5-7 хвилин',
-  thematicOrientation78: '📚 Шкільна програма - відповідно до класу',
-  pedagogicalGoal78: '📚 Засвоєння знань - нова інформація',
-  assessmentMethod78: '🏆 Бали - числова система',
-  audioSettings78: ['🗣️ Вчительський голос - професійний диктор'],
-  interactionType78: '🖱️ Клік та вибір - прості натискання',
-  presentationStyle78: '🎮 Ігровий - навчання через гру',
-  socialFormat78: '👤 Індивідуальна робота - самостійне виконання',
-  platform78: ['💻 Комп\'ютер/ноутбук - традиційний формат'],
-  visualStyle78: '🌈 Яскравий - кольорові акценти',
-  educationalProgram78: '🇺🇦 НУШ - Нова українська школа',
-  competencies78: ['🗣️ Спілкування - рідною та іноземними мовами'],
-  
-  // Поля для 9-10 років
-  subject910: '📊 Математика - алгебра, геометрія, статистика',
-  complexity910: '🌟 Базова - стандартна шкільна програма',
-  taskTypes910: ['📝 Текстові задачі - аналіз та розв\'язання'],
-  learningGoal910: '📚 Поглиблення знань - детальне вивчення теми',
-  lessonDuration910: '⚡ Швидка перевірка - 5-10 хвилин',
-  thematicOrientation910: '📚 Академічна - наукові дисципліни',
-  pedagogicalApproach910: '🧠 Когнітивний - розвиток мислення',
-  independenceLevel910: '🤝 З підтримкою - допомога вчителя',
-  gradingSystem910: '🏆 Бали - числова оцінка',
-  digitalTools910: ['💻 Презентації - слайди та візуалізація'],
-  visualDesign910: '🎨 Професійний - академічний стиль',
-  audioSettings910: '🔕 Без звуку - тільки текст та зображення',
-  interactionFormat910: '👤 Індивідуальний - самостійна робота',
-  studentRole910: '📚 Слухач - сприйняття інформації',
-  educationalProgram910: '🇺🇦 НУШ - Нова українська школа',
-  keyCompetencies910: ['🗣️ Спілкування - рідною та іноземними мовами'],
-  
-  // Додаткова інформація для всіх груп
-  additionalInfo: ''
-});
+// === SOLID: SRP - Default form data initialization ===
+const getDefaultFormData = (ageGroup?: AgeGroup): FormData => {
+  const base: FormData = {
+    topic: '',
+    difficulty: '',
+    duration: '',
+    activities: '',
+    goals: '',
+    lessonGoal: '',
+    activityType: []
+  };
 
-// === SOLID: SRP - Кастомний хук ===
-export const useGenerationForm = ({ 
-  onGenerate, 
-  onPreview 
-}: UseGenerationFormOptions): UseGenerationFormReturn => {
-  
-  // === SOLID: SRP - Стан форми ===
-  const [selectedAge, setSelectedAge] = useState<AgeGroup | null>('2-3');
-  const [formData, setFormData] = useState<FormData>(getInitialFormData());
-  
-  // === SOLID: SRP - Валідація форми ===
-  const validationResult = useMemo(() => {
+  // === SOLID: OCP - Easily extensible for new age groups ===
+  switch (ageGroup) {
+    case '2-3':
+      return {
+        ...base,
+        thematic24: '',
+        audioSupport24: false,
+        complexityLevel24: '',
+        lessonDuration24: '',
+        presentationStyle24: '',
+        participationFormat24: '',
+        visualEffects: [],
+        presentationSpeed24: ''
+      };
+    case '4-6':
+      return {
+        ...base,
+        thematic: '',
+        taskTypes: [],
+        language: '',
+        learningGoal: '',
+        complexityLevel: '',
+        lessonDuration: '',
+        presentationStyle: '',
+        audioSupport: [],
+        participationFormat: '',
+        visualDesign: [],
+        presentationSpeed: '',
+        interactivity: '',
+        educationalProgram: '',
+        gradingSystem: ''
+      };
+    case '7-8':
+      return {
+        ...base,
+        subject78: '',
+        lessonFormat78: [],
+        skills78: [],
+        complexityLevel78: '',
+        lessonDuration78: '',
+        thematicOrientation78: '',
+        pedagogicalGoal78: '',
+        assessmentMethod78: '',
+        audioSettings78: [],
+        interactionType78: '',
+        presentationStyle78: '',
+        socialFormat78: '',
+        platform78: [],
+        visualStyle78: '',
+        educationalProgram78: '',
+        competencies78: []
+      };
+    case '9-10':
+      return {
+        ...base,
+        subject910: '',
+        complexity910: '',
+        taskTypes910: [],
+        learningGoal910: '',
+        lessonDuration910: '',
+        thematicOrientation910: '',
+        pedagogicalApproach910: '',
+        independenceLevel910: '',
+        gradingSystem910: '',
+        digitalTools910: [],
+        visualDesign910: '',
+        audioSettings910: '',
+        interactionFormat910: '',
+        studentRole910: '',
+        educationalProgram910: '',
+        keyCompetencies910: []
+      };
+    default:
+      return base;
+  }
+};
+
+// === SOLID: SRP - Main hook implementation ===
+export const useGenerationForm = (options: UseGenerationFormOptions): UseGenerationFormReturn => {
+  // === SOLID: SRP - State management ===
+  const [selectedAge, setSelectedAge] = useState<AgeGroup | null>(null);
+  const [formData, setFormData] = useState<FormData>(getDefaultFormData());
+
+  // === SOLID: SRP - Form validation ===
+  const { isFormValid, validationErrors } = useMemo(() => {
     if (!selectedAge) {
-      return { isValid: false, errors: ['Оберіть вікову групу'] };
+      return { isFormValid: false, validationErrors: ['Please select age group'] };
     }
-    
-    return formValidator.validateWithResult(selectedAge, formData);
+
+    const validationResult = formValidator.validateWithResult(selectedAge, formData);
+    return { 
+      isFormValid: validationResult.isValid, 
+      validationErrors: validationResult.errors 
+    };
   }, [selectedAge, formData]);
-  
-  const isFormValid = validationResult.isValid;
-  const validationErrors = validationResult.errors;
-  
-  // === SOLID: SRP - Обробка вибору вікової групи ===
+
+  // === SOLID: SRP - Age selection handler ===
   const handleAgeSelect = useCallback((age: AgeGroup) => {
     setSelectedAge(age);
-    // Скидаємо форму при зміні вікової групи
-    setFormData(getInitialFormData());
+    setFormData(getDefaultFormData(age));
   }, []);
-  
-  // === SOLID: SRP - Обробка зміни полів форми ===
+
+  // === SOLID: SRP - Field change handler ===
   const handleFieldChange = useCallback((field: keyof FormData, value: string | string[] | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
   }, []);
-  
-  // === SOLID: SRP - Генерація уроку ===
+
+  // === SOLID: SRP - Generation handler ===
   const handleGenerate = useCallback(() => {
     if (!selectedAge || !isFormValid) {
-      console.warn('Cannot generate: form is invalid');
       return;
     }
-    
-    try {
-      const detailedPrompt = promptGenerator.generatePrompt(selectedAge, formData);
-      
-      onGenerate({
-        ageGroup: selectedAge,
-        formData,
-        detailedPrompt
-      });
-    } catch (error) {
-      console.error('Error generating prompt:', error);
-    }
-  }, [selectedAge, formData, isFormValid, onGenerate]);
-  
-  // === SOLID: SRP - Попередній перегляд ===
+
+    // Use the new PromptGenerators factory
+    const promptGenerator = PromptGeneratorFactory.createGenerator(selectedAge);
+    const detailedPrompt = promptGenerator.generatePrompt(selectedAge, formData);
+
+    options.onGenerate({
+      ageGroup: selectedAge,
+      formData,
+      detailedPrompt
+    });
+  }, [selectedAge, formData, isFormValid, options]);
+
+  // === SOLID: SRP - Preview handler ===
   const handlePreview = useCallback(() => {
-    if (!selectedAge) {
-      console.warn('Cannot preview: no age group selected');
+    if (!selectedAge || !isFormValid) {
       return;
     }
-    
-    onPreview({
+
+    options.onPreview({
       ageGroup: selectedAge,
       formData
     });
-  }, [selectedAge, formData, onPreview]);
-  
-  // === SOLID: SRP - Скидання форми ===
+  }, [selectedAge, formData, isFormValid, options]);
+
+  // === SOLID: SRP - Form reset ===
   const resetForm = useCallback(() => {
     setSelectedAge(null);
-    setFormData(getInitialFormData());
+    setFormData(getDefaultFormData());
   }, []);
-  
+
   return {
-    // Стан
     selectedAge,
     formData,
     isFormValid,
     validationErrors,
-    
-    // Дії
     handleAgeSelect,
     handleFieldChange,
     handleGenerate,
     handlePreview,
     resetForm
   };
-}; 
+};
+
+// === SOLID: SRP - Export default for convenience ===
+export default useGenerationForm; 

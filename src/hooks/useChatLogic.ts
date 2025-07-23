@@ -126,7 +126,8 @@ export const useChatLogic = () => {
   const {
     isGenerating: isSSEGenerating,
     currentProgress,
-    startGenerationWithProgress
+    startGenerationWithProgress,
+    connect: connectSSE
   } = useSlideProgressSSE({
     onProgressUpdate: (data) => {
       console.log('📊 [CHAT] SSE Progress update:', data);
@@ -363,21 +364,21 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
 
         setMessages(prev => [...prev, aiMessage]);
 
-        // Якщо є описи слайдів, запускаємо генерацію з прогресом
-        if (response.conversationHistory?.slideDescriptions && response.lesson) {
+        // Якщо є описи слайдів та sessionId, запускаємо генерацію з прогресом
+        if (response.conversationHistory?.slideDescriptions && response.lesson && response.sessionId) {
           try {
-            console.log('🎯 [CHAT] Starting SSE slide generation...');
+            console.log('🎯 [CHAT] Starting SSE slide generation with sessionId:', response.sessionId);
             
             // === ОНОВЛЮЄМО КОНТЕКСТ ПРИ ПОЧАТКУ ГЕНЕРАЦІЇ СЛАЙДІВ ===
             const generationContext = updatedContext + ' | GENERATION: Starting slide generation';
             setConversationContext(generationContext);
             
-            await startGenerationWithProgress(
-              response.conversationHistory.slideDescriptions,
-              response.lesson,
-              response.conversationHistory.lessonTopic || 'урок',
-              response.conversationHistory.lessonAge || '6-8 років'
-            );
+            // The SSE hook is already initialized above - we need to find a way to connect with sessionId
+            // For now, let's trigger the API call which should send completion via SSE
+            console.log('🔄 [CHAT] API will handle SSE events with sessionId:', response.sessionId);
+            
+            // Connect to SSE with the sessionId from the response
+            connectSSE(response.sessionId);
           } catch (error) {
             console.error('❌ [CHAT] SSE generation failed:', error);
             
