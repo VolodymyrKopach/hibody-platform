@@ -316,21 +316,53 @@ INSTEAD of adding real images, use SPECIAL COMMENTS for each place where an imag
 **IMAGE COMMENT FORMAT:**
 <!-- IMAGE_PROMPT: "detailed image description in English" WIDTH: XXX HEIGHT: YYY -->
 
+**STANDARDIZED IMAGE SIZES:**
+Use these EXACT standardized sizes based on image type and context:
+
+**HERO IMAGES (Main slide visuals):**
+- Ages 2-3: WIDTH: 640 HEIGHT: 480
+- Ages 4-6: WIDTH: 640 HEIGHT: 480  
+- Ages 7-8: WIDTH: 800 HEIGHT: 600
+- Ages 9-10: WIDTH: 800 HEIGHT: 600
+
+**CONTENT IMAGES (Supporting illustrations):**
+- Ages 2-3: WIDTH: 512 HEIGHT: 384
+- Ages 4-6: WIDTH: 512 HEIGHT: 384
+- Ages 7-8: WIDTH: 640 HEIGHT: 480
+- Ages 9-10: WIDTH: 640 HEIGHT: 480
+
+**ACTIVITY IMAGES (Interactive elements):**
+- Ages 2-3: WIDTH: 400 HEIGHT: 400 (square format)
+- Ages 4-6: WIDTH: 400 HEIGHT: 400 (square format)
+- Ages 7-8: WIDTH: 512 HEIGHT: 512 (square format)
+- Ages 9-10: WIDTH: 512 HEIGHT: 512 (square format)
+
+**DECORATION IMAGES (Small visual elements):**
+- Ages 2-3: WIDTH: 256 HEIGHT: 256
+- Ages 4-6: WIDTH: 256 HEIGHT: 256
+- Ages 7-8: WIDTH: 320 HEIGHT: 320
+- Ages 9-10: WIDTH: 320 HEIGHT: 320
+
 **IMAGE RULES:**
-1. WIDTH and HEIGHT MUST be multiples of 16 (e.g.: 512, 528, 640, 768, 800)
-2. Minimum size: 256x256
-3. Maximum size: 1536x1536
-4. Prompt MUST be in English
-5. Prompt should be detailed and describe:
+1. ALWAYS use the standardized sizes above - NO custom dimensions
+2. Choose the appropriate size category based on image purpose:
+   - Hero: Main slide illustration, central visual
+   - Content: Supporting educational illustration  
+   - Activity: Interactive game elements, clickable items
+   - Decoration: Small visual accents, icons, borders
+3. Prompt MUST be in English
+4. Prompt should be detailed and describe:
    - What is depicted
    - Style (cartoon, illustration, realistic)
    - Colors and mood
    - Age group (for children aged X-Y)
+   - Educational purpose
 
-**CORRECT COMMENT EXAMPLES:**
+**STANDARDIZED EXAMPLES:**
 <!-- IMAGE_PROMPT: "colorful cartoon illustration of happy children counting numbers 1 to 10, bright colors, educational style, for children aged 6-8" WIDTH: 640 HEIGHT: 480 -->
-<!-- IMAGE_PROMPT: "cute animated animals learning mathematics, cartoon style, bright and friendly, educational illustration for kids" WIDTH: 512 HEIGHT: 384 -->
-<!-- IMAGE_PROMPT: "simple geometric shapes in vibrant colors, educational poster style, clean and child-friendly design" WIDTH: 800 HEIGHT: 600 -->
+<!-- IMAGE_PROMPT: "cute animated animals learning mathematics, cartoon style, bright and friendly, educational illustration for kids aged 4-6" WIDTH: 512 HEIGHT: 384 -->
+<!-- IMAGE_PROMPT: "simple geometric shapes in vibrant colors, educational poster style, clean and child-friendly design for ages 7-8" WIDTH: 400 HEIGHT: 400 -->
+<!-- IMAGE_PROMPT: "small decorative star with sparkles, golden color, reward symbol for children aged 2-3" WIDTH: 256 HEIGHT: 256 -->
 
 **COMMENT PLACEMENT:**
 - Place comments where images should appear in the layout
