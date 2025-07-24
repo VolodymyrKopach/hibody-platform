@@ -334,10 +334,10 @@ INSTEAD of adding real images, use SPECIAL COMMENTS for each place where an imag
 
 **COMMENT PLACEMENT:**
 - Place comments where images should appear in the layout
-- Add an empty div with placeholder style immediately after the comment
+- DO NOT add placeholder divs after IMAGE_PROMPT comments - images will be inserted automatically
 - Example placement:
   <!-- IMAGE_PROMPT: "description" WIDTH: 640 HEIGHT: 480 -->
-  <div style="width: 640px; height: 480px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999;">🖼️ Image will be generated here</div>
+- The system will automatically replace this comment with a properly contained image
 
 **MANDATORY ELEMENTS:**
 - Slide title

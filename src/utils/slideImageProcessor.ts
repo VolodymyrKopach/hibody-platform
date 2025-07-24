@@ -284,79 +284,68 @@ export function replaceImageComments(
     let replacement: string;
     
     if (imageData && imageData.success && imageData.base64Image) {
-      // Successfully generated image
-      replacement = `<img src="data:image/webp;base64,${imageData.base64Image}" 
-        alt="${imageData.prompt.replace(/"/g, '&quot;')}" 
-        width="${imageData.width}" 
-        height="${imageData.height}"
-        style="
-          max-width: 100%; 
-          height: auto; 
-          border-radius: 12px; 
-          box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-          display: block;
-          margin: 15px auto;
-          object-fit: cover;
-        "
-        loading="lazy" 
-        data-prompt="${imageData.prompt.replace(/"/g, '&quot;')}"
-        data-model="${imageData.model}"
-        data-generated="true" />`;
+      // Successfully generated image - create a properly contained img element
+      replacement = `<div class="image-container" style="max-width: 100%; margin: 15px auto; display: flex; justify-content: center; align-items: center; box-sizing: border-box;"><img src="data:image/webp;base64,${imageData.base64Image}" alt="${imageData.prompt.replace(/"/g, '&quot;')}" width="${imageData.width}" height="${imageData.height}" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); display: block; object-fit: cover;" loading="lazy" data-prompt="${imageData.prompt.replace(/"/g, '&quot;')}" data-model="${imageData.model}" data-generated="true" /></div>`;
       
       console.log(`✅ Replacing comment ${i + 1} with generated image (${imageData.width}x${imageData.height})`);
     } else {
       // Failed generation or missing image
       const errorInfo = imageData ? 'Generation failed' : 'No image data';
-      replacement = `<div style="
-        width: ${prompt.width}px; 
-        height: ${prompt.height}px; 
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: 3px dashed rgba(255,255,255,0.3);
-        border-radius: 16px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-family: 'Comic Sans MS', cursive;
-        text-align: center;
-        font-size: 16px;
-        max-width: 100%;
-        margin: 15px auto;
-        position: relative;
-        overflow: hidden;
-      " data-failed-prompt="${prompt.prompt.replace(/"/g, '&quot;')}">
-        <div style="font-size: 32px; margin-bottom: 8px;">🎨</div>
-        <div style="font-weight: bold; margin-bottom: 4px;">Image is being generated...</div>
-        <div style="font-size: 12px; opacity: 0.8; max-width: 80%; word-wrap: break-word;">
-          ${prompt.prompt.substring(0, 60)}${prompt.prompt.length > 60 ? '...' : ''}
-        </div>
-        <div style="font-size: 10px; opacity: 0.6; margin-top: 4px;">⚠️ ${errorInfo}</div>
-      </div>`;
+      replacement = `<div class="image-placeholder" style="width: ${prompt.width}px; height: ${prompt.height}px; max-width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 3px dashed rgba(255,255,255,0.3); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: 'Comic Sans MS', cursive; text-align: center; font-size: 16px; margin: 15px auto; position: relative; overflow: hidden; box-sizing: border-box;" data-failed-prompt="${prompt.prompt.replace(/"/g, '&quot;')}"><div style="font-size: 32px; margin-bottom: 8px;">🎨</div><div style="font-weight: bold; margin-bottom: 4px;">Image is being generated...</div><div style="font-size: 12px; opacity: 0.8; max-width: 80%; word-wrap: break-word;">${prompt.prompt.substring(0, 60)}${prompt.prompt.length > 60 ? '...' : ''}</div><div style="font-size: 10px; opacity: 0.6; margin-top: 4px;">⚠️ ${errorInfo}</div></div>`;
       
       console.log(`⚠️ Replacing comment ${i + 1} with placeholder: ${errorInfo}`);
     }
-    
+
     // Check if the comment still exists in HTML
     if (processedHtml.includes(prompt.fullComment)) {
+      // Replace the comment with the image
       processedHtml = processedHtml.replace(prompt.fullComment, replacement);
       replacements++;
+
+      // Also try to remove any placeholder div that might follow the comment
+      // Look for placeholder divs that contain emojis and text like "🖼️", "🧠", "Brain", etc.
+      const placeholderPatterns = [
+        // Generic placeholder pattern
+        /<div[^>]*class[^>]*image-placeholder[^>]*>.*?<\/div>/gi,
+        // Gemini-generated placeholder pattern
+        /<div[^>]*style[^>]*>🖼️[^<]*Image will be generated here[^<]*<\/div>/gi,
+        // Common placeholder patterns with emojis and text
+        /<div[^>]*>\s*🧠[^<]*Brain[^<]*<\/div>/gi,
+        /<div[^>]*>\s*🖼️[^<]*<\/div>/gi,
+        /<div[^>]*>\s*📷[^<]*<\/div>/gi,
+        /<div[^>]*>\s*🎨[^<]*<\/div>/gi,
+      ];
+
+      placeholderPatterns.forEach((pattern) => {
+        const matches = processedHtml.match(pattern);
+        if (matches) {
+          console.log(`🧹 Removing ${matches.length} placeholder div(s) near image ${i + 1}`);
+          processedHtml = processedHtml.replace(pattern, '');
+        }
+      });
     } else {
       console.warn(`⚠️ Comment ${i + 1} not found in HTML: "${prompt.fullComment.substring(0, 50)}..."`);
     }
   }
-  
+
   console.log(`🎯 Completed ${replacements}/${prompts.length} image replacements`);
-  
-  // Also find and replace placeholder divs that might have been created by Gemini
-  const placeholderRegex = /<div[^>]*>🖼️[^<]*Image will be generated here[^<]*<\/div>/gi;
-  const placeholderMatches = processedHtml.match(placeholderRegex);
-  
-  if (placeholderMatches && placeholderMatches.length > 0) {
-    console.log(`🔍 Found ${placeholderMatches.length} placeholder divs to clean up`);
-    processedHtml = processedHtml.replace(placeholderRegex, '<!-- Placeholder div removed -->');
-  }
-  
+
+  // Additional cleanup: Remove any remaining standalone placeholder divs
+  const finalCleanupPatterns = [
+    // Remove placeholder divs with just emojis
+    /<div[^>]*class[^>]*image-placeholder[^>]*>\s*[🧠🖼️📷🎨][^<]*<\/div>/gi,
+    // Remove divs that are clearly placeholders
+    /<div[^>]*>\s*🖼️[^<]*Image will be generated here[^<]*<\/div>/gi
+  ];
+
+  finalCleanupPatterns.forEach((pattern) => {
+    const matches = processedHtml.match(pattern);
+    if (matches) {
+      console.log(`🧹 Final cleanup: Removing ${matches.length} remaining placeholder div(s)`);
+      processedHtml = processedHtml.replace(pattern, '');
+    }
+  });
+
   return processedHtml;
 }
 
