@@ -35,6 +35,7 @@ const ChatInterface: React.FC = () => {
     messages,
     setMessages,
     isTyping,
+    typingStage,
     inputText,
     setInputText,
     isLoading,
@@ -184,7 +185,12 @@ const ChatInterface: React.FC = () => {
                 ))}
                 
                 {/* Typing indicator */}
-                {isTyping && <TypingIndicator isTyping={isTyping} />}
+                {isTyping && (
+                  <TypingIndicator 
+                    isTyping={isTyping}
+                    typingStage={typingStage}
+                  />
+                )}
               </Box>
             </Box>
 

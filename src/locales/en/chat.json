@@ -13,6 +13,9 @@
   "messages": {
     "welcome": "Hello! I'm your AI assistant. How can I help you?",
     "thinking": "Thinking...",
+    "processing": "Processing...",
+    "generating": "Generating response...",
+    "finalizing": "Finalizing...",
     "error": "An error occurred processing your message",
     "networkError": "Network error. Check your connection",
     "tooLong": "Message too long",

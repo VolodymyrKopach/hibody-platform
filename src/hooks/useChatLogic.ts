@@ -19,6 +19,7 @@ export const useChatLogic = () => {
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [typingStage, setTypingStage] = useState<'thinking' | 'processing' | 'generating' | 'finalizing'>('thinking');
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<any>(null);
@@ -241,7 +242,8 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     if (!message.trim() || isLoading) return;
 
     setIsLoading(true);
-    setIsTyping(false);
+    setIsTyping(true);
+    setTypingStage('thinking');
 
     // Додаємо повідомлення користувача
     const userMessage: Message = {
@@ -261,12 +263,16 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     console.log('📝 [CHAT] Updated context with user message');
 
     try {
+      setTypingStage('processing');
+      
       // === ПЕРЕДАЄМО КОНТЕКСТ ДО API ADAPTER ДЛЯ PRE-REQUEST COMPRESSION ===
       const response = await apiAdapter.sendMessage(message, conversationHistory, undefined, updatedContext);
       
       if (!response.success) {
         throw new Error(response.error || 'Unknown error');
       }
+
+      setTypingStage('generating');
 
       // Оновлюємо conversation history
       if (response.conversationHistory) {
@@ -276,6 +282,8 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         const contextWithTopic = updatedContext + ' | TOPIC: ' + (response.conversationHistory.lessonTopic || 'Unknown topic');
         setConversationContext(contextWithTopic);
       }
+
+      setTypingStage('finalizing');
 
       const aiMessage: Message = {
         id: Date.now() + 1,
@@ -317,6 +325,8 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       setConversationContext(errorContext);
     } finally {
       setIsLoading(false);
+      setIsTyping(false);
+      setTypingStage('thinking');
     }
   }, [isLoading, conversationHistory, apiAdapter, conversationContext]);
 
@@ -478,6 +488,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     messages,
     setMessages,
     isTyping,
+    typingStage,
     inputText,
     setInputText,
     isLoading,
