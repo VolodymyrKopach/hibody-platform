@@ -21,9 +21,16 @@ export class EnhancedCreateLessonHandler implements IIntentHandler {
   
   canHandle(intent: IntentDetectionResult, conversationHistory?: ConversationHistory): boolean {
     const enhancedIntent = intent as EnhancedIntentDetectionResult;
+    
+    // Handle CREATE_LESSON when:
+    // 1. Intent is CREATE_LESSON
+    // 2. We have sufficient data
+    // 3. Not in the middle of another lesson creation process
     return intent.intent === UserIntent.CREATE_LESSON && 
-           !conversationHistory && 
-           enhancedIntent.isDataSufficient === true;
+           enhancedIntent.isDataSufficient === true &&
+           // Allow conversation history, just make sure we're not in an active lesson creation step
+           (!conversationHistory?.step || conversationHistory.step === 'planning') &&
+           !conversationHistory?.planningResult; // Not already in lesson planning
   }
 
   async handle(intent: IntentDetectionResult, conversationHistory?: ConversationHistory): Promise<ChatResponse> {
