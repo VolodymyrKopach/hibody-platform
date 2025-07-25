@@ -11,7 +11,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   
   const formatText = (text: string) => {
     return text
-      // Headers
+      // Headers - order matters: longest patterns first
+      .replace(/^##### (.*$)/gm, '<h5>$1</h5>')
+      .replace(/^#### (.*$)/gm, '<h4>$1</h4>')
       .replace(/^### (.*$)/gm, '<h3>$1</h3>')
       .replace(/^## (.*$)/gm, '<h2>$1</h2>')
       .replace(/^# (.*$)/gm, '<h1>$1</h1>')
@@ -117,6 +119,30 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           '& li': {
             margin: '4px 0',
             lineHeight: 1.5,
+            
+            // Subitems styling
+            '& ul': {
+              margin: '6px 0',
+              paddingLeft: '24px',
+              listStyle: 'circle',
+              
+              '& li': {
+                margin: '2px 0',
+                fontSize: '0.85rem',
+                color: theme.palette.text.secondary,
+                
+                // Third level subitems
+                '& ul': {
+                  paddingLeft: '20px',
+                  listStyle: 'square',
+                  
+                  '& li': {
+                    fontSize: '0.8rem',
+                    margin: '1px 0',
+                  },
+                },
+              },
+            },
           },
           '& + br': { display: 'none' },
         },
