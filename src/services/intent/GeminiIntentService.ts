@@ -71,7 +71,9 @@ IMPORTANT: If there's an active lesson and user asks about slides ("next", "thir
 DETAILED CONVERSATION HISTORY:
 ${conversationHistory.conversationContext}
 
-Use this conversation history to better understand the user's intent and provide more accurate responses.
+CRITICAL: Use this conversation history to better understand the user's intent and provide more accurate responses.
+When user says "create lesson" or similar, look at the conversation history to identify what topic they were discussing.
+Example: If they previously asked "who is batman" and now say "create lesson", the topic should be "batman" or "superheroes".
 `;
       }
     }
@@ -104,7 +106,7 @@ SUPPORTED INTENTS (exact values):
 - HELP: help request
 
 PARAMETERS to extract:
-- topic: lesson topic (from user text)
+- topic: lesson topic (from user text OR conversation history)
 - age: children's age (numbers, ranges, "preschoolers", "schoolchildren")
 - slideNumber: slide number (if mentioned)
 - instruction: specific user instruction
@@ -113,21 +115,32 @@ PARAMETERS to extract:
 INTENT DETECTION LOGIC:
 
 **CRITICAL: RESOLVE CONTEXTUAL REFERENCES**
-When user says "it", "that", "this topic", "the same thing", etc., look at the conversation history to understand what they're referring to. Extract the actual topic from previous messages.
+When user says "it", "that", "this topic", "the same thing", etc., OR when they say "create lesson" without specifying a topic, 
+look at the conversation history to understand what they were discussing previously.
+
+TOPIC EXTRACTION PRIORITY:
+1. EXPLICIT topic in current message ("create lesson about dinosaurs")
+2. CONTEXTUAL reference in current message ("create lesson about it", "lesson about that")
+3. TOPIC FROM CONVERSATION HISTORY - scan the conversation for topics they discussed:
+   - Look for questions like "who is X", "what is Y", "tell me about Z"
+   - Look for educational discussions about specific subjects
+   - Extract the main subject/character/concept they were interested in
 
 Examples:
-- "Tell me about dinosaurs" → "Let's create lesson about it" = CREATE_LESSON with topic="dinosaurs"
-- "We discussed space" → "Make lesson about that" = CREATE_LESSON with topic="space"  
+- "Tell me about dinosaurs" → "Let's create lesson" = CREATE_LESSON with topic="dinosaurs"
+- "Who is Batman?" → "Create lesson" = CREATE_LESSON with topic="batman" or "superheroes"
+- "We discussed space" → "Make lesson about that" = CREATE_LESSON with topic="space"
 - "I mentioned animals earlier" → "Create lesson about them" = CREATE_LESSON with topic="animals"
+
+**CRITICAL: EVEN WITHOUT EXPLICIT REFERENCE, CHECK CONVERSATION HISTORY**
+If user says just "create lesson" or "let's create lesson", scan the conversation history for any educational topics they were discussing.
 
 1. **CREATE_LESSON** - if user explicitly wants to create a lesson:
    - EXPLICIT phrases: "create lesson", "make lesson", "lesson about", "teach children"
-   - **CONTEXTUAL phrases**: "lesson about it", "lesson about that"
+   - **CONTEXTUAL phrases**: "lesson about it", "lesson about that", or just "create lesson" (scan history)
    - Must have CLEAR intent to create educational content
-   - **IMPORTANT**: If user says "about it/that/this", resolve the reference from conversation history
-   - Just asking about a topic (like "tell me about dinosaurs") is NOT lesson creation
-   - REQUIRED: topic (subject) + age (age group)
-   - If something missing → isDataSufficient: false
+   - **IMPORTANT**: If no explicit topic, search conversation history for educational topics discussed
+   - Just asking about a topic (like "tell me about dinosaurs") is NOT lesson creation UNLESS followed by lesson creation request
 
 2. **CREATE_NEW_SLIDE** - if there's an active lesson and asking for slide:
    - Phrases: "next slide", "another slide", "third slide", "let's continue"
@@ -194,6 +207,23 @@ RESPONSE:
   },
   "isDataSufficient": true,
   "missingData": []
+}
+
+MESSAGE: "let's create lesson" (after conversation about Batman)
+ANALYSIS: User previously asked about Batman, now wants to create lesson. Extract topic from conversation history.
+RESPONSE:
+{
+  "intent": "CREATE_LESSON",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "topic": "batman",
+    "age": null,
+    "rawMessage": "let's create lesson"
+  },
+  "isDataSufficient": false,
+  "missingData": ["age"],
+  "suggestedQuestion": "For what age should I create a lesson about Batman?"
 }
 
 MESSAGE: "підкажи хто такі динозаври"
