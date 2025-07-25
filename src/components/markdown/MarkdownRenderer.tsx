@@ -9,8 +9,152 @@ interface MarkdownRendererProps {
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   const theme = useTheme();
   
+  // Helper function to process nested lists
+  const processLists = (text: string): string => {
+    const lines = text.split('\n');
+    const result: string[] = [];
+    let i = 0;
+    
+    while (i < lines.length) {
+      const line = lines[i];
+      
+      // Check if this line starts a list - handle both regular and indented lists
+      if (/^(\s*)([-•*])\s+(.+)/.test(line)) {
+        const listResult = processListBlock(lines, i);
+        result.push(listResult.html);
+        i = listResult.nextIndex;
+      } else {
+        result.push(line);
+        i++;
+      }
+    }
+    
+    return result.join('\n');
+  };
+
+  // Helper function to process a complete list block
+  const processListBlock = (lines: string[], startIndex: number): { html: string; nextIndex: number } => {
+    const listItems: Array<{ content: string; indent: number; marker: string; spaces: number }> = [];
+    let i = startIndex;
+    
+    // Parse all consecutive list items (including nested ones)
+    while (i < lines.length) {
+      const line = lines[i];
+      // Match list items, including nested ones with different indentation
+      const match = line.match(/^(\s*)([-•*])(\s+)(.+)/);
+      
+      if (!match) {
+        // Check if this is a continuation of a list item (no marker but indented)
+        const continuationMatch = line.match(/^(\s{4,})(.+)/);
+        if (continuationMatch && listItems.length > 0) {
+          // This is a continuation line - append to the last item
+          const lastItem = listItems[listItems.length - 1];
+          lastItem.content += ' ' + continuationMatch[2].trim();
+          i++;
+          continue;
+        }
+        break;
+      }
+      
+      const [, whitespace, marker, spacesAfterMarker, content] = match;
+      const indent = whitespace.length;
+      const spaces = spacesAfterMarker.length;
+      
+      listItems.push({ 
+        content: content.trim(), 
+        indent, 
+        marker,
+        spaces 
+      });
+      i++;
+    }
+    
+    if (listItems.length === 0) {
+      return { html: lines[startIndex], nextIndex: startIndex + 1 };
+    }
+    
+    // Convert to nested HTML structure
+    const html = buildNestedListHTML(listItems);
+    return { html, nextIndex: i };
+  };
+
+  // Helper function to build nested HTML from list items
+  const buildNestedListHTML = (items: Array<{ content: string; indent: number; marker: string; spaces: number }>): string => {
+    if (items.length === 0) return '';
+    
+    // Determine if this contains nested list items (multiple spaces after asterisk)
+    const hasNestedItems = items.some(item => 
+      item.marker === '*' && item.spaces > 1
+    );
+    
+    // Find the base indentation level
+    const baseIndent = Math.min(...items.map(item => item.indent));
+    
+    let html = '';
+    let currentLevel = 0;
+    let openTags: string[] = [];
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      
+      // Calculate nesting level based on indentation
+      // 0 = base level, 1 = first nested level, etc.
+      let level = 0;
+      if (item.indent > baseIndent) {
+        level = Math.ceil((item.indent - baseIndent) / 4); // 4 spaces = one level
+      }
+      
+      // Close tags if we're going to a higher level
+      while (currentLevel > level) {
+        html += '</ul>';
+        openTags.pop();
+        currentLevel--;
+      }
+      
+      // Open tags if we're going to a deeper level
+      while (currentLevel < level) {
+        const isFirstList = openTags.length === 0;
+        const isNestedList = openTags.length > 0;
+        
+        let className = '';
+        if (isFirstList && hasNestedItems) {
+          className = ' class="has-nested"';
+        } else if (isNestedList) {
+          className = ' class="nested-list"';
+        }
+        
+        html += `<ul${className}>`;
+        openTags.push('ul');
+        currentLevel++;
+      }
+      
+      // Add the list item
+      html += `<li>${item.content}</li>`;
+    }
+    
+    // Close all remaining tags
+    while (openTags.length > 0) {
+      html += '</ul>';
+      openTags.pop();
+    }
+    
+    // If no nesting occurred, add the main ul tag
+    if (!html.startsWith('<ul')) {
+      let className = '';
+      if (hasNestedItems) {
+        className = ' class="simple-list"';
+      }
+      html = `<ul${className}>${html}</ul>`;
+    }
+    
+    return html;
+  };
+
   const formatText = (text: string) => {
-    return text
+    // First process lists with the advanced parser
+    let processedText = processLists(text);
+    
+    return processedText
       // Headers - order matters: longest patterns first
       .replace(/^##### (.*$)/gm, '<h5>$1</h5>')
       .replace(/^#### (.*$)/gm, '<h4>$1</h4>')
@@ -43,17 +187,6 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
       
       // Emoji bullets - keeping as div with emoji
       .replace(/^🔹 (.*$)/gm, '<div class="emoji-item">🔹 $1</div>')
-      
-      // Standard lists - convert to standard HTML lists
-      .replace(/^([-•]\s.*(?:\n[-•]\s.*)*)/gm, (match) => {
-        const items = match
-          .split('\n')
-          .map(line => line.replace(/^[-•]\s/, '').trim())
-          .filter(item => item.length > 0)
-          .map(item => `<li>${item}</li>`)
-          .join('');
-        return `<ul>${items}</ul>`;
-      })
       
       // Action items
       .replace(/^⚡ (.*$)/gm, '<div class="action-item">⚡ $1</div>')
@@ -230,6 +363,40 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             },
           },
           '& + br': { display: 'none' },
+        },
+        
+        // Lists with nested items
+        '& ul.has-nested': {
+          margin: '16px 0',
+        },
+        
+        // Simple lists without nesting
+        '& ul.simple-list': {
+          margin: '16px 0',
+        },
+        
+        // Nested lists with special styling
+        '& ul.nested-list': {
+          margin: '8px 0',
+          paddingLeft: '24px',
+          backgroundColor: `${theme.palette.grey[50]}`,
+          borderRadius: '4px',
+          padding: '8px 16px 8px 24px',
+          border: `1px solid ${theme.palette.grey[200]}`,
+          
+          '& li': {
+            margin: '4px 0',
+            fontSize: '0.875rem',
+            lineHeight: 1.5,
+            
+            '&::before': {
+              content: '"◦"',
+              color: theme.palette.secondary.main, // #10B981 green
+              fontWeight: 'bold',
+              left: '-16px',
+              fontSize: '1.1em',
+            },
+          },
         },
         
         // Special section styling with project colors
