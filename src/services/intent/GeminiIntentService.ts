@@ -22,6 +22,32 @@ export class GeminiIntentService implements IIntentDetectionService {
   }
 
   async detectIntent(message: string, conversationHistory?: any): Promise<EnhancedIntentDetectionResult> {
+    // Debug: Check if lesson plan exists
+    const hasLessonPlan = conversationHistory?.planningResult ? true : false;
+    console.log('🔍 [DEBUG] Has lesson plan:', hasLessonPlan);
+    console.log('🔍 [DEBUG] Conversation step:', conversationHistory?.step);
+    if (hasLessonPlan && (message.toLowerCase().includes('generate') || message.toLowerCase().includes('slides'))) {
+      console.log('🔍 [DEBUG] Should be GENERATE_SLIDES - plan exists and message mentions generation/slides');
+      
+      // TEMPORARY FIX: Force correct intent when plan exists and user mentions slides/generation
+      console.log('🔧 [TEMPORARY FIX] Forcing GENERATE_SLIDES intent');
+      return {
+        intent: UserIntent.GENERATE_SLIDES,
+        confidence: 0.95,
+        language: 'en',
+        parameters: {
+          topic: undefined,
+          age: undefined,
+          regenerationInstruction: 'generate slides from lesson plan',
+          rawMessage: message
+        },
+        isDataSufficient: true,
+        missingData: [],
+        suggestedQuestion: undefined,
+        reasoning: 'Lesson plan exists and user mentions slide generation'
+      };
+    }
+    
     // Let AI detect language naturally instead of hardcoded detection
     const prompt = this.buildGeminiPrompt(message, conversationHistory);
 
@@ -60,7 +86,9 @@ CONVERSATION CONTEXT:
 - Lesson topic: ${conversationHistory.lessonTopic || 'not specified'}
 - Children age: ${conversationHistory.lessonAge || 'not specified'}
 - Generated slides: ${conversationHistory.generatedSlides?.length || 0}
-- Has lesson plan: ${conversationHistory.planningResult ? 'YES' : 'NO'}
+- Has lesson plan: ${conversationHistory.planningResult ? 'YES - PLAN EXISTS, READY FOR SLIDE GENERATION' : 'NO'}
+
+CRITICAL: If lesson plan exists and user mentions generating/creating slides or says "it"/"them" referring to slides → GENERATE_SLIDES!
 
 IMPORTANT: If there's an active lesson and user asks about slides ("next", "third", "another slide", "let's go"), this is almost always CREATE_NEW_SLIDE!
 `;
@@ -92,11 +120,18 @@ TASK: Analyze the user's message and conversation context, then:
 
 IMPORTANT: Detect the user's language from their message and respond in the SAME language!
 
+**PRIORITY RULES**: 
+- If lesson plan exists (planningResult) + user mentions slides/generation → ALWAYS GENERATE_SLIDES
+- Keywords that trigger GENERATE_SLIDES when plan exists: "generate", "create", "make", "build", "slides", "them", "it" (referring to slides)
+- Phrases like "then generate slides", "lets generate it", "okay, lets generate it" → ALWAYS GENERATE_SLIDES if plan exists
+- Be tolerant of typos and variations in key phrases
+
 SUPPORTED INTENTS (exact values):
 - CREATE_LESSON: create a lesson (requires: topic, age)
 - GENERATE_PLAN: create lesson plan  
 - EDIT_PLAN: modify/improve lesson plan (phrases: "improve plan", "change plan", "update plan")
-- CREATE_SLIDE: create a slide
+- GENERATE_SLIDES: generate all slides from lesson plan (bulk generation)
+- CREATE_SLIDE: create a single slide
 - CREATE_NEW_SLIDE: add new slide (when there's an active lesson)
 - REGENERATE_SLIDE: regenerate slide
 - EDIT_HTML_INLINE: text changes in HTML
@@ -114,23 +149,36 @@ PARAMETERS to extract:
 
 INTENT DETECTION LOGIC:
 
+**CRITICAL: CONTEXT-DEPENDENT DECISION MAKING**
+The conversation state determines the correct intent:
+
+1. If conversationHistory.planningResult exists AND user says approval phrases ("go", "proceed", "continue", "start", "let's go", "approve", "yes") → GENERATE_SLIDES
+2. If conversationHistory.planningResult exists AND user says slide generation phrases (even with typos: "generate slides", "generete slides", "create slides", "make slides", "then generate slides", "lets generate it", "okay, lets generate it") → GENERATE_SLIDES
+3. If conversationHistory.currentLesson exists (but no planningResult) AND user asks for slides → CREATE_NEW_SLIDE  
+4. If no lesson context and user wants to create content → CREATE_LESSON
+
+**TYPO TOLERANCE**: Be flexible with spelling mistakes in key phrases. Focus on the intent rather than exact spelling.
+
 **CRITICAL: RESOLVE CONTEXTUAL REFERENCES**
 When user says "it", "that", "this topic", "the same thing", etc., OR when they say "create lesson" without specifying a topic, 
 look at the conversation history to understand what they were discussing previously.
 
-TOPIC EXTRACTION PRIORITY:
-1. EXPLICIT topic in current message ("create lesson about dinosaurs")
+TOPIC AND AGE EXTRACTION PRIORITY:
+1. EXPLICIT topic/age in current message ("create lesson about dinosaurs for 5 year olds")
 2. CONTEXTUAL reference in current message ("create lesson about it", "lesson about that")
-3. TOPIC FROM CONVERSATION HISTORY - scan the conversation for topics they discussed:
-   - Look for questions like "who is X", "what is Y", "tell me about Z"
-   - Look for educational discussions about specific subjects
+3. TOPIC AND AGE FROM CONVERSATION HISTORY - scan the conversation for:
+   **TOPICS**: Look for questions like "who is X", "what is Y", "tell me about Z"
+   **AGES**: Look for phrases like "age 3", "3 years old", "for 5 year olds", "preschoolers", numbers followed by age context
    - Extract the main subject/character/concept they were interested in
+   - Extract any age mentions from previous conversations
 
 Examples:
 - "Tell me about dinosaurs" → "Let's create lesson" = CREATE_LESSON with topic="dinosaurs"
 - "Who is Batman?" → "Create lesson" = CREATE_LESSON with topic="batman" or "superheroes"
 - "We discussed space" → "Make lesson about that" = CREATE_LESSON with topic="space"
 - "I mentioned animals earlier" → "Create lesson about them" = CREATE_LESSON with topic="animals"
+- "lets create a lesson about him 3" → age="3", topic="batman" (from previous context)
+- "create presentation" (after discussing batman and age 3) = topic="batman", age="3"
 
 **CRITICAL: EVEN WITHOUT EXPLICIT REFERENCE, CHECK CONVERSATION HISTORY**
 If user says just "create lesson" or "let's create lesson", scan the conversation history for any educational topics they were discussing.
@@ -142,11 +190,21 @@ If user says just "create lesson" or "let's create lesson", scan the conversatio
    - **IMPORTANT**: If no explicit topic, search conversation history for educational topics discussed
    - Just asking about a topic (like "tell me about dinosaurs") is NOT lesson creation UNLESS followed by lesson creation request
 
-2. **CREATE_NEW_SLIDE** - if there's an active lesson and asking for slide:
+2. **GENERATE_SLIDES** - if user wants to generate all slides from an existing lesson plan:
+   - Phrases: "generate slides", "create slides", "make slides", "build slides"
+   - **TYPO variations**: "generete slides", "genrate slides", "generatr slides", "creat slides"
+   - **EXTENDED phrases**: "then generate slides", "lets generate it", "okay, lets generate it", "generate them", "create them", "make them"
+   - **APPROVAL phrases**: "go", "proceed", "continue", "start", "let's go", "approve", "yes"
+   - Context: must have conversationHistory.planningResult (lesson plan exists)
+   - **CRITICAL**: If planningResult exists and user says approval phrases OR slide generation phrases, this is GENERATE_SLIDES!
+   - This triggers bulk slide generation from the lesson plan
+
+3. **CREATE_NEW_SLIDE** - if there's an active lesson and asking for slide:
    - Phrases: "next slide", "another slide", "third slide", "let's continue"
    - Context: conversationHistory.currentLesson exists
+   - **IMPORTANT**: Only if currentLesson exists AND no planningResult waiting for approval
 
-3. **EDIT_PLAN** - editing lesson plan:
+4. **EDIT_PLAN** - editing lesson plan:
    - Phrases: "change plan", "improve plan", "add to plan"
    - Context: conversationHistory.step === 'planning'
 
@@ -207,6 +265,95 @@ RESPONSE:
   },
   "isDataSufficient": true,
   "missingData": []
+}
+
+MESSAGE: "go" (with conversationHistory.planningResult exists)
+ANALYSIS: User wants to approve plan and generate slides
+RESPONSE:
+{
+  "intent": "GENERATE_SLIDES",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "topic": null,
+    "age": null,
+    "instruction": "approve plan and generate slides",
+    "rawMessage": "go"
+  },
+  "isDataSufficient": true,
+  "missingData": [],
+  "suggestedQuestion": null
+}
+
+MESSAGE: "generete slides" (with conversationHistory.planningResult exists)
+ANALYSIS: User wants to generate slides (typo in "generate"), plan exists
+RESPONSE:
+{
+  "intent": "GENERATE_SLIDES",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "topic": null,
+    "age": null,
+    "instruction": "generate slides from lesson plan",
+    "rawMessage": "generete slides"
+  },
+  "isDataSufficient": true,
+  "missingData": [],
+  "suggestedQuestion": null
+}
+
+MESSAGE: "then generate slides" (with conversationHistory.planningResult exists)
+ANALYSIS: User wants to proceed with slide generation, plan exists
+RESPONSE:
+{
+  "intent": "GENERATE_SLIDES",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "topic": null,
+    "age": null,
+    "instruction": "generate slides from lesson plan",
+    "rawMessage": "then generate slides"
+  },
+  "isDataSufficient": true,
+  "missingData": [],
+  "suggestedQuestion": null
+}
+
+MESSAGE: "okay, lets generate it" (with conversationHistory.planningResult exists)
+ANALYSIS: User agrees to generate slides, plan exists
+RESPONSE:
+{
+  "intent": "GENERATE_SLIDES",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "topic": null,
+    "age": null,
+    "instruction": "generate slides from lesson plan",
+    "rawMessage": "okay, lets generate it"
+  },
+  "isDataSufficient": true,
+  "missingData": [],
+  "suggestedQuestion": null
+}
+
+MESSAGE: "lets create a presentation" (after discussing batman and age 3)
+ANALYSIS: has topic="batman" and age="3" from conversation context
+RESPONSE:
+{
+  "intent": "CREATE_LESSON",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "topic": "batman",
+    "age": "3",
+    "rawMessage": "lets create a presentation"
+  },
+  "isDataSufficient": true,
+  "missingData": [],
+  "suggestedQuestion": null
 }
 
 MESSAGE: "let's create lesson" (after conversation about Batman)

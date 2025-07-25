@@ -340,9 +340,9 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     console.log('⚡ [CHAT] Updated context with user action');
 
     try {
-      // Спеціальна обробка для approve_plan - використовуємо SSE генерацію з прогресом
-      if (action === 'approve_plan' && conversationHistory) {
-        console.log('🚀 [CHAT] Using SSE generation with progress for plan approval');
+      // Спеціальна обробка для approve_plan та generate_slides - використовуємо SSE генерацію з прогресом
+      if ((action === 'approve_plan' || action === 'generate_slides') && conversationHistory) {
+        console.log('🚀 [CHAT] Using SSE generation with progress for', action === 'approve_plan' ? 'plan approval' : 'slide generation');
         
         // === ПЕРЕДАЄМО КОНТЕКСТ ДО API ADAPTER ДЛЯ PRE-REQUEST COMPRESSION ===
         const response = await apiAdapter.sendMessage('', conversationHistory, action, updatedContext);

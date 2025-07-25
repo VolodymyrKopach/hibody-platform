@@ -23,6 +23,12 @@ export class ActionHandlerService implements IActionHandlerService {
       case 'approve_plan':
         return await this.handleApprovePlan(history);
       
+      case 'generate_slides':
+        // IMPORTANT: Generate slides behaves exactly like approve_plan
+        // This ensures both "approve plan" and "generate slides" quick actions create lesson context
+        // and trigger bulk slide generation from the lesson plan
+        return await this.handleApprovePlan(history);
+      
       case 'edit_plan':
         return await this.handleEditPlanAction(history);
 

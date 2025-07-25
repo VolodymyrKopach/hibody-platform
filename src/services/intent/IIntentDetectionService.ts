@@ -32,6 +32,7 @@ export enum UserIntent {
   CREATE_LESSON = 'create_lesson',
   GENERATE_PLAN = 'generate_plan',
   EDIT_PLAN = 'edit_plan',
+  GENERATE_SLIDES = 'generate_slides',
   CREATE_SLIDE = 'create_slide',
   CREATE_NEW_SLIDE = 'create_new_slide',
   REGENERATE_SLIDE = 'regenerate_slide',

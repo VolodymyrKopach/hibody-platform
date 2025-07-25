@@ -111,6 +111,12 @@ export class ChatService {
         return await this.actionHandlerService.handleAction(action, conversationHistory, intentResult);
       }
       
+      if (intentResult.intent === 'generate_slides') {
+        // Handle GENERATE_SLIDES intent by delegating to action handler
+        // This supports both text-based intent detection and direct action calls
+        return await this.actionHandlerService.handleAction('generate_slides', conversationHistory, intentResult);
+      }
+
       if (intentResult.intent === 'create_slide') {
         return await this.handleCreateSlide(conversationHistory, intentResult);
       }
