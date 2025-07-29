@@ -6,7 +6,7 @@ import { Box, Container, Typography } from '@mui/material'
 import { useTheme, alpha } from '@mui/material/styles'
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm'
 import { useAuth } from '@/providers/AuthProvider'
-import { LoadingScreen } from '@/components/ui'
+import { LoadingScreen, Logo } from '@/components/ui'
 
 function ForgotPasswordPageContent() {
   const theme = useTheme()
@@ -54,23 +54,8 @@ function ForgotPasswordPageContent() {
         >
           {/* Logo */}
           <Box sx={{ textAlign: 'center' }}>
-            <Box
-              sx={{
-                width: 80,
-                height: 80,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-                borderRadius: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.3)}`,
-                mx: 'auto',
-                mb: 2,
-              }}
-            >
-              <Typography variant="h3" sx={{ color: 'white', fontWeight: 700 }}>
-                H
-              </Typography>
+            <Box sx={{ mx: 'auto', mb: 2 }}>
+              <Logo variant="auth" />
             </Box>
             <Typography
               variant="h4"

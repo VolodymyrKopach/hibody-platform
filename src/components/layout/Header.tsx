@@ -36,6 +36,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { AuthModal } from '@/components/auth';
+import { Logo } from '@/components/ui';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -130,22 +131,7 @@ const Header: React.FC<HeaderProps> = ({
         <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1 }}>
           {/* Logo */}
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-              }}
-            >
-              <Typography variant="h6" sx={{ color: 'white', fontWeight: 700, fontSize: '1.1rem' }}>
-                H
-              </Typography>
-            </Box>
+            <Logo variant="header" />
             
             <Typography
               variant="h5"

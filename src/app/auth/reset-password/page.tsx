@@ -7,6 +7,7 @@ import { useTheme, alpha } from '@mui/material/styles'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import ResetPasswordForm from '@/components/auth/ResetPasswordForm'
 import { LoadingScreen } from '@/components/ui/LoadingScreen'
+import { Logo } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
 
 function ResetPasswordPageContent() {
@@ -177,23 +178,8 @@ function ResetPasswordPageContent() {
         >
           {/* Logo */}
           <Box sx={{ textAlign: 'center' }}>
-            <Box
-              sx={{
-                width: 80,
-                height: 80,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-                borderRadius: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.3)}`,
-                mx: 'auto',
-                mb: 2,
-              }}
-            >
-              <Typography variant="h3" sx={{ color: 'white', fontWeight: 700 }}>
-                H
-              </Typography>
+            <Box sx={{ mx: 'auto', mb: 2 }}>
+              <Logo variant="auth" />
             </Box>
             <Typography
               variant="h4"
