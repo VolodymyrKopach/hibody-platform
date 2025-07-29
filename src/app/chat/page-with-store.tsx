@@ -29,8 +29,6 @@ const ChatInterfaceWithStore: React.FC = () => {
     setInputText,
     isLoading,
     sendMessage,
-    regenerateMessage,
-    handleFeedback,
     handleActionClick
   } = useChatLogic();
 
@@ -43,8 +41,6 @@ const ChatInterfaceWithStore: React.FC = () => {
         setInputText={setInputText}
         isLoading={isLoading}
         sendMessage={sendMessage}
-        regenerateMessage={regenerateMessage}
-        handleFeedback={handleFeedback}
         handleActionClick={handleActionClick}
       />
       
@@ -62,8 +58,6 @@ interface ChatInterfaceContentProps {
   setInputText: (text: string) => void;
   isLoading: boolean;
   sendMessage: (text: string) => void;
-  regenerateMessage: (messageId: number) => void;
-  handleFeedback: (messageId: number, feedback: 'like' | 'dislike') => void;
   handleActionClick: (action: string) => void;
 }
 
@@ -74,8 +68,6 @@ const ChatInterfaceContent: React.FC<ChatInterfaceContentProps> = ({
   setInputText,
   isLoading,
   sendMessage,
-  regenerateMessage,
-  handleFeedback,
   handleActionClick
 }) => {
   const theme = useTheme();
@@ -134,8 +126,6 @@ const ChatInterfaceContent: React.FC<ChatInterfaceContentProps> = ({
               <ChatMessage
                 key={message.id || index}
                 message={message}
-                onFeedback={handleFeedback}
-                onRegenerate={regenerateMessage}
                 onActionClick={handleActionClick}
               />
             ))}

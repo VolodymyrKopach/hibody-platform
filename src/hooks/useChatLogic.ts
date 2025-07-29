@@ -526,18 +526,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     }
   }, [isLoading, conversationHistory, apiAdapter, generationActions, startGenerationWithProgress, conversationContext]);
 
-  const regenerateMessage = useCallback(async (messageId: number) => {
-    // Реалізація регенерації повідомлення
-    console.log('Regenerating message:', messageId);
-  }, []);
 
-  const handleFeedback = useCallback((messageId: number, feedback: 'like' | 'dislike') => {
-    setMessages(prev => 
-      prev.map(msg => 
-        msg.id === messageId ? { ...msg, feedback } : msg
-      )
-    );
-  }, []);
 
   // === ФУНКЦІЇ ДЛЯ ОНОВЛЕННЯ КОНТЕКСТУ РОЗМОВИ ===
   // updateConversationContext, // This function is now directly available
@@ -554,8 +543,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     setInputText,
     isLoading,
     sendMessage,
-    regenerateMessage,
-    handleFeedback,
     handleActionClick,
     
     // Додаємо інформацію про паралельну генерацію

@@ -6,21 +6,18 @@ import {
   Paper,
   Avatar,
   Fade,
-  IconButton,
   LinearProgress,
   Chip
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
-import { Bot, User, ThumbsUp, ThumbsDown, RefreshCw, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Bot, User, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Message, SlideGenerationProgress } from '@/types/chat';
 import { SimpleLesson } from '@/types/chat';
 import MarkdownRenderer from '@/components/markdown/MarkdownRenderer';
 
 interface ChatMessageProps {
   message: Message;
-  onRegenerate?: (messageId: number) => void;
-  onFeedback?: (messageId: number, feedback: 'like' | 'dislike') => void;
   onLessonCreate?: (lesson: SimpleLesson) => void;
   onActionClick?: (action: string, description: string) => void;
   slideGenerationProgress?: SlideGenerationProgress[]; // Slide generation progress
@@ -29,8 +26,6 @@ interface ChatMessageProps {
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
-  onRegenerate,
-  onFeedback,
   onLessonCreate,
   onActionClick,
   slideGenerationProgress,
@@ -64,7 +59,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             title: title,
             content: htmlMatch[1],
             htmlContent: htmlMatch[1],
-            type: 'content',
             status: 'completed'
           }]
         };
@@ -161,7 +155,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           title: `${topic} - Introduction`,
           content: 'Introductory slide generated',
           htmlContent: '<div>Slide generating...</div>',
-          type: 'content',
           status: 'completed'
         }]
       };
@@ -237,7 +230,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                           icon={
                             slide.status === 'completed' ? <CheckCircle size={14} /> :
                             slide.status === 'error' ? <XCircle size={14} /> :
-                            slide.status === 'generating' ? <RefreshCw size={14} /> :
+                            slide.status === 'generating' ? <Clock size={14} /> :
                             <Clock size={14} />
                           }
                           label={
@@ -339,62 +332,20 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 </Box>
               )}
 
-              {/* Standard Action Buttons */}
-              {message.sender === 'ai' && (
-                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    {/* Feedback buttons */}
-                    <IconButton
-                      size="small"
-                      onClick={() => onFeedback?.(message.id, 'like')}
-                      sx={{
-                        color: message.feedback === 'like' ? theme.palette.success.main : theme.palette.text.secondary,
-                        '&:hover': { color: theme.palette.success.main }
-                      }}
-                    >
-                      <ThumbsUp size={16} />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => onFeedback?.(message.id, 'dislike')}
-                      sx={{
-                        color: message.feedback === 'dislike' ? theme.palette.error.main : theme.palette.text.secondary,
-                        '&:hover': { color: theme.palette.error.main }
-                      }}
-                    >
-                      <ThumbsDown size={16} />
-                    </IconButton>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    {/* Create lesson button if contains HTML */}
-                    {message.text.includes('```html') && (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={handleLessonCreate}
-                        sx={{
-                          borderRadius: 2,
-                          textTransform: 'none',
-                          fontSize: '0.75rem',
-                        }}
-                      >
-                        {t('actions.createLesson')}
-                      </Button>
-                    )}
-                    
-                    {/* Regenerate button */}
-                    <IconButton
-                      size="small"
-                      onClick={() => onRegenerate?.(message.id)}
-                      sx={{
-                        color: theme.palette.text.secondary,
-                        '&:hover': { color: theme.palette.primary.main }
-                      }}
-                    >
-                      <RefreshCw size={16} />
-                    </IconButton>
-                  </Box>
+              {message.sender === 'ai' && message.text.includes('```html') && (
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={handleLessonCreate}
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    {t('actions.createLesson')}
+                  </Button>
                 </Box>
               )}
 

@@ -41,8 +41,6 @@ const ChatInterface: React.FC = () => {
     setInputText,
     isLoading,
     sendMessage,
-    regenerateMessage,
-    handleFeedback: provideFeedback,
     handleActionClick,
     setOnLessonUpdate
   } = useChatLogic();
@@ -176,8 +174,6 @@ const ChatInterface: React.FC = () => {
                   <ChatMessage
                     key={message.id}
                     message={message}
-                    onRegenerate={regenerateMessage}
-                    onFeedback={provideFeedback}
                     onLessonCreate={updateCurrentLesson}
                     onActionClick={handleActionClick}
                     slideGenerationProgress={(message as any).slideGenerationProgress}

@@ -4,7 +4,6 @@ export interface Message {
   sender: 'user' | 'ai';
   timestamp: Date;
   status: 'sending' | 'sent' | 'delivered';
-  feedback: 'like' | 'dislike' | null;
   availableActions?: Array<{
     action: string;
     label: string;
