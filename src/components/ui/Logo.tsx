@@ -31,7 +31,7 @@ const Logo: React.FC<LogoProps> = ({ size, variant = 'header' }) => {
       }}
     >
       <img
-        src="/images/image-1.png"
+        src="/images/ts-logo.png"
         alt="TeachSpark Logo"
         style={{
           width: '100%',

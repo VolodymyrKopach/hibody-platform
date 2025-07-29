@@ -3,51 +3,34 @@
 import React from 'react'
 import { Box, keyframes } from '@mui/material'
 import { styled } from '@mui/material/styles'
+import Image from 'next/image'
 
-// Wavy animation with two balanced waves - indigo palette
-const waveAnimation = keyframes`
+// Floating animation for the TypeScript logo (faster)
+const floatingAnimation = keyframes`
   0% {
-    transform: scale(1) rotate(0deg);
-    box-shadow: 
-      0 8px 32px rgba(99, 102, 241, 0.3),
-      0 0 0 8px rgba(99, 102, 241, 0.1);
-  }
-  25% {
-    transform: scale(1.1) rotate(2deg);
-    box-shadow: 
-      0 12px 40px rgba(99, 102, 241, 0.4),
-      0 0 0 12px rgba(99, 102, 241, 0.05);
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 8px 16px rgba(0, 122, 204, 0.3));
   }
   50% {
-    transform: scale(1.05) rotate(0deg);
-    box-shadow: 
-      0 16px 48px rgba(99, 102, 241, 0.5),
-      0 0 0 16px rgba(99, 102, 241, 0.03);
-  }
-  75% {
-    transform: scale(1.1) rotate(-2deg);
-    box-shadow: 
-      0 12px 40px rgba(99, 102, 241, 0.4),
-      0 0 0 12px rgba(99, 102, 241, 0.05);
+    transform: translateY(-8px) scale(1.02);
+    filter: drop-shadow(0 12px 24px rgba(0, 122, 204, 0.4));
   }
   100% {
-    transform: scale(1) rotate(0deg);
-    box-shadow: 
-      0 8px 32px rgba(99, 102, 241, 0.3),
-      0 0 0 8px rgba(99, 102, 241, 0.1);
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 8px 16px rgba(0, 122, 204, 0.3));
   }
 `
 
-// Gradient background animation - indigo palette
-const backgroundPulse = keyframes`
+// Pulse animation for the glow effect using TypeScript colors (faster)
+const pulseGlow = keyframes`
   0% {
-    background: linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(129, 140, 248) 100%);
+    box-shadow: 0 0 20px rgba(0, 122, 204, 0.2);
   }
   50% {
-    background: linear-gradient(135deg, rgb(129, 140, 248) 0%, rgb(99, 102, 241) 100%);
+    box-shadow: 0 0 40px rgba(0, 122, 204, 0.4);
   }
   100% {
-    background: linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(129, 140, 248) 100%);
+    box-shadow: 0 0 20px rgba(0, 122, 204, 0.2);
   }
 `
 
@@ -67,28 +50,47 @@ const LoadingContainer = styled(Box)(({ theme }) => ({
 export const LoadingScreen: React.FC = () => {
   return (
     <LoadingContainer>
-      {/* Icon with two balanced waves - indigo palette */}
+      {/* TypeScript logo container */}
       <Box
         sx={{
-          width: 80,
-          height: 80,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(129, 140, 248) 100%)',
+          position: 'relative',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'white',
-          fontSize: '2rem',
-          fontWeight: 'bold',
-          animation: `
-            ${waveAnimation} 2.5s ease-in-out infinite,
-            ${backgroundPulse} 3s ease-in-out infinite
-          `,
-          border: 'none',
-          outline: 'none',
+          marginTop: '30px', // Move icon down a few pixels
         }}
       >
-        Hi
+        {/* Subtle glow effect behind the logo */}
+        <Box
+          sx={{
+            position: 'absolute',
+            width: 120,
+            height: 120,
+            borderRadius: '20px',
+            background: 'radial-gradient(circle, rgba(0, 122, 204, 0.08) 0%, transparent 70%)',
+            animation: `${pulseGlow} 2.5s ease-in-out infinite`,
+          }}
+        />
+        
+        {/* TypeScript logo */}
+        <Box
+          sx={{
+            position: 'relative',
+            zIndex: 1,
+            animation: `${floatingAnimation} 2.5s ease-in-out infinite`,
+            padding: 1,
+          }}
+        >
+          <Image
+            src="/images/ts-logo.png"
+            alt="Loading..."
+            width={80}
+            height={80}
+            style={{
+              objectFit: 'contain',
+            }}
+          />
+        </Box>
       </Box>
     </LoadingContainer>
   )

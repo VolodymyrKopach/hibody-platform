@@ -64,7 +64,7 @@ export const LoadingTest: React.FC = () => {
     <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Loading Components Testing with Animations
+          Loading Components Testing with TypeScript Logo
         </Typography>
         
         <Stack spacing={3}>
@@ -72,7 +72,7 @@ export const LoadingTest: React.FC = () => {
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                🌊 Wavy full-screen logo animation (Hi)
+                ⚡ TypeScript logo with floating animation and blue glow
               </Typography>
               {infiniteFullScreen && (
                 <Chip 
@@ -181,17 +181,17 @@ export const LoadingTest: React.FC = () => {
           {/* Features Info */}
           <Box>
             <Typography variant="body2" color="text.secondary">
-              💡 Features of new animations:
+              💡 Features of the TypeScript logo loading screen:
               <br />
-              • The "Hi" logo has a wavy animation with rotation and scaling
+              • Clean TypeScript logo with floating animation
               <br />
-              • Gradient background changes colors smoothly
+              • Subtle blue glow effect using TypeScript brand colors
               <br />
-              • Round "halo" effect around the logo instead of square
+              • No distracting text or dots - pure logo focus
               <br />
-              • Dots in PageLoader pulsate with delay to create a wave
+              • Smooth 2.5s animation cycle for relaxed feel
               <br />
-              • All text messages removed for a clean design
+              • Professional, minimal design
               <br />
               • ♾️ <strong>Infinite Mode</strong> - for detailed animation testing
             </Typography>
