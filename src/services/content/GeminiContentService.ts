@@ -468,309 +468,181 @@ Provide only the ready HTML code without any explanations. The code must be comp
     // Детальні інструкції для кожної вікової групи
     if (ageGroup === '2-3') {
       return `
-**AVAILABLE COMPONENTS FOR 2-3 YEARS (Choose appropriate ones for each slide):**
+**AVAILABLE INTERACTIVE COMPONENTS FOR 2-3 YEARS:**
 
-**🌟 SIMPLE, LARGE INTERACTIONS:**
-- Use one very large, prominent button as the main focus - limit to ONE per slide
-- Create large, central visual elements that capture attention
-- Include basic shape recognition activities with large touch areas
-- Use for: Primary interactions, main content display, shape recognition
-- Teaching approach: Single-focus design with extra-large interactive elements
+**🌟 LARGE ACTION BUTTONS:**
+- Giant buttons that children can easily touch and click
+- One main button per slide that does something when pressed
+- Makes sounds and gives visual feedback when touched
+- Perfect for starting activities or moving to next content
 
-**🐾 FRIENDLY CHARACTER ENGAGEMENT:**
-- Include animated animal characters that move and respond
-- Use large, friendly buttons for simple interactions
-- Focus on one character or element at a time
-- Use for: Emotional connection, basic recognition, simple cause-effect
-- Teaching approach: Character-based learning with simple, clear interactions
+**🐾 FRIENDLY ANIMAL CHARACTERS:**
+- Cute animal friends that respond when children touch them
+- Animals make their characteristic sounds (cats meow, dogs bark)
+- Characters can bounce, move, or change when interacted with
+- Helps create emotional connection and engagement
 
-**🎵 AUDIO-FIRST LEARNING:**
-- Sound buttons with visual waves
-- Audio toggle always visible
-- Large speaker elements
-- Use for: Sound recognition, music play, audio feedback
-- Component classes: .sound-button, .sound-wave, .audio-toggle
+**🎵 SOUND AND MUSIC ELEMENTS:**
+- Buttons that play sounds, music, or spoken words
+- Audio controls so children (or teachers) can turn sound on/off
+- Everything responds with audio feedback when touched
+- Supports learning through hearing and sound recognition
 
-**🏆 IMMEDIATE REWARDS:**
-- Large reward stars (120px) with sparkle animations
-- Celebration bursts with spinning effects
-- Progress visual with large progress bar
-- Use for: Instant gratification, achievement recognition
-- Component classes: .reward-star, .celebration-burst, .progress-visual
+**🏆 REWARD AND CELEBRATION COMPONENTS:**
+- Sparkling stars that appear when children complete tasks
+- Celebration animations with confetti and spinning effects
+- Progress bars that fill up to show accomplishment
+- Makes children feel successful and encourages continued learning
 
-**🖼️ SIMPLE VISUAL LEARNING:**
-- Hero images (400×300) for main content
-- Story images (280×210) for narrative
-- Activity images (200×200) for interactive elements
-- Mini images (120×120) for small accents
-- Use for: Visual recognition, simple storytelling, basic concepts
-- Component classes: .hero-image, .story-image, .activity-image, .mini-image
+**🔺 SIMPLE LEARNING GAMES:**
+- Large shapes (circles, squares, triangles) for basic recognition
+- Touch-and-respond activities for cause-and-effect learning
+- Color recognition and simple pattern games
+- One concept per activity to avoid overwhelming young minds
 
-**COMPONENT SELECTION GUIDELINES FOR 2-3 YEARS:**
+**🖼️ EDUCATIONAL IMAGES:**
+- Large, colorful pictures that support the lesson topic
+- Images can be touched to trigger sounds or animations
+- Simple illustrations that clearly show one main idea
+- Visual learning support for concepts being taught
 
-**WELCOME SLIDES:**
-- ONE giant button as primary focus
-- Simple 1-3 word titles only
-- Bright, high-contrast colors
-- Floating decorations for visual interest
-
-**LEARNING SLIDES:**
-- Main visual circle for content focus
-- Supporting hero image if needed
-- Maximum 2 interactive elements total
-- Audio feedback for every interaction
-
-**ACTIVITY SLIDES:**
-- Touch shapes for basic learning games
-- Animal friends for character interaction
-- Immediate audio/visual feedback
-- Simple cause-and-effect interactions
-
-**REWARD SLIDES:**
-- Large celebration elements
-- Progress visuals with animations
-- Reward stars for achievement
-- Positive audio reinforcement
-
-**CRITICAL DESIGN RULES FOR 2-3 YEARS:**
-- ONE main interactive element per slide maximum
-- All touch targets minimum 180px size
-- Maximum 3 words in any text element
-- Bright, high-contrast colors only
-- No complex navigation or multiple choices
-- Immediate feedback for every action`;
+**TEACHING APPROACH FOR 2-3 YEARS:**
+- Only one main activity per slide to maintain focus
+- Everything should be large and easy for small fingers to touch
+- Immediate positive feedback for every interaction
+- Simple, clear language with maximum 3 words at a time
+- Bright, happy colors that attract and hold attention
+- Audio support for all learning content`;
 
     } else if (ageGroup === '4-6') {
       return `
-**AVAILABLE COMPONENTS FOR 4-6 YEARS (Choose appropriate ones for each slide):**
+**AVAILABLE INTERACTIVE COMPONENTS FOR 4-6 YEARS:**
 
-**🎯 ENGAGING INTERACTION METHODS:**
-- Use very large, prominent buttons for main activities
-- Include medium-sized buttons for secondary choices
-- Create educational cards that students can explore
-- Add smaller interactive elements for specific tasks
-- Use for: Primary interactions, learning activities, game elements
-- Teaching approach: Size-graded interactions that guide student attention
+**🎮 EDUCATIONAL LEARNING CARDS:**
+- Interactive cards that flip and respond when touched
+- Each card teaches one concept (letters, words, objects)
+- Cards have titles and visual elements children can recognize
+- Perfect for vocabulary building and concept recognition
 
-**🎮 SKILL-BUILDING GAMES:**
-- Create large, central visual elements to focus attention
-- Design alphabet cards for letter recognition practice
-- Use number blocks for counting and basic math concepts
-- Include audio buttons for pronunciation and sound learning
-- Use for: Active learning, skill practice, concept reinforcement
-- Teaching approach: Game-based learning with focused skill development
+**🔤 ALPHABET AND LETTER LEARNING:**
+- Letter cards that show both the letter and a word (A - Apple)
+- Each letter makes sounds and speaks the word aloud
+- Children can practice letter recognition and phonics
+- Interactive elements that help with reading readiness
 
-**🏆 MOTIVATION & PROGRESS:**
-- Progress visual with animated fill
-- Reward stars with rotation effects
-- Achievement medals with spin animations
-- Points display for accomplishment tracking
-- Use for: Goal setting, achievement recognition, engagement
-- Component classes: .progress-visual, .reward-star, .medal, .points
+**🔢 NUMBER AND COUNTING ACTIVITIES:**
+- Colorful number blocks that children can click and explore
+- Each number speaks its name and shows counting examples
+- Numbers have different colors to help with visual recognition
+- Supports early math skills and number familiarity
 
-**🖼️ VISUAL LEARNING COMPONENTS:**
-- Hero images (400×300) for main educational content
-- Story images (320×240) for narrative elements
-- Activity images (240×240) for interactive exercises
-- Learning images (180×180) for supporting content
-- Use for: Visual learning, story telling, concept illustration
-- Component classes: .hero-image, .story-image, .activity-image, .learning-image
+**🎵 SOUND AND MUSIC INTERACTIONS:**
+- Animal sound buttons that make realistic animal noises
+- Musical elements for rhythm and audio learning
+- Audio controls so sounds can be turned on or off
+- Supports language development and listening skills
 
-**🎵 AUDIO & SOUND ELEMENTS:**
-- Sound buttons with interactive effects
-- Audio toggle for user control
-- Animal sound triggers
-- Musical elements for engagement
-- Use for: Auditory learning, language development, engagement
-- Component classes: .sound-button, .audio-toggle
+**🏆 ACHIEVEMENT AND MOTIVATION ELEMENTS:**
+- Reward stars that sparkle when children complete tasks
+- Achievement medals that spin and celebrate success
+- Progress bars that fill up to show learning advancement
+- Point counters that track accomplishments and encourage continued learning
 
-**COMPONENT SELECTION GUIDELINES FOR 4-6 YEARS:**
+**🎯 LARGE ACTION BUTTONS:**
+- Main activity buttons for starting lessons or games
+- Different types: learning activities, games, and achievements
+- Large enough for easy touching and interaction
+- Each button type has distinctive colors and sounds
 
-**WELCOME/INTRODUCTION SLIDES:**
-- Giant button as primary call-to-action
-- Main title (max 5 words) with animations
-- Hero image for topic introduction
-- 4-6 floating decorations for visual appeal
+**🖼️ EDUCATIONAL IMAGES AND STORIES:**
+- Large hero images that tell stories or show main concepts
+- Story images for narrative and imagination development
+- Activity images for interactive learning exercises
+- Supporting learning images that illustrate specific topics
 
-**CONTENT/LEARNING SLIDES:**
-- Main visual circle for central concept
-- Supporting images (story or learning images)
-- Learning cards for interactive exploration
-- Audio elements for multi-sensory learning
-
-**ACTIVITY/GAME SLIDES:**
-- Interactive buttons for game mechanics
-- Number blocks or alphabet cards for skill practice
-- Progress tracking for motivation
-- Reward elements for achievement
-
-**PRACTICE SLIDES:**
-- Multiple learning cards for concept practice
-- Sound buttons for pronunciation/audio
-- Visual feedback elements
-- Achievement tracking systems
-
-**ASSESSMENT/REVIEW SLIDES:**
-- Simple choice elements (large buttons)
-- Progress visuals showing completion
-- Reward systems for encouragement
-- Celebration elements for success
-
-**DESIGN PRINCIPLES FOR 4-6 YEARS:**
-- Maximum 5 words in titles and instructions
-- Interactive elements minimum 120px size
-- Bright but not overwhelming colors
-- Clear visual hierarchy with 3-5 main elements
-- Audio feedback for all interactions
-- Simple navigation patterns`;
+**TEACHING APPROACH FOR 4-6 YEARS:**
+- Multiple learning activities per slide (up to 5 elements)
+- Interactive elements are medium to large sized for developing fine motor skills
+- Simple language with maximum 5 words per instruction
+- Combination of visual, audio, and tactile learning
+- Progressive difficulty with rewards for motivation
+- Bright, engaging colors that support focus and attention`;
 
     } else if (ageGroup === '7-8') {
       return `
-**AVAILABLE COMPONENTS FOR 7-8 YEARS (Choose appropriate ones for each slide):**
+**AVAILABLE INTERACTIVE COMPONENTS FOR 7-8 YEARS:**
 
-**🏗️ SLIDE TEMPLATE STRUCTURE:**
-- Use .slide-container as main wrapper with proper layout structure
-- Include .slide-header with .slide-title-area containing .slide-main-title and .slide-subtitle
-- Use .slide-content with scrollable content area for main educational material
-- Add .slide-footer for navigation controls and progress tracking
-- Structure content in .content-section containers with .section-title headers
-- Include .scroll-indicator to show when more content is available
-- Use for: Professional slide organization, consistent layout, content-heavy presentations
-- Teaching approach: Structured presentation with clear visual hierarchy and professional appearance
+**📚 PROFESSIONAL SLIDE STRUCTURE:**
+- Well-organized slides with clear headers, main content areas, and navigation
+- Scrollable content sections that can hold extensive educational material
+- Professional layout that looks more mature and sophisticated than younger age groups
+- Progress tracking and navigation controls to help students manage their learning
 
-**✍️ TYPOGRAPHY SYSTEM:**
-- Use .main-heading (32px) with gradient text for lesson titles
-- Apply .section-heading (24px, underlined) for major sections with icons
-- Include .sub-heading (20px) for detailed subsections
-- Add .instruction-text-style (16px) for activity instructions with blue border
-- Use .highlight-text with yellow background for important information
-- Include .success-text (green) for correct feedback and .error-text (red) for errors
-- Use .hint-text (gray italic) for helpful guidance and tips
-- Include .reading-title and .reading-content for sustained reading passages
-- Use .list-title with .learning-list and .list-item for organized content
-- Add .educational-quote for inspirational or key concept text
-- Use for: Clear text hierarchy, readable content, proper feedback, organized information
-- Teaching approach: Visual text organization that guides student attention and comprehension
+**✍️ ADVANCED TEXT AND READING ELEMENTS:**
+- Multiple text styles for different purposes: main titles, section headings, body text
+- Special highlighting for important information that needs attention
+- Success and error feedback text that helps students understand their progress
+- Inspirational quotes and educational tips to motivate learning
+- Extended reading passages with comfortable formatting for longer texts
+- Organized lists with checkmarks to track learning objectives
 
-**🔢 SEQUENTIAL PROBLEM-SOLVING APPROACHES:**
-- Use .step-container with .step-item elements for 4-step learning process
-- Include .step-number, .step-title, .step-description for clear progression
-- Add .step-check-btn for interactive confirmation of understanding
-- Track completion with visual states showing progress
-- Use for: Complex tasks, multi-step problems, structured learning sequences
-- Teaching approach: Guided step-by-step learning with visual progress tracking and self-pacing
+**🔢 STEP-BY-STEP PROBLEM SOLVING:**
+- Multi-step learning processes that break complex tasks into manageable parts
+- Sequential workflow where students complete one step before moving to the next
+- Visual progress tracking that shows which steps are completed
+- Self-pacing controls that let students work at their own speed
+- Guided learning that builds independence and confidence
 
-**📝 COMPREHENSIVE INTERACTIVE ELEMENTS:**
-- Use .exercise-container with .exercise-text for problem presentation
-- Include .answer-options with .option-btn for multiple choice questions
-- Add .check-work-btn for answer validation and feedback
-- Use .activity-area for containing interactive exercises and games
-- Include .learning-objectives with .objective-item for goal listing
-- Add hover effects and color changes (.correct, .incorrect) for feedback
-- Use for: Active learning, concept reinforcement, skill practice, assessment
-- Teaching approach: Hands-on interaction with immediate educational feedback
+**📝 COMPLEX INTERACTIVE ACTIVITIES:**
+- Multiple choice questions with detailed explanations for both correct and incorrect answers
+- Text input exercises where students can type their own responses
+- Comprehensive feedback systems that help students understand mistakes
+- Interactive exercises that require critical thinking and analysis
+- Activities that connect to real-world applications and practical skills
 
-**💡 ADVANCED HINT & SUPPORT SYSTEMS:**
-- Use .hint-system with .hint-btn for progressive hint delivery
-- Include .mistake-analysis with .mistake-title and .mistake-explanation
-- Add contextual help that appears when students struggle
-- Provide multiple levels of guidance without giving away answers
-- Use for: Challenging exercises, when students need guidance, building independence
-- Teaching approach: Graduated support that encourages independent thinking while providing necessary assistance
+**💡 INTELLIGENT HINT AND HELP SYSTEMS:**
+- Progressive hint system that provides help without giving away answers
+- Mistake analysis that explains why an answer is wrong and how to improve
+- Multiple levels of support for students who need extra guidance
+- Contextual help that appears when students struggle with specific concepts
+- Encouraging feedback that builds confidence while providing necessary assistance
 
-**🧠 CRITICAL THINKING & ASSESSMENT:**
-- Complex matching exercises with connecting visual elements
-- True/False questions with comprehensive explanations in feedback text
-- Memory games with flip-card mechanics and state management
-- Story creation tools with guided choices and validation
-- Note-taking areas for reflection and personal responses
-- Use for: Critical thinking development, logical reasoning, creativity, comprehension assessment
-- Teaching approach: Structured thinking exercises that build cognitive skills and analytical abilities
+**🧠 CRITICAL THINKING AND REASONING ACTIVITIES:**
+- Complex problem-solving exercises that require analytical thinking
+- Activities that encourage students to explain their reasoning
+- Connections between different concepts and subjects
+- Creative exercises that allow personal expression and unique solutions
+- Assessment activities that measure deeper understanding rather than memorization
 
-**🏆 MOTIVATION & PROGRESS TRACKING:**
-- Visual progress indicators showing completion percentages
-- Achievement recognition through color changes and animations
-- Interactive feedback systems with immediate response
-- Success validation with visual and textual confirmation
-- Use for: Engagement, goal setting, progress visualization, motivation maintenance
-- Teaching approach: Positive reinforcement with detailed progress tracking and achievement recognition
+**🏆 DETAILED PROGRESS AND ACHIEVEMENT TRACKING:**
+- Visual progress indicators that show learning advancement
+- Achievement recognition for completing difficult tasks
+- Detailed feedback that explains what students did well and areas for improvement
+- Motivation systems that encourage continued learning and persistence
+- Goal-setting features that help students plan their learning journey
 
-**📱 SCROLLING & NAVIGATION:**
-- .slide-content with overflow-y: auto for scrollable content areas
-- .scroll-indicator showing when more content is available below
-- Keyboard navigation support (arrows for navigation/scrolling)
-- Responsive design that adapts to different screen sizes and orientations
-- Professional scrollbar styling that matches the educational theme
-- Use for: Content-heavy slides, comprehensive lessons, professional presentation
-- Teaching approach: Smooth user experience with intuitive navigation patterns
+**🖼️ EDUCATIONAL IMAGES AND MEDIA:**
+- Hero images that illustrate complex concepts and main lesson topics
+- Story images for narrative content and creative thinking exercises
+- Activity images that support interactive learning and hands-on exercises
+- Supporting educational images that clarify difficult concepts
 
-**🔊 AUDIO & ACCESSIBILITY:**
-- .audio-toggle with .audio-status for user-controlled audio feedback
-- Speech synthesis integration for all interactive elements and text
-- Keyboard navigation support with clear focus indicators
-- Screen reader friendly structure with proper semantic HTML
-- ARIA labels and roles for accessibility compliance
-- Use for: Multi-modal learning, accessibility compliance, inclusive design
-- Teaching approach: Inclusive design supporting diverse learning needs and preferences
+**🔊 COMPREHENSIVE AUDIO SUPPORT:**
+- High-quality speech synthesis that reads content aloud for auditory learners
+- Audio feedback for all interactions and activities
+- Educational content narration that supports reading comprehension
+- Audio hints and guidance system for additional learning support
+- User-controlled audio settings so students can customize their experience
 
-**⚙️ TECHNICAL SPECIFICATIONS FOR 7-8 YEARS:**
-- Attention span: 15-25 minutes maximum per slide with scrollable content
-- Text sizing: .main-heading (32px), .section-heading (24px), .section-text (16px)
-- Minimum interactive element size: .option-btn with 50px height minimum
-- Color contrast: 4.5:1 ratio minimum for accessibility compliance
-- Animation timing: 0.3s transitions for professional, mature feel
-- Data persistence: localStorage integration for progress saving
-- Device optimization: tablets, desktops, laptops with responsive breakpoints
-- Use for: Professional educational delivery with technical reliability
-- Teaching approach: Age-appropriate technical implementation with reliability focus
-
-**COMPONENT SELECTION GUIDELINES FOR 7-8 YEARS:**
-
-**SLIDE TEMPLATE STRUCTURE USAGE:**
-- Always wrap content in .slide-container for consistent layout
-- Include .slide-header with proper title hierarchy (.slide-main-title, .slide-subtitle)
-- Use .slide-content with .scroll-indicator for extensive material presentation
-- Add .slide-footer for navigation and progress tracking elements
-
-**WELCOME/INTRODUCTION SLIDES:**
-- .slide-container with sequential problem-solving overview using .step-container
-- Typography system with .main-heading for clear title hierarchy
-- .content-section containers for organized information presentation
-- Interactive .option-btn elements to set learning expectations
-
-**CONTENT/LEARNING SLIDES:**
-- .content-section containers with .section-title for organized information
-- Typography components (.section-heading, .section-text) for clear text organization
-- .learning-objectives with .objective-item for structured goal presentation
-- .activity-area containers for interactive learning elements
-
-**PRACTICE/ACTIVITY SLIDES:**
-- .exercise-container with .exercise-text and .answer-options for structured activities
-- .hint-system with .hint-btn and .hint-text for progressive guidance
-- .check-work-btn with feedback through .success-text or .error-text
-- .mistake-analysis for detailed learning support and explanation
-
-**GAME/CHALLENGE SLIDES:**
-- Interactive .option-btn elements with .correct/.incorrect state management
-- .step-container for complex problem-solving workflows
-- Achievement feedback through color changes and text updates
-- .activity-area containers for complex interactive experiences
-
-**ASSESSMENT/REVIEW SLIDES:**
-- .learning-objectives with .objective-item for self-assessment checklists
-- Multiple choice elements with comprehensive explanation feedback
-- .step-container for multi-step validation processes
-- Reflection areas using .instruction-text-style for guided responses
-
-**MANDATORY DESIGN PRINCIPLES FOR 7-8 YEARS:**
-- Use .slide-container structure for all content organization
-- Apply typography system (.main-heading, .section-heading, .section-text) for text hierarchy
-- Include .scroll-indicator and scrollable .slide-content for content-heavy presentations
-- Implement .audio-toggle and .audio-status for accessibility controls
-- Provide keyboard navigation support with proper focus management
-- Use appropriate visual feedback (.success-text, .error-text, .highlight-text) for all interactions
-- Maintain professional, age-appropriate design aesthetic with proper color contrast
-- Balance challenge with support through .hint-system and .mistake-analysis components`;
+**TEACHING APPROACH FOR 7-8 YEARS:**
+- Complex, multi-step learning activities that challenge students appropriately
+- Professional presentation style that treats students as capable learners
+- Extensive content that can be explored through scrolling and navigation
+- Self-directed learning opportunities with guidance available when needed
+- Critical thinking emphasis with reasoning and explanation requirements
+- Mistake analysis and learning from errors as part of the educational process
+- Integration of multiple learning modalities: visual, auditory, and kinesthetic
+- Real-world applications and practical skill development`;
 
     } else if (ageGroup === '9-10') {
       return `
