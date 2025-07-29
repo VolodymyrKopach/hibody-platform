@@ -36,6 +36,7 @@ const ChatInterface: React.FC = () => {
     setMessages,
     isTyping,
     typingStage,
+    isGeneratingSlides,
     inputText,
     setInputText,
     isLoading,
@@ -189,6 +190,7 @@ const ChatInterface: React.FC = () => {
                   <TypingIndicator 
                     isTyping={isTyping}
                     typingStage={typingStage}
+                    isGeneratingSlides={isGeneratingSlides}
                   />
                 )}
               </Box>

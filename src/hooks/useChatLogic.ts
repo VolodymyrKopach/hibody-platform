@@ -23,6 +23,7 @@ export const useChatLogic = () => {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<any>(null);
+  const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
   
   // === СПРОЩЕНИЙ СТЕЙТ ДЛЯ КОНТЕКСТУ РОЗМОВИ (ТІЛЬКИ РЯДОК) ===
   const [conversationContext, setConversationContext] = useState<ConversationContext>(() => {
@@ -133,6 +134,10 @@ export const useChatLogic = () => {
     onProgressUpdate: (data) => {
       console.log('📊 [CHAT] SSE Progress update:', data);
       
+      // === ОНОВЛЮЄМО TYPING STAGE ПІД ЧАС ГЕНЕРАЦІЇ ===
+      setTypingStage('generating');
+      console.log('⌨️ [CHAT] Updated typing stage to generating');
+      
       // Оновлюємо повідомлення з прогресом
       setMessages(prevMessages => {
         const newMessages = [...prevMessages];
@@ -164,6 +169,18 @@ export const useChatLogic = () => {
     },
     onCompletion: (data) => {
       console.log('🎉 [CHAT] SSE Generation completed:', data);
+      
+      // === ПОКАЗУЄМО FINALIZING STAGE ===
+      setTypingStage('finalizing');
+      console.log('⌨️ [CHAT] Updated typing stage to finalizing');
+      
+      // === ВИМИКАЄМО TYPING VIEW ПІСЛЯ КОРОТКОЇ ЗАТРИМКИ ===
+      setTimeout(() => {
+        setIsTyping(false);
+        setTypingStage('thinking');
+        setIsGeneratingSlides(false);
+        console.log('⌨️ [CHAT] Typing view deactivated after slide generation completion');
+      }, 1000);
       
       // Оновлюємо повідомлення з фінальним результатом
       setMessages(prevMessages => {
@@ -203,6 +220,12 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     },
     onError: (error) => {
       console.error('❌ [CHAT] SSE Error:', error);
+      
+      // === ВИМИКАЄМО TYPING VIEW ПРИ ПОМИЛЦІ ГЕНЕРАЦІЇ ===
+      setIsTyping(false);
+      setTypingStage('thinking');
+      setIsGeneratingSlides(false);
+      console.log('⌨️ [CHAT] Typing view deactivated due to SSE error');
       
       // Додаємо повідомлення про помилку
       const errorMessage: Message = {
@@ -335,6 +358,14 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
 
     setIsLoading(true);
 
+    // === АКТИВУЄМО TYPING VIEW ДЛЯ APPROVE_PLAN ===
+    if (action === 'approve_plan' || action === 'generate_slides') {
+      setIsTyping(true);
+      setTypingStage('processing');
+      setIsGeneratingSlides(true);
+      console.log('⌨️ [CHAT] Activated typing view for', action, 'with slide generation flag');
+    }
+
     // === ОНОВЛЮЄМО КОНТЕКСТ З ДІЄЮ КОРИСТУВАЧА ===
     const updatedContext = conversationContext + ' | ACTION: ' + action;
     console.log('⚡ [CHAT] Updated context with user action');
@@ -379,6 +410,10 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
           try {
             console.log('🎯 [CHAT] Starting SSE slide generation with sessionId:', response.sessionId);
             
+            // === ОНОВЛЮЄМО TYPING STAGE ДЛЯ ПОЧАТКУ ГЕНЕРАЦІЇ ===
+            setTypingStage('processing');
+            console.log('⌨️ [CHAT] Updated typing stage to processing for slide generation start');
+            
             // === ОНОВЛЮЄМО КОНТЕКСТ ПРИ ПОЧАТКУ ГЕНЕРАЦІЇ СЛАЙДІВ ===
             const generationContext = updatedContext + ' | GENERATION: Starting slide generation';
             setConversationContext(generationContext);
@@ -391,6 +426,12 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
             connectSSE(response.sessionId);
           } catch (error) {
             console.error('❌ [CHAT] SSE generation failed:', error);
+            
+            // === ВИМИКАЄМО TYPING VIEW ПРИ ПОМИЛЦІ ГЕНЕРАЦІЇ ===
+            setIsTyping(false);
+            setTypingStage('thinking');
+            setIsGeneratingSlides(false);
+            console.log('⌨️ [CHAT] Typing view deactivated due to SSE generation error');
             
             // === ОНОВЛЮЄМО КОНТЕКСТ ПРИ ПОМИЛЦІ ГЕНЕРАЦІЇ ===
             const errorContext = updatedContext + ' | GENERATION_ERROR: ' + (error instanceof Error ? error.message : 'Unknown error');
@@ -447,6 +488,17 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     } catch (error) {
       console.error('Error handling action:', error);
       
+      // === ВИМИКАЄМО TYPING VIEW ПРИ ПОМИЛЦІ (ОКРІМ APPROVE_PLAN) ===
+      if (action !== 'approve_plan' && action !== 'generate_slides') {
+        setIsTyping(false);
+        setTypingStage('thinking');
+        setIsGeneratingSlides(false);
+        console.log('⌨️ [CHAT] Typing view deactivated due to action error');
+      } else {
+        // Для approve_plan та generate_slides помилок, також вимикаємо флаг генерації слайдів
+        setIsGeneratingSlides(false);
+      }
+      
       const errorMessage: Message = {
         id: Date.now(),
         text: `❌ **Помилка:** ${error instanceof Error ? error.message : 'Невідома помилка'}`,
@@ -463,6 +515,14 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       setConversationContext(errorContext);
     } finally {
       setIsLoading(false);
+      
+      // === НЕ ВИМИКАЄМО TYPING ДЛЯ APPROVE_PLAN І GENERATE_SLIDES ===
+      // Typing буде вимкнено в onCompletion або onError callbacks SSE
+      if (action !== 'approve_plan' && action !== 'generate_slides') {
+        setIsTyping(false);
+        setTypingStage('thinking');
+        setIsGeneratingSlides(false);
+      }
     }
   }, [isLoading, conversationHistory, apiAdapter, generationActions, startGenerationWithProgress, conversationContext]);
 
@@ -489,6 +549,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     setMessages,
     isTyping,
     typingStage,
+    isGeneratingSlides,
     inputText,
     setInputText,
     isLoading,

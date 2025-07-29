@@ -15,6 +15,7 @@ interface TypingIndicatorProps {
   isTyping: boolean;
   typingStage?: 'thinking' | 'processing' | 'generating' | 'finalizing';
   customMessage?: string;
+  isGeneratingSlides?: boolean;
 }
 
 const bounceAnimation = keyframes`
@@ -54,7 +55,8 @@ const sparkleAnimation = keyframes`
 const TypingIndicator: React.FC<TypingIndicatorProps> = ({ 
   isTyping, 
   typingStage = 'thinking',
-  customMessage 
+  customMessage,
+  isGeneratingSlides = false
 }) => {
   const { t } = useTranslation(['chat', 'common']);
   const theme = useTheme();
@@ -68,11 +70,11 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
       case 'thinking':
         return t('messages.thinking', { ns: 'chat' });
       case 'processing':
-        return t('interface.typing', { ns: 'chat' });
+        return isGeneratingSlides ? t('messages.generatingSlides', { ns: 'chat' }) : t('interface.typing', { ns: 'chat' });
       case 'generating':
-        return t('buttons.generating', { ns: 'common' });
+        return isGeneratingSlides ? t('messages.generatingSlides', { ns: 'chat' }) : t('buttons.generating', { ns: 'common' });
       case 'finalizing':
-        return 'Finalizing response...';
+        return t('messages.finalizing', { ns: 'chat' });
       default:
         return t('chat.typingIndicator', { ns: 'common' });
     }
@@ -127,44 +129,63 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
               minWidth: '200px',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {getTypingMessage()}
-                </Typography>
-                
-                {/* Animated typing dots */}
-                <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-                  {[0, 1, 2].map((index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        width: 4,
-                        height: 4,
-                        borderRadius: '50%',
-                        backgroundColor: theme.palette.primary.main,
-                        animation: `${bounceAnimation} 1.4s ease-in-out infinite`,
-                        animationDelay: `${index * 0.2}s`,
-                      }}
-                    />
-                  ))}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {/* Main typing message */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {getTypingMessage()}
+                  </Typography>
+                  
+                  {/* Animated typing dots */}
+                  <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                    {[0, 1, 2].map((index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          width: 4,
+                          height: 4,
+                          borderRadius: '50%',
+                          backgroundColor: theme.palette.primary.main,
+                          animation: `${bounceAnimation} 1.4s ease-in-out infinite`,
+                          animationDelay: `${index * 0.2}s`,
+                        }}
+                      />
+                    ))}
+                  </Box>
                 </Box>
+                
+                {/* Status chip */}
+                <Chip
+                  size="small"
+                  label={typingStage}
+                  sx={{
+                    height: 20,
+                    fontSize: '0.7rem',
+                    backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                    color: theme.palette.primary.main,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+                    textTransform: 'capitalize',
+                    fontWeight: 500,
+                  }}
+                />
               </Box>
               
-              {/* Status chip */}
-              <Chip
-                size="small"
-                label={typingStage}
-                sx={{
-                  height: 20,
-                  fontSize: '0.7rem',
-                  backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                  color: theme.palette.primary.main,
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-                  textTransform: 'capitalize',
-                  fontWeight: 500,
-                }}
-              />
+              {/* Secondary patience message for slide generation */}
+              {isGeneratingSlides && (typingStage === 'processing' || typingStage === 'generating') && (
+                <Typography 
+                  variant="caption" 
+                  color="text.secondary"
+                  sx={{ 
+                    fontStyle: 'italic',
+                    opacity: 0.8,
+                    fontSize: '0.75rem',
+                    mt: 0.5
+                  }}
+                >
+                  {t('messages.patienceMessage', { ns: 'chat' })}
+                </Typography>
+              )}
             </Box>
           </Paper>
         </Box>

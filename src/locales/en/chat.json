@@ -16,6 +16,8 @@
     "processing": "Processing...",
     "generating": "Generating response...",
     "finalizing": "Finalizing...",
+    "generatingSlides": "Generating slides...",
+    "patienceMessage": "This can take a few minutes, please be patient",
     "error": "An error occurred processing your message",
     "networkError": "Network error. Check your connection",
     "tooLong": "Message too long",
