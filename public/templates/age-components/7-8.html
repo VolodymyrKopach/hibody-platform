@@ -10,512 +10,388 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-g
 body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(circle at 25% 25%,rgba(255,255,255,0.1) 1px,transparent 1px),radial-gradient(circle at 75% 75%,rgba(255,255,255,0.05) 1px,transparent 1px);background-size:60px 60px,40px 40px;pointer-events:none;z-index:-1}
 .c{max-width:1400px;margin:0 auto;padding:20px}
 .t{font-size:42px;color:#2c3e50;text-align:center;margin:20px 0;text-shadow:2px 2px 4px rgba(0,0,0,0.1);background:linear-gradient(45deg,#3498db,#2ecc71,#e74c3c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:600}
-.s{background:linear-gradient(145deg,rgba(255,255,255,0.95),rgba(248,248,255,0.9));border-radius:20px;padding:30px;margin:25px 0;box-shadow:0 15px 35px rgba(0,0,0,0.1);position:relative;border:2px solid rgba(255,255,255,0.5)}
 .st{font-size:28px;color:#2c3e50;margin-bottom:20px;text-align:center;font-weight:600;position:relative}
 .st::after{content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:60px;height:3px;background:linear-gradient(90deg,#3498db,#2ecc71);border-radius:2px}
-.hs{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#3498db 0%,#2980b9 100%);color:white;padding:20px 25px;border-radius:15px;margin-bottom:20px;box-shadow:0 8px 20px rgba(52,152,219,0.3)}
-.lt{font-size:24px;font-weight:600}
-.sc{font-size:18px;background:rgba(255,255,255,0.2);padding:8px 15px;border-radius:20px}
-.ds{display:flex;gap:5px}
-.ds span{font-size:20px;color:#f1c40f;text-shadow:1px 1px 2px rgba(0,0,0,0.3)}
-.ds .empty{color:rgba(255,255,255,0.3)}
-.tt{background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);color:white;padding:10px 20px;border-radius:20px;font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 5px 15px rgba(231,76,60,0.3)}
-.td{font-family:'Courier New',monospace;font-size:20px}
-.lz{background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(248,248,255,0.8));border-radius:15px;padding:25px;margin:20px 0;border:2px solid rgba(52,152,219,0.2)}
-.th{font-size:26px;color:#2c3e50;text-align:center;margin-bottom:20px;font-weight:600;background:linear-gradient(135deg,rgba(52,152,219,0.1),rgba(46,204,113,0.1));padding:15px;border-radius:10px}
-.ca{display:flex;gap:25px;margin:20px 0;align-items:flex-start}
-.tc{flex:1;font-size:18px;line-height:1.6;color:#2c3e50}
-.ip{width:300px;height:200px;background:linear-gradient(135deg,#f39c12 0%,#e67e22 100%);border-radius:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(0,0,0,0.1);border:3px solid rgba(255,255,255,0.5)}
-.ii{font-size:80px;margin-bottom:10px;filter:drop-shadow(2px 2px 4px rgba(0,0,0,0.2))}
-.it{font-size:14px;color:white;font-weight:600;text-shadow:1px 1px 2px rgba(0,0,0,0.3)}
-.kw{display:flex;gap:15px;margin:20px 0;flex-wrap:wrap}
-.kw span{background:linear-gradient(135deg,#9b59b6 0%,#8e44ad 100%);color:white;padding:8px 16px;border-radius:20px;font-size:16px;font-weight:600;box-shadow:0 4px 12px rgba(155,89,182,0.3);cursor:pointer;transition:all 0.3s ease}
-.kw span:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(155,89,182,0.4)}
-.es{background:linear-gradient(135deg,rgba(46,204,113,0.1),rgba(39,174,96,0.1));padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #2ecc71}
-.est{font-size:20px;color:#27ae60;margin-bottom:15px;font-weight:600}
-.ei{background:white;padding:15px;margin:10px 0;border-radius:8px;border-left:3px solid #2ecc71;font-size:16px;color:#2c3e50;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
-.is{background:linear-gradient(135deg,rgba(52,152,219,0.05),rgba(41,128,185,0.05));border-radius:15px;padding:25px;margin:20px 0;border:2px solid rgba(52,152,219,0.1)}
-.tt2{font-size:22px;color:#2c3e50;margin-bottom:20px;font-weight:600;text-align:center}
-.if{display:flex;gap:20px;margin:20px 0;flex-wrap:wrap;justify-content:center}
-.ti{width:200px;height:50px;border:3px solid #3498db;border-radius:10px;padding:0 15px;font-size:18px;color:#2c3e50;background:white;transition:all 0.3s ease}
-.ti:focus{outline:none;border-color:#2ecc71;box-shadow:0 0 0 3px rgba(46,204,113,0.2)}
-.ti::placeholder{color:#95a5a6;font-style:italic}
-.mc{display:flex;flex-direction:column;gap:15px;margin:20px 0}
-.co{background:white;border:3px solid #ecf0f1;border-radius:12px;padding:15px 20px;font-size:18px;color:#2c3e50;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:15px}
-.co:hover{border-color:#3498db;background:rgba(52,152,219,0.05)}
-.co.selected{border-color:#2ecc71;background:rgba(46,204,113,0.1)}
-.co.correct{border-color:#27ae60;background:rgba(39,174,96,0.2);animation:correctPulse 0.6s ease-out}
-.co.incorrect{border-color:#e74c3c;background:rgba(231,76,60,0.2);animation:incorrectShake 0.6s ease-out}
-.cl{width:40px;height:40px;background:linear-gradient(135deg,#3498db 0%,#2980b9 100%);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px}
-.dda{display:flex;gap:30px;margin:20px 0;flex-wrap:wrap;justify-content:center}
-.di{display:flex;flex-direction:column;gap:15px}
-.di div{background:linear-gradient(135deg,#f39c12 0%,#e67e22 100%);color:white;padding:12px 20px;border-radius:10px;cursor:pointer;font-size:16px;font-weight:600;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(243,156,18,0.3)}
-.di div:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(243,156,18,0.4)}
-.di .dragging{opacity:0.5;transform:rotate(5deg)}
-.dz{display:flex;flex-direction:column;gap:15px}
-.dz div{width:250px;height:80px;border:3px dashed #3498db;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#3498db;background:rgba(52,152,219,0.05);transition:all 0.3s ease;font-weight:600}
-.dz .drag-over{border-color:#2ecc71;background:rgba(46,204,113,0.1);color:#2ecc71}
-.dz .filled{border-color:#27ae60;background:rgba(39,174,96,0.2);color:#27ae60}
-.sa{display:flex;gap:20px;margin:20px 0;flex-wrap:wrap;justify-content:center}
-.si{width:120px;height:100px;background:linear-gradient(135deg,#9b59b6 0%,#8e44ad 100%);color:white;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s ease;font-size:14px;font-weight:600;text-align:center;box-shadow:0 4px 12px rgba(155,89,182,0.3)}
-.si:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(155,89,182,0.4)}
-.si.selected{background:linear-gradient(135deg,#2ecc71 0%,#27ae60 100%);transform:scale(1.05)}
-.sn{font-size:24px;margin-bottom:5px}
-.sta{display:flex;gap:40px;margin:20px 0;justify-content:center;flex-wrap:wrap}
-.cc{display:flex;flex-direction:column;align-items:center;gap:15px}
-.ch{background:linear-gradient(135deg,#34495e 0%,#2c3e50 100%);color:white;padding:12px 25px;border-radius:25px;font-size:18px;font-weight:600;box-shadow:0 4px 12px rgba(52,73,94,0.3)}
-.cz{width:200px;min-height:150px;border:3px dashed #95a5a6;border-radius:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(149,165,166,0.05);transition:all 0.3s ease}
-.cz.active{border-color:#3498db;background:rgba(52,152,219,0.1)}
-.sti{display:flex;gap:15px;margin:20px 0;flex-wrap:wrap;justify-content:center}
-.sti div{background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);color:white;padding:10px 18px;border-radius:20px;cursor:pointer;font-size:16px;font-weight:600;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(231,76,60,0.3)}
-.sti div:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(231,76,60,0.4)}
-.qs{background:linear-gradient(135deg,rgba(155,89,182,0.05),rgba(142,68,173,0.05));border-radius:15px;padding:25px;margin:20px 0;border:2px solid rgba(155,89,182,0.1)}
-.qq{font-size:20px;color:#2c3e50;margin-bottom:20px;font-weight:600;text-align:center;background:white;padding:15px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
-.qo{display:flex;flex-direction:column;gap:12px;margin:20px 0}
-.qo div{background:white;border:2px solid #ecf0f1;border-radius:10px;padding:15px;font-size:16px;color:#2c3e50;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:12px}
-.qo div:hover{border-color:#9b59b6;background:rgba(155,89,182,0.05)}
-.qo .selected{border-color:#8e44ad;background:rgba(142,68,173,0.1)}
-.nt{width:100%;min-height:120px;border:2px solid #ecf0f1;border-radius:10px;padding:15px;font-size:16px;color:#2c3e50;resize:vertical;font-family:inherit;transition:all 0.3s ease}
-.nt:focus{outline:none;border-color:#3498db;box-shadow:0 0 0 3px rgba(52,152,219,0.2)}
-.sam{display:flex;justify-content:center;gap:30px;margin:20px 0}
-.mb{width:80px;height:80px;background:white;border:3px solid #ecf0f1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;cursor:pointer;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
-.mb:hover{transform:scale(1.1);box-shadow:0 6px 18px rgba(0,0,0,0.1)}
-.mb.selected{border-color:#3498db;background:rgba(52,152,219,0.1);transform:scale(1.1)}
-.ms{background:linear-gradient(135deg,rgba(241,196,15,0.1),rgba(230,126,34,0.1));border-radius:15px;padding:25px;margin:20px 0;border:2px solid rgba(241,196,15,0.2)}
-.pa{display:flex;justify-content:space-between;align-items:center;margin:20px 0;flex-wrap:wrap;gap:20px}
-.lp{flex:1;min-width:300px}
-.pl{font-size:16px;color:#2c3e50;margin-bottom:10px;font-weight:600}
-.pb{width:100%;height:20px;background:rgba(255,255,255,0.8);border-radius:10px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);border:2px solid rgba(255,255,255,0.5)}
-.pf{height:100%;background:linear-gradient(90deg,#3498db 0%,#2ecc71 50%,#f1c40f 100%);border-radius:10px;transition:width 0.8s ease;position:relative}
-.pf::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:progressShine 2s infinite}
-.pd{background:linear-gradient(135deg,#3498db 0%,#2980b9 100%);color:white;padding:15px 25px;border-radius:25px;font-size:20px;font-weight:600;box-shadow:0 4px 12px rgba(52,152,219,0.3);display:flex;align-items:center;gap:10px}
-.aa{display:flex;justify-content:center;gap:20px;margin:20px 0;flex-wrap:wrap}
-.ab{width:80px;height:80px;background:linear-gradient(135deg,#f1c40f 0%,#f39c12 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;color:white;text-shadow:1px 1px 2px rgba(0,0,0,0.3);box-shadow:0 4px 12px rgba(241,196,15,0.3);cursor:pointer;transition:all 0.3s ease;border:3px solid rgba(255,255,255,0.3)}
-.ab:hover{transform:scale(1.1) rotate(5deg);box-shadow:0 6px 18px rgba(241,196,15,0.4)}
-.ab.earned{animation:achievementEarned 1s ease-out}
-.ss{display:flex;gap:8px;margin:15px 0}
-.ss div{font-size:24px;color:#f1c40f;cursor:pointer;transition:all 0.3s ease;filter:drop-shadow(1px 1px 2px rgba(0,0,0,0.2))}
-.ss div:hover{transform:scale(1.2) rotate(15deg)}
-.ss .earned{animation:starEarned 0.8s ease-out}
-.ns{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,rgba(52,73,94,0.05),rgba(44,62,80,0.05));border-radius:15px;padding:20px;margin:20px 0;border:2px solid rgba(52,73,94,0.1)}
-.nb{background:linear-gradient(135deg,#34495e 0%,#2c3e50 100%);color:white;border:none;padding:12px 25px;border-radius:25px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(52,73,94,0.3);display:flex;align-items:center;gap:8px}
-.nb:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(52,73,94,0.4)}
-.nb:disabled{opacity:0.5;cursor:not-allowed;transform:none}
-.nb.primary{background:linear-gradient(135deg,#3498db 0%,#2980b9 100%);box-shadow:0 4px 12px rgba(52,152,219,0.3)}
-.nb.primary:hover{box-shadow:0 6px 18px rgba(52,152,219,0.4)}
-.hb{display:flex;gap:15px}
-.hb button{background:linear-gradient(135deg,#95a5a6 0%,#7f8c8d 100%);color:white;border:none;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.3s ease;box-shadow:0 3px 8px rgba(149,165,166,0.3)}
-.hb button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(149,165,166,0.4)}
-.hb .hint{background:linear-gradient(135deg,#f39c12 0%,#e67e22 100%);box-shadow:0 3px 8px rgba(243,156,18,0.3)}
-.hb .hint:hover{box-shadow:0 4px 12px rgba(243,156,18,0.4)}
-.hb .sound{background:linear-gradient(135deg,#9b59b6 0%,#8e44ad 100%);box-shadow:0 3px 8px rgba(155,89,182,0.3)}
-.hb .sound:hover{box-shadow:0 4px 12px rgba(155,89,182,0.4)}
-.fbc{background:white;border-radius:15px;padding:25px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
-.fbt{font-size:20px;line-height:2;color:#2c3e50;margin-bottom:20px}
-.blank{display:inline-block;min-width:80px;padding:5px 10px;margin:0 5px;border-bottom:3px solid #3498db;background:rgba(52,152,219,0.05);border-radius:5px;cursor:pointer;transition:all 0.3s ease;text-align:center;font-weight:600}
-.blank:hover{background:rgba(52,152,219,0.1)}
-.blank.filled{border-color:#2ecc71;background:rgba(46,204,113,0.1)}
-.blank.incorrect{border-color:#e74c3c;background:rgba(231,76,60,0.1)}
-.wb{background:linear-gradient(135deg,rgba(52,152,219,0.05),rgba(41,128,185,0.05));border-radius:10px;padding:15px;margin-top:20px}
-.wbt{font-size:16px;font-weight:600;color:#2c3e50;margin-bottom:10px}
-.wbi{display:flex;gap:10px;flex-wrap:wrap}
-.wi{background:linear-gradient(135deg,#3498db 0%,#2980b9 100%);color:white;padding:8px 16px;border-radius:20px;cursor:pointer;transition:all 0.3s ease;font-weight:600;box-shadow:0 3px 8px rgba(52,152,219,0.3)}
-.wi:hover{transform:translateY(-2px);box-shadow:0 5px 12px rgba(52,152,219,0.4)}
-.wi.used{opacity:0.5;cursor:not-allowed}
-.mt{display:flex;justify-content:center;align-items:center;gap:30px;margin:20px 0}
-.mc2{display:flex;flex-direction:column;gap:20px}
-.mi{background:white;border:3px solid #ecf0f1;border-radius:10px;padding:15px 20px;font-size:16px;font-weight:600;color:#2c3e50;cursor:pointer;transition:all 0.3s ease;min-width:150px;text-align:center;box-shadow:0 3px 8px rgba(0,0,0,0.05)}
-.mi:hover{border-color:#3498db;transform:translateY(-2px);box-shadow:0 5px 12px rgba(52,152,219,0.2)}
-.mi.selected{border-color:#f39c12;background:rgba(243,156,18,0.1)}
-.mi.matched{border-color:#2ecc71;background:rgba(46,204,113,0.1)}
-.msvg{pointer-events:none}
-.ml{stroke:#3498db;stroke-width:3;fill:none;opacity:0.8}
-.sb{background:white;border-radius:15px;padding:25px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
-.st2{font-size:20px;line-height:2.5;color:#2c3e50;margin-bottom:20px}
-.ss2{background:linear-gradient(135deg,#f39c12 0%,#e67e22 100%);color:white;border:none;border-radius:8px;padding:8px 15px;font-size:18px;font-weight:600;cursor:pointer;transition:all 0.3s ease;margin:0 5px}
-.ss2:hover{transform:translateY(-2px);box-shadow:0 3px 8px rgba(243,156,18,0.3)}
-.ss2:focus{outline:none;box-shadow:0 0 0 3px rgba(243,156,18,0.3)}
-.scb{background:linear-gradient(135deg,#2ecc71 0%,#27ae60 100%);color:white;border:none;padding:12px 30px;border-radius:25px;font-size:18px;font-weight:600;cursor:pointer;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(46,204,113,0.3);display:block;margin:0 auto}
-.scb:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(46,204,113,0.4)}
-.gmg{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;max-width:500px;margin:20px auto}
-.gc{background:linear-gradient(135deg,#9b59b6 0%,#8e44ad 100%);color:white;border-radius:12px;padding:20px;font-size:18px;font-weight:600;text-align:center;cursor:pointer;transition:all 0.3s ease;min-height:80px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(155,89,182,0.3)}
-.gc:hover{transform:scale(1.05)}
-.gc.flipped{background:white;color:#2c3e50;border:3px solid #9b59b6}
-.gc.matched{background:linear-gradient(135deg,#2ecc71 0%,#27ae60 100%);color:white;animation:matchedPulse 0.6s ease-out}
-.twc{display:flex;gap:40px;justify-content:center;align-items:center;flex-wrap:wrap}
-.tw{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;max-width:300px}
-.ws{background:white;border:3px solid #ecf0f1;border-radius:15px;padding:20px;text-align:center;cursor:pointer;transition:all 0.3s ease;box-shadow:0 3px 8px rgba(0,0,0,0.05)}
-.ws:hover{border-color:#3498db;transform:translateY(-3px);box-shadow:0 5px 12px rgba(52,152,219,0.2)}
-.ws.active{border-color:#f39c12;background:rgba(243,156,18,0.1)}
-.wic{font-size:40px;margin-bottom:10px}
-.wt{font-size:16px;font-weight:600;color:#2c3e50}
-.tac{display:flex;flex-direction:column;gap:10px}
-.ai{background:linear-gradient(135deg,#3498db 0%,#2980b9 100%);color:white;padding:10px 20px;border-radius:20px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s ease;box-shadow:0 3px 8px rgba(52,152,219,0.3)}
-.ai:hover{transform:translateX(5px);box-shadow:0 4px 12px rgba(52,152,219,0.4)}
-.ai.placed{opacity:0.5;cursor:not-allowed}
-.tfg{max-width:500px;margin:0 auto}
-.stc{background:white;border-radius:15px;padding:25px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
-.stmt{font-size:22px;color:#2c3e50;text-align:center;margin-bottom:20px;font-weight:600}
-.tfb{display:flex;gap:20px;justify-content:center}
-.tfbt{border:none;padding:15px 30px;border-radius:25px;font-size:18px;font-weight:600;cursor:pointer;transition:all 0.3s ease;color:white}
-.true-btn{background:linear-gradient(135deg,#2ecc71 0%,#27ae60 100%);box-shadow:0 4px 12px rgba(46,204,113,0.3)}
-.false-btn{background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);box-shadow:0 4px 12px rgba(231,76,60,0.3)}
-.tfbt:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,0.2)}
-.exp{background:linear-gradient(135deg,rgba(52,152,219,0.05),rgba(41,128,185,0.05));border-radius:10px;padding:15px;margin-top:20px;font-size:16px;color:#2c3e50;text-align:center;border-left:4px solid #3498db}
-.tsp{background:linear-gradient(135deg,rgba(44,62,80,0.05),rgba(52,73,94,0.05));border-radius:15px;padding:25px;margin:20px 0;border:2px solid rgba(44,62,80,0.1)}
-.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin:20px 0}
-.spi{background:white;border-radius:10px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
-.spl{font-size:16px;color:#2c3e50;font-weight:600;margin-bottom:5px}
-.spv{font-size:14px;color:#7f8c8d;line-height:1.4}
-@keyframes correctPulse{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
-@keyframes incorrectShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-@keyframes progressShine{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-@keyframes achievementEarned{0%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.2) rotate(10deg)}100%{transform:scale(1) rotate(0deg)}}
-@keyframes starEarned{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
-@keyframes matchedPulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
-@media (max-width:768px){
-.hs{flex-direction:column;gap:15px;text-align:center}
-.ca{flex-direction:column}
-.ip{width:100%;max-width:300px;margin:0 auto}
-.if{flex-direction:column;align-items:center}
-.dda{flex-direction:column;align-items:center}
-.sa{justify-content:center}
-.sta{flex-direction:column;align-items:center}
-.pa{flex-direction:column;align-items:center}
-.ns{flex-direction:column;gap:15px}
-.hb{justify-content:center}
-}
+.slide-container{background:rgba(255,255,255,0.95);border-radius:20px;padding:30px;margin:20px 0;box-shadow:0 15px 35px rgba(0,0,0,0.1);border:2px solid rgba(255,255,255,0.5);min-height:100vh;max-height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.slide-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid rgba(52,152,219,0.2)}
+.slide-title-area{flex:1}
+.slide-main-title{font-size:36px;color:#2c3e50;margin:0 0 10px 0;font-weight:700;background:linear-gradient(45deg,#3498db,#2ecc71);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.slide-subtitle{font-size:18px;color:#7f8c8d;margin:0;font-weight:500}
+.slide-content{flex:1;display:flex;flex-direction:column;gap:30px;margin-bottom:30px;overflow-y:auto;overflow-x:hidden;padding-right:10px;scrollbar-width:thin;scrollbar-color:rgba(52,152,219,0.3) rgba(255,255,255,0.1)}
+.content-section{background:rgba(52,152,219,0.05);border-radius:15px;padding:25px;border:2px solid rgba(52,152,219,0.1)}
+.section-title{font-size:24px;color:#2c3e50;margin:0 0 20px 0;font-weight:600;display:flex;align-items:center;gap:10px}
+.learning-objectives{display:flex;flex-direction:column;gap:12px}
+.objective-item{background:white;padding:15px;border-radius:10px;font-size:16px;color:#2c3e50;border-left:4px solid #2ecc71;box-shadow:0 2px 8px rgba(0,0,0,0.05);font-weight:500}
+.activity-area{background:white;border-radius:15px;padding:25px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+.instruction{font-size:20px;color:#2c3e50;margin:0 0 20px 0;font-weight:600;text-align:center}
+.exercise-container{display:flex;flex-direction:column;align-items:center;gap:20px}
+.exercise-text{font-size:24px;color:#2c3e50;margin:0;padding:20px;background:rgba(52,152,219,0.05);border-radius:10px;border:2px dashed #3498db}
+.answer-options{display:flex;gap:15px;justify-content:center;flex-wrap:wrap}
+.option-btn{background:linear-gradient(135deg,#3498db 0%,#2980b9 100%);color:white;border:none;padding:12px 25px;border-radius:25px;font-size:18px;font-weight:600;cursor:pointer;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(52,152,219,0.3);min-width:80px}
+.option-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(52,152,219,0.4)}
+.option-btn.correct{background:linear-gradient(135deg,#2ecc71 0%,#27ae60 100%);box-shadow:0 4px 12px rgba(46,204,113,0.3)}
+.option-btn.incorrect{background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);box-shadow:0 4px 12px rgba(231,76,60,0.3)}
+.slide-footer{border-top:2px solid rgba(52,152,219,0.2);padding-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+.main-heading{font-size:32px;color:#2c3e50;font-weight:700;margin:0 0 15px 0;background:linear-gradient(45deg,#3498db,#2ecc71,#e74c3c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:flex;align-items:center;gap:10px}
+.main-description{font-size:18px;color:#2c3e50;line-height:1.6;margin:0 0 20px 0;font-weight:400}
+.section-heading{font-size:24px;color:#2c3e50;font-weight:600;margin:20px 0 15px 0;display:flex;align-items:center;gap:8px;border-bottom:2px solid rgba(52,152,219,0.2);padding-bottom:8px}
+.section-text{font-size:16px;color:#2c3e50;line-height:1.7;margin:0 0 15px 0;font-weight:400}
+.sub-heading{font-size:20px;color:#34495e;font-weight:500;margin:15px 0 10px 0;display:flex;align-items:center;gap:6px}
+.instruction-text-style{font-size:16px;color:#34495e;line-height:1.6;margin:10px 0;font-weight:500;background:rgba(52,152,219,0.05);padding:12px;border-radius:8px;border-left:4px solid #3498db}
+.highlight-text{font-size:16px;color:#2c3e50;font-weight:600;background:linear-gradient(135deg,#fff3cd,#ffeaa7);padding:10px 15px;border-radius:8px;margin:10px 0;border:2px solid #f1c40f;display:flex;align-items:center;gap:8px}
+.success-text{font-size:16px;color:#27ae60;font-weight:600;background:rgba(46,204,113,0.1);padding:10px 15px;border-radius:8px;margin:10px 0;border:2px solid #2ecc71;display:flex;align-items:center;gap:8px}
+.error-text{font-size:16px;color:#e74c3c;font-weight:600;background:rgba(231,76,60,0.1);padding:10px 15px;border-radius:8px;margin:10px 0;border:2px solid #e74c3c;display:flex;align-items:center;gap:8px}
+.hint-text{font-size:14px;color:#7f8c8d;font-style:italic;line-height:1.5;margin:8px 0;background:rgba(149,165,166,0.1);padding:8px 12px;border-radius:6px;border-left:3px solid #95a5a6;display:flex;align-items:center;gap:6px}
+.reading-title{font-size:20px;color:#2c3e50;font-weight:600;margin:0 0 15px 0;display:flex;align-items:center;gap:8px}
+.reading-content{font-size:16px;color:#2c3e50;line-height:1.8;margin:0;font-weight:400;text-align:justify}
+.list-title{font-size:18px;color:#2c3e50;font-weight:600;margin:0 0 12px 0;display:flex;align-items:center;gap:8px}
+.learning-list{margin:0;padding:0 0 0 20px;list-style:none}
+.list-item{font-size:16px;color:#2c3e50;line-height:1.6;margin:8px 0;position:relative;padding-left:25px}
+.list-item::before{content:'✓';position:absolute;left:0;color:#2ecc71;font-weight:bold;font-size:16px}
+.educational-quote{font-size:18px;color:#34495e;font-style:italic;line-height:1.6;margin:20px 0;padding:20px;background:linear-gradient(135deg,rgba(155,89,182,0.1),rgba(142,68,173,0.05));border-left:4px solid #9b59b6;border-radius:8px;position:relative;quotes:'"' '"'}
+.educational-quote::before{content:open-quote;font-size:32px;color:#9b59b6;position:absolute;top:10px;left:15px;line-height:1}
+.educational-quote::after{content:close-quote;font-size:32px;color:#9b59b6;position:absolute;bottom:10px;right:15px;line-height:1}
+.step-container{display:flex;flex-direction:column;gap:20px;margin:20px 0}
+.step-item{display:flex;align-items:center;gap:20px;background:white;border-radius:15px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.1);border:2px solid #ecf0f1;transition:all 0.3s ease}
+.step-item.completed{border-color:#2ecc71;background:rgba(46,204,113,0.05)}
+.step-item.active{border-color:#3498db;background:rgba(52,152,219,0.05)}
+.step-number{width:50px;height:50px;background:linear-gradient(135deg,#95a5a6 0%,#7f8c8d 100%);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;flex-shrink:0}
+.step-item.completed .step-number{background:linear-gradient(135deg,#2ecc71 0%,#27ae60 100%)}
+.step-item.active .step-number{background:linear-gradient(135deg,#3498db 0%,#2980b9 100%)}
+.step-content{flex:1}
+.step-title{font-size:18px;color:#2c3e50;font-weight:600;margin-bottom:5px}
+.step-description{font-size:16px;color:#7f8c8d;margin-bottom:15px}
+.step-check-btn{background:linear-gradient(135deg,#3498db 0%,#2980b9 100%);color:white;border:none;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.3s ease;box-shadow:0 3px 8px rgba(52,152,219,0.3)}
+.step-check-btn:hover{transform:translateY(-2px);box-shadow:0 5px 12px rgba(52,152,219,0.4)}
+.step-check-btn:disabled{background:#95a5a6;cursor:not-allowed;transform:none;box-shadow:none}
+.step-item.completed .step-check-btn{background:linear-gradient(135deg,#2ecc71 0%,#27ae60 100%);box-shadow:0 3px 8px rgba(46,204,113,0.3)}
+.check-work-btn{background:linear-gradient(135deg,#9b59b6 0%,#8e44ad 100%);color:white;border:none;padding:12px 25px;border-radius:20px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(155,89,182,0.3);margin:15px 0}
+.check-work-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(155,89,182,0.4)}
+.hint-btn{background:linear-gradient(135deg,#f39c12 0%,#e67e22 100%);color:white;border:none;padding:8px 16px;border-radius:15px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.3s ease;margin:5px 0}
+.hint-btn:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(243,156,18,0.3)}
+.hint-system{background:linear-gradient(135deg,rgba(243,156,18,0.05),rgba(230,126,34,0.05));border-radius:10px;padding:15px;margin:15px 0;border-left:4px solid #f39c12}
+.mistake-analysis{background:linear-gradient(135deg,rgba(231,76,60,0.05),rgba(192,57,43,0.05));border-radius:10px;padding:15px;margin:15px 0;border-left:4px solid #e74c3c;display:none}
+.mistake-title{font-size:16px;color:#e74c3c;font-weight:600;margin-bottom:10px}
+.mistake-explanation{font-size:14px;color:#2c3e50;line-height:1.5}
+.hero-image,.story-image,.activity-image,.learning-image{border-radius:20px;border:4px solid rgba(255,255,255,0.9);box-shadow:0 15px 30px rgba(0,0,0,0.2);cursor:pointer;transition:all 0.3s ease;margin:20px auto;overflow:hidden;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);display:flex;align-items:center;justify-content:center;position:relative;max-width:calc(100% - 40px);box-sizing:border-box}
+.hero-image{width:400px;height:300px}
+.hero-image:hover{transform:scale(1.03);box-shadow:0 20px 40px rgba(0,0,0,0.3)}
+.story-image{width:320px;height:240px;background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%)}
+.story-image:hover{transform:scale(1.05) rotate(1deg)}
+.activity-image{width:240px;height:240px;background:linear-gradient(135deg,#f3e8ff 0%,#ddd6fe 100%)}
+.activity-image:hover{transform:scale(1.08) rotate(2deg)}
+.learning-image{width:180px;height:180px;background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%)}
+.learning-image:hover{transform:scale(1.1)}
+.image-placeholder{font-size:16px;color:#666;text-align:center;padding:15px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;line-height:1.3;max-width:90%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:2px dashed rgba(255,255,255,0.3);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;margin:0 auto;position:relative;overflow:hidden;box-sizing:border-box}
+.scroll-indicator{position:absolute;top:50%;right:5px;transform:translateY(-50%);background:rgba(52,152,219,0.8);color:white;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:600;opacity:0;transition:opacity 0.3s ease;pointer-events:none;z-index:10}
+.scroll-indicator.show{opacity:1}
+.audio-toggle{position:fixed;top:20px;right:20px;width:80px;height:80px;border-radius:50%;border:4px solid rgba(255,255,255,0.9);background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:40px;color:white;transition:all 0.3s;z-index:1000;box-shadow:0 10px 20px rgba(0,0,0,0.3);outline:none}
+.audio-toggle:hover{transform:scale(1.1);box-shadow:0 15px 30px rgba(0,0,0,0.4)}
+.audio-toggle.muted{background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);animation:muted-pulse 2s infinite}
+.audio-toggle::before{content:'🔊'}
+.audio-toggle.muted::before{content:'🔇'}
+.audio-status{position:fixed;top:110px;right:20px;background:rgba(0,0,0,0.8);color:white;padding:10px 15px;border-radius:20px;font-size:16px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;z-index:1000;opacity:0;transform:translateY(-10px);transition:all 0.3s;pointer-events:none}
+.audio-status.show{opacity:1;transform:translateY(0)}
+@keyframes muted-pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+.slide-content::-webkit-scrollbar{width:8px}
+.slide-content::-webkit-scrollbar-track{background:rgba(255,255,255,0.1);border-radius:4px}
+.slide-content::-webkit-scrollbar-thumb{background:linear-gradient(135deg,rgba(52,152,219,0.3),rgba(46,204,113,0.3));border-radius:4px;transition:background 0.3s ease}
+.slide-content::-webkit-scrollbar-thumb:hover{background:linear-gradient(135deg,rgba(52,152,219,0.6),rgba(46,204,113,0.6))}
+@media (max-width:768px){.slide-container{padding:20px;min-height:100vh;max-height:100vh}.slide-header{flex-direction:column;gap:15px;align-items:center;text-align:center}.slide-main-title{font-size:28px}.slide-subtitle{font-size:16px}.content-section{padding:20px}.section-title{font-size:20px}.exercise-text{font-size:20px;padding:15px}.answer-options{flex-direction:column;align-items:center}.option-btn{min-width:200px}.hero-image{width:320px;height:240px}.story-image{width:280px;height:210px}.activity-image{width:200px;height:200px}.learning-image{width:150px;height:150px}.audio-toggle{width:70px;height:70px;font-size:35px}.audio-status{font-size:14px}}
+@media (max-width:480px){.main-heading{font-size:24px}.section-heading{font-size:20px}.sub-heading{font-size:16px}.main-description{font-size:15px}.section-text{font-size:14px}.reading-content{font-size:14px}.educational-quote{font-size:15px;padding:12px}.educational-quote::before,.educational-quote::after{font-size:24px}.audio-toggle{width:60px;height:60px;font-size:30px;top:15px;right:15px}.audio-status{font-size:12px;top:85px;right:15px}}
 </style>
 </head>
 <body>
+<div class="audio-toggle" onclick="toggleAudio()" role="button" tabindex="0" aria-label="Toggle audio on/off"></div>
+<div class="audio-status" id="audioStatus">Audio: ON</div>
 <div class="c">
 <h1 class="t">🎓 Visual Components for Children 7-8 Years</h1>
-<div class="s">
-<h2 class="st">📋 Header Section</h2>
-<div class="hs">
-<div class="lt">📚 English Language: Present Simple</div>
-<div class="sc">Slide 3/8</div>
-<div class="ds">
-<span>⭐</span><span>⭐</span><span>⭐</span><span class="empty">⭐</span><span class="empty">⭐</span>
-</div>
-<div class="tt">
-<span>⏰</span><span class="td">07:30</span>
-</div>
+<div>
+<h2 class="st">📋 AI INSTRUCTION: SLIDE TEMPLATE COMPONENTS</h2>
+<div class="slide-template-demo" style="border:3px dashed rgba(255,255,255,0.8);padding:30px;margin:30px 0;border-radius:20px;background:rgba(255,255,255,0.1);">
+<h3 style="color:white;text-align:center;margin-bottom:20px;font-size:24px;">📖 Full Slide Template Example</h3>
+<div class="slide-container">
+<div class="slide-header">
+<div class="slide-title-area">
+<h1 class="slide-main-title">Math: Addition and Subtraction</h1>
+<p class="slide-subtitle">Learning basic arithmetic operations</p>
 </div>
 </div>
-<div class="s">
-<h2 class="st">📖 Learning Zone</h2>
-<div class="lz">
-<div class="th">🎯 Topic: Present Simple Tense</div>
-<div class="ca">
-<div class="tc">
-<p>Present Simple is a tense that we use to describe usual actions, facts, and regular events. It shows what happens always or often.</p>
-<p>Formula: Subject + Verb (+ s/es for he/she/it)</p>
-</div>
-<div class="ip">
-<div class="ii">📚</div>
-<div class="it">Grammar Table</div>
+<div class="slide-content" id="slideContent">
+<div class="scroll-indicator" id="scrollIndicator">Scroll down for more</div>
+<div class="content-section">
+<h2 class="section-title">📚 What You'll Learn</h2>
+<div class="learning-objectives">
+<div class="objective-item">✓ Learn addition facts to 20</div>
+<div class="objective-item">✓ Practice subtraction strategies</div>
+<div class="objective-item">✓ Solve word problems</div>
 </div>
 </div>
-<div class="kw">
-<span>always</span><span>usually</span><span>often</span><span>sometimes</span><span>never</span>
-</div>
-<div class="es">
-<div class="est">💡 Examples:</div>
-<div class="ei">I play football every day. - I play football every day.</div>
-<div class="ei">She reads books in the evening. - She reads books in the evening.</div>
-<div class="ei">They go to school by bus. - They go to school by bus.</div>
+<div class="content-section">
+<h2 class="section-title">🎯 Interactive Activity</h2>
+<div class="activity-area">
+<p class="instruction">Solve the math problem:</p>
+<div class="exercise-container">
+<p class="exercise-text">15 + 7 = ?</p>
+<div class="answer-options">
+<button class="option-btn" onclick="handleAnswer(this, false)">21</button>
+<button class="option-btn" onclick="handleAnswer(this, true)">22</button>
+<button class="option-btn" onclick="handleAnswer(this, false)">23</button>
 </div>
 </div>
 </div>
-<div class="s">
+</div>
+<div class="content-section">
+<h2 class="section-title">📝 More Practice</h2>
+<div class="activity-area">
+<p class="instruction">Additional math exercises:</p>
+<div class="learning-objectives">
+<div class="objective-item">✓ Practice mental math strategies</div>
+<div class="objective-item">✓ Complete number patterns</div>
+<div class="objective-item">✓ Solve multi-step problems</div>
+<div class="objective-item">✓ Apply skills to real situations</div>
+</div>
+</div>
+</div>
+</div>
+<div class="slide-footer"></div>
+</div>
+</div>
+<div class="template-specs" style="background:rgba(0,0,0,0.4);color:white;padding:25px;border-radius:15px;margin-top:20px;">
+<h3 style="margin-bottom:15px;">🔧 Template Structure Requirements:</h3>
+<ul style="margin:15px 0;padding-left:25px;line-height:1.8;">
+<li><strong>.slide-container</strong> - Main wrapper for all slide content</li>
+<li><strong>.slide-header</strong> - Top section with title and meta information</li>
+<li><strong>.slide-content</strong> - Main educational content area</li>
+<li><strong>.slide-footer</strong> - Navigation and progress tracking</li>
+<li><strong>.content-section</strong> - Individual content blocks within slide</li>
+<li><strong>.section-title</strong> - Headers for content sections</li>
+<li><strong>.activity-area</strong> - Interactive exercise containers</li>
+</ul>
+</div>
+</div>
+<div>
+<h2 class="st">✍️ AI INSTRUCTION: TYPOGRAPHY COMPONENTS</h2>
+<div class="typography-demo" style="border:3px dashed rgba(255,255,255,0.8);padding:30px;margin:30px 0;border-radius:20px;background:rgba(255,255,255,0.1);">
+<h3 style="color:white;text-align:center;margin-bottom:20px;font-size:24px;">📝 Typography Styles for 7-8 Years</h3>
+<div class="typography-section" style="background:rgba(255,255,255,0.95);border-radius:15px;padding:25px;margin:20px 0;">
+<h2 class="main-heading">📚 Main Lesson Heading</h2>
+<p class="main-description">This is the main description text that explains the lesson content. It should be clear, engaging, and easy to read for children aged 7-8 years.</p>
+<h3 class="section-heading">🎯 Section Heading</h3>
+<p class="section-text">Regular section text for explaining concepts, providing instructions, or describing activities. This text size is perfect for comfortable reading.</p>
+<h4 class="sub-heading">📖 Sub-heading for Details</h4>
+<p class="instruction-text-style">Instruction text for activities: "Complete the sentence by choosing the correct word from the options below."</p>
+<div class="text-examples" style="margin:20px 0;">
+<p class="highlight-text">🌟 Highlighted important information</p>
+<p class="success-text">✅ Correct answer feedback text</p>
+<p class="error-text">❌ Incorrect answer feedback text</p>
+<p class="hint-text">💡 Hint text to help students</p>
+</div>
+<div class="reading-text" style="background:rgba(52,152,219,0.05);padding:20px;border-radius:10px;margin:20px 0;">
+<h5 class="reading-title">📖 Reading Passage Title</h5>
+<p class="reading-content">This is an example of reading passage text. It uses comfortable line spacing and appropriate font size for sustained reading. The text should be engaging and age-appropriate for 7-8 year old students.</p>
+</div>
+<div class="list-examples" style="margin:20px 0;">
+<h5 class="list-title">📋 Lists and Objectives:</h5>
+<ul class="learning-list">
+<li class="list-item">Learn about Present Simple tense</li>
+<li class="list-item">Practice with interactive exercises</li>
+<li class="list-item">Complete assessment activities</li>
+</ul>
+</div>
+<div class="quote-example" style="margin:20px 0;">
+<blockquote class="educational-quote">"Remember: Practice makes perfect! Keep trying and you'll master this concept."</blockquote>
+</div>
+</div>
+<div class="typography-specs" style="background:rgba(0,0,0,0.4);color:white;padding:25px;border-radius:15px;margin-top:20px;">
+<h3 style="margin-bottom:15px;">📐 Typography Specifications:</h3>
+<ul style="margin:15px 0;padding-left:25px;line-height:1.8;">
+<li><strong>.main-heading</strong> - 32px, bold, gradient text for lesson titles</li>
+<li><strong>.section-heading</strong> - 24px, semi-bold for major sections</li>
+<li><strong>.sub-heading</strong> - 20px, medium weight for subsections</li>
+<li><strong>.main-description</strong> - 18px, regular for main content</li>
+<li><strong>.section-text</strong> - 16px, regular for body text</li>
+<li><strong>.instruction-text-style</strong> - 16px, medium for instructions</li>
+<li><strong>.highlight-text</strong> - 16px, bold with yellow background</li>
+<li><strong>.success-text</strong> - 16px, green color for positive feedback</li>
+<li><strong>.error-text</strong> - 16px, red color for corrections</li>
+<li><strong>.hint-text</strong> - 14px, italic for helpful hints</li>
+<li><strong>.reading-content</strong> - 16px, optimized line height for reading</li>
+<li><strong>.list-item</strong> - 16px with custom bullets</li>
+<li><strong>.educational-quote</strong> - 18px, italic with special styling</li>
+</ul>
+</div>
+</div>
+</div>
+<div>
+<h2 class="st">🔢 Sequential Problem-Solving</h2>
+<div style="background:linear-gradient(145deg,rgba(255,255,255,0.95),rgba(248,248,255,0.9));border-radius:20px;padding:30px;margin:25px 0;box-shadow:0 15px 35px rgba(0,0,0,0.1);border:2px solid rgba(255,255,255,0.5);">
+<div style="font-size:22px;color:#2c3e50;margin-bottom:20px;font-weight:600;text-align:center;">📋 Step-by-Step Learning Process:</div>
+<div class="step-container">
+<div class="step-item" data-step="1">
+<div class="step-number">1</div>
+<div class="step-content">
+<div class="step-title">📖 Read the instruction</div>
+<div class="step-description">Understand what you need to do</div>
+<button class="step-check-btn" onclick="completeStep(1)">✓ I understand</button>
+</div>
+</div>
+<div class="step-item" data-step="2">
+<div class="step-number">2</div>
+<div class="step-content">
+<div class="step-title">🤔 Think about the solution</div>
+<div class="step-description">Plan your approach before starting</div>
+<button class="step-check-btn" onclick="completeStep(2)">✓ I have a plan</button>
+</div>
+</div>
+<div class="step-item" data-step="3">
+<div class="step-number">3</div>
+<div class="step-content">
+<div class="step-title">✏️ Complete the task</div>
+<div class="step-description">Work through the problem step by step</div>
+<button class="step-check-btn" onclick="completeStep(3)">✓ Task completed</button>
+</div>
+</div>
+<div class="step-item" data-step="4">
+<div class="step-number">4</div>
+<div class="step-content">
+<div class="step-title">🔍 Check your work</div>
+<div class="step-description">Review and verify your answer</div>
+<button class="step-check-btn" onclick="completeStep(4)">✓ Work checked</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div>
 <h2 class="st">🎮 Interactive Elements</h2>
-<div class="is">
-<div class="tt2">✏️ Complete the sentence:</div>
+<div style="background:linear-gradient(145deg,rgba(255,255,255,0.95),rgba(248,248,255,0.9));border-radius:20px;padding:30px;margin:25px 0;box-shadow:0 15px 35px rgba(0,0,0,0.1);border:2px solid rgba(255,255,255,0.5);">
+<div style="font-size:22px;color:#2c3e50;margin-bottom:20px;font-weight:600;text-align:center;">✏️ Complete the sentence:</div>
 <div style="text-align:center;margin:20px 0">
 <p style="font-size:18px;color:#2c3e50">I _____ to school every morning.</p>
 </div>
-<div class="if">
-<input type="text" class="ti" placeholder="Enter verb">
-<input type="text" class="ti" placeholder="go">
-<input type="text" class="ti" placeholder="walk">
+<div style="display:flex;justify-content:center;margin:20px 0">
+<input type="text" style="width:200px;height:50px;border:3px solid #3498db;border-radius:10px;padding:0 15px;font-size:18px;color:#2c3e50;background:white;" placeholder="Enter verb" id="sentence-input">
+</div>
+<button class="check-work-btn" onclick="checkSentenceAnswer()">🔍 Check my answer</button>
+<div class="hint-system">
+<button class="hint-btn" onclick="showHint('sentence')">💡 Need a hint?</button>
+<div class="hint-text" id="sentence-hint">Think about what action you do when you move from home to school.</div>
+</div>
+<div class="mistake-analysis" id="sentence-mistake">
+<div class="mistake-title">🤔 Let's analyze this together:</div>
+<div class="mistake-explanation">Remember: we use the base form of the verb (without 's') with 'I'. The correct answer is 'go' - it describes a regular action.</div>
 </div>
 </div>
-<div class="is">
-<div class="tt2">🎯 Choose the correct answer:</div>
-<div style="text-align:center;margin:20px 0">
-<p style="font-size:18px;color:#2c3e50">She _____ her homework every evening.</p>
-</div>
-<div class="mc">
-<div class="co"><div class="cl">A</div><div>do</div></div>
-<div class="co"><div class="cl">B</div><div>does</div></div>
-<div class="co"><div class="cl">C</div><div>doing</div></div>
-<div class="co"><div class="cl">D</div><div>did</div></div>
-</div>
-</div>
-<div class="is">
-<div class="tt2">🔄 Connect words with pictures:</div>
-<div class="dda">
-<div class="di">
-<div>reads</div><div>plays</div><div>eats</div><div>sleeps</div>
-</div>
-<div class="dz">
-<div>📚 Book</div><div>⚽ Ball</div><div>🍎 Apple</div><div>🛏️ Bed</div>
-</div>
-</div>
-</div>
-<div class="is">
-<div class="tt2">🔢 Arrange words in order:</div>
-<div style="text-align:center;margin:20px 0">
-<p style="font-size:16px;color:#7f8c8d">Create a sentence: "I usually go to school"</p>
-</div>
-<div class="sa">
-<div class="si"><div class="sn">3</div><div>go</div></div>
-<div class="si"><div class="sn">1</div><div>I</div></div>
-<div class="si"><div class="sn">4</div><div>to</div></div>
-<div class="si"><div class="sn">2</div><div>usually</div></div>
-<div class="si"><div class="sn">5</div><div>school</div></div>
-</div>
-</div>
-<div class="is">
-<div class="tt2">📂 Sort words into categories:</div>
-<div class="sta">
-<div class="cc"><div class="ch">Actions</div><div class="cz"></div></div>
-<div class="cc"><div class="ch">Objects</div><div class="cz"></div></div>
-<div class="cc"><div class="ch">Time</div><div class="cz"></div></div>
-</div>
-<div class="sti">
-<div>run</div><div>book</div><div>morning</div><div>eat</div><div>table</div><div>evening</div><div>write</div><div>computer</div>
-</div>
-</div>
-</div>
-<div class="s">
-<h2 class="st">🎲 Additional Interactive Components</h2>
-<div class="is">
-<div class="tt2">📝 Fill in the blanks:</div>
-<div class="fbc">
-<p class="fbt">My name <span class="blank" data-answer="is">_____</span> John. I <span class="blank" data-answer="live">_____</span> in London. Every morning I <span class="blank" data-answer="wake">_____</span> up at 7 o'clock. I <span class="blank" data-answer="have">_____</span> breakfast with my family.</p>
-<div class="wb">
-<div class="wbt">Word Bank:</div>
-<div class="wbi">
-<span class="wi">is</span><span class="wi">live</span><span class="wi">wake</span><span class="wi">have</span><span class="wi">am</span><span class="wi">go</span>
-</div>
-</div>
-</div>
-</div>
-<div class="is">
-<div class="tt2">🔗 Match the correspondences:</div>
-<div class="mt">
-<div class="mc2 left-column">
-<div class="mi" data-match="1">I/You/We/They</div>
-<div class="mi" data-match="2">He/She/It</div>
-<div class="mi" data-match="3">Always</div>
-<div class="mi" data-match="4">Never</div>
 </div>
 <div>
-<svg class="msvg" width="100" height="300"></svg>
-</div>
-<div class="mc2 right-column">
-<div class="mi" data-match="2">plays</div>
-<div class="mi" data-match="4">0%</div>
-<div class="mi" data-match="1">play</div>
-<div class="mi" data-match="3">100%</div>
-</div>
-</div>
-</div>
-<div class="is">
-<div class="tt2">📖 Create your story:</div>
-<div class="sb">
-<div class="st2">
-<p>Every <select class="ss2"><option value="">___</option><option value="morning">morning</option><option value="evening">evening</option><option value="day">day</option></select> I <select class="ss2"><option value="">___</option><option value="read">read</option><option value="play">play</option><option value="study">study</option></select> <select class="ss2"><option value="">___</option><option value="books">books</option><option value="games">games</option><option value="English">English</option></select> with my <select class="ss2"><option value="">___</option><option value="friends">friends</option><option value="family">family</option><option value="teacher">teacher</option></select>.</p>
-</div>
-<button class="scb">Check story</button>
-</div>
-</div>
-<div class="is">
-<div class="tt2">🧠 Find grammatical pairs:</div>
-<div class="gmg">
-<div class="gc" data-pair="do-I">I</div>
-<div class="gc" data-pair="does-she">She</div>
-<div class="gc" data-pair="do-I">do</div>
-<div class="gc" data-pair="does-she">does</div>
-<div class="gc" data-pair="do-they">They</div>
-<div class="gc" data-pair="does-he">He</div>
-<div class="gc" data-pair="do-they">do</div>
-<div class="gc" data-pair="does-he">does</div>
-</div>
-</div>
-<div class="is">
-<div class="tt2">⏰ Daily Action Wheel:</div>
-<div class="twc">
-<div class="tw">
-<div class="ws" data-time="morning"><div class="wic">🌅</div><div class="wt">Morning</div></div>
-<div class="ws" data-time="afternoon"><div class="wic">☀️</div><div class="wt">Afternoon</div></div>
-<div class="ws" data-time="evening"><div class="wic">🌆</div><div class="wt">Evening</div></div>
-<div class="ws" data-time="night"><div class="wic">🌙</div><div class="wt">Night</div></div>
-</div>
-<div class="tac">
-<div class="ai" data-time="morning">wake up</div>
-<div class="ai" data-time="morning">have breakfast</div>
-<div class="ai" data-time="afternoon">study</div>
-<div class="ai" data-time="evening">do homework</div>
-<div class="ai" data-time="night">sleep</div>
-</div>
-</div>
-</div>
-<div class="is">
-<div class="tt2">✅❌ True or False:</div>
-<div class="tfg">
-<div class="stc">
-<p class="stmt">He play football every day.</p>
-<div class="tfb">
-<button class="tfbt true-btn">✅ True</button>
-<button class="tfbt false-btn">❌ False</button>
-</div>
-<div class="exp" style="display:none">False! Correct: He <strong>plays</strong> football every day.</div>
-</div>
-</div>
-</div>
-</div>
-<div class="s">
-<h2 class="st">🧠 Knowledge Check</h2>
-<div class="qs">
-<div class="qq">❓ Which ending do we add to the verb for he/she/it?</div>
-<div class="qo">
-<div><div style="width:20px;height:20px;border:2px solid #3498db;border-radius:50%"></div><div>-ed</div></div>
-<div><div style="width:20px;height:20px;border:2px solid #3498db;border-radius:50%"></div><div>-s or -es</div></div>
-<div><div style="width:20px;height:20px;border:2px solid #3498db;border-radius:50%"></div><div>-ing</div></div>
-</div>
-</div>
-<div class="qs">
-<div class="qq">🎯 Practical task: Create a sentence about your day</div>
+<h2 class="st">🖼️ Image Components</h2>
+<div style="background:linear-gradient(145deg,rgba(255,255,255,0.95),rgba(248,248,255,0.9));border-radius:20px;padding:30px;margin:25px 0;box-shadow:0 15px 35px rgba(0,0,0,0.1);border:2px solid rgba(255,255,255,0.5);">
+<div style="font-size:22px;color:#2c3e50;margin-bottom:20px;font-weight:600;text-align:center;">📚 Hero Image - Main Educational Content:</div>
 <div style="text-align:center;margin:20px 0">
-<textarea class="nt" placeholder="Write 3 sentences about what you do every day, using Present Simple..."></textarea>
-</div>
-</div>
-<div class="qs">
-<div class="qq">🤔 How did you understand the material?</div>
-<div class="sam">
-<div class="mb" title="Understood everything">😊</div>
-<div class="mb" title="Partially understood">😐</div>
-<div class="mb" title="Need help">😕</div>
+<div class="hero-image" onclick="handleImageClick(this,'hero')" role="button" tabindex="0" aria-label="Hero image - educational scene">
+<!-- IMAGE_PROMPT: "modern classroom scene with children aged 7-8 learning advanced concepts, interactive whiteboards, science equipment, collaborative learning environment, realistic style with bright educational atmosphere" WIDTH: 400 HEIGHT: 300 -->
+<div class="image-placeholder">🎓 Hero Image<br/>400×300</div>
 </div>
 </div>
 </div>
-<div class="s">
-<h2 class="st">🏆 Motivation System</h2>
-<div class="ms">
-<div class="pa">
-<div class="lp">
-<div class="pl">Lesson Progress:</div>
-<div class="pb">
-<div class="pf" style="width:65%"></div>
+<div style="background:linear-gradient(145deg,rgba(255,255,255,0.95),rgba(248,248,255,0.9));border-radius:20px;padding:30px;margin:25px 0;box-shadow:0 15px 35px rgba(0,0,0,0.1);border:2px solid rgba(255,255,255,0.5);">
+<div style="font-size:22px;color:#2c3e50;margin-bottom:20px;font-weight:600;text-align:center;">📖 Story Image - Narrative Content:</div>
+<div style="text-align:center;margin:20px 0">
+<div class="story-image" onclick="handleImageClick(this,'story')" role="button" tabindex="0" aria-label="Story image - adventure">
+<!-- IMAGE_PROMPT: "detailed adventure scene with characters solving puzzles, fantasy elements appropriate for 7-8 year olds, quest narrative illustration, engaging storytelling visuals" WIDTH: 320 HEIGHT: 240 -->
+<div class="image-placeholder">📖 Story Image<br/>320×240</div>
 </div>
 </div>
-<div class="pd">
-<span>🎯</span><span>245 points</span>
+</div>
+<div style="background:linear-gradient(145deg,rgba(255,255,255,0.95),rgba(248,248,255,0.9));border-radius:20px;padding:30px;margin:25px 0;box-shadow:0 15px 35px rgba(0,0,0,0.1);border:2px solid rgba(255,255,255,0.5);">
+<div style="font-size:22px;color:#2c3e50;margin-bottom:20px;font-weight:600;text-align:center;">🎯 Activity Image - Interactive Learning:</div>
+<div style="text-align:center;margin:20px 0">
+<div class="activity-image" onclick="handleImageClick(this,'activity')" role="button" tabindex="0" aria-label="Activity image - grammar">
+<!-- IMAGE_PROMPT: "grammar learning activity with sentence construction, visual grammar rules, interactive language learning for 7-8 year olds, colorful educational design" WIDTH: 240 HEIGHT: 240 -->
+<div class="image-placeholder">📝 Activity<br/>240×240</div>
 </div>
 </div>
-<div class="aa">
-<div class="ab" title="Grammarian">📝</div>
-<div class="ab earned" title="Fast Learner">⚡</div>
-<div class="ab" title="Perfectionist">🎯</div>
-<div class="ab" title="Explorer">🔍</div>
 </div>
-<div style="text-align:center">
-<div class="pl">Speed Bonus:</div>
-<div class="ss">
-<div class="earned">⭐</div><div class="earned">⭐</div><div>⭐</div><div>⭐</div><div>⭐</div>
+<div style="background:linear-gradient(145deg,rgba(255,255,255,0.95),rgba(248,248,255,0.9));border-radius:20px;padding:30px;margin:25px 0;box-shadow:0 15px 35px rgba(0,0,0,0.1);border:2px solid rgba(255,255,255,0.5);">
+<div style="font-size:22px;color:#2c3e50;margin-bottom:20px;font-weight:600;text-align:center;">✨ Learning Image - Supporting Content:</div>
+<div style="text-align:center;margin:20px 0">
+<div class="learning-image" onclick="handleImageClick(this,'learning')" role="button" tabindex="0" aria-label="Learning image - science">
+<!-- IMAGE_PROMPT: "advanced science experiment for 7-8 year olds, chemistry concepts, laboratory setting with safety equipment, STEM education visuals" WIDTH: 180 HEIGHT: 180 -->
+<div class="image-placeholder">🔬 Learning<br/>180×180</div>
 </div>
 </div>
 </div>
 </div>
-<div class="s">
-<h2 class="st">🧭 Navigation and Control</h2>
-<div class="ns">
-<button class="nb"><span>◀</span><span>Back</span></button>
-<div class="hb">
-<button class="hint"><span>💡</span><span>Hint</span></button>
-<button class="sound"><span>🔊</span><span>Voiceover</span></button>
-</div>
-<button class="nb primary"><span>Next</span><span>▶</span></button>
-</div>
-</div>
-<div class="s">
-<h2 class="st">⚙️ Technical Specifications</h2>
-<div class="tsp">
-<div class="sg">
-<div class="spi"><div class="spl">Attention span:</div><div class="spv">15-25 minutes maximum</div></div>
-<div class="spi"><div class="spl">Text size:</div><div class="spv">18-24px (larger than 5-6 years)</div></div>
-<div class="spi"><div class="spl">Minimum button size:</div><div class="spv">50x50px</div></div>
-<div class="spi"><div class="spl">Contrast:</div><div class="spv">minimum 4.5:1</div></div>
-<div class="spi"><div class="spl">Time per task:</div><div class="spv">5-10 minutes per slide</div></div>
-<div class="spi"><div class="spl">Number of elements:</div><div class="spv">4-8 interactive elements</div></div>
-<div class="spi"><div class="spl">Animations:</div><div class="spv">faster (0.3s), less "childish"</div></div>
-<div class="spi"><div class="spl">Colors:</div><div class="spv">less bright, more "adult"</div></div>
-<div class="spi"><div class="spl">Support:</div><div class="spv">keyboard, mouse, touch</div></div>
-<div class="spi"><div class="spl">Responsiveness:</div><div class="spv">tablets, desktops, laptops</div></div>
-<div class="spi"><div class="spl">Gamification:</div><div class="spv">points, achievements, progress</div></div>
-<div class="spi"><div class="spl">Saving:</div><div class="spv">automatic in localStorage</div></div>
-</div>
+<div>
+<h2 class="st">🤖 AI Generation Rules for 7-8 Years</h2>
+<div style="background:rgba(0,0,0,0.3);color:white;padding:30px;border-radius:20px;font-size:18px;line-height:1.6;">
+<h3>MANDATORY REQUIREMENTS:</h3>
+<ul style="margin:20px 0;padding-left:30px;">
+<li>✅ Interactive elements must be 50px+ for this age group (more precise control)</li>
+<li>✅ Support complex multi-step problem solving</li>
+<li>✅ ALL interactive elements must have onclick handlers</li>
+<li>✅ Use more sophisticated color schemes (less bright, more "adult")</li>
+<li>✅ Include progress tracking and detailed feedback</li>
+<li>✅ Minimum touch target size: 50px × 50px</li>
+<li>✅ Include comprehensive audio feedback for learning</li>
+<li>✅ ALWAYS include audio toggle button (audio-toggle class)</li>
+<li>✅ Respect audioEnabled global variable in all sound functions</li>
+<li>✅ Support sequential problem-solving workflows</li>
+<li>✅ Include mistake analysis and learning guidance</li>
+</ul>
+<h3>SLIDE TEMPLATE STRUCTURE FOR 7-8 YEARS:</h3>
+<ul style="margin:20px 0;padding-left:30px;">
+<li>🏗️ ALWAYS use .slide-container as main wrapper</li>
+<li>📋 .slide-header: title area + meta info (lesson progress, time)</li>
+<li>📚 .slide-content: main educational content with .content-section blocks</li>
+<li>🎯 .activity-area: interactive exercises and games</li>
+<li>📊 .slide-footer: navigation controls + progress tracking</li>
+<li>🎨 .section-title: headers for content sections with emojis</li>
+<li>✅ .learning-objectives: bulleted learning goals</li>
+<li>🎮 .exercise-container: structured interactive activities</li>
+</ul>
+<h3>TYPOGRAPHY COMPONENTS FOR 7-8 YEARS:</h3>
+<ul style="margin:20px 0;padding-left:30px;">
+<li>📚 .main-heading - Primary lesson titles (32px, gradient text)</li>
+<li>🎯 .section-heading - Major section headers (24px, underlined)</li>
+<li>📖 .sub-heading - Subsection titles (20px, medium weight)</li>
+<li>📝 .main-description - Main explanatory text (18px, readable)</li>
+<li>📄 .section-text - Regular body text (16px, optimal spacing)</li>
+<li>📋 .instruction-text-style - Activity instructions (16px, highlighted)</li>
+<li>🌟 .highlight-text - Important information (yellow background)</li>
+<li>✅ .success-text - Positive feedback (green styling)</li>
+<li>❌ .error-text - Error feedback (red styling)</li>
+<li>💡 .hint-text - Helpful hints (gray, italic)</li>
+<li>📖 .reading-content - Extended reading text (optimized line height)</li>
+<li>📋 .list-item - Bulleted lists (custom checkmark bullets)</li>
+<li>💬 .educational-quote - Inspirational quotes (styled blockquotes)</li>
+</ul>
+<h3>STANDARDIZED IMAGE SIZES FOR AGES 7-8:</h3>
+<ul style="margin:20px 0;padding-left:30px;">
+<li>🌟 Hero images (400×300): Main educational content, complex concepts</li>
+<li>📖 Story images (320×240): Narrative and contextual illustrations</li>
+<li>🎯 Activity images (240×240): Interactive learning exercises</li>
+<li>✨ Learning images (180×180): Supporting educational elements</li>
+</ul>
+<h3>AUDIO CONTROL REQUIREMENTS:</h3>
+<ul style="margin:20px 0;padding-left:30px;">
+<li>🔊 ALWAYS include: &lt;div class="audio-toggle" onclick="toggleAudio()"&gt;&lt;/div&gt;</li>
+<li>📊 ALWAYS include: &lt;div class="audio-status" id="audioStatus"&gt;Audio: ON&lt;/div&gt;</li>
+<li>🎵 Check audioEnabled before all speech and tone functions</li>
+<li>⌨️ M key toggles audio globally</li>
+<li>👆 Click/touch audio button to toggle</li>
+<li>📱 Visual feedback when muted (red) vs active (blue)</li>
+<li>🔊 Include both tone generation and speech synthesis</li>
+<li>🎯 Age-appropriate voice settings (rate: 0.9, pitch: 1.0)</li>
+<li>📚 Educational content narration for learning support</li>
+<li>💡 Audio hints and guidance system</li>
+</ul>
 </div>
 </div>
 </div>
 <script>
-document.addEventListener('DOMContentLoaded',function(){
-let cp=245,cpr=65,tl=450,ti,tint=0,hu=0;
-function sp(t,o={}){if('speechSynthesis'in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=0.9;u.pitch=1.0;u.volume=0.7;const v=speechSynthesis.getVoices();const vo=v.find(v=>v.lang==='en-US')||v[0];if(vo)u.voice=vo;Object.assign(u,o);speechSynthesis.speak(u)}}
-function up(n){cpr=Math.min(100,Math.max(0,n));const pf=document.querySelector('.pf');if(pf)pf.style.width=cpr+'%';if(cpr===100)setTimeout(()=>sp('Lesson completed! Great job!'),500)}
-function upo(p){cp+=p;const pd=document.querySelector('.pd span:last-child');if(pd)pd.textContent=`${cp} points`}
-function ut(){const m=Math.floor(tl/60);const s=tl%60;const td=document.querySelector('.td');if(td)td.textContent=`${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;if(tl<=0){clearInterval(ti);sp('Time is up! Moving to the next task.')}tl--}
-ti=setInterval(ut,1000);
-const tis=document.querySelectorAll('.ti');
-tis.forEach(i=>i.addEventListener('input',function(){tint++;if(this.value.toLowerCase().includes('go')){this.style.borderColor='#2ecc71';this.style.background='rgba(46,204,113,0.1)';upo(5);up(cpr+2)}else if(this.value.length>2){this.style.borderColor='#e74c3c';this.style.background='rgba(231,76,60,0.1)'}else{this.style.borderColor='#3498db';this.style.background='white'}}));
-tis.forEach(i=>i.addEventListener('keypress',function(e){if(e.key==='Enter')sp('Good try! Keep going!')}));
-const cos=document.querySelectorAll('.co');
-cos.forEach(o=>o.addEventListener('click',function(){tint++;cos.forEach(op=>op.classList.remove('selected','correct','incorrect'));this.classList.add('selected');const ic=this.textContent.includes('does');setTimeout(()=>{if(ic){this.classList.add('correct');sp('Correct! "Does" is used with he, she, it.');upo(10);up(cpr+3)}else{this.classList.add('incorrect');sp('Try again. Remember the rule for the third person singular.')}},500)}));
-const dis=document.querySelectorAll('.di div');const dzs=document.querySelectorAll('.dz div');let sdi=null;
-dis.forEach(i=>i.addEventListener('click',function(){dis.forEach(ii=>ii.classList.remove('dragging'));this.classList.add('dragging');sdi=this;sp(this.textContent)}));
-dzs.forEach(z=>z.addEventListener('click',function(){if(sdi){tint++;const m={'reads':'📚 Book','plays':'⚽ Ball','eats':'🍎 Apple','sleeps':'🛏️ Bed'};const ic=m[sdi.textContent]===this.textContent;if(ic){this.classList.add('filled');this.textContent=`✓ ${sdi.textContent}`;this.style.color='#27ae60';sdi.style.opacity='0.3';sp('Correct! Good connection!');upo(8);up(cpr+2)}else{this.classList.add('drag-over');setTimeout(()=>this.classList.remove('drag-over'),1000);sp('Try another connection.')}sdi.classList.remove('dragging');sdi=null}}));
-const sis=document.querySelectorAll('.si');let so=[];
-sis.forEach(i=>i.addEventListener('click',function(){tint++;if(this.classList.contains('selected')){this.classList.remove('selected');const idx=so.indexOf(this);if(idx>-1)so.splice(idx,1)}else{this.classList.add('selected');so.push(this);sp(this.textContent.split('\n')[1])}if(so.length===sis.length){const co=['I','usually','go','to','school'];const uo=so.map(i=>i.textContent.split('\n')[1]);const ic=JSON.stringify(uo)===JSON.stringify(co);if(ic){sis.forEach(i=>i.style.background='linear-gradient(135deg,#2ecc71 0%,#27ae60 100%)');sp('Excellent! Sentence composed correctly!');upo(15);up(cpr+4)}else{sp('Almost correct! Try again.');setTimeout(()=>{sis.forEach(i=>{i.classList.remove('selected');i.style.background=''});so=[]},2000)}}}));
-const stis=document.querySelectorAll('.sti div');const czs=document.querySelectorAll('.cz');let ssti=null;
-stis.forEach(i=>i.addEventListener('click',function(){stis.forEach(ii=>ii.style.transform='');this.style.transform='scale(1.1)';ssti=this;sp(this.textContent)}));
-czs.forEach(z=>z.addEventListener('click',function(){if(ssti){tint++;const cs={'run':'Actions','eat':'Actions','write':'Actions','book':'Objects','table':'Objects','computer':'Objects','morning':'Time','evening':'Time'};const chs=Array.from(document.querySelectorAll('.ch'));const cc=chs.find(h=>h.parentNode.querySelector('.cz')===this).textContent;const ic=cs[ssti.textContent]===cc;if(ic){this.classList.add('active');const ie=document.createElement('div');ie.textContent=ssti.textContent;ie.style.cssText='background:linear-gradient(135deg,#2ecc71 0%,#27ae60 100%);color:white;padding:8px 12px;border-radius:15px;margin:5px;font-size:14px;font-weight:600';this.appendChild(ie);ssti.style.opacity='0.3';sp(`Correct! ${ssti.textContent} belongs to the category "${cc}"`);upo(6);up(cpr+1)}else{this.style.background='rgba(231,76,60,0.2)';setTimeout(()=>this.style.background='',1000);sp('Try another category.')}ssti.style.transform='';ssti=null}}));
-const qos=document.querySelectorAll('.qo div');
-qos.forEach(o=>o.addEventListener('click',function(){tint++;qos.forEach(op=>op.classList.remove('selected'));this.classList.add('selected');const ic=this.textContent.includes('-s or -es');if(ic){sp('Correct! For he, she, it add -s or -es.');upo(10);up(cpr+3)}else sp('Think again. What is the rule for the third person singular?')}));
-const mbs=document.querySelectorAll('.mb');
-mbs.forEach(b=>b.addEventListener('click',function(){tint++;mbs.forEach(bb=>bb.classList.remove('selected'));this.classList.add('selected');const m=this.textContent;if(m==='😊'){sp('Great! You have mastered the material well!');upo(5)}else if(m==='😐'){sp('Not bad! Perhaps you should review some points.');upo(3)}else{sp('Don\'t worry! We can review the material together.');upo(2)}}));
-const nbs=document.querySelectorAll('.nb');
-nbs.forEach(b=>b.addEventListener('click',function(){const bt=this.textContent;if(bt.includes('Back'))sp('Returning to the previous slide.');else if(bt.includes('Next')){sp('Moving to the next task.');up(cpr+5)}}));
-const hbs=document.querySelectorAll('.hb button');
-hbs.forEach(b=>b.addEventListener('click',function(){if(this.classList.contains('hint')){hu++;const hs=['Remember: Present Simple describes usual actions.','For he, she, it add -s or -es to the verb.','Use keywords: always, usually, often.','Structure: subject + verb + object.'];const rh=hs[Math.floor(Math.random()*hs.length)];sp(rh);const hd=document.createElement('div');hd.textContent=rh;hd.style.cssText='position:fixed;top:100px;right:20px;background:rgba(243,156,18,0.9);color:white;padding:15px;border-radius:10px;max-width:300px;font-size:14px;z-index:1000;box-shadow:0 5px 15px rgba(0,0,0,0.3)';document.body.appendChild(hd);setTimeout(()=>{if(document.body.contains(hd))document.body.removeChild(hd)},5000)}else if(this.classList.contains('sound'))sp('Present Simple is the tense for describing usual actions and facts. Use it to talk about what you do regularly.')}));
-const abs=document.querySelectorAll('.ab');
-abs.forEach(b=>b.addEventListener('click',function(){const a=this.title;sp(`Achievement: ${a}`);if(!this.classList.contains('earned')){this.classList.add('earned');upo(20)}}));
-const sss=document.querySelectorAll('.ss div');
-sss.forEach((s,i)=>s.addEventListener('click',function(){if(!this.classList.contains('earned')){this.classList.add('earned');upo(5);sp(`Speed star ${i+1} earned!`)}}));
-setInterval(()=>{if(typeof(Storage)!=='undefined')localStorage.setItem('studentProgress7-8',JSON.stringify({progress:cpr,points:cp,interactions:tint,hintsUsed:hu,timeSpent:450-tl}))},30000);
-if(typeof(Storage)!=='undefined'){const sd=localStorage.getItem('studentProgress7-8');if(sd){const d=JSON.parse(sd);cpr=d.progress||65;cp=d.points||245;tint=d.interactions||0;hu=d.hintsUsed||0;up(cpr);upo(0)}}
-setTimeout(()=>sp('Hi! Today we are learning Present Simple. Ready to start?'),1000);
-const bs=document.querySelectorAll('.blank');const wis=document.querySelectorAll('.wi');let sw=null;
-wis.forEach(i=>i.addEventListener('click',function(){if(this.classList.contains('used'))return;wis.forEach(w=>w.style.transform='');sw=this.textContent;this.style.transform='scale(1.1)';sp(sw)}));
-bs.forEach(b=>b.addEventListener('click',function(){if(!sw){sp('First, select a word from the word bank.');return}tint++;const ca=this.dataset.answer;this.textContent=sw;if(sw===ca){this.classList.add('filled');this.classList.remove('incorrect');sp('Correct!');upo(5);up(cpr+1);wis.forEach(i=>{if(i.textContent===sw)i.classList.add('used')})}else{this.classList.add('incorrect');this.classList.remove('filled');sp('Try another word.')}sw=null;wis.forEach(w=>w.style.transform='')}));
-const mis=document.querySelectorAll('.mi');const msvg=document.querySelector('.msvg');let fs=null,dl=[];
-mis.forEach(i=>i.addEventListener('click',function(){if(this.classList.contains('matched'))return;if(!fs){fs=this;this.classList.add('selected');sp(this.textContent)}else{const fm=fs.dataset.match;const sm=this.dataset.match;tint++;if(fm===sm&&fs.parentNode!==this.parentNode){fs.classList.add('matched');this.classList.add('matched');drawLine(fs,this);sp('Correctly connected!');upo(8);up(cpr+2)}else sp('Try another connection.');fs.classList.remove('selected');fs=null}}));
-function drawLine(e1,e2){const r1=e1.getBoundingClientRect();const r2=e2.getBoundingClientRect();const sr=msvg.getBoundingClientRect();const x1=r1.right-sr.left;const y1=r1.top+r1.height/2-sr.top;const x2=r2.left-sr.left;const y2=r2.top+r2.height/2-sr.top;const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);l.classList.add('ml');msvg.appendChild(l);dl.push(l)}
-const ss2s=document.querySelectorAll('.ss2');const scb=document.querySelector('.scb');
-ss2s.forEach(s=>s.addEventListener('change',function(){if(this.value)sp(this.value)}));
-scb.addEventListener('click',function(){let af=true;let st='Every ';ss2s.forEach(s=>{if(!s.value)af=false;else st+=s.value+' '});if(af){sp('Great story! '+st);upo(10);up(cpr+2)}else sp('Fill in all the blanks in the story.')});
-const gcs=document.querySelectorAll('.gc');let fgc=[],mgp=0;
-gcs.forEach(c=>c.addEventListener('click',function(){if(this.classList.contains('flipped')||this.classList.contains('matched')||fgc.length>=2)return;this.classList.add('flipped');fgc.push(this);sp(this.textContent);if(fgc.length===2){const[c1,c2]=fgc;const p1=c1.dataset.pair;const p2=c2.dataset.pair;tint++;setTimeout(()=>{if(p1===p2){c1.classList.add('matched');c2.classList.add('matched');mgp++;sp('Correct grammatical pair!');upo(10);up(cpr+2);if(mgp===4)setTimeout(()=>sp('Congratulations! All grammatical pairs found!'),1000)}else{c1.classList.remove('flipped');c2.classList.remove('flipped');sp('This is not a pair. Try again.');}fgc=[]},1000)}}));
-const wss=document.querySelectorAll('.ws');const ais=document.querySelectorAll('.ai');let st=null;
-wss.forEach(s=>s.addEventListener('click',function(){wss.forEach(ss=>ss.classList.remove('active'));this.classList.add('active');st=this.dataset.time;sp(this.querySelector('.wt').textContent)}));
-ais.forEach(i=>i.addEventListener('click',function(){if(this.classList.contains('placed'))return;if(!st){sp('First, select the time of day.');return}tint++;if(this.dataset.time===st){this.classList.add('placed');sp(`Correct! "${this.textContent}" is a ${st} activity.`);upo(6);up(cpr+1)}else sp('This action happens at a different time.')}));
-const tfbts=document.querySelectorAll('.tfbt');const exp=document.querySelector('.exp');const stmts=[{text:"He play football every day.",correct:false,explanation:"False! Correct: He <strong>plays</strong> football every day."},{text:"They goes to school by bus.",correct:false,explanation:"False! Correct: They <strong>go</strong> to school by bus."},{text:"I study English every week.",correct:true,explanation:"True! The sentence is grammatically correct."},{text:"She like ice cream.",correct:false,explanation:"False! Correct: She <strong>likes</strong> ice cream."},{text:"We play games together.",correct:true,explanation:"True! The sentence is grammatically correct."}];let csi=0;
-function showStatement(i){const st=stmts[i];document.querySelector('.stmt').textContent=st.text;exp.style.display='none';exp.innerHTML=st.explanation}
-tfbts.forEach(b=>b.addEventListener('click',function(){tint++;const cs=stmts[csi];const it=this.classList.contains('true-btn');exp.style.display='block';if((it&&cs.correct)||(!it&&!cs.correct)){sp('Correct! '+cs.explanation.replace(/<[^>]*>/g,''));upo(8);up(cpr+2)}else sp('Incorrect. '+cs.explanation.replace(/<[^>]*>/g,''));setTimeout(()=>{csi=(csi+1)%stmts.length;showStatement(csi)},3000)}));
-showStatement(0);
-});
+document.addEventListener('DOMContentLoaded',function(){let audioContext,speechSynthesis=window.speechSynthesis;let audioEnabled=true,currentStep=1,hintsUsed=0;function initAudio(){if(!audioContext){try{audioContext=new(window.AudioContext||window.webkitAudioContext)()}catch(e){console.warn('Web Audio API not supported')}}return audioContext}function playTone(frequency,duration,volume=0.1){if(!audioEnabled)return;const ctx=initAudio();if(!ctx)return;const oscillator=ctx.createOscillator();const gainNode=ctx.createGain();oscillator.connect(gainNode);gainNode.connect(ctx.destination);oscillator.frequency.value=frequency;oscillator.type='sine';gainNode.gain.setValueAtTime(0,ctx.currentTime);gainNode.gain.linearRampToValueAtTime(volume,ctx.currentTime+0.01);gainNode.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+duration);oscillator.start(ctx.currentTime);oscillator.stop(ctx.currentTime+duration)}function speak(text,options={}){if(!audioEnabled)return;if('speechSynthesis'in window){speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.rate=0.9;utterance.pitch=1.0;utterance.volume=0.7;const voices=speechSynthesis.getVoices();const voice=voices.find(v=>v.lang==='en-US')||voices[0];if(voice)utterance.voice=voice;Object.assign(utterance,options);speechSynthesis.speak(utterance)}}window.toggleAudio=function(){audioEnabled=!audioEnabled;const toggleButton=document.querySelector('.audio-toggle');const statusIndicator=document.getElementById('audioStatus');if(audioEnabled){toggleButton.classList.remove('muted');statusIndicator.textContent='Audio: ON';statusIndicator.style.color='#4CAF50'}else{toggleButton.classList.add('muted');statusIndicator.textContent='Audio: OFF';statusIndicator.style.color='#f44336';if(speechSynthesis){speechSynthesis.cancel()}}statusIndicator.classList.add('show');setTimeout(()=>{statusIndicator.classList.remove('show')},2000);toggleButton.style.transform='scale(0.9)';setTimeout(()=>toggleButton.style.transform='',100);console.log('Audio',audioEnabled?'enabled':'disabled')};window.handleAnswer=function(element,isCorrect){element.style.transform='scale(0.95)';setTimeout(()=>element.style.transform='',100);const options=document.querySelectorAll('.option-btn');options.forEach(btn=>btn.disabled=true);if(isCorrect){element.classList.add('correct');playTone(523,0.3);setTimeout(()=>speak('Correct! Well done!'),200)}else{element.classList.add('incorrect');playTone(220,0.5);setTimeout(()=>speak('Not quite right. Try again next time!'),200)}setTimeout(()=>{options.forEach(btn=>{btn.disabled=false;btn.classList.remove('correct','incorrect')})},3000)};window.completeStep=function(stepNum){const stepItem=document.querySelector(`[data-step="${stepNum}"]`);const stepBtn=stepItem.querySelector('.step-check-btn');stepItem.classList.add('completed');stepBtn.disabled=true;stepBtn.textContent='✓ Completed';speak(`Step ${stepNum} completed! Great progress!`);if(stepNum<4){const nextStep=document.querySelector(`[data-step="${stepNum+1}"]`);nextStep.classList.add('active');currentStep=stepNum+1}else{speak('All steps completed! You are ready to tackle any problem now!')}};window.showHint=function(type){hintsUsed++;const hintText=document.getElementById(`${type}-hint`);hintText.style.display='block';const hintBtn=event.target;hintBtn.disabled=true;hintBtn.textContent='💡 Hint shown';speak('Here is a helpful hint for you!');setTimeout(()=>speak(hintText.textContent),500)};window.checkSentenceAnswer=function(){const input=document.getElementById('sentence-input');const answer=input.value.toLowerCase().trim();const mistakeDiv=document.getElementById('sentence-mistake');if(answer==='go'||answer==='walk'){input.style.borderColor='#2ecc71';input.style.background='rgba(46,204,113,0.1)';speak('Excellent! That is the correct answer!');mistakeDiv.style.display='none'}else if(answer.length>0){input.style.borderColor='#e74c3c';input.style.background='rgba(231,76,60,0.1)';mistakeDiv.style.display='block';speak('Not quite right. Let me help you understand why.');setTimeout(()=>speak('The correct answer is "go" - it describes a regular action in Present Simple.'),2000)}else{speak('Please enter your answer first.')}};window.handleImageClick=function(element,imageType){const originalTransform=element.style.transform;element.style.transform='scale(0.96)';setTimeout(()=>element.style.transform=originalTransform,150);const sounds={hero:()=>{speak('This is an amazing educational image! Let\'s explore it together.')},story:()=>{speak('What an interesting story scene! Can you tell me what you see?')},activity:()=>{speak('Great activity image! This will help us learn new concepts.')},learning:()=>{speak('Excellent learning material! Let\'s discover something new.')}};if(sounds[imageType]){sounds[imageType]()}};function initScrollDetection(){const slideContent=document.getElementById('slideContent');const scrollIndicator=document.getElementById('scrollIndicator');if(slideContent&&scrollIndicator){function checkScroll(){const isScrollable=slideContent.scrollHeight>slideContent.clientHeight;const isAtTop=slideContent.scrollTop<20;const isAtBottom=slideContent.scrollTop+slideContent.clientHeight>=slideContent.scrollHeight-20;if(isScrollable&&isAtTop&&!isAtBottom){scrollIndicator.classList.add('show')}else{scrollIndicator.classList.remove('show')}}slideContent.addEventListener('scroll',checkScroll);window.addEventListener('resize',checkScroll);checkScroll();slideContent.style.scrollBehavior='smooth'}}const statusIndicator=document.getElementById('audioStatus');if(statusIndicator){statusIndicator.style.color='#4CAF50'}const stepItems=document.querySelectorAll('.step-item');if(stepItems.length>0){stepItems[0].classList.add('active')}setTimeout(()=>speak('Hi! Today we are learning with interactive components. Ready to start?'),1000);document.addEventListener('touchstart',function(e){if(audioContext&&audioContext.state==='suspended'){audioContext.resume()}});document.addEventListener('keydown',function(e){if(e.key==='m'||e.key==='M'){e.preventDefault();toggleAudio();return}const slideContent=document.getElementById('slideContent');if(slideContent&&(e.key==='ArrowUp'||e.key==='ArrowDown')){e.preventDefault();const scrollAmount=100;if(e.key==='ArrowDown'){slideContent.scrollTop+=scrollAmount}else{slideContent.scrollTop-=scrollAmount}}if(e.target.getAttribute('role')==='button'){if(e.key==='Enter'||e.key===' '){e.preventDefault();e.target.click()}}});initScrollDetection();console.log('🎓 Educational Components for 7-8 years loaded!');console.log('🔊 Press M key to toggle audio on/off')});
 </script>
 </body>
 </html> 
