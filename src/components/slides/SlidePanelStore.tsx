@@ -209,20 +209,44 @@ const SlidePanelStore: React.FC = () => {
   // === SOLID: SRP - Component for empty state ===
   const EmptyState = () => (
     <Box sx={{ 
+      flex: 1, 
       display: 'flex', 
       flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      height: '100%',
+      justifyContent: 'center', 
+      alignItems: 'center',
       textAlign: 'center',
-      color: 'text.secondary',
       p: 3
     }}>
-      <Typography variant="h6" sx={{ mb: 1, fontSize: '1rem' }}>
-        📝 No slides
+      <Box sx={{ fontSize: '4rem', mb: 2 }}>🎨</Box>
+      
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}>
+        {t('slides:emptyState.title')}
       </Typography>
-      <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-        Start a chat to create slides
+      
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, lineHeight: 1.6 }}>
+        {t('slides:emptyState.description')}
+      </Typography>
+      
+      <Paper elevation={0} sx={{ 
+        p: 2, 
+        mb: 3, 
+        backgroundColor: alpha(theme.palette.primary.main, 0.04),
+        borderRadius: 2,
+        width: '100%'
+      }}>
+        <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+          {t('slides:emptyState.example1')}
+        </Typography>
+        <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary', mt: 1 }}>
+          {t('slides:emptyState.example2')}
+        </Typography>
+        <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary', mt: 1 }}>
+          {t('slides:emptyState.example3')}
+        </Typography>
+      </Paper>
+      
+      <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
+        {t('slides:emptyState.footer')}
       </Typography>
     </Box>
   );
@@ -273,10 +297,10 @@ const SlidePanelStore: React.FC = () => {
           fontWeight: 600,
           color: 'text.primary'
         }}>
-          🎨 Lesson Slides
+          🎨 {t('slides:title')}
         </Typography>
         
-        <Tooltip title="Close panel">
+        <Tooltip title={t('slides:navigation.close')}>
           <IconButton
             size="small"
             onClick={togglePanel}

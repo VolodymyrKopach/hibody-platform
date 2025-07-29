@@ -14,10 +14,11 @@ interface SimpleSlide {
   title: string;
   content: string;
   htmlContent: string;
-  type: 'title' | 'content' | 'interactive' | 'summary';
-  status: 'completed' | 'draft';
+  type?: 'title' | 'content' | 'interactive' | 'summary';
+  status: 'completed' | 'draft' | 'generating';
   previewUrl?: string;
   thumbnailUrl?: string; // Add thumbnailUrl from database
+  updatedAt?: Date;
 }
 
 interface SlideCardProps {
@@ -70,12 +71,10 @@ const SlideCard: React.FC<SlideCardProps> = ({
         width: '100%',        // Occupy full card width
         aspectRatio: '2/1',   // Even more compact display
         overflow: 'hidden',
-        backgroundColor: alpha(theme.palette.grey[100], 0.3),
+        backgroundColor: alpha(theme.palette.grey[100], 0.5),
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        bgcolor: alpha(theme.palette.grey[100], 0.5)
+        justifyContent: 'center'
       }}>
         {/* Actual slide preview */}
         {(previewUrl || slide.thumbnailUrl) && !isUpdating ? (
