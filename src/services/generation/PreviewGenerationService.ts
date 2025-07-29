@@ -64,7 +64,7 @@ export interface EnhancedPreviewData {
   metadata: {
     generatedAt: string;
     generationTime: number; // in milliseconds
-    aiProvider: string;
+    assistantProvider: string;
     version: string;
   };
 }
@@ -113,7 +113,7 @@ export class PreviewGenerationService {
       const metadata = {
         generatedAt: new Date().toISOString(),
         generationTime: Date.now() - startTime,
-        aiProvider: this.contentService ? 'AI' : 'Mock',
+        assistantProvider: this.contentService ? 'Assistant' : 'Mock',
         version: '3.0.0'
       };
 
@@ -406,7 +406,7 @@ export class PreviewGenerationService {
       metadata: {
         generatedAt: new Date().toISOString(),
         generationTime: 100,
-        aiProvider: 'Fallback',
+        assistantProvider: 'Fallback',
         version: '3.0.0'
       }
     };

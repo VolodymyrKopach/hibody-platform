@@ -143,7 +143,7 @@ const ChatInterfaceContent: React.FC<ChatInterfaceContentProps> = ({
                   <span></span>
                   <span></span>
                 </div>
-                AI is processing your request...
+                Assistant is processing your request...
               </Box>
             )}
           </Box>

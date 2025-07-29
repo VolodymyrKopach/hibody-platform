@@ -1,17 +1,17 @@
 {
   "interface": {
-    "title": "AI Assistant Chat",
+    "title": "Assistant Chat",
     "placeholder": "Type your message...",
     "send": "Send",
     "clear": "Clear chat",
-    "typing": "AI is typing...",
+    "typing": "Assistant is typing...",
     "connecting": "Connecting...",
     "connected": "Connected",
     "disconnected": "Disconnected",
     "retry": "Retry"
   },
   "messages": {
-    "welcome": "Hello! I'm your AI assistant. How can I help you?",
+    "welcome": "Hello! I'm your Assistant. How can I help you?",
     "thinking": "Thinking...",
     "processing": "Processing...",
     "generating": "Generating response...",
@@ -56,7 +56,7 @@
     "example3": "How to make the lesson more interactive?"
   },
   "ai": {
-    "name": "AI Assistant",
+    "name": "Assistant",
     "status": {
       "online": "Online",
       "offline": "Offline",
@@ -71,7 +71,7 @@
     }
   },
   "welcome": {
-    "greeting": "Hello! 👋 I'm HiBody AI - your personal assistant for creating interactive lessons for children.",
+    "greeting": "Hello! 👋 I'm HiBody Assistant - your personal assistant for creating interactive lessons for children.",
     "capabilities": "**What I can do:**",
     "feature1": "Create lessons on any topic with interactive slides",
     "feature2": "Adapt material to the child's age",

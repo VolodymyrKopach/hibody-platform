@@ -15,7 +15,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "HiBody Platform",
-  description: "AI-powered educational content creation platform",
+  description: "Assistant-powered educational content creation platform",
 };
 
 export default function RootLayout({

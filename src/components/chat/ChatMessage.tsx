@@ -37,7 +37,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   // Handle lesson creation from message
   const handleLessonCreate = () => {
     if (message.text.includes('```html') && onLessonCreate) {
-      // Parsing lesson from AI response
+      // Parsing lesson from Assistant response
       const lessonMatch = message.text.match(/## 📚 (.*?)\n/);
       const title = lessonMatch ? lessonMatch[1] : 'New lesson';
       

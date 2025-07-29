@@ -25,7 +25,7 @@
   },
   "emptyState": {
     "title": "Create Your First Lesson",
-    "description": "Start chatting to generate engaging educational slides tailored to your audience. Our AI will help you create interactive and age-appropriate content.",
+    "description": "Start chatting to generate engaging educational slides tailored to your audience. Our Assistant will help you create interactive and age-appropriate content.",
     "example1": "\"Create a lesson about the solar system for 8-year-olds\"",
     "example2": "\"Make an interactive math lesson about fractions\"",
     "example3": "\"Design a history lesson about ancient Egypt for teenagers\"",

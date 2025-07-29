@@ -6,11 +6,11 @@
     "account": "Account",
     "lessons": "Lessons",
     "slides": "Slides",
-    "aiChat": "AI Chat",
+    "aiChat": "Assistant Chat",
     "myMaterials": "My Materials"
   },
   "pages": {
-    "chatTitle": "AI Chat",
+    "chatTitle": "Assistant Chat",
     "materialsTitle": "My Materials",
     "accountTitle": "Account"
   },

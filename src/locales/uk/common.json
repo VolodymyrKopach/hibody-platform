@@ -7,11 +7,11 @@
     "lessons": "Уроки",
     "slides": "Слайди",
     "home": "Головна",
-    "aiChat": "AI Чат",
+    "aiChat": "Assistant Чат",
     "myMaterials": "Мої матеріали"
   },
   "pages": {
-    "chatTitle": "Чат з ШІ",
+    "chatTitle": "Чат з асистентом",
     "materialsTitle": "Мої матеріали",
     "accountTitle": "Акаунт"
   },

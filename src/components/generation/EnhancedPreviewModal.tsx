@@ -279,7 +279,7 @@ const EnhancedPreviewModal: React.FC<EnhancedPreviewModalProps> = ({
             }}
           >
             <Typography variant="caption" color="text.secondary">
-              {t('generation:preview.metadata', 'Генерація')}: {state.data.metadata.aiProvider} • 
+              {t('generation:preview.metadata', 'Генерація')}: {state.data.metadata.assistantProvider} • 
               {Math.round(state.data.metadata.generationTime)}мс
             </Typography>
             
