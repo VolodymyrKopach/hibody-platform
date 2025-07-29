@@ -53,7 +53,7 @@ export class LocalStorageFormPersistence implements FormPersistenceStrategy {
   
   constructor(config: Partial<StorageConfig> = {}) {
     this.config = {
-      prefix: 'hibody_form_',
+      prefix: 'teachspark_form_',
       maxEntries: 50,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       autoSaveInterval: 30000, // 30 seconds
@@ -290,7 +290,7 @@ export class FormPersistenceService {
   ) {
     this.storage = storage;
     this.config = {
-      prefix: 'hibody_form_',
+      prefix: 'teachspark_form_',
       maxEntries: 50,
       maxAge: 7 * 24 * 60 * 60 * 1000,
       autoSaveInterval: 30000,

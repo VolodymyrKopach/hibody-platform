@@ -1,4 +1,4 @@
-# Кастомні розміри зображень у HiBody Platform
+# Кастомні розміри зображень у TeachSpark Platform
 
 ## Огляд
 

@@ -1,6 +1,6 @@
-# Cursor Rules для hibody-platform
+# Cursor Rules для teachspark-platform
 
-Цей файл містить правила та рекомендації для розробки на проекті hibody-platform з використанням Next.js 14+ та TypeScript.
+Цей файл містить правила та рекомендації для розробки на проекті teachspark-platform з використанням Next.js 14+ та TypeScript.
 
 ## SOLID Принципи
 

@@ -20,7 +20,7 @@ export const createClient = () => {
           },
           global: {
             headers: {
-              'X-Client-Info': 'hibody-platform'
+              'X-Client-Info': 'teachspark-platform'
             }
           },
           db: {

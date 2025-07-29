@@ -17,7 +17,7 @@ export class SlideStore implements ISlideStore {
 
   constructor(config: Partial<SlideStoreConfig> = {}) {
     this.config = {
-      persistence: { enabled: false, key: 'hibody-slide-store' },
+      persistence: { enabled: false, key: 'teachspark-slide-store' },
       logging: { enabled: true, level: 'info' },
       performance: { debounceMs: 10, maxSubscribers: 100 },
       ...config
@@ -386,7 +386,7 @@ export class SlideStoreFactory {
     return new SlideStore(config);
   }
 
-  static createWithPersistence(key = 'hibody-slide-store'): SlideStore {
+  static createWithPersistence(key = 'teachspark-slide-store'): SlideStore {
     return new SlideStore({
       persistence: { enabled: true, key },
       logging: { enabled: true, level: 'info' }

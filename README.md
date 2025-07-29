@@ -1,4 +1,4 @@
-# 🎓 HiBody Platform
+# 🎓 TeachSpark Platform
 
 > AI-powered educational platform for creating interactive lessons with presentations
 
@@ -19,7 +19,7 @@
 
 ## 🚀 Демо
 
-[🔗 Переглянути живу демо](https://hibody-platform.vercel.app)
+[🔗 Переглянути живу демо](https://teachspark-platform.vercel.app)
 
 ## 📸 Скріншоти
 
@@ -67,8 +67,8 @@
 
 ### Крок 1: Клонування
 ```bash
-git clone https://github.com/VolodymyrKopach/hibody-platform.git
-cd hibody-platform
+git clone https://github.com/VolodymyrKopach/teachspark-platform.git
+cd teachspark-platform
 ```
 
 ### Крок 2: Встановлення залежностей
@@ -124,7 +124,7 @@ npm run dev
 ## 🏗️ Архітектура
 
 ```
-hibody-platform/
+teachspark-platform/
 ├── src/
 │   ├── app/                 # Next.js App Router
 │   │   ├── api/            # API endpoints
@@ -150,7 +150,7 @@ hibody-platform/
 ## 🚀 Деплой
 
 ### Vercel (Рекомендовано)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/VolodymyrKopach/hibody-platform)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/VolodymyrKopach/teachspark-platform)
 
 ### Manual Deploy
 ```bash

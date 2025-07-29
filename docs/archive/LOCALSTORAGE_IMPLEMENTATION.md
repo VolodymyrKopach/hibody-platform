@@ -111,14 +111,14 @@ export class LessonStorage {
 
 1. Відкрийте Developer Tools (F12)
 2. Перейдіть на вкладку Application/Storage
-3. Знайдіть localStorage → `hibody_saved_lessons`
+3. Знайдіть localStorage → `teachspark_saved_lessons`
 4. Перевірте збережені дані в JSON форматі
 
 ## 🗂️ Структура localStorage
 
 ```json
 {
-  "hibody_saved_lessons": [
+  "teachspark_saved_lessons": [
     {
       "id": "lesson_1703847291234",
       "title": "Урок: Подорож у світ динозаврів",
@@ -155,7 +155,7 @@ export class LessonStorage {
 
 ### Ключові константи
 
-- **Storage Key**: `hibody_saved_lessons`
+- **Storage Key**: `teachspark_saved_lessons`
 - **Default Thumbnail**: `/images/default-lesson.png`
 - **Default Tags**: `['створений-в-чаті', 'інтерактивний']`
 - **Default Difficulty**: `easy`

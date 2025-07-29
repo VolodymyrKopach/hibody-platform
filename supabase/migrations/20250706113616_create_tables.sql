@@ -1,5 +1,5 @@
 -- =============================================
--- HiBody Platform Database Schema
+-- TeachSpark Platform Database Schema
 -- =============================================
 
 -- Enable UUID extension

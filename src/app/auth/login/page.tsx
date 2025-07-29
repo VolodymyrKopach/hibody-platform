@@ -90,7 +90,7 @@ function LoginPageContent() {
                 mb: 1,
               }}
             >
-              HiBody Platform
+                              TeachSpark Platform
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
               Platform for creating interactive educational materials

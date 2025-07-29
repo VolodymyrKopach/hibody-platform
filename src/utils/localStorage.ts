@@ -39,8 +39,8 @@ export interface SavedFolder {
   materialIds: string[];
 }
 
-const LESSONS_STORAGE_KEY = 'hibody_saved_lessons';
-const FOLDERS_STORAGE_KEY = 'hibody_saved_folders';
+const LESSONS_STORAGE_KEY = 'teachspark_saved_lessons';
+const FOLDERS_STORAGE_KEY = 'teachspark_saved_folders';
 
 export class LessonStorage {
   

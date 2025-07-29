@@ -32,7 +32,7 @@ export const SlideStoreProvider: React.FC<SlideStoreProviderProps> = ({
   // === SOLID: DIP - Використання залежності через інтерфейс ===
   const storeInstance = store || SlideStoreFactory.create({
     logging: { enabled: enableLogging, level: 'info' },
-    persistence: { enabled: enablePersistence, key: 'hibody-slide-store' }
+    persistence: { enabled: enablePersistence, key: 'teachspark-slide-store' }
   });
 
   const previewServiceInstance = previewService || SlidePreviewServiceFactory.create();

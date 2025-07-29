@@ -159,7 +159,7 @@ const Header: React.FC<HeaderProps> = ({
                 display: { xs: 'none', sm: 'block' }
               }}
             >
-              HiBody
+              TeachSpark
             </Typography>
           </Stack>
 

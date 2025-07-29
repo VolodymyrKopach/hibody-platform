@@ -1,4 +1,4 @@
-# Action Buttons Implementation - Гарячі Кнопки для Hibody Platform
+# Action Buttons Implementation - Гарячі Кнопки для TeachSpark Platform
 
 ## Огляд функціональності
 

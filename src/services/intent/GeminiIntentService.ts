@@ -106,7 +106,7 @@ Example: If they previously asked "who is batman" and now say "create lesson", t
       }
     }
 
-    return `You are an expert intent recognition system for the HiBody educational platform.
+    return `You are an expert intent recognition system for the TeachSpark educational platform.
 
 CRITICAL: Respond ONLY with a valid JSON object. No additional text!
 

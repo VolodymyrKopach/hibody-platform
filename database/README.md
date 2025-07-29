@@ -1,6 +1,6 @@
-# База даних HiBody Platform
+# База даних TeachSpark Platform
 
-Цей документ містить інструкції для налаштування бази даних Supabase для проекту HiBody Platform.
+Цей документ містить інструкції для налаштування бази даних Supabase для проекту TeachSpark Platform.
 
 ## Структура бази даних
 

@@ -68,7 +68,7 @@ export class GeminiCommandParsingService {
       `Current slide context: "${currentSlide.title}" (slide ${currentSlide.number}, type: ${currentSlide.type})` : 
       'No current slide context';
 
-    return `You are an expert neural network for analyzing user commands related to educational slides in the HiBody platform.
+    return `You are an expert neural network for analyzing user commands related to educational slides in the TeachSpark platform.
 
 CRITICAL REQUIREMENTS:
 - Analyze ONLY the semantic meaning of the command

@@ -1,8 +1,8 @@
-# 📐 Standardized Image Sizes for HiBody Platform
+# 📐 Standardized Image Sizes for TeachSpark Platform
 
 ## Overview
 
-This document defines the standardized image sizes for all age groups and image types in the HiBody educational platform. These sizes ensure consistency, optimal performance, and age-appropriate visual design.
+This document defines the standardized image sizes for all age groups and image types in the TeachSpark educational platform. These sizes ensure consistency, optimal performance, and age-appropriate visual design.
 
 ## 🎯 Design Principles
 
@@ -144,4 +144,4 @@ Icons, badges, borders, small decorative elements, rewards
 
 ---
 
-*This standardization ensures consistent, age-appropriate, and performant images across the entire HiBody educational platform.* 
+*This standardization ensures consistent, age-appropriate, and performant images across the entire TeachSpark educational platform.* 

@@ -14,7 +14,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "HiBody Platform",
+  title: "TeachSpark Platform",
   description: "Assistant-powered educational content creation platform",
 };
 

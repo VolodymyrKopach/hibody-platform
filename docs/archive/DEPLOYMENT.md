@@ -1,8 +1,8 @@
-# 🚀 Deployment Guide - HiBody Platform
+# 🚀 Deployment Guide - TeachSpark Platform
 
 ## Огляд
 
-HiBody Platform - це Next.js 14+ додаток з TypeScript, використовує Supabase як backend та Material-UI для інтерфейсу.
+TeachSpark Platform - це Next.js 14+ додаток з TypeScript, використовує Supabase як backend та Material-UI для інтерфейсу.
 
 ## 📋 Передумови
 
@@ -29,7 +29,7 @@ HiBody Platform - це Next.js 14+ додаток з TypeScript, викорис�
 3. **Або через Vercel Dashboard**
    - Зайти на [vercel.com](https://vercel.com)
    - Import Git Repository
-   - Вибрати hibody-platform
+   - Вибрати teachspark-platform
    - Налаштувати environment variables
 
 ### Environment Variables для Vercel

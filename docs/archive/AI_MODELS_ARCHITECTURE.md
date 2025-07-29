@@ -1,7 +1,7 @@
-# 🤖 AI Models Architecture in HiBody Platform
+# 🤖 AI Models Architecture in TeachSpark Platform
 
 ## Overview
-HiBody Platform uses a **dual-model architecture** to optimize performance, cost, and quality:
+TeachSpark Platform uses a **dual-model architecture** to optimize performance, cost, and quality:
 
 - **Claude Haiku** 🚀 - Fast intent detection
 - **Claude Sonnet 4** 🎯 - High-quality content generation

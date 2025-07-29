@@ -22,7 +22,7 @@ export class HelpHandler implements IIntentHandler {
 
   private generateHelpMessage(language: string): string {
     // Use English as the universal help language
-    return `🎓 **How to use HiBody platform:**
+    return `🎓 **How to use TeachSpark platform:**
 
 **Creating lessons:**
 • "Create lesson about [topic] for [age] year old children"

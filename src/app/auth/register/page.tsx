@@ -87,7 +87,7 @@ export default function RegisterPage() {
                 mb: 1,
               }}
             >
-              HiBody Platform
+                              TeachSpark Platform
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
               Join the community of educational innovators

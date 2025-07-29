@@ -36,9 +36,9 @@ export interface IntentParameters {
 
 
 const INTENT_DETECTION_PROMPT = `
-You are an expert AI assistant for analyzing user messages in an educational content creation platform called HiBody.
+You are an expert AI assistant for analyzing user messages in an educational content creation platform called TeachSpark.
 
-HiBody Platform allows teachers to create interactive HTML lessons for children through natural language commands.
+TeachSpark Platform allows teachers to create interactive HTML lessons for children through natural language commands.
 
 Your task is to analyze the user's message and determine their intent with high accuracy.
 
