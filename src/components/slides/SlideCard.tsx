@@ -118,23 +118,27 @@ const SlideCard: React.FC<SlideCardProps> = ({
               `}
             </style>
           </Box>
-        ) : /* Actual slide preview */ (previewUrl || slide.thumbnailUrl) && !isUpdating ? (
+        ) : /* Show thumbnail only when fully ready */ (previewUrl || slide.thumbnailUrl) && !isUpdating && !slide.isPlaceholder ? (
           <img
             src={previewUrl || slide.thumbnailUrl}
             alt={`Slide preview ${index + 1}`}
             style={{
               width: '100%',
               height: '100%',
-              objectFit: 'cover',
-              opacity: isUpdating ? 0.5 : 1
+              objectFit: 'cover'
+            }}
+            onError={(e) => {
+              // Hide broken images to prevent purple placeholder display
+              e.currentTarget.style.display = 'none';
             }}
           />
         ) : (
+          /* Preparing state for real slides waiting for thumbnails */
           <Box
             sx={{
               width: '100%',
               height: '100%',
-              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.1)} 100%)`,
+              background: `linear-gradient(135deg, ${alpha(theme.palette.grey[100], 0.8)} 0%, ${alpha(theme.palette.grey[200], 0.6)} 100%)`,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -142,20 +146,29 @@ const SlideCard: React.FC<SlideCardProps> = ({
               position: 'relative'
             }}
           >
-            <CircularProgress 
-              size={24} 
-              sx={{ 
-                color: theme.palette.primary.main,
-                opacity: 0.6
-              }} 
-            />
-            <Typography variant="caption" sx={{ 
-              mt: 1, 
-              opacity: 0.6,
-              fontSize: '0.7rem'
+            <Typography sx={{ 
+              fontSize: '24px', 
+              mb: 1, 
+              opacity: 0.5,
+              animation: 'preparingPulse 2s ease-in-out infinite'
             }}>
-              {isUpdating ? 'Updating...' : 'Generating...'}
+              📄
             </Typography>
+            <Typography variant="caption" sx={{ 
+              color: 'text.secondary', 
+              fontSize: '10px',
+              opacity: 0.7 
+            }}>
+              Preparing…
+            </Typography>
+            <style>
+              {`
+                @keyframes preparingPulse {
+                  0%, 100% { opacity: 0.5; }
+                  50% { opacity: 0.8; }
+                }
+              `}
+            </style>
           </Box>
         )}
         
@@ -266,4 +279,4 @@ const SlideCard: React.FC<SlideCardProps> = ({
   );
 };
 
-export default SlideCard; 
+export default React.memo(SlideCard); 

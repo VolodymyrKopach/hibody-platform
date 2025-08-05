@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { SlideUIState, SimpleLesson, SimpleSlide, SaveLessonDialogData, Message } from '@/types/chat';
 import { generateMessageId } from '@/utils/messageUtils';
 import { getLocalThumbnailStorage } from '@/services/slides/LocalThumbnailService';
@@ -140,22 +140,40 @@ const useSlideManagement = (
     setSlidePreviews(allLocalPreviews);
   }, [localThumbnailStorage]);
 
-  // Автоматична генерація превью для нових слайдів
+  // Відстеження згенерованих превью для запобігання повторним генераціям
+  const generatedPreviewsRef = useRef<Set<string>>(new Set());
+
+  // Автоматична генерація превью тільки для нових слайдів (мемоізовано)
+  const slidesForPreviews = useMemo(() => {
+    if (!slideUIState.currentLesson?.slides) return [];
+    
+    return slideUIState.currentLesson.slides.filter(slide => 
+      !slide.isPlaceholder && // Не генеруємо для плейсхолдерів
+      slide.htmlContent && // Є HTML контент
+      !localThumbnailStorage.has(slide.id) && // Немає локального превью
+      !generatedPreviewsRef.current.has(slide.id) // Ще не генерували
+    );
+  }, [slideUIState.currentLesson?.slides, localThumbnailStorage]);
+
+  // Генерація превью тільки для нових слайдів
   useEffect(() => {
-    if (!slideUIState.currentLesson?.slides) return;
+    if (slidesForPreviews.length === 0) return;
 
-         const generateMissingPreviews = async () => {
-       for (const slide of slideUIState.currentLesson!.slides) {
-         // Генеруємо тільки якщо немає локального превью і є HTML контент
-         if (!localThumbnailStorage.has(slide.id) && slide.htmlContent) {
-           console.log('🆕 NEW PREVIEW: Генерація для нового слайду:', slide.id);
-           await generateSlidePreview(slide.id, slide.htmlContent);
-         }
-       }
-     };
+    const generateNewPreviews = async () => {
+      for (const slide of slidesForPreviews) {
+        try {
+          console.log('🆕 NEW PREVIEW: Генерація для нового слайду:', slide.id);
+          generatedPreviewsRef.current.add(slide.id); // Відмічаємо як згенеровано
+          await generateSlidePreview(slide.id, slide.htmlContent);
+        } catch (error) {
+          console.error('❌ Preview generation failed for slide:', slide.id, error);
+          generatedPreviewsRef.current.delete(slide.id); // Забираємо з відміток при помилці
+        }
+      }
+    };
 
-    generateMissingPreviews();
-  }, [slideUIState.currentLesson?.slides, generateSlidePreview, localThumbnailStorage]);
+    generateNewPreviews();
+  }, [slidesForPreviews, generateSlidePreview]);
 
   // === ФУНКЦІЇ ДІАЛОГІВ ===
 
@@ -330,8 +348,7 @@ const useSlideManagement = (
             return {
               title: slide.title,
               description: slide.content,
-              htmlContent: slide.htmlContent,
-              type: slide.type
+              htmlContent: slide.htmlContent
             };
           })
         })
@@ -350,8 +367,7 @@ const useSlideManagement = (
         text: `✅ **Урок "${dialogData.title}" успішно збережено!**\n\n📚 **Деталі:**\n- Слайдів збережено: ${selectedSlideIds.length}\n- Предмет: ${dialogData.subject}\n- Вікова група: ${dialogData.ageGroup}\n\n🎯 Урок тепер доступний в бібліотеці матеріалів.`,
         sender: 'ai',
         timestamp: new Date(),
-        status: 'delivered',
-        feedback: null
+        status: 'delivered'
       };
 
       setMessages(prev => [...prev, successMessage]);
@@ -373,8 +389,7 @@ const useSlideManagement = (
         text: `❌ **Помилка збереження уроку**\n\n${error instanceof Error ? error.message : 'Невідома помилка'}\n\nСпробуйте ще раз або зверніться до підтримки.`,
         sender: 'ai',
         timestamp: new Date(),
-        status: 'delivered',
-        feedback: null
+        status: 'delivered'
       };
 
       setMessages(prev => [...prev, errorMessage]);
@@ -407,6 +422,7 @@ const useSlideManagement = (
       console.log('🧹 NEW LESSON: Очищення локального кешу для нового уроку');
       localThumbnailStorage.clear();
       setSlidePreviews({});
+      generatedPreviewsRef.current.clear(); // Очищуємо трекінг згенерованих превью
     }
   }, [localThumbnailStorage]);
 

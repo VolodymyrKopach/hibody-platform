@@ -583,7 +583,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
 
     // === CREATE PLACEHOLDER SLIDES FOR IMMEDIATE FEEDBACK ===
     const placeholderSlides = slideDescriptions.map((desc, index) => ({
-      id: `placeholder-${desc.slideNumber}-${Date.now()}`,
+      id: `slide-${desc.slideNumber}-${sessionId}`, // Stable ID that will be preserved
       title: desc.title,
       htmlContent: `
         <div style="
@@ -747,7 +747,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
                   if (slide.isPlaceholder && slide.title === desc.title) {
                     return {
                       ...result.slide,
-                      id: result.slide.id || `slide-${desc.slideNumber}-${Date.now()}`,
+                      id: slide.id, // Keep the same stable ID from placeholder
                       isPlaceholder: false,
                       status: 'completed'
                     };
