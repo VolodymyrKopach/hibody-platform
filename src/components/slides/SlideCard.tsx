@@ -20,6 +20,7 @@ interface SimpleSlide {
   thumbnailUrl?: string; // Add thumbnailUrl from database
   updatedAt?: Date;
   isPlaceholder?: boolean; // Add placeholder flag
+  thumbnailReady?: boolean; // Add thumbnailReady flag
 }
 
 interface SlideCardProps {
@@ -118,9 +119,12 @@ const SlideCard: React.FC<SlideCardProps> = ({
               `}
             </style>
           </Box>
-        ) : /* Show thumbnail only when fully ready */ (previewUrl || slide.thumbnailUrl) && !isUpdating && !slide.isPlaceholder ? (
+        ) : /* Show thumbnail only when fully ready and verified */ 
+        !slide.isPlaceholder && 
+        (slide.thumbnailReady || slide.thumbnailUrl || previewUrl) && 
+        !isUpdating ? (
           <img
-            src={previewUrl || slide.thumbnailUrl}
+            src={slide.thumbnailUrl || previewUrl}
             alt={`Slide preview ${index + 1}`}
             style={{
               width: '100%',
@@ -129,6 +133,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
             }}
             onError={(e) => {
               // Hide broken images to prevent purple placeholder display
+              console.warn(`Thumbnail failed to load for slide ${slide.id}`);
               e.currentTarget.style.display = 'none';
             }}
           />

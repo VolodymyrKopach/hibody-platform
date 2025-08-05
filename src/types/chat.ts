@@ -22,6 +22,7 @@ export interface SimpleSlide {
   thumbnailUrl?: string;
   updatedAt?: Date;
   isPlaceholder?: boolean; // Flag for placeholder slides during generation
+  thumbnailReady?: boolean; // Flag to prevent regeneration of existing thumbnails
   // Content-driven properties
   estimatedDuration?: number; // in seconds
   interactive?: boolean;

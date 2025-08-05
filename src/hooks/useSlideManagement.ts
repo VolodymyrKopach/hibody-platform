@@ -143,30 +143,39 @@ const useSlideManagement = (
   // Відстеження згенерованих превью для запобігання повторним генераціям
   const generatedPreviewsRef = useRef<Set<string>>(new Set());
 
-  // Автоматична генерація превью тільки для нових слайдів (мемоізовано)
+  // DISABLED: Reactive thumbnail generation (now handled pre-store)
+  // Slides should enter store with thumbnails already generated
   const slidesForPreviews = useMemo(() => {
     if (!slideUIState.currentLesson?.slides) return [];
     
+    // Only generate for legacy slides that don't have thumbnailReady flag
     return slideUIState.currentLesson.slides.filter(slide => 
       !slide.isPlaceholder && // Не генеруємо для плейсхолдерів
+      !slide.thumbnailReady && // НОВИЙ ФІЛЬТР: Не генеруємо для готових слайдів
       slide.htmlContent && // Є HTML контент
       !localThumbnailStorage.has(slide.id) && // Немає локального превью
       !generatedPreviewsRef.current.has(slide.id) // Ще не генерували
     );
   }, [slideUIState.currentLesson?.slides, localThumbnailStorage]);
 
-  // Генерація превью тільки для нових слайдів
+  // Генерація превью тільки для LEGACY слайдів (нові слайди приходять готовими)
   useEffect(() => {
-    if (slidesForPreviews.length === 0) return;
+    if (slidesForPreviews.length === 0) {
+      console.log('📋 [REACTIVE] No slides need reactive thumbnail generation (all slides ready)');
+      return;
+    }
+
+    console.log(`🔄 [REACTIVE] Found ${slidesForPreviews.length} legacy slides needing thumbnails:`, 
+      slidesForPreviews.map(s => s.id));
 
     const generateNewPreviews = async () => {
       for (const slide of slidesForPreviews) {
         try {
-          console.log('🆕 NEW PREVIEW: Генерація для нового слайду:', slide.id);
+          console.log('🆕 [LEGACY] Reactive generation for legacy slide:', slide.id);
           generatedPreviewsRef.current.add(slide.id); // Відмічаємо як згенеровано
           await generateSlidePreview(slide.id, slide.htmlContent);
         } catch (error) {
-          console.error('❌ Preview generation failed for slide:', slide.id, error);
+          console.error('❌ Legacy preview generation failed for slide:', slide.id, error);
           generatedPreviewsRef.current.delete(slide.id); // Забираємо з відміток при помилці
         }
       }
