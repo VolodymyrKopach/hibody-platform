@@ -42,6 +42,7 @@ const ChatInterface: React.FC = () => {
     isLoading,
     sendMessage,
     handleActionClick,
+    conversationHistory,
     setOnLessonUpdate
   } = useChatLogic();
 
@@ -120,7 +121,7 @@ const ChatInterface: React.FC = () => {
         sender: 'ai',
         timestamp: new Date(),
         status: 'sent',
-        feedback: null
+
       };
       setMessages(prev => [...prev, errorMessage]);
     }
@@ -176,8 +177,8 @@ const ChatInterface: React.FC = () => {
                     message={message}
                     onLessonCreate={updateCurrentLesson}
                     onActionClick={handleActionClick}
-                    slideGenerationProgress={(message as any).slideGenerationProgress}
-                    isGeneratingSlides={(message as any).isGeneratingSlides}
+                    slideGenerationProgress={conversationHistory?.slideGenerationProgress}
+                    isGeneratingSlides={conversationHistory?.isGeneratingAllSlides || isGeneratingSlides}
                   />
                 ))}
                 

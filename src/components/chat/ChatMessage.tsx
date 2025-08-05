@@ -211,8 +211,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             >
               <MarkdownRenderer content={message.text} />
 
-              {/* Slide Generation Progress */}
-              {message.sender === 'ai' && isGeneratingSlides && slideGenerationProgress && (
+                     {/* Slide Generation Progress */}
+       {message.sender === 'ai' && isGeneratingSlides && slideGenerationProgress && 
+        message.text.includes('Generating slides...') && (
                 <Box sx={{ mt: 3, mb: 2 }}>
                   <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Clock size={16} />
@@ -254,11 +255,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                           variant="determinate"
                           value={slide.progress || 0}
                           sx={{
-                            height: 6,
-                            borderRadius: 3,
+                            height: 8, // Increased from 6 to 8
+                            borderRadius: 4, // Increased from 3 to 4
+                            width: '100%', // Ensure full width
                             backgroundColor: alpha(theme.palette.grey[300], 0.3),
                             '& .MuiLinearProgress-bar': {
-                              borderRadius: 3,
+                              borderRadius: 4, // Increased from 3 to 4
                               backgroundColor: 
                                 slide.status === 'completed' ? theme.palette.success.main :
                                 slide.status === 'error' ? theme.palette.error.main :

@@ -55,62 +55,36 @@ export class ActionHandlerService implements IActionHandlerService {
       history.lessonAge || '8-9 years'
     );
 
-    console.log('🎯 Starting synchronous slide generation - waiting for all slides to complete');
+    console.log('🚀 Starting PARALLEL slide generation using single slide endpoint');
 
-    try {
-      // Generate all slides synchronously and wait for completion
-      const generatedSlides = await this.generateAllSlidesSync(slideDescriptions, history, lesson);
-      
-      // Add all generated slides to the lesson (capture the returned lesson)
-      for (const slide of generatedSlides) {
-        lesson = this.lessonManagementService.addSlideToLesson(lesson, slide);
-      }
+    // Initialize progress tracking
+    const sessionId = `parallel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const initialProgress: SlideGenerationProgress[] = slideDescriptions.map(desc => ({
+      slideNumber: desc.slideNumber,
+      title: desc.title,
+      status: 'pending',
+      progress: 0
+    }));
 
-      console.log(`🎉 All slides generated successfully! Generated ${generatedSlides.length} slides`);
+    const newConversationHistory: ConversationHistory = {
+      ...history,
+      step: 'bulk_generation',
+      slideDescriptions,
+      slideGenerationProgress: initialProgress,
+      bulkGenerationStartTime: new Date(),
+      isGeneratingAllSlides: true,
+      currentLesson: lesson
+    };
 
-      const newConversationHistory: ConversationHistory = {
-        ...history,
-        step: 'bulk_generation',
-        slideDescriptions,
-        slideGenerationProgress: slideDescriptions.map(desc => ({
-          slideNumber: desc.slideNumber,
-          title: desc.title,
-          status: 'completed',
-          progress: 100
-        })),
-        bulkGenerationStartTime: new Date(),
-        isGeneratingAllSlides: false, // Generation is now complete
-        currentLesson: lesson
-      };
-
-      return {
-        success: true,
-        message: `🎉 **Lesson generation completed!**
-
-📚 **Generated ${generatedSlides.length} slides:**
-${generatedSlides.map((slide: SimpleSlide, index: number) => {
-  // Remove duration from title (e.g., "Introduction (5 minutes)" -> "Introduction")
-  const titleWithoutDuration = slide.title.replace(/\s*\(?\d+\s*minutes?\)?\s*$/i, '').replace(/\s*-.*?\d+\s*minutes?\s*$/i, '');
-  return `${index + 1}. ${titleWithoutDuration}`;
-}).join('\n')}
-
-✨ Your lesson is ready! Check the slide panel to view and edit your slides.`,
-        conversationHistory: newConversationHistory,
-        lesson: lesson, // Return lesson with generated slides
-        actions: []
-      };
-
-    } catch (error) {
-      console.error('❌ Error generating slides:', error);
-      
-      return {
-        success: false,
-        message: `❌ **Slide generation failed**\n\n${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease try again or contact support if the problem persists.`,
-        conversationHistory: history,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        actions: []
-      };
-    }
+    // Return minimal response - actual generation will happen client-side
+    return {
+      success: true,
+      message: `✅ **Plan approved!** Starting slide generation...`,
+      conversationHistory: newConversationHistory,
+      lesson: lesson,
+      sessionId: sessionId, // Pass sessionId for client-side tracking
+      actions: []
+    };
   }
 
   private async handleEditPlanAction(history?: ConversationHistory): Promise<ChatResponse> {

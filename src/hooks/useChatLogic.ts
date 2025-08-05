@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Message, SimpleLesson } from '@/types/chat';
 import { ChatServiceAPIAdapter } from '@/services/chat/ChatServiceAPIAdapter';
+import { ConversationHistory } from '@/services/chat/types';
 import { useRealTimeSlideGeneration } from './useRealTimeSlideGeneration';
 import { useSlideProgressSSE } from './useSlideProgressSSE';
 import { ContextCompressionService } from '@/services/context/ContextCompressionService';
@@ -234,7 +235,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         sender: 'ai',
         timestamp: new Date(),
         status: 'delivered',
-        feedback: null
+
       };
       
       setMessages(prev => [...prev, errorMessage]);
@@ -274,8 +275,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       text: message,
       sender: 'user',
       timestamp: new Date(),
-      status: 'sent',
-      feedback: null
+      status: 'sent'
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -314,7 +314,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         sender: 'ai',
         timestamp: new Date(),
         status: 'delivered',
-        feedback: null,
         availableActions: response.actions?.map(action => ({
           action: action.action,
           label: action.label,
@@ -338,7 +337,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         sender: 'ai',
         timestamp: new Date(),
         status: 'delivered',
-        feedback: null
+
       };
 
       setMessages(prev => [...prev, errorMessage]);
@@ -394,7 +393,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
           sender: 'ai',
           timestamp: new Date(),
           status: 'delivered',
-          feedback: null,
           availableActions: response.actions?.map(action => ({
             action: action.action,
             label: action.label,
@@ -405,33 +403,52 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
 
         setMessages(prev => [...prev, aiMessage]);
 
-        // Якщо є описи слайдів та sessionId, запускаємо генерацію з прогресом
+        // Якщо є описи слайдів та sessionId, запускаємо PARALLEL генерацію
         if (response.conversationHistory?.slideDescriptions && response.lesson && response.sessionId) {
           try {
-            console.log('🎯 [CHAT] Starting SSE slide generation with sessionId:', response.sessionId);
+            console.log('🚀 [CHAT] Starting PARALLEL slide generation with sessionId:', response.sessionId);
             
             // === ОНОВЛЮЄМО TYPING STAGE ДЛЯ ПОЧАТКУ ГЕНЕРАЦІЇ ===
             setTypingStage('processing');
-            console.log('⌨️ [CHAT] Updated typing stage to processing for slide generation start');
+            console.log('⌨️ [CHAT] Updated typing stage to processing for parallel generation start');
             
             // === ОНОВЛЮЄМО КОНТЕКСТ ПРИ ПОЧАТКУ ГЕНЕРАЦІЇ СЛАЙДІВ ===
-            const generationContext = updatedContext + ' | GENERATION: Starting slide generation';
+            const generationContext = updatedContext + ' | PARALLEL_GENERATION: Starting parallel slide generation';
             setConversationContext(generationContext);
             
-            // The SSE hook is already initialized above - we need to find a way to connect with sessionId
-            // For now, let's trigger the API call which should send completion via SSE
-            console.log('🔄 [CHAT] API will handle SSE events with sessionId:', response.sessionId);
+                         // === CREATE DEDICATED PROGRESS MESSAGE ===
+             const progressMessage: Message = {
+               id: Date.now() + 1,
+               text: `🔄 **Generating slides...**`,
+               sender: 'ai',
+               timestamp: new Date(),
+               status: 'delivered'
+             };
             
-            // Connect to SSE with the sessionId from the response
-            connectSSE(response.sessionId);
+            setMessages(prev => [...prev, progressMessage]);
+            
+            // === DISABLE TYPING INDICATOR SINCE WE HAVE PROGRESS MESSAGE ===
+            setIsTyping(false);
+            setTypingStage('thinking');
+            
+            // === START PARALLEL GENERATION ===
+            handleParallelSlideGeneration(
+              response.conversationHistory.slideDescriptions,
+              response.conversationHistory.lessonTopic || 'Unknown topic',
+              response.conversationHistory.lessonAge || '6-8',
+              response.sessionId,
+              response.lesson,
+              progressMessage.id // Pass the progress message ID
+            );
+            
           } catch (error) {
-            console.error('❌ [CHAT] SSE generation failed:', error);
+            console.error('❌ [CHAT] Parallel generation failed:', error);
             
             // === ВИМИКАЄМО TYPING VIEW ПРИ ПОМИЛЦІ ГЕНЕРАЦІЇ ===
             setIsTyping(false);
             setTypingStage('thinking');
             setIsGeneratingSlides(false);
-            console.log('⌨️ [CHAT] Typing view deactivated due to SSE generation error');
+            console.log('⌨️ [CHAT] Typing view deactivated due to parallel generation error');
             
             // === ОНОВЛЮЄМО КОНТЕКСТ ПРИ ПОМИЛЦІ ГЕНЕРАЦІЇ ===
             const errorContext = updatedContext + ' | GENERATION_ERROR: ' + (error instanceof Error ? error.message : 'Unknown error');
@@ -444,7 +461,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
               sender: 'ai',
               timestamp: new Date(),
               status: 'delivered',
-              feedback: null
+      
             };
             
             setMessages(prev => [...prev, errorMessage]);
@@ -469,7 +486,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
           sender: 'ai',
           timestamp: new Date(),
           status: 'delivered',
-          feedback: null,
           availableActions: response.actions?.map(action => ({
             action: action.action,
             label: action.label,
@@ -505,7 +521,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         sender: 'ai',
         timestamp: new Date(),
         status: 'delivered',
-        feedback: null
+
       };
 
       setMessages(prev => [...prev, errorMessage]);
@@ -528,6 +544,242 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
 
 
 
+  // === PARALLEL SLIDE GENERATION FUNCTION ===
+  const handleParallelSlideGeneration = async (
+    slideDescriptions: any[],
+    topic: string,
+    age: string,
+    sessionId: string,
+    lesson: any,
+    progressMessageId: number
+  ) => {
+    console.log('🚀 [PARALLEL] Starting parallel generation of', slideDescriptions.length, 'slides');
+    
+    // Initialize progress tracking
+    const progressMap = new Map<number, any>();
+    const progressIntervals = new Map<number, NodeJS.Timeout>();
+    const maxFakeProgress = 75; // Cap fake progress at 75%
+    
+    slideDescriptions.forEach(desc => {
+      progressMap.set(desc.slideNumber, {
+        slideNumber: desc.slideNumber,
+        title: desc.title,
+        status: 'pending',
+        progress: 0
+      });
+    });
+
+    // Update initial progress in conversation history
+    setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
+      ...prev,
+      slideGenerationProgress: Array.from(progressMap.values())
+    } : prev);
+
+    // === FAKE PROGRESS SIMULATION ===
+    const startFakeProgress = (slideNumber: number) => {
+      const interval = setInterval(() => {
+        const currentSlide = progressMap.get(slideNumber);
+        if (currentSlide && currentSlide.status === 'generating' && currentSlide.progress < maxFakeProgress) {
+          const newProgress = Math.min(currentSlide.progress + 15, maxFakeProgress);
+          progressMap.set(slideNumber, {
+            ...currentSlide,
+            progress: newProgress
+          });
+          
+          // Update conversation history
+          setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
+            ...prev,
+            slideGenerationProgress: Array.from(progressMap.values())
+          } : prev);
+          
+          console.log(`📊 [FAKE PROGRESS] Slide ${slideNumber}: ${newProgress}%`);
+        }
+      }, 5000); // Every 5 seconds
+      
+      progressIntervals.set(slideNumber, interval);
+    };
+
+    const stopFakeProgress = (slideNumber: number) => {
+      const interval = progressIntervals.get(slideNumber);
+      if (interval) {
+        clearInterval(interval);
+        progressIntervals.delete(slideNumber);
+        console.log(`⏹️ [FAKE PROGRESS] Stopped for slide ${slideNumber}`);
+      }
+    };
+
+    try {
+      // Create parallel requests for each slide
+      const slidePromises = slideDescriptions.map(async (desc, index) => {
+        try {
+          // Update status to generating and start fake progress
+          progressMap.set(desc.slideNumber, {
+            ...progressMap.get(desc.slideNumber)!,
+            status: 'generating',
+            progress: 10
+          });
+          
+          // Start fake progress simulation for this slide
+          startFakeProgress(desc.slideNumber);
+          
+          // Update progress in conversation history
+          setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
+            ...prev,
+            slideGenerationProgress: Array.from(progressMap.values())
+          } : prev);
+
+          console.log(`📤 [PARALLEL] Generating slide ${desc.slideNumber}: ${desc.title}`);
+
+          const response = await fetch('/api/generation/slides/single', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: desc.title,
+              description: desc.description,
+              topic: topic,
+              age: age,
+              sessionId: `${sessionId}_slide_${desc.slideNumber}`
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to generate slide ${desc.slideNumber}: ${response.statusText}`);
+          }
+
+          const result = await response.json();
+          
+          if (!result.success) {
+            throw new Error(result.error || `Unknown error for slide ${desc.slideNumber}`);
+          }
+
+          // Stop fake progress and update status to completed
+          stopFakeProgress(desc.slideNumber);
+          progressMap.set(desc.slideNumber, {
+            ...progressMap.get(desc.slideNumber)!,
+            status: 'completed',
+            progress: 100,
+            htmlContent: result.slide?.htmlContent
+          });
+
+          console.log(`✅ [PARALLEL] Slide ${desc.slideNumber} completed:`, result.slide?.title);
+
+          return {
+            slideNumber: desc.slideNumber,
+            slide: result.slide,
+            success: true
+          };
+
+        } catch (error) {
+          console.error(`❌ [PARALLEL] Slide ${desc.slideNumber} failed:`, error);
+          
+          // Stop fake progress and update status to error
+          stopFakeProgress(desc.slideNumber);
+          progressMap.set(desc.slideNumber, {
+            ...progressMap.get(desc.slideNumber)!,
+            status: 'error',
+            progress: 0,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+
+          return {
+            slideNumber: desc.slideNumber,
+            slide: null,
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          };
+        } finally {
+          // Update progress after each slide completes
+          setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
+            ...prev,
+            slideGenerationProgress: Array.from(progressMap.values())
+          } : prev);
+        }
+      });
+
+      // Wait for all slides to complete
+      console.log('⏳ [PARALLEL] Waiting for all slides to complete...');
+      const results = await Promise.all(slidePromises);
+      
+      // Process results
+      const successfulSlides = results.filter(r => r.success).map(r => r.slide);
+      const failedSlides = results.filter(r => !r.success);
+      
+      console.log(`🎉 [PARALLEL] Generation completed! ${successfulSlides.length}/${slideDescriptions.length} slides successful`);
+
+      // Update lesson with generated slides
+      const updatedLesson = {
+        ...lesson,
+        slides: successfulSlides,
+        updatedAt: new Date()
+      };
+
+      // Update conversation history with completed generation
+      setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
+        ...prev,
+        currentLesson: updatedLesson,
+        isGeneratingAllSlides: false,
+        slideGenerationProgress: Array.from(progressMap.values())
+      } : prev);
+
+      // Add completion message
+      const completionMessage = {
+        id: Date.now(),
+        text: `🎉 **Generation completed!**
+
+✨ Your lesson is ready! ${successfulSlides.length} slides have been generated successfully.${failedSlides.length > 0 ? ` ${failedSlides.length} slide${failedSlides.length > 1 ? 's' : ''} couldn't be generated.` : ''}
+
+📚 Check the slide panel to view and edit your slides.`,
+        sender: 'ai' as const,
+        timestamp: new Date(),
+        status: 'delivered' as const,
+        lesson: updatedLesson
+      };
+
+      setMessages(prev => [...prev, completionMessage]);
+
+      // Update context
+      const completionContext = conversationContext + ` | PARALLEL_COMPLETED: ${successfulSlides.length}/${slideDescriptions.length} slides generated`;
+      setConversationContext(completionContext);
+
+    } catch (error) {
+      console.error('❌ [PARALLEL] Critical error during parallel generation:', error);
+      
+      // Add error message
+      const errorMessage = {
+        id: Date.now(),
+        text: `❌ **Generation failed**\n\n${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease try again or contact support if the problem persists.`,
+        sender: 'ai' as const,
+        timestamp: new Date(),
+        status: 'delivered' as const,
+
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+      
+      // Update conversation history
+      setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
+        ...prev,
+        isGeneratingAllSlides: false
+      } : prev);
+    } finally {
+      // Always stop typing indicators
+      setIsTyping(false);
+      setTypingStage('thinking');
+      setIsGeneratingSlides(false);
+      
+      // Clean up all fake progress intervals
+      progressIntervals.forEach((interval, slideNumber) => {
+        clearInterval(interval);
+        console.log(`🧹 [CLEANUP] Cleared interval for slide ${slideNumber}`);
+      });
+      progressIntervals.clear();
+      
+      console.log('⌨️ [PARALLEL] Typing view deactivated after generation completion');
+    }
+  };
+
   // === ФУНКЦІЇ ДЛЯ ОНОВЛЕННЯ КОНТЕКСТУ РОЗМОВИ ===
   // updateConversationContext, // This function is now directly available
   // addInteractionToContext, // This function is no longer needed
@@ -544,6 +796,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     isLoading,
     sendMessage,
     handleActionClick,
+    conversationHistory,
     
     // Додаємо інформацію про паралельну генерацію
     generationState,
