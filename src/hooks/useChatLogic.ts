@@ -570,7 +570,12 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     // Initialize progress tracking
     const progressMap = new Map<number, any>();
     const progressIntervals = new Map<number, NodeJS.Timeout>();
-    const maxFakeProgress = 75; // Cap fake progress at 75%
+    
+    // Progress randomization utilities
+    const getRandomMaxProgress = () => Math.floor(Math.random() * 10) + 70; // 70-79%
+    const getRandomStepSize = () => Math.floor(Math.random() * 10) + 10; // 10-19%
+    const getRandomInterval = () => Math.floor(Math.random() * 2000) + 4000; // 4-6 seconds
+    const getRandomInitialProgress = () => Math.floor(Math.random() * 10) + 5; // 5-14%
     
     slideDescriptions.forEach(desc => {
       progressMap.set(desc.slideNumber, {
@@ -650,12 +655,17 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       currentLesson: lessonWithPlaceholders
     } : prev);
 
-    // === FAKE PROGRESS SIMULATION ===
+    // === RANDOMIZED PROGRESS SIMULATION ===
     const startFakeProgress = (slideNumber: number) => {
-      const interval = setInterval(() => {
+      // Each slide gets its own random parameters for more natural variation
+      const maxProgress = getRandomMaxProgress();
+      const intervalTime = getRandomInterval();
+      
+      const updateProgress = () => {
         const currentSlide = progressMap.get(slideNumber);
-        if (currentSlide && currentSlide.status === 'generating' && currentSlide.progress < maxFakeProgress) {
-          const newProgress = Math.min(currentSlide.progress + 15, maxFakeProgress);
+        if (currentSlide && currentSlide.status === 'generating' && currentSlide.progress < maxProgress) {
+          const stepSize = getRandomStepSize();
+          const newProgress = Math.min(currentSlide.progress + stepSize, maxProgress);
           progressMap.set(slideNumber, {
             ...currentSlide,
             progress: newProgress
@@ -667,19 +677,28 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
             slideGenerationProgress: Array.from(progressMap.values())
           } : prev);
           
-          console.log(`📊 [FAKE PROGRESS] Slide ${slideNumber}: ${newProgress}%`);
+          console.log(`📊 [RANDOMIZED PROGRESS] Slide ${slideNumber}: ${newProgress}% (step: ${stepSize}%, max: ${maxProgress}%, next: ${getRandomInterval()}ms)`);
+          
+          // Schedule next update with new random interval
+          if (newProgress < maxProgress) {
+            const nextInterval = getRandomInterval();
+            const timeoutId = setTimeout(updateProgress, nextInterval);
+            progressIntervals.set(slideNumber, timeoutId);
+          }
         }
-      }, 5000); // Every 5 seconds
+      };
       
-      progressIntervals.set(slideNumber, interval);
+      // Start the first update after initial random interval
+      const timeoutId = setTimeout(updateProgress, intervalTime);
+      progressIntervals.set(slideNumber, timeoutId);
     };
 
     const stopFakeProgress = (slideNumber: number) => {
-      const interval = progressIntervals.get(slideNumber);
-      if (interval) {
-        clearInterval(interval);
+      const timeoutId = progressIntervals.get(slideNumber);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
         progressIntervals.delete(slideNumber);
-        console.log(`⏹️ [FAKE PROGRESS] Stopped for slide ${slideNumber}`);
+        console.log(`⏹️ [RANDOMIZED PROGRESS] Stopped for slide ${slideNumber}`);
       }
     };
 
@@ -687,14 +706,15 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       // Create parallel requests for each slide
       const slidePromises = slideDescriptions.map(async (desc, index) => {
         try {
-          // Update status to generating and start fake progress
+          // Update status to generating and start randomized progress
+          const initialProgress = getRandomInitialProgress();
           progressMap.set(desc.slideNumber, {
             ...progressMap.get(desc.slideNumber)!,
             status: 'generating',
-            progress: 10
+            progress: initialProgress
           });
           
-          // Start fake progress simulation for this slide
+          // Start randomized progress simulation for this slide
           startFakeProgress(desc.slideNumber);
           
           // Update progress in conversation history
@@ -729,8 +749,8 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
             throw new Error(result.error || `Unknown error for slide ${desc.slideNumber}`);
           }
 
-          // Stop fake progress and update status to completed
-          stopFakeProgress(desc.slideNumber);
+                      // Stop randomized progress and update status to completed
+            stopFakeProgress(desc.slideNumber);
           progressMap.set(desc.slideNumber, {
             ...progressMap.get(desc.slideNumber)!,
             status: 'completed',
@@ -830,7 +850,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         } catch (error) {
           console.error(`❌ [PARALLEL] Slide ${desc.slideNumber} failed:`, error);
           
-          // Stop fake progress and update status to error
+          // Stop randomized progress and update status to error
           stopFakeProgress(desc.slideNumber);
           progressMap.set(desc.slideNumber, {
             ...progressMap.get(desc.slideNumber)!,
@@ -933,10 +953,10 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       setTypingStage('thinking');
       setIsGeneratingSlides(false);
       
-      // Clean up all fake progress intervals
-      progressIntervals.forEach((interval, slideNumber) => {
-        clearInterval(interval);
-        console.log(`🧹 [CLEANUP] Cleared interval for slide ${slideNumber}`);
+      // Clean up all randomized progress timeouts
+      progressIntervals.forEach((timeoutId, slideNumber) => {
+        clearTimeout(timeoutId);
+        console.log(`🧹 [CLEANUP] Cleared timeout for slide ${slideNumber}`);
       });
       progressIntervals.clear();
       
