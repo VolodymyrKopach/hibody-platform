@@ -79,14 +79,29 @@ const useSlideManagement = (
 
   // === ЛОКАЛЬНЕ УПРАВЛІННЯ ПРЕВЬЮ ===
 
-  // Спрощена функція генерації превью (тільки локально)
+  // Функція отримання превью (пріоритет backend thumbnail > fallback)
   const generateSlidePreview = useCallback(async (slideId: string, htmlContent: string): Promise<string> => {
-    console.log('🎨 NEW PREVIEW: Генерація превью для слайду:', slideId);
+    console.log('🎨 NEW PREVIEW: Отримання превью для слайду:', slideId);
     
     setPreviewsUpdating(prev => new Set(prev).add(slideId));
 
     try {
-      // Генеруємо і зберігаємо локально
+      // Спочатку перевіряємо чи слайд вже має backend thumbnail
+      const slide = slideUIState.currentLesson?.slides?.find(s => s.id === slideId);
+      if (slide?.thumbnailUrl) {
+        console.log('✅ NEW PREVIEW: Використовуємо backend thumbnail для слайду:', slideId);
+        
+        // Оновлюємо локальний стан з backend thumbnail
+        setSlidePreviews(prev => ({
+          ...prev,
+          [slideId]: slide.thumbnailUrl!
+        }));
+        
+        return slide.thumbnailUrl;
+      }
+      
+      // Fallback: генеруємо локально тільки якщо немає backend thumbnail
+      console.log('📋 NEW PREVIEW: Немає backend thumbnail, використовуємо fallback для слайду:', slideId);
       const thumbnailBase64 = await localThumbnailStorage.generateThumbnail(slideId, htmlContent);
       
       // Оновлюємо локальний стан
@@ -95,10 +110,10 @@ const useSlideManagement = (
         [slideId]: thumbnailBase64
       }));
 
-      console.log('✅ NEW PREVIEW: Превью згенеровано та збережено локально:', slideId);
+      console.log('✅ NEW PREVIEW: Fallback превью згенеровано та збережено локально:', slideId);
       return thumbnailBase64;
     } catch (error) {
-      console.error('❌ NEW PREVIEW: Помилка генерації:', error);
+      console.error('❌ NEW PREVIEW: Помилка отримання превью:', error);
       throw error;
     } finally {
       setPreviewsUpdating(prev => {
@@ -107,7 +122,7 @@ const useSlideManagement = (
         return newSet;
       });
     }
-  }, [localThumbnailStorage]);
+  }, [localThumbnailStorage, slideUIState.currentLesson?.slides]);
 
   // Функція для регенерації превью конкретного слайду
   const regenerateSlidePreview = useCallback(async (slideId: string) => {
@@ -148,40 +163,41 @@ const useSlideManagement = (
   const slidesForPreviews = useMemo(() => {
     if (!slideUIState.currentLesson?.slides) return [];
     
-    // Only generate for legacy slides that don't have thumbnailReady flag
+    // Only generate for legacy slides that don't have backend thumbnails
     return slideUIState.currentLesson.slides.filter(slide => 
       !slide.isPlaceholder && // Не генеруємо для плейсхолдерів
       !slide.thumbnailReady && // НОВИЙ ФІЛЬТР: Не генеруємо для готових слайдів
+      !slide.thumbnailUrl && // Не генеруємо для слайдів з backend thumbnails
       slide.htmlContent && // Є HTML контент
       !localThumbnailStorage.has(slide.id) && // Немає локального превью
       !generatedPreviewsRef.current.has(slide.id) // Ще не генерували
     );
   }, [slideUIState.currentLesson?.slides, localThumbnailStorage]);
 
-  // Генерація превью тільки для LEGACY слайдів (нові слайди приходять готовими)
+  // Завантаження превью тільки для LEGACY слайдів (нові слайди приходять з backend thumbnails)
   useEffect(() => {
     if (slidesForPreviews.length === 0) {
-      console.log('📋 [REACTIVE] No slides need reactive thumbnail generation (all slides ready)');
+      console.log('📋 [REACTIVE] No slides need reactive thumbnail generation (all slides ready or have backend thumbnails)');
       return;
     }
 
     console.log(`🔄 [REACTIVE] Found ${slidesForPreviews.length} legacy slides needing thumbnails:`, 
       slidesForPreviews.map(s => s.id));
 
-    const generateNewPreviews = async () => {
+    const loadPreviews = async () => {
       for (const slide of slidesForPreviews) {
         try {
-          console.log('🆕 [LEGACY] Reactive generation for legacy slide:', slide.id);
+          console.log('🆕 [LEGACY] Loading preview for legacy slide:', slide.id);
           generatedPreviewsRef.current.add(slide.id); // Відмічаємо як згенеровано
           await generateSlidePreview(slide.id, slide.htmlContent);
         } catch (error) {
-          console.error('❌ Legacy preview generation failed for slide:', slide.id, error);
+          console.error('❌ Legacy preview loading failed for slide:', slide.id, error);
           generatedPreviewsRef.current.delete(slide.id); // Забираємо з відміток при помилці
         }
       }
     };
 
-    generateNewPreviews();
+    loadPreviews();
   }, [slidesForPreviews, generateSlidePreview]);
 
   // === ФУНКЦІЇ ДІАЛОГІВ ===
