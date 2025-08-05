@@ -738,39 +738,93 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
             htmlContent: result.slide?.htmlContent
           });
 
-          // Replace placeholder slide with real slide immediately
+          // Generate thumbnail BEFORE adding slide to store
           if (onLessonUpdateRef.current && result.slide) {
-            setConversationHistory((prev: ConversationHistory | undefined) => {
-              if (prev?.currentLesson?.slides) {
-                const updatedSlides = prev.currentLesson.slides.map((slide: any) => {
-                  // Find placeholder slide for this slide number and replace it
-                  if (slide.isPlaceholder && slide.title === desc.title) {
-                    return {
-                      ...result.slide,
-                      id: slide.id, // Keep the same stable ID from placeholder
-                      isPlaceholder: false,
-                      status: 'completed'
-                    };
-                  }
-                  return slide;
-                });
-
-                const updatedLesson = {
-                  ...prev.currentLesson,
-                  slides: updatedSlides
-                };
-
-                // Update lesson immediately in the panel
-                onLessonUpdateRef.current!(updatedLesson);
-                console.log(`🔄 [PARALLEL] Replaced placeholder with real slide ${desc.slideNumber}:`, result.slide.title);
-
-                return {
-                  ...prev,
-                  currentLesson: updatedLesson
-                };
+            try {
+              console.log(`🎨 [PRE-GENERATION] Generating thumbnail for slide ${desc.slideNumber} before store update`);
+              
+              // Import thumbnail generation service
+              const { getLocalThumbnailStorage } = await import('@/services/slides/LocalThumbnailService');
+              const localThumbnailStorage = getLocalThumbnailStorage();
+              
+              // Generate thumbnail before store update
+              let thumbnailUrl: string | undefined;
+              try {
+                thumbnailUrl = await localThumbnailStorage.generateThumbnail(
+                  `slide-${desc.slideNumber}-${sessionId}`, // Use the stable ID
+                  result.slide.htmlContent
+                );
+                console.log(`✅ [PRE-GENERATION] Thumbnail generated for slide ${desc.slideNumber}`);
+              } catch (thumbError) {
+                console.warn(`⚠️ [PRE-GENERATION] Thumbnail generation failed for slide ${desc.slideNumber}:`, thumbError);
+                // Continue without thumbnail - slide will show "Preparing..." state
               }
-              return prev;
-            });
+
+              // Update store with FULLY READY slide (including thumbnail)
+              setConversationHistory((prev: ConversationHistory | undefined) => {
+                if (prev?.currentLesson?.slides) {
+                  const updatedSlides = prev.currentLesson.slides.map((slide: any) => {
+                    // Find placeholder slide for this slide number and replace it
+                    if (slide.isPlaceholder && slide.title === desc.title) {
+                      return {
+                        ...result.slide,
+                        id: slide.id, // Keep the same stable ID from placeholder
+                        isPlaceholder: false,
+                        status: 'completed',
+                        thumbnailUrl: thumbnailUrl, // Add pre-generated thumbnail
+                        thumbnailReady: !!thumbnailUrl // Flag to prevent further generation
+                      };
+                    }
+                    return slide;
+                  });
+
+                  const updatedLesson = {
+                    ...prev.currentLesson,
+                    slides: updatedSlides
+                  };
+
+                  // Update lesson immediately in the panel
+                  onLessonUpdateRef.current!(updatedLesson);
+                  console.log(`🔄 [PARALLEL] Added fully ready slide ${desc.slideNumber} to store:`, result.slide.title);
+
+                  return {
+                    ...prev,
+                    currentLesson: updatedLesson
+                  };
+                }
+                return prev;
+              });
+            } catch (error) {
+              console.error(`❌ [PRE-GENERATION] Failed to process slide ${desc.slideNumber}:`, error);
+              // Fallback to basic slide addition without thumbnail
+              setConversationHistory((prev: ConversationHistory | undefined) => {
+                if (prev?.currentLesson?.slides) {
+                  const updatedSlides = prev.currentLesson.slides.map((slide: any) => {
+                    if (slide.isPlaceholder && slide.title === desc.title) {
+                      return {
+                        ...result.slide,
+                        id: slide.id,
+                        isPlaceholder: false,
+                        status: 'completed'
+                      };
+                    }
+                    return slide;
+                  });
+
+                  const updatedLesson = {
+                    ...prev.currentLesson,
+                    slides: updatedSlides
+                  };
+
+                  onLessonUpdateRef.current!(updatedLesson);
+                  return {
+                    ...prev,
+                    currentLesson: updatedLesson
+                  };
+                }
+                return prev;
+              });
+            }
           }
 
           console.log(`✅ [PARALLEL] Slide ${desc.slideNumber} completed:`, result.slide?.title);
@@ -818,22 +872,30 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       
       console.log(`🎉 [PARALLEL] Generation completed! ${successfulSlides.length}/${slideDescriptions.length} slides successful`);
 
-      // Update lesson with generated slides
-      const updatedLesson = {
-        ...lesson,
-        slides: successfulSlides,
-        updatedAt: new Date()
-      };
+      // 🛡️ PRESERVE EXISTING SLIDES: Don't recreate slides array to prevent re-renders
+      // Slides were already updated individually during generation
+      console.log('🛡️ [PARALLEL] Preserving existing slides array to prevent re-renders');
+      
+      // Update conversation history with completion flags ONLY (no slides array change)
+      setConversationHistory((prev: ConversationHistory | undefined) => {
+        if (!prev?.currentLesson) return prev;
+        
+        // Use existing lesson with individually updated slides - DON'T recreate slides array
+        const preservedLesson = {
+          ...prev.currentLesson,
+          updatedAt: new Date() // Only update timestamp, preserve existing slides
+        };
+        
+        return {
+          ...prev,
+          currentLesson: preservedLesson, // Preserve existing lesson with individual slide updates
+          isGeneratingAllSlides: false,   // Update completion flag
+          slideGenerationProgress: Array.from(progressMap.values()) // Update progress
+        };
+      });
 
-      // Update conversation history with completed generation
-      setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
-        ...prev,
-        currentLesson: updatedLesson,
-        isGeneratingAllSlides: false,
-        slideGenerationProgress: Array.from(progressMap.values())
-      } : prev);
-
-      // Add completion message
+      // Add completion message (get current lesson from state, don't recreate)
+      const currentLesson = conversationHistory?.currentLesson;
       const completionMessage = {
         id: Date.now(),
         text: `🎉 **Generation completed!**
@@ -844,7 +906,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         sender: 'ai' as const,
         timestamp: new Date(),
         status: 'delivered' as const,
-        lesson: updatedLesson
+        lesson: currentLesson // Use existing lesson, don't recreate
       };
 
       setMessages(prev => [...prev, completionMessage]);
