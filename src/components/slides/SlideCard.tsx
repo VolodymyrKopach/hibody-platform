@@ -19,6 +19,7 @@ interface SimpleSlide {
   previewUrl?: string;
   thumbnailUrl?: string; // Add thumbnailUrl from database
   updatedAt?: Date;
+  isPlaceholder?: boolean; // Add placeholder flag
 }
 
 interface SlideCardProps {
@@ -50,13 +51,18 @@ const SlideCard: React.FC<SlideCardProps> = ({
         minHeight: '140px',  // Reduced from 200px to 140px due to smaller preview
         height: 'auto',      // Automatic height depending on content
         flexShrink: 0,       // Prevent card from shrinking
-        border: `1px solid ${isSelected ? theme.palette.primary.main : alpha(theme.palette.divider, 0.1)}`,
+        border: slide.isPlaceholder 
+          ? `2px dashed ${alpha(theme.palette.grey[400], 0.5)}`
+          : `1px solid ${isSelected ? theme.palette.primary.main : alpha(theme.palette.divider, 0.1)}`,
         borderRadius: '12px',
         overflow: 'hidden',
         transition: 'all 0.2s ease',
-        backgroundColor: isSelected 
-          ? alpha(theme.palette.primary.main, 0.08)
-          : 'white',
+        backgroundColor: slide.isPlaceholder
+          ? alpha(theme.palette.grey[50], 0.8)
+          : isSelected 
+            ? alpha(theme.palette.primary.main, 0.08)
+            : 'white',
+        opacity: slide.isPlaceholder ? 0.8 : 1,
         '&:hover': {
           borderColor: theme.palette.primary.main,
           backgroundColor: alpha(theme.palette.primary.main, 0.04),
@@ -76,8 +82,43 @@ const SlideCard: React.FC<SlideCardProps> = ({
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        {/* Actual slide preview */}
-        {(previewUrl || slide.thumbnailUrl) && !isUpdating ? (
+        {/* Placeholder visual for generating slides */}
+        {slide.isPlaceholder ? (
+          <Box sx={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            position: 'relative'
+          }}>
+            <Typography sx={{ 
+              fontSize: '28px', 
+              mb: 1, 
+              opacity: 0.6,
+              animation: 'pulse 2s ease-in-out infinite'
+            }}>
+              🎨
+            </Typography>
+            <Typography variant="caption" sx={{ 
+              color: 'text.secondary', 
+              fontSize: '10px',
+              opacity: 0.7 
+            }}>
+              Generating...
+            </Typography>
+            <style>
+              {`
+                @keyframes pulse {
+                  0%, 100% { opacity: 0.6; }
+                  50% { opacity: 0.9; }
+                }
+              `}
+            </style>
+          </Box>
+        ) : /* Actual slide preview */ (previewUrl || slide.thumbnailUrl) && !isUpdating ? (
           <img
             src={previewUrl || slide.thumbnailUrl}
             alt={`Slide preview ${index + 1}`}
@@ -138,25 +179,26 @@ const SlideCard: React.FC<SlideCardProps> = ({
 
 
         
-        {/* View button in center */}
-        <Box
-          onClick={() => onOpenDialog(index)}
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'transparent',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: 0,
-            transition: 'opacity 0.2s ease',
-            cursor: 'pointer',
-            '&:hover': {
-              opacity: 1,
-              background: alpha(theme.palette.primary.main, 0.1),
+        {/* View button in center - disabled for placeholders */}
+        {!slide.isPlaceholder && (
+          <Box
+            onClick={() => onOpenDialog(index)}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: 0,
+              transition: 'opacity 0.2s ease',
+              cursor: 'pointer',
+              '&:hover': {
+                opacity: 1,
+                background: alpha(theme.palette.primary.main, 0.1),
             }
           }}
         >
@@ -180,24 +222,31 @@ const SlideCard: React.FC<SlideCardProps> = ({
             <Maximize2 size={16} />
           </Box>
         </Box>
+        )}
       </Box>
 
       {/* Slide Information */}
       <Box sx={{ p: 1.5 }}>    {/* Reduced from 2.5 to 1.5 */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>   {/* Reduced mb from 1.5 to 1 */}
-          {/* Checkbox for slide selection */}
+          {/* Checkbox for slide selection - disabled for placeholders */}
           <Checkbox
             checked={isSelected}
+            disabled={slide.isPlaceholder}
             onChange={(e) => {
               e.stopPropagation();
-              onToggleSelection(slide.id);
+              if (!slide.isPlaceholder) {
+                onToggleSelection(slide.id);
+              }
             }}
             size="small"
             sx={{
               p: 0.5,
-              color: theme.palette.primary.main,
+              color: slide.isPlaceholder ? theme.palette.grey[400] : theme.palette.primary.main,
               '&.Mui-checked': {
                 color: theme.palette.primary.main,
+              },
+              '&.Mui-disabled': {
+                opacity: 0.5
               }
             }}
           />

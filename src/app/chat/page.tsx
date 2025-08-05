@@ -43,7 +43,8 @@ const ChatInterface: React.FC = () => {
     sendMessage,
     handleActionClick,
     conversationHistory,
-    setOnLessonUpdate
+    setOnLessonUpdate,
+    setOnSlidePanelOpen
   } = useChatLogic();
 
   // Slide management
@@ -75,6 +76,17 @@ const ChatInterface: React.FC = () => {
   useEffect(() => {
     setOnLessonUpdate(updateCurrentLesson);
   }, [setOnLessonUpdate, updateCurrentLesson]);
+
+  // Set callback for slide panel opening
+  useEffect(() => {
+    const openSlidePanel = () => {
+      if (!slideUIState.slidePanelOpen) {
+        toggleSlidePanelOpen();
+        console.log('🎯 [CHAT PAGE] Opened slide panel for generation');
+      }
+    };
+    setOnSlidePanelOpen(openSlidePanel);
+  }, [setOnSlidePanelOpen, slideUIState.slidePanelOpen, toggleSlidePanelOpen]);
 
   // State for generation constructor dialog
   const [generationConstructorOpen, setGenerationConstructorOpen] = React.useState(false);

@@ -12,10 +12,16 @@ export type ConversationContext = string;
 export const useChatLogic = () => {
   // Ref для динамічного callback
   const onLessonUpdateRef = useRef<((lesson: SimpleLesson) => void) | null>(null);
+  const onSlidePanelOpenRef = useRef<(() => void) | null>(null);
   
   // Функція для встановлення callback
   const setOnLessonUpdate = useCallback((callback: (lesson: SimpleLesson) => void) => {
     onLessonUpdateRef.current = callback;
+  }, []);
+  
+  // Функція для встановлення callback відкриття панелі слайдів
+  const setOnSlidePanelOpen = useCallback((callback: () => void) => {
+    onSlidePanelOpenRef.current = callback;
   }, []);
   
   const [messages, setMessages] = useState<Message[]>([]);
@@ -403,6 +409,12 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
 
         setMessages(prev => [...prev, aiMessage]);
 
+        // === АВТОМАТИЧНО ВІДКРИВАЄМО ПАНЕЛЬ СЛАЙДІВ ===
+        if (onSlidePanelOpenRef.current) {
+          console.log('🎯 [CHAT] Opening slide panel automatically for generation');
+          onSlidePanelOpenRef.current();
+        }
+
         // Якщо є описи слайдів та sessionId, запускаємо PARALLEL генерацію
         if (response.conversationHistory?.slideDescriptions && response.lesson && response.sessionId) {
           try {
@@ -569,10 +581,73 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       });
     });
 
+    // === CREATE PLACEHOLDER SLIDES FOR IMMEDIATE FEEDBACK ===
+    const placeholderSlides = slideDescriptions.map((desc, index) => ({
+      id: `placeholder-${desc.slideNumber}-${Date.now()}`,
+      title: desc.title,
+      htmlContent: `
+        <div style="
+          width: 100%; 
+          height: 400px; 
+          display: flex; 
+          flex-direction: column; 
+          justify-content: center; 
+          align-items: center; 
+          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+          border-radius: 12px;
+          border: 2px dashed #e0e0e0;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          text-align: center;
+          padding: 20px;
+        ">
+          <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;">🎨</div>
+          <h2 style="font-size: 24px; color: #666; margin: 0 0 10px 0; font-weight: 600;">${desc.title}</h2>
+          <p style="font-size: 16px; color: #999; margin: 0; opacity: 0.8;">Generating...</p>
+          <div style="
+            width: 80px; 
+            height: 4px; 
+            background: #e0e0e0; 
+            border-radius: 2px; 
+            margin-top: 20px;
+            overflow: hidden;
+          ">
+            <div style="
+              width: 30%; 
+              height: 100%; 
+              background: linear-gradient(90deg, #4fc3f7, #29b6f6);
+              border-radius: 2px;
+              animation: pulse 2s ease-in-out infinite;
+            "></div>
+          </div>
+        </div>
+        <style>
+          @keyframes pulse {
+            0%, 100% { width: 30%; }
+            50% { width: 70%; }
+          }
+        </style>
+      `,
+      isPlaceholder: true,
+      status: 'generating'
+    }));
+
+    // Update lesson with placeholder slides immediately for panel display
+    const lessonWithPlaceholders = {
+      ...lesson,
+      slides: placeholderSlides
+    };
+
+    // Update lesson immediately so placeholders appear in the panel
+    if (onLessonUpdateRef.current) {
+      onLessonUpdateRef.current(lessonWithPlaceholders);
+      console.log('🎯 [PARALLEL] Created', placeholderSlides.length, 'placeholder slides for immediate feedback');
+    }
+
     // Update initial progress in conversation history
     setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
       ...prev,
-      slideGenerationProgress: Array.from(progressMap.values())
+      slideGenerationProgress: Array.from(progressMap.values()),
+      currentLesson: lessonWithPlaceholders
     } : prev);
 
     // === FAKE PROGRESS SIMULATION ===
@@ -662,6 +737,41 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
             progress: 100,
             htmlContent: result.slide?.htmlContent
           });
+
+          // Replace placeholder slide with real slide immediately
+          if (onLessonUpdateRef.current && result.slide) {
+            setConversationHistory((prev: ConversationHistory | undefined) => {
+              if (prev?.currentLesson?.slides) {
+                const updatedSlides = prev.currentLesson.slides.map((slide: any) => {
+                  // Find placeholder slide for this slide number and replace it
+                  if (slide.isPlaceholder && slide.title === desc.title) {
+                    return {
+                      ...result.slide,
+                      id: result.slide.id || `slide-${desc.slideNumber}-${Date.now()}`,
+                      isPlaceholder: false,
+                      status: 'completed'
+                    };
+                  }
+                  return slide;
+                });
+
+                const updatedLesson = {
+                  ...prev.currentLesson,
+                  slides: updatedSlides
+                };
+
+                // Update lesson immediately in the panel
+                onLessonUpdateRef.current!(updatedLesson);
+                console.log(`🔄 [PARALLEL] Replaced placeholder with real slide ${desc.slideNumber}:`, result.slide.title);
+
+                return {
+                  ...prev,
+                  currentLesson: updatedLesson
+                };
+              }
+              return prev;
+            });
+          }
 
           console.log(`✅ [PARALLEL] Slide ${desc.slideNumber} completed:`, result.slide?.title);
 
@@ -808,6 +918,9 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     
     // Функція для встановлення callback оновлення уроку
     setOnLessonUpdate,
+    
+    // Функція для встановлення callback відкриття панелі слайдів
+    setOnSlidePanelOpen,
     
     // === НОВИЙ КОНТЕКСТ РОЗМОВИ ===
     conversationContext,
