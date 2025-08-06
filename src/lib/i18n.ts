@@ -39,8 +39,8 @@ i18n
       escapeValue: false,
     },
 
-    // Debug mode for development
-    debug: process.env.NODE_ENV === 'development',
+    // Debug mode disabled to prevent console spam
+    debug: false,
   });
 
 export default i18n; 
