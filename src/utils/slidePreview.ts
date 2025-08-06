@@ -1,5 +1,4 @@
-import html2canvas from 'html2canvas';
-import { toPng } from 'html-to-image';
+// html2canvas and html-to-image removed - using fallback functionality only
 
 export interface SlidePreviewOptions {
   width?: number;
@@ -11,272 +10,59 @@ export interface SlidePreviewOptions {
 
 /**
  * Generates a slide preview from HTML content
+ * Note: This now only returns a fallback preview since html2canvas has been removed
  */
 export async function generateSlidePreview(
   htmlContent: string,
   options: SlidePreviewOptions = {}
 ): Promise<string> {
-  const {
-    width = 1600,        // Standard width for preview
-    height = 1200,       // Standard height for preview
-    quality = 0.8,
-    scale = 1,
-    background = '#ffffff'
-  } = options;
-
-  return new Promise((resolve, reject) => {
-    try {
-      // Create a temporary iframe for HTML rendering
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'absolute';
-      iframe.style.top = '-9999px';
-      iframe.style.left = '-9999px';
-      iframe.style.width = `${width}px`;
-      iframe.style.height = `${height}px`;
-      iframe.style.border = 'none';
-      iframe.style.background = background;
-      iframe.style.visibility = 'hidden';
-      
-      document.body.appendChild(iframe);
-
-      // Timeout for safety (increased to 20 seconds)
-      const timeoutId = setTimeout(() => {
-        console.warn('Timeout during slide preview generation');
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe);
-        }
-        reject(new Error('Timeout during preview generation'));
-      }, 20000);
-
-      iframe.onload = async () => {
-        try {
-          const iframeDocument = iframe.contentDocument || iframe.contentWindow?.document;
-          if (!iframeDocument) {
-            throw new Error('Could not access iframe document');
-          }
-
-          console.log('⏰ Waiting 5 seconds for animations to complete...');
-          // Just wait 5 seconds for all animations to complete
-          await new Promise(resolve => setTimeout(resolve, 5000));
-
-          console.log('📸 Creating screenshot after animations complete...');
-
-          // Generate preview using html2canvas
-          const canvas = await html2canvas(iframeDocument.body, {
-            width,
-            height,
-            scale,
-            backgroundColor: background,
-            useCORS: true,
-            allowTaint: true,
-            foreignObjectRendering: true,
-            logging: false,
-            removeContainer: true,
-            imageTimeout: 8000
-          });
-
-          // Convert to base64
-          const dataUrl = canvas.toDataURL('image/png', quality);
-          
-          // Clean up resources
-          clearTimeout(timeoutId);
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
-          
-          console.log('✅ Preview successfully created after 5-second wait');
-          resolve(dataUrl);
-        } catch (error) {
-          clearTimeout(timeoutId);
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
-          console.error('html2canvas error:', error);
-          reject(error);
-        }
-      };
-
-      iframe.onerror = (error) => {
-        clearTimeout(timeoutId);
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe);
-        }
-        console.error('iframe loading error:', error);
-        reject(new Error('iframe loading error'));
-      };
-
-      // Optimize HTML content for better preview generation
-      const optimizedHtml = optimizeHtmlForPreviewWithAnimations(htmlContent);
-      iframe.srcdoc = optimizedHtml;
-    } catch (error) {
-      console.error('iframe creation error:', error);
-      reject(error);
-    }
-  });
+  console.log('🖼️ Frontend preview generation disabled - using fallback preview');
+  return generateFallbackPreview(options);
 }
 
 /**
  * Alternative method for preview generation with less aggressive processing
+ * Note: This now only returns a fallback preview since html2canvas has been removed
  */
 export async function generateSlidePreviewAlt(
   htmlContent: string,
   options: SlidePreviewOptions = {}
 ): Promise<string> {
-  const {
-    width = 1600,        // Standard width for preview
-    height = 1200,       // Standard height for preview
-    quality = 0.8,
-    scale = 1,
-    background = '#ffffff'
-  } = options;
-
-  return new Promise((resolve, reject) => {
-    try {
-      // Create a container for preview
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.top = '-9999px';
-      container.style.left = '-9999px';
-      container.style.width = `${width}px`;
-      container.style.height = `${height}px`;
-      container.style.overflow = 'hidden';
-      container.style.background = background;
-      container.style.visibility = 'hidden';
-      
-      document.body.appendChild(container);
-
-      // Timeout for safety
-      const timeoutId = setTimeout(() => {
-        console.warn('Timeout during alternative preview generation');
-        if (document.body.contains(container)) {
-          document.body.removeChild(container);
-        }
-        reject(new Error('Timeout during alternative preview generation'));
-      }, 15000);
-
-      try {
-        // Add HTML content
-        container.innerHTML = htmlContent;
-
-        // Simple method - wait 5 seconds and take a screenshot
-        setTimeout(async () => {
-          try {
-            console.log('📸 Alternative method: creating screenshot after 5 seconds...');
-
-            const canvas = await html2canvas(container, {
-              width,
-              height,
-              scale,
-              backgroundColor: background,
-              useCORS: true,
-              allowTaint: true,
-              foreignObjectRendering: true,
-              logging: false,
-              removeContainer: true,
-              imageTimeout: 5000
-            });
-
-            const dataUrl = canvas.toDataURL('image/png', quality);
-            
-            clearTimeout(timeoutId);
-            if (document.body.contains(container)) {
-              document.body.removeChild(container);
-            }
-            
-            console.log('✅ Alternative preview successfully created');
-            resolve(dataUrl);
-          } catch (error) {
-            clearTimeout(timeoutId);
-            if (document.body.contains(container)) {
-              document.body.removeChild(container);
-            }
-            console.error('Alternative html2canvas error:', error);
-            reject(error);
-          }
-        }, 5000);
-
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (document.body.contains(container)) {
-          document.body.removeChild(container);
-        }
-        console.error('Container creation error:', error);
-        reject(error);
-      }
-    } catch (error) {
-      console.error('Alternative method error:', error);
-      reject(error);
-    }
-  });
+  console.log('🖼️ Frontend alternative preview generation disabled - using fallback preview');
+  return generateFallbackPreview(options);
 }
 
 /**
  * Generates a slide thumbnail with automatic fallback
+ * Note: This now only returns a fallback preview since html2canvas has been removed
  */
 export async function generateSlideThumbnail(
   htmlContent: string, 
   options: SlidePreviewOptions = {}
 ): Promise<string> {
-  console.log('🖼️ Starting slide preview generation...');
-  
-  try {
-    // First, try the main method with a 5-second wait
-    const preview = await generateSlidePreview(htmlContent, options);
-    console.log('✅ Main method successfully created preview');
-    return preview;
-  } catch (error) {
-    console.warn('⚠️ Main method failed, trying alternative...', error);
-    
-    try {
-      // If the main method failed, try the alternative
-      const alternativePreview = await generateSlidePreviewAlt(htmlContent, options);
-      console.log('✅ Alternative method successfully created preview');
-      return alternativePreview;
-    } catch (altError) {
-      console.warn('⚠️ Alternative method also failed, creating fallback preview...', altError);
-      
-      // If both methods failed, create a fallback preview
-      const fallbackPreview = generateFallbackPreview(options);
-      console.log('✅ Fallback preview created');
-      return fallbackPreview;
-    }
-  }
+  console.log('🖼️ Frontend thumbnail generation disabled - using fallback preview');
+  return generateFallbackPreview(options);
 }
 
 /**
  * Generates previews for all lesson slides
+ * Note: This now only returns fallback previews since html2canvas has been removed
  */
 export async function generateLessonPreviews(
   slides: Array<{ id: string; htmlContent: string }>,
   options: SlidePreviewOptions = {}
 ): Promise<Array<{ slideId: string; preview: string; thumbnail: string }>> {
+  console.log('🖼️ Frontend lesson previews generation disabled - using fallback previews');
+  
   const results: Array<{ slideId: string; preview: string; thumbnail: string }> = [];
   
   for (const slide of slides) {
-    try {
-      console.log(`Generating preview for slide ${slide.id}...`);
-      
-      const [preview, thumbnail] = await Promise.all([
-        generateSlidePreview(slide.htmlContent, options),
-        generateSlideThumbnail(slide.htmlContent, options)
-      ]);
-
-      results.push({
-        slideId: slide.id,
-        preview,
-        thumbnail
-      });
-    } catch (error) {
-      console.error(`Error generating preview for slide ${slide.id}:`, error);
-      
-      // Generate fallback preview
-      const fallbackPreview = generateFallbackPreview(options);
-      results.push({
-        slideId: slide.id,
-        preview: fallbackPreview,
-        thumbnail: fallbackPreview
-      });
-    }
+    const fallbackPreview = generateFallbackPreview(options);
+    results.push({
+      slideId: slide.id,
+      preview: fallbackPreview,
+      thumbnail: fallbackPreview
+    });
   }
 
   return results;

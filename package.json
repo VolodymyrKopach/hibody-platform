@@ -28,6 +28,7 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.3",
     "@types/bcryptjs": "^3.0.0",
+    "@zumer/snapdom": "^1.9.7",
     "bcryptjs": "^3.0.2",
     "dotenv": "^17.0.1",
     "framer-motion": "^12.19.1",
