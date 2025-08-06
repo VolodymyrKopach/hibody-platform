@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
@@ -36,12 +36,17 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     '/account'
   ];
 
-  const isPublicRoute = publicRoutes.some(route => pathname?.startsWith(route));
-  const isAuthOnlyRoute = authOnlyRoutes.some(route => pathname?.startsWith(route));
-  const isProtectedRoute = protectedRoutes.some(route => pathname === route || pathname?.startsWith(route + '/'));
-  
-  // Check if this is a known page (not 404)
-  const isKnownRoute = isPublicRoute || isProtectedRoute;
+  // Memoize route calculations to prevent unnecessary re-renders
+  const routeInfo = useMemo(() => {
+    const isPublicRoute = publicRoutes.some(route => pathname?.startsWith(route));
+    const isAuthOnlyRoute = authOnlyRoutes.some(route => pathname?.startsWith(route));
+    const isProtectedRoute = protectedRoutes.some(route => pathname === route || pathname?.startsWith(route + '/'));
+    const isKnownRoute = isPublicRoute || isProtectedRoute;
+    
+    return { isPublicRoute, isAuthOnlyRoute, isProtectedRoute, isKnownRoute };
+  }, [pathname]);
+
+  const { isPublicRoute, isAuthOnlyRoute, isProtectedRoute, isKnownRoute } = routeInfo;
 
   useEffect(() => {
     // Do nothing while loading
@@ -89,7 +94,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     }
 
     console.log(`✅ RouteGuard: Access granted to ${pathname}`);
-  }, [user, loading, pathname, router, isPublicRoute, isAuthOnlyRoute, isProtectedRoute, isKnownRoute]);
+  }, [user, loading, pathname, router, routeInfo]);
 
   // Show loading screen while authentication is being checked
   if (loading) {

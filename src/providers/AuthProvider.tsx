@@ -1,11 +1,10 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { AuthContextType, UserProfile } from '@/types/auth'
-import { SessionManager } from '@/components/auth/SessionManager'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -88,14 +87,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('🔄 AuthProvider: Auth state changed:', event, session?.user ? 'User present' : 'No user')
         
         if (mounted) {
-          setUser(session?.user ?? null)
+          const newUser = session?.user ?? null
           
-          if (session?.user) {
-            // Завантажуємо профіль асинхронно
-            fetchUserProfile(session.user.id).catch(console.error)
-          } else {
-            setProfile(null)
-          }
+          // Оновлюємо користувача тільки якщо він змінився
+          setUser(prevUser => {
+            const userChanged = prevUser?.id !== newUser?.id
+            
+            if (userChanged) {
+              if (newUser) {
+                // Завантажуємо профіль асинхронно тільки для нового користувача
+                fetchUserProfile(newUser.id).catch(console.error)
+              } else {
+                setProfile(null)
+              }
+            }
+            
+            return newUser
+          })
           
           // Якщо ініціалізація ще не завершена, завершуємо її
           if (!initializationComplete) {
@@ -112,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
@@ -129,22 +137,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error fetching user profile:', error)
     }
-  }
+  }, [])
 
-  // Функція для оновлення сесії
-  const refreshSession = async () => {
+  // Функція для оновлення сесії (для ручного використання)
+  const refreshSession = useCallback(async () => {
     try {
+      console.log('🔄 AuthProvider: Manual session refresh requested')
       const { data, error } = await supabase.auth.refreshSession()
       if (error) {
-        console.error('Error refreshing session:', error)
+        console.error('❌ AuthProvider: Error refreshing session:', error)
         return false
       }
+      console.log('✅ AuthProvider: Session refreshed successfully')
       return true
     } catch (error) {
-      console.error('Error refreshing session:', error)
+      console.error('❌ AuthProvider: Error refreshing session:', error)
       return false
     }
-  }
+  }, [])
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -254,7 +264,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // AuthProvider просто надає контекст авторизації
   return (
     <AuthContext.Provider value={value}>
-      <SessionManager />
+      {/* SessionManager removed - using Supabase's built-in autoRefreshToken instead */}
       {children}
     </AuthContext.Provider>
   )
