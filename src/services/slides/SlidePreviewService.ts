@@ -127,8 +127,8 @@ export class SlidePreviewService implements ISlidePreviewService {
             // Чекаємо завершення рендерингу
             setTimeout(() => {
               try {
-                // Frontend HTML-to-canvas conversion has been removed
-                // Using simple fallback instead
+                // Використовуємо html2canvas для конвертації (якщо доступно)
+                // Інакше створюємо простий fallback
                 this.captureIframeContent(iframe, canvas, ctx)
                   .then(dataUrl => {
                     document.body.removeChild(iframe);

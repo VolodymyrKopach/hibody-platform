@@ -26,7 +26,7 @@ async function testLogout() {
     await page.goto('http://localhost:3000/test', { waitUntil: 'networkidle2' });
     
     // Чекаємо завантаження сторінки
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await page.waitForTimeout(2000);
     
     // Перевіряємо, чи є користувач авторизованим
     const isLoggedIn = await page.evaluate(() => {
@@ -42,7 +42,7 @@ async function testLogout() {
       console.log('🖱️ Clicked logout button');
       
       // Чекаємо на зміни
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await page.waitForTimeout(3000);
       
       // Перевіряємо результат
       const isLoggedOut = await page.evaluate(() => {

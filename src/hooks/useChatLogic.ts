@@ -758,18 +758,26 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
             htmlContent: result.slide?.htmlContent
           });
 
-          // Use backend-generated thumbnail
+          // Generate thumbnail BEFORE adding slide to store
           if (onLessonUpdateRef.current && result.slide) {
             try {
-              console.log(`🖼️ [BACKEND-THUMBNAIL] Using backend thumbnail for slide ${desc.slideNumber}`);
+              console.log(`🎨 [PRE-GENERATION] Generating thumbnail for slide ${desc.slideNumber} before store update`);
               
-              // Extract thumbnail from backend API response
+              // Import thumbnail generation service
+              const { getLocalThumbnailStorage } = await import('@/services/slides/LocalThumbnailService');
+              const localThumbnailStorage = getLocalThumbnailStorage();
+              
+              // Generate thumbnail before store update
               let thumbnailUrl: string | undefined;
-              if (result.thumbnail && result.thumbnail.success && result.thumbnail.thumbnail) {
-                thumbnailUrl = result.thumbnail.thumbnail;
-                console.log(`✅ [BACKEND-THUMBNAIL] Backend thumbnail available for slide ${desc.slideNumber}`);
-              } else {
-                console.warn(`⚠️ [BACKEND-THUMBNAIL] No backend thumbnail for slide ${desc.slideNumber}, will use fallback`);
+              try {
+                thumbnailUrl = await localThumbnailStorage.generateThumbnail(
+                  `slide-${desc.slideNumber}-${sessionId}`, // Use the stable ID
+                  result.slide.htmlContent
+                );
+                console.log(`✅ [PRE-GENERATION] Thumbnail generated for slide ${desc.slideNumber}`);
+              } catch (thumbError) {
+                console.warn(`⚠️ [PRE-GENERATION] Thumbnail generation failed for slide ${desc.slideNumber}:`, thumbError);
+                // Continue without thumbnail - slide will show "Preparing..." state
               }
 
               // Update store with FULLY READY slide (including thumbnail)
@@ -783,7 +791,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
                         id: slide.id, // Keep the same stable ID from placeholder
                         isPlaceholder: false,
                         status: 'completed',
-                        thumbnailUrl: thumbnailUrl, // Add backend-generated thumbnail
+                        thumbnailUrl: thumbnailUrl, // Add pre-generated thumbnail
                         thumbnailReady: !!thumbnailUrl // Flag to prevent further generation
                       };
                     }
@@ -797,7 +805,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
 
                   // Update lesson immediately in the panel
                   onLessonUpdateRef.current!(updatedLesson);
-                  console.log(`🔄 [PARALLEL] Added fully ready slide ${desc.slideNumber} to store with backend thumbnail:`, result.slide.title);
+                  console.log(`🔄 [PARALLEL] Added fully ready slide ${desc.slideNumber} to store:`, result.slide.title);
 
                   return {
                     ...prev,

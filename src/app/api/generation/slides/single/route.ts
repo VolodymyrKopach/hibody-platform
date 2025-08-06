@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SlideGenerationService } from '@/services/chat/services/SlideGenerationService';
 import { SimpleSlide } from '@/types/chat';
-import { getThumbnailService, ThumbnailResult } from '@/services/thumbnails/PuppeteerThumbnailService';
 
 interface SingleSlideGenerationRequest {
   title: string;
@@ -14,7 +13,6 @@ interface SingleSlideGenerationRequest {
 interface SingleSlideGenerationResponse {
   success: boolean;
   slide?: SimpleSlide;
-  thumbnail?: ThumbnailResult;
   error?: string;
   details?: string;
 }
@@ -74,34 +72,9 @@ export async function POST(request: NextRequest) {
         status: generatedSlide.status
       });
 
-      // Generate thumbnail using Puppeteer
-      console.log('🖼️ SINGLE SLIDE API: Generating thumbnail for slide...');
-      const thumbnailService = getThumbnailService();
-      
-      const thumbnailResult = await thumbnailService.generateThumbnail(
-        generatedSlide.htmlContent,
-        {
-          width: 1600,
-          height: 1200,
-          quality: 90,
-          format: 'png',
-          background: '#ffffff'
-        }
-      );
-
-      if (thumbnailResult.success) {
-        console.log('✅ SINGLE SLIDE API: Thumbnail generated successfully:', {
-          size: thumbnailResult.metadata?.size,
-          format: thumbnailResult.metadata?.format
-        });
-      } else {
-        console.warn('⚠️ SINGLE SLIDE API: Thumbnail generation failed:', thumbnailResult.error);
-      }
-
       const response: SingleSlideGenerationResponse = {
         success: true,
-        slide: generatedSlide,
-        thumbnail: thumbnailResult
+        slide: generatedSlide
       };
 
       return NextResponse.json(response);

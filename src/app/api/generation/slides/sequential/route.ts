@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SlideGenerationService } from '@/services/chat/services/SlideGenerationService';
 import { SlideDescription, SimpleLesson, SimpleSlide, SlideGenerationProgress } from '@/types/chat';
 import { sendProgressUpdate, sendCompletion } from '../progress/route';
-import { getThumbnailService } from '@/services/thumbnails/PuppeteerThumbnailService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -93,50 +92,12 @@ export async function POST(request: NextRequest) {
 
       console.log(`✅ SEQUENTIAL API: Successfully generated ${generatedSlides.length} slides`);
 
-      // Generate thumbnails for all slides
-      console.log('🖼️ SEQUENTIAL API: Generating thumbnails for all slides...');
-      const thumbnailService = getThumbnailService();
-      
-      const slidesWithThumbnails = await Promise.all(
-        generatedSlides.map(async (slide) => {
-          try {
-            const thumbnailResult = await thumbnailService.generateThumbnail(
-              slide.htmlContent,
-              {
-                width: 1600,
-                height: 1200,
-                quality: 90,
-                format: 'png',
-                background: '#ffffff'
-              }
-            );
-
-            if (thumbnailResult.success) {
-              console.log(`✅ SEQUENTIAL API: Thumbnail generated for slide ${slide.id}`);
-              return {
-                ...slide,
-                thumbnail: thumbnailResult.thumbnail,
-                thumbnailMetadata: thumbnailResult.metadata
-              };
-            } else {
-              console.warn(`⚠️ SEQUENTIAL API: Thumbnail generation failed for slide ${slide.id}:`, thumbnailResult.error);
-              return slide;
-            }
-          } catch (error) {
-            console.error(`❌ SEQUENTIAL API: Error generating thumbnail for slide ${slide.id}:`, error);
-            return slide;
-          }
-        })
-      );
-
-      console.log(`✅ SEQUENTIAL API: Thumbnail generation completed for ${slidesWithThumbnails.length} slides`);
-
       // Send completion notification
       if (sessionId) {
         sendCompletion(sessionId, {
           lesson: {
             ...lesson,
-            slides: slidesWithThumbnails,
+            slides: generatedSlides,
             updatedAt: new Date()
           },
           message: `Successfully generated ${generatedSlides.length} slides from lesson content!`
@@ -147,7 +108,7 @@ export async function POST(request: NextRequest) {
         success: true,
         lesson: {
           ...lesson,
-          slides: slidesWithThumbnails,
+          slides: generatedSlides,
           updatedAt: new Date()
         },
         message: `Successfully generated ${generatedSlides.length} slides using content-driven approach!`,

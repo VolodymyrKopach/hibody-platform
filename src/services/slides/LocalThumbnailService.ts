@@ -1,4 +1,4 @@
-import { generateFallbackPreview } from '@/utils/slidePreview';
+import { generateSlideThumbnail, generateFallbackPreview } from '@/utils/slidePreview';
 import { createClient } from '@/lib/supabase/client';
 
 export interface ThumbnailOptions {
@@ -79,7 +79,7 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
   // === ГЕНЕРАЦІЯ THUMBNAIL'ІВ ===
 
   async generateThumbnail(slideId: string, htmlContent: string, options: ThumbnailOptions = {}): Promise<string> {
-    console.log('🎨 LOCAL THUMBNAIL: Генерація thumbnail для слайду (fallback mode):', slideId);
+    console.log('🎨 LOCAL THUMBNAIL: Генерація thumbnail для слайду:', slideId);
 
     // Перевіряємо чи вже генерується
     if (this.generationInProgress.has(slideId)) {
@@ -99,18 +99,17 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
         ...options
       };
 
-      // Frontend thumbnail generation has been removed - use fallback
-      console.log('📋 LOCAL THUMBNAIL: Using fallback preview (html2canvas removed)');
-      const thumbnailBase64 = generateFallbackPreview(defaultOptions);
+      // Генеруємо thumbnail
+      const thumbnailBase64 = await generateSlideThumbnail(htmlContent, defaultOptions);
       
       // Зберігаємо локально
       this.set(slideId, thumbnailBase64);
       
-      console.log('✅ LOCAL THUMBNAIL: Fallback thumbnail згенеровано та збережено локально:', slideId);
+      console.log('✅ LOCAL THUMBNAIL: Thumbnail згенеровано та збережено локально:', slideId);
       return thumbnailBase64;
 
     } catch (error) {
-      console.warn('⚠️ LOCAL THUMBNAIL: Помилка генерації fallback:', error);
+      console.warn('⚠️ LOCAL THUMBNAIL: Помилка генерації, створюємо fallback:', error);
       const fallbackThumbnail = generateFallbackPreview(options);
       this.set(slideId, fallbackThumbnail);
       return fallbackThumbnail;
@@ -141,7 +140,7 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
 
       // Завантажуємо в Supabase Storage
       const supabase = createClient();
-      const { error } = await supabase.storage
+      const { data, error } = await supabase.storage
         .from('lesson-assets')
         .upload(filePath, blob, {
           contentType: 'image/png',
