@@ -69,9 +69,9 @@ export async function POST(request: NextRequest) {
 
     console.log('👤 PREVIEW API: User authenticated:', user.id);
 
-    // Generate filename for Supabase Storage
+    // Generate filename for Supabase Storage (WebP format from new snapDOM system)
     const timestamp = Date.now();
-    const fileName = `${slideId}-${type}-${timestamp}.png`;
+    const fileName = `${slideId}-${type}-${timestamp}.webp`;
     const filePath = `lesson-thumbnails/${lessonId}/${fileName}`;
 
     console.log('📤 PREVIEW API: Uploading to Supabase Storage:', {
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('lesson-assets')
       .upload(filePath, buffer, {
-        contentType: 'image/png',
+        contentType: 'image/webp',
         upsert: true // Overwrite file if it exists
       });
 

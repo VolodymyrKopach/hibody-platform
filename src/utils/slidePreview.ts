@@ -1,68 +1,225 @@
-// html2canvas and html-to-image removed - using fallback functionality only
+// snapDOM-based thumbnail generation system
+
+import { snapdom } from '@zumer/snapdom';
 
 export interface SlidePreviewOptions {
-  width?: number;
-  height?: number;
   quality?: number;
-  scale?: number;
   background?: string;
+  compress?: boolean;
+  embedFonts?: boolean;
+  fast?: boolean;
 }
 
 /**
- * Generates a slide preview from HTML content
- * Note: This now only returns a fallback preview since html2canvas has been removed
+ * Generates a slide preview from HTML content using snapDOM
  */
 export async function generateSlidePreview(
   htmlContent: string,
   options: SlidePreviewOptions = {}
 ): Promise<string> {
-  console.log('🖼️ Frontend preview generation disabled - using fallback preview');
-  return generateFallbackPreview(options);
+  console.log('🖼️ Generating slide preview with snapDOM');
+  return generateSlideThumbnail(htmlContent, options);
 }
 
 /**
  * Alternative method for preview generation with less aggressive processing
- * Note: This now only returns a fallback preview since html2canvas has been removed
+ * Uses snapDOM with optimized settings for better compatibility
  */
 export async function generateSlidePreviewAlt(
   htmlContent: string,
   options: SlidePreviewOptions = {}
 ): Promise<string> {
-  console.log('🖼️ Frontend alternative preview generation disabled - using fallback preview');
-  return generateFallbackPreview(options);
+  console.log('🖼️ Alternative preview generation with snapDOM (compatible mode)');
+  
+  // Use more conservative settings for better compatibility
+  const altOptions = {
+    compress: false,
+    fast: false,
+    embedFonts: true,
+    ...options
+  };
+  
+  return generateSlideThumbnail(htmlContent, altOptions);
 }
 
 /**
- * Generates a slide thumbnail with automatic fallback
- * Note: This now only returns a fallback preview since html2canvas has been removed
+ * Generates a slide thumbnail from HTML content using snapDOM
+ * Supports multiple formats and advanced options
  */
 export async function generateSlideThumbnail(
   htmlContent: string, 
   options: SlidePreviewOptions = {}
 ): Promise<string> {
-  console.log('🖼️ Frontend thumbnail generation disabled - using fallback preview');
-  return generateFallbackPreview(options);
+  console.log('🎨 SNAPDOM THUMBNAIL: Starting generation');
+  
+  try {
+    // Default options optimized for slide thumbnails
+    const defaultOptions: Required<SlidePreviewOptions> = {
+      quality: 0.85,
+      background: '#ffffff',
+      compress: true,
+      embedFonts: false,
+      fast: true
+    };
+
+    // Hardcoded dimensions for optimal thumbnail generation
+    const VIEWPORT_WIDTH = 1600;  // Large viewport for better content rendering
+    const VIEWPORT_HEIGHT = 1200;
+    const OUTPUT_WIDTH = 400;     // Smaller output for efficient thumbnails
+    const OUTPUT_HEIGHT = 300;
+
+    const config = { ...defaultOptions, ...options };
+    
+    // Optimize HTML content for thumbnail generation first
+    const optimizedHtml = optimizeHtmlForSnapdom(htmlContent);
+    
+    // Check if optimized HTML is a full document or fragment
+    const isFullDocument = optimizedHtml.trim().toLowerCase().startsWith('<!doctype') || 
+                          optimizedHtml.trim().toLowerCase().startsWith('<html');
+    
+    let container: HTMLElement;
+    
+    if (isFullDocument) {
+      // For full documents, create an iframe-like container
+      container = document.createElement('iframe');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      container.style.width = `${VIEWPORT_WIDTH}px`;
+      container.style.height = `${VIEWPORT_HEIGHT}px`;
+      container.style.border = 'none';
+      container.style.overflow = 'hidden';
+      
+      // Add to document first to enable content writing
+      document.body.appendChild(container);
+      
+      const iframe = container as HTMLIFrameElement;
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (iframeDoc) {
+        iframeDoc.open();
+        iframeDoc.write(optimizedHtml);
+        iframeDoc.close();
+        
+        // Wait for iframe to load
+        await new Promise(resolve => {
+          iframe.onload = resolve;
+          setTimeout(resolve, 100); // Fallback timeout
+        });
+        
+        // Use the iframe's document element for capture
+        container = iframeDoc.documentElement;
+      } else {
+        throw new Error('Could not access iframe document');
+      }
+    } else {
+      // For fragments, use a simple div container
+      container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      container.style.width = `${VIEWPORT_WIDTH}px`;
+      container.style.height = `${VIEWPORT_HEIGHT}px`;
+      container.style.overflow = 'hidden';
+      container.style.backgroundColor = config.background;
+      container.innerHTML = optimizedHtml;
+      
+      // Add container to document temporarily
+      document.body.appendChild(container);
+    }
+    
+    try {
+      // Fast-forward animations to their final state instead of waiting
+      console.log('⚡ SNAPDOM THUMBNAIL: Fast-forwarding animations to final state...');
+      await new Promise(resolve => setTimeout(resolve, 100)); // Short delay for DOM to settle
+      
+      // Configure snapDOM options with hardcoded dimensions
+      const snapdomOptions = {
+        width: OUTPUT_WIDTH,   // Output image size: 400px
+        height: OUTPUT_HEIGHT, // Output image size: 300px
+        backgroundColor: config.background,
+        quality: config.quality,
+        compress: config.compress,
+        embedFonts: config.embedFonts,
+        fast: config.fast,
+        exclude: [
+          'script',
+          '[data-capture="exclude"]'
+        ],
+        filter: (el: Element) => {
+          // Exclude problematic elements
+          const tagName = el.tagName.toLowerCase();
+          return !['script', 'iframe', 'embed', 'object'].includes(tagName);
+        }
+      };
+
+      // Always use WebP format for best compression and quality
+      const webpImg = await snapdom.toWebp(container, snapdomOptions);
+      return webpImg.src;
+      
+    } finally {
+      // Always clean up the temporary container
+      if (isFullDocument) {
+        // For iframes, remove the iframe element (container was the iframe initially)
+        const iframe = document.querySelector('iframe[style*="-9999px"]') as HTMLIFrameElement;
+        if (iframe && iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
+        }
+      } else {
+        // For div containers, remove the div
+        if (container && container.parentNode) {
+          container.parentNode.removeChild(container);
+        }
+      }
+    }
+    
+  } catch (error) {
+    console.warn('⚠️ SNAPDOM THUMBNAIL: Generation failed, using fallback:', error);
+    return generateFallbackPreview(options);
+  }
 }
 
 /**
- * Generates previews for all lesson slides
- * Note: This now only returns fallback previews since html2canvas has been removed
+ * Generates previews for all lesson slides using snapDOM
+ * Creates both preview and thumbnail versions
  */
 export async function generateLessonPreviews(
   slides: Array<{ id: string; htmlContent: string }>,
   options: SlidePreviewOptions = {}
 ): Promise<Array<{ slideId: string; preview: string; thumbnail: string }>> {
-  console.log('🖼️ Frontend lesson previews generation disabled - using fallback previews');
+  console.log('🖼️ Generating lesson previews with snapDOM');
   
   const results: Array<{ slideId: string; preview: string; thumbnail: string }> = [];
   
   for (const slide of slides) {
-    const fallbackPreview = generateFallbackPreview(options);
-    results.push({
-      slideId: slide.id,
-      preview: fallbackPreview,
-      thumbnail: fallbackPreview
-    });
+    try {
+      // Generate preview (uses hardcoded dimensions: 1600×1200 → 400×300)
+      const preview = await generateSlideThumbnail(slide.htmlContent, {
+        quality: 0.9,
+        ...options
+      });
+      
+      // Generate thumbnail (same dimensions - already optimized)
+      const thumbnail = await generateSlideThumbnail(slide.htmlContent, {
+        quality: 0.8,
+        fast: true,
+        ...options
+      });
+      
+      results.push({
+        slideId: slide.id,
+        preview,
+        thumbnail
+      });
+      
+    } catch (error) {
+      console.warn(`⚠️ Failed to generate preview for slide ${slide.id}, using fallback:`, error);
+      const fallbackPreview = generateFallbackPreview(options);
+      results.push({
+        slideId: slide.id,
+        preview: fallbackPreview,
+        thumbnail: fallbackPreview
+      });
+    }
   }
 
   return results;
@@ -332,4 +489,191 @@ function replaceImagesWithPlaceholders(htmlContent: string): string {
   });
   
   return doc.documentElement.outerHTML;
+}
+
+/**
+ * Optimizes HTML content specifically for snapDOM capture
+ * Handles both complete HTML documents and HTML fragments
+ */
+function optimizeHtmlForSnapdom(htmlContent: string): string {
+  const parser = new DOMParser();
+  let doc: Document;
+  let isFullDocument = false;
+  
+  // Check if it's a complete HTML document or just a fragment
+  if (htmlContent.trim().toLowerCase().startsWith('<!doctype') || 
+      htmlContent.trim().toLowerCase().startsWith('<html')) {
+    doc = parser.parseFromString(htmlContent, 'text/html');
+    isFullDocument = true;
+  } else {
+    // For fragments, wrap in a basic HTML structure
+    const wrappedHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${htmlContent}</body></html>`;
+    doc = parser.parseFromString(wrappedHtml, 'text/html');
+    isFullDocument = false;
+  }
+
+  // Remove scripts and potentially problematic elements
+  const elementsToRemove = doc.querySelectorAll('script, iframe, embed, object, video, audio, noscript');
+  elementsToRemove.forEach(el => el.remove());
+
+  // Handle external images - replace with placeholders or data URLs
+  const images = doc.querySelectorAll('img');
+  images.forEach((img, index) => {
+    const src = img.getAttribute('src');
+    if (src && (src.startsWith('http') || src.startsWith('//'))) {
+      // Replace external images with CSS-based placeholders
+      const placeholder = doc.createElement('div');
+      placeholder.style.cssText = `
+        width: ${img.width || 200}px;
+        height: ${img.height || 200}px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        border-radius: 8px;
+        text-align: center;
+        vertical-align: ${img.style.verticalAlign || 'top'};
+        margin: ${img.style.margin || '0'};
+      `;
+      placeholder.textContent = img.alt || `🖼️ Image ${index + 1}`;
+      
+      // Copy any classes
+      if (img.className) {
+        placeholder.className = img.className;
+      }
+      
+      img.parentNode?.replaceChild(placeholder, img);
+    }
+  });
+
+  // Convert interactive elements to static ones with preserved styling
+  const interactiveElements = doc.querySelectorAll('button, input, select, textarea, a[href]');
+  interactiveElements.forEach(el => {
+    const staticDiv = doc.createElement('div');
+    staticDiv.className = el.className;
+    
+    // Copy all computed styles
+    const computedStyle = window.getComputedStyle ? null : (el as HTMLElement).style;
+    staticDiv.style.cssText = (el as HTMLElement).style.cssText;
+    
+    // Set content
+    if (el.tagName.toLowerCase() === 'input') {
+      staticDiv.textContent = (el as HTMLInputElement).value || (el as HTMLInputElement).placeholder || 'Input';
+    } else if (el.tagName.toLowerCase() === 'select') {
+      const selectedOption = (el as HTMLSelectElement).selectedOptions[0];
+      staticDiv.textContent = selectedOption?.textContent || 'Select';
+    } else {
+      staticDiv.textContent = el.textContent || 'Interactive Element';
+    }
+    
+    // Preserve visual styling for different element types
+    if (el.tagName.toLowerCase() === 'button') {
+      staticDiv.style.border = staticDiv.style.border || '1px solid #ccc';
+      staticDiv.style.padding = staticDiv.style.padding || '8px 16px';
+      staticDiv.style.borderRadius = staticDiv.style.borderRadius || '4px';
+      staticDiv.style.backgroundColor = staticDiv.style.backgroundColor || '#f5f5f5';
+      staticDiv.style.cursor = 'default';
+      staticDiv.style.display = staticDiv.style.display || 'inline-block';
+    } else if (el.tagName.toLowerCase() === 'a') {
+      staticDiv.style.color = staticDiv.style.color || '#0066cc';
+      staticDiv.style.textDecoration = staticDiv.style.textDecoration || 'underline';
+    } else if (el.tagName.toLowerCase() === 'input') {
+      staticDiv.style.border = staticDiv.style.border || '1px solid #ccc';
+      staticDiv.style.padding = staticDiv.style.padding || '4px 8px';
+      staticDiv.style.backgroundColor = staticDiv.style.backgroundColor || '#fff';
+    }
+    
+    el.parentNode?.replaceChild(staticDiv, el);
+  });
+
+  // Extract and merge CSS from style tags and link tags
+  const styleTags = doc.querySelectorAll('style');
+  const linkTags = doc.querySelectorAll('link[rel="stylesheet"]');
+  let mergedStyles = '';
+  
+  styleTags.forEach(style => {
+    mergedStyles += style.textContent || '';
+  });
+
+  // Add essential styles for snapDOM
+  const optimizationStyle = doc.createElement('style');
+  
+  optimizationStyle.textContent = `
+    ${mergedStyles}
+    
+    /* Fast-forward animations to their final state */
+    *, *::before, *::after {
+      animation-delay: -10s !important; /* Jump to end of animation */
+      animation-duration: 0.01s !important; /* Instant completion */
+      animation-fill-mode: forwards !important; /* Stay at final state */
+      transition-duration: 0.01s !important; /* Instant transitions */
+      transition-delay: 0s !important;
+    }
+    
+    /* Handle AOS animations */
+    [data-aos] {
+      animation-delay: -10s !important;
+      animation-duration: 0.01s !important;
+      animation-fill-mode: forwards !important;
+      opacity: 1 !important; /* Ensure visibility */
+      transform: translateY(0) translateX(0) scale(1) rotate(0deg) !important; /* Final position */
+    }
+    
+    /* Force all elements to their final animated state */
+    [style*="animation"] {
+      animation-delay: -10s !important;
+      animation-duration: 0.01s !important;
+      animation-fill-mode: forwards !important;
+    }
+    
+    /* Ensure proper rendering */
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* Handle background images */
+    [style*="background-image"] {
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    
+    /* Prevent overflow issues */
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Fix common layout issues */
+    * {
+      box-sizing: border-box;
+    }
+  `;
+  
+  // Remove existing style tags to avoid duplication
+  styleTags.forEach(style => style.remove());
+  linkTags.forEach(link => link.remove());
+  
+  // Add the optimized style to head
+  const head = doc.querySelector('head');
+  if (head) {
+    head.appendChild(optimizationStyle);
+  } else {
+    doc.body.insertBefore(optimizationStyle, doc.body.firstChild);
+  }
+
+  // For full documents, return the entire body content
+  // For fragments, return just the content
+  if (isFullDocument) {
+    return doc.documentElement.outerHTML;
+  } else {
+    return doc.body.innerHTML;
+  }
 } 

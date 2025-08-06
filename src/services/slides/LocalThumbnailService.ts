@@ -1,11 +1,12 @@
-import { generateSlideThumbnail, generateFallbackPreview } from '@/utils/slidePreview';
+import { generateSlideThumbnail, generateFallbackPreview, SlidePreviewOptions } from '@/utils/slidePreview';
 import { createClient } from '@/lib/supabase/client';
 
 export interface ThumbnailOptions {
-  width?: number;
-  height?: number;
   quality?: number;
   background?: string;
+  compress?: boolean;
+  embedFonts?: boolean;
+  fast?: boolean;
 }
 
 // Інтерфейс для локального зберігання thumbnail'ів
@@ -91,15 +92,17 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
     this.generationInProgress.add(slideId);
 
     try {
-      const defaultOptions = {
-        width: 640,
-        height: 480,
+      // Default options optimized for chat thumbnails (dimensions are hardcoded in generateSlideThumbnail)
+      const defaultOptions: SlidePreviewOptions = {
         quality: 0.85,
         background: '#ffffff',
+        compress: true,
+        embedFonts: false,
+        fast: true,
         ...options
       };
 
-      // Генеруємо thumbnail
+      // Generate thumbnail using new snapDOM system (1600×1200 → 400×300 WebP)
       const thumbnailBase64 = await generateSlideThumbnail(htmlContent, defaultOptions);
       
       // Зберігаємо локально
@@ -110,7 +113,11 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
 
     } catch (error) {
       console.warn('⚠️ LOCAL THUMBNAIL: Помилка генерації, створюємо fallback:', error);
-      const fallbackThumbnail = generateFallbackPreview(options);
+      const fallbackThumbnail = generateFallbackPreview({
+        quality: 0.85,
+        background: '#ffffff',
+        ...options
+      });
       this.set(slideId, fallbackThumbnail);
       return fallbackThumbnail;
     } finally {
