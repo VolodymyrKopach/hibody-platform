@@ -100,14 +100,17 @@ export async function generateSlideThumbnail(
         iframeDoc.write(optimizedHtml);
         iframeDoc.close();
         
-        // Wait for iframe to load
+        // Wait for iframe to load and fonts to render
         await new Promise(resolve => {
           iframe.onload = resolve;
-          setTimeout(resolve, 100); // Fallback timeout
+          setTimeout(resolve, 300); // Increased timeout for font loading
         });
         
-        // Use the iframe's document element for capture
-        container = iframeDoc.documentElement;
+        // Additional wait for font rendering
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Use the iframe's body for better content capture
+        container = iframeDoc.body || iframeDoc.documentElement;
       } else {
         throw new Error('Could not access iframe document');
       }
@@ -128,9 +131,9 @@ export async function generateSlideThumbnail(
     }
     
     try {
-      // Fast-forward animations to their final state instead of waiting
-      console.log('⚡ SNAPDOM THUMBNAIL: Fast-forwarding animations to final state...');
-      await new Promise(resolve => setTimeout(resolve, 100)); // Short delay for DOM to settle
+      // Fast-forward animations to their final state and allow fonts to load
+      console.log('⚡ SNAPDOM THUMBNAIL: Fast-forwarding animations to final state and loading fonts...');
+      await new Promise(resolve => setTimeout(resolve, 200)); // Increased delay for DOM and fonts to settle
       
       // Configure snapDOM options with hardcoded dimensions
       const snapdomOptions = {
@@ -589,20 +592,36 @@ function optimizeHtmlForSnapdom(htmlContent: string): string {
     el.parentNode?.replaceChild(staticDiv, el);
   });
 
-  // Extract and merge CSS from style tags and link tags
-  const styleTags = doc.querySelectorAll('style');
+  // Preserve existing styles but add optimization styles
   const linkTags = doc.querySelectorAll('link[rel="stylesheet"]');
-  let mergedStyles = '';
   
-  styleTags.forEach(style => {
-    mergedStyles += style.textContent || '';
-  });
+  // Remove only external stylesheet links (they won't load properly anyway)
+  linkTags.forEach(link => link.remove());
 
-  // Add essential styles for snapDOM
+  // Add essential optimization styles WITHOUT removing existing style tags
   const optimizationStyle = doc.createElement('style');
   
   optimizationStyle.textContent = `
-    ${mergedStyles}
+    /* Font Loading and Fallbacks */
+    @font-face {
+      font-family: 'Comic Sans MS';
+      src: local('Comic Sans MS'), local('ComicSansMS'), local('Comic Sans');
+      font-display: swap;
+    }
+    
+    /* Ensure system fonts are available as fallbacks */
+    * {
+      font-family: inherit;
+    }
+    
+    /* Common educational fonts with proper fallbacks */
+    [style*="Comic Sans"] {
+      font-family: "Comic Sans MS", "Trebuchet MS", cursive, sans-serif !important;
+    }
+    
+    body {
+      font-family: inherit;
+    }
     
     /* Fast-forward animations to their final state */
     *, *::before, *::after {
@@ -635,15 +654,20 @@ function optimizeHtmlForSnapdom(htmlContent: string): string {
       height: auto;
     }
     
-    /* Handle background images */
-    [style*="background-image"] {
+    /* Handle background images and gradients */
+    [style*="background-image"], [style*="background:"], [style*="linear-gradient"], [style*="radial-gradient"] {
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
     }
     
-    /* Prevent overflow issues */
-    html, body {
+    /* Ensure gradients render properly in snapshots */
+    body, html {
+      background-attachment: scroll !important;
+    }
+    
+    /* Prevent overflow issues - but preserve original body styles */
+    html {
       margin: 0;
       padding: 0;
       overflow: hidden;
@@ -657,11 +681,7 @@ function optimizeHtmlForSnapdom(htmlContent: string): string {
     }
   `;
   
-  // Remove existing style tags to avoid duplication
-  styleTags.forEach(style => style.remove());
-  linkTags.forEach(link => link.remove());
-  
-  // Add the optimized style to head
+  // Add the optimization styles to head (but keep existing styles)
   const head = doc.querySelector('head');
   if (head) {
     head.appendChild(optimizationStyle);
