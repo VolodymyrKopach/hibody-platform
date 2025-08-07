@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
-import { X, Download } from 'lucide-react';
+import { X } from 'lucide-react';
 import { SimpleLesson, SimpleSlide } from '@/types/chat';
 import SlideCard from './SlideCard';
 
@@ -257,17 +257,6 @@ const SlidePanel: React.FC<SlidePanelProps> = ({
           {t('slides:title')}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {currentLesson && (
-            <Tooltip title={t('slides:export.title')}>
-              <IconButton
-                onClick={onExportLesson}
-                size="small"
-                sx={{ color: 'primary.main' }}
-              >
-                <Download size={16} />
-              </IconButton>
-            </Tooltip>
-          )}
           <IconButton
             onClick={onCloseSidePanel}
             size="small"

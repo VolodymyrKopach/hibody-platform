@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
-import { X, Download } from 'lucide-react';
+import { X } from 'lucide-react';
 import SlideCard from './SlideCard';
 import { 
   useLessonManagement, 
@@ -183,23 +183,6 @@ const SlidePanelStore: React.FC = () => {
             >
               {isSavingLesson ? 'Saving...' : 'Save'}
             </Button>
-            
-            <Tooltip title="Export lesson to HTML">
-              <IconButton
-                size="small"
-                onClick={handleExportLesson}
-                disabled={slides.length === 0}
-                sx={{ 
-                  color: 'text.secondary',
-                  '&:hover': { 
-                    color: 'primary.main',
-                    backgroundColor: alpha(theme.palette.primary.main, 0.1)
-                  }
-                }}
-              >
-                <Download size={16} />
-              </IconButton>
-            </Tooltip>
           </Box>
         </Box>
       </Paper>
@@ -255,25 +238,6 @@ const SlidePanelStore: React.FC = () => {
   const handleOpenSaveDialog = () => {
     // TODO: Integrate with Save Dialog via Store
     console.log('🎯 Opening save dialog with selected slides:', Array.from(selectedSlides));
-  };
-
-  const handleExportLesson = () => {
-    if (!currentLesson) return;
-    
-    // Простий експорт HTML
-    const htmlContent = slides
-      .map(slide => slide.htmlContent)
-      .join('\n\n');
-    
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${currentLesson.title.replace(/[^a-zA-Z0-9]/g, '-')}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   return (
