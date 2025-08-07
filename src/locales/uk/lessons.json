@@ -128,6 +128,18 @@
       "generationError": "Помилка при генерації зображення"
     }
   },
+  "saveDialog": {
+    "title": "Зберегти презентацію",
+    "subtitle": "Налаштуйте інформацію про вашу презентацію перед збереженням",
+    "nameLabel": "📚 Назва презентації",
+    "namePlaceholder": "Введіть назву презентації",
+    "descriptionLabel": "📝 Опис презентації",
+    "descriptionPlaceholder": "Короткий опис змісту та мети презентації",
+    "subjectLabel": "🎯 Предмет/Жанр",
+    "ageGroupLabel": "👥 Вікова група",
+    "save": "Зберегти презентацію",
+    "saving": "Збереження..."
+  },
   "dialogs": {
     "saveLesson": {
       "title": "Зберегти урок",

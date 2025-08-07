@@ -122,6 +122,18 @@
       "generationError": "Error during image generation"
     }
   },
+  "saveDialog": {
+    "title": "Save Presentation",
+    "subtitle": "Configure your presentation information before saving",
+    "nameLabel": "📚 Presentation Title",
+    "namePlaceholder": "Enter presentation title",
+    "descriptionLabel": "📝 Presentation Description", 
+    "descriptionPlaceholder": "Short description of content and purpose",
+    "subjectLabel": "🎯 Subject/Genre",
+    "ageGroupLabel": "👥 Age Group",
+    "save": "Save Presentation",
+    "saving": "Saving..."
+  },
   "dialogs": {
     "saveLesson": {
       "title": "Save Lesson",
