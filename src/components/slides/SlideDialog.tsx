@@ -28,20 +28,10 @@ interface SlideDialogProps {
 const SlideContent = React.memo(({ htmlContent }: { htmlContent: string }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
-  // Debug logging to see what content we're receiving
-  useEffect(() => {
-    console.log('🔍 SlideContent received htmlContent:', {
-      content: htmlContent,
-      length: htmlContent?.length,
-      isValidHTML: htmlContent?.includes('<html') || htmlContent?.includes('<!DOCTYPE'),
-      preview: htmlContent?.substring(0, 200) + '...',
-      isDefaultMessage: htmlContent?.includes('Слайд генерується'),
-    });
-  }, [htmlContent]);
+
   
   useEffect(() => {
     if (iframeRef.current) {
-      console.log('🎯 Setting iframe srcdoc to:', htmlContent?.substring(0, 100) + '...');
       iframeRef.current.srcdoc = htmlContent;
     }
   }, [htmlContent]);
@@ -275,7 +265,7 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
         setIsFullscreen(false);
       }
     } catch (error) {
-      console.error('Error toggling fullscreen:', error);
+      // Handle fullscreen error silently
     }
   }, [isFullscreen]);
 

@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Функція для ініціалізації авторизації
     const initializeAuth = async () => {
       try {
-        console.log('🔄 AuthProvider: Starting auth initialization...')
+
         
         // Отримуємо сесію з таймаутом
         const sessionPromise = supabase.auth.getSession()
@@ -46,16 +46,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ]) as any
 
         if (sessionError) {
-          console.error('❌ AuthProvider: Error getting session:', sessionError)
-        } else {
-          console.log('✅ AuthProvider: Session retrieved:', session?.user ? 'User found' : 'No user')
+          // Handle session error silently
         }
 
         if (mounted && !initializationComplete) {
           if (session?.user) {
             setUser(session.user)
             // Завантажуємо профіль асинхронно без блокування
-            fetchUserProfile(session.user.id).catch(console.error)
+            fetchUserProfile(session.user.id).catch(() => {})
           } else {
             setUser(null)
             setProfile(null)
@@ -63,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           completeInitialization()
         }
       } catch (error) {
-        console.error('❌ AuthProvider: Error initializing auth:', error)
+
         if (mounted) {
           completeInitialization()
         }
@@ -73,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Скорочений таймаут для запобігання вічному loading
     const timeoutId = setTimeout(() => {
       if (mounted && !initializationComplete) {
-        console.warn('Auth initialization timeout, forcing completion')
+
         completeInitialization()
       }
     }, 1000) // Зменшуємо до 1 секунди для швидшого редиректу
@@ -84,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Підписуємося на зміни аутентифікації
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: any, session: any) => {
-        console.log('🔄 AuthProvider: Auth state changed:', event, session?.user ? 'User present' : 'No user')
+
         
         if (mounted) {
           const newUser = session?.user ?? null
@@ -96,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (userChanged) {
               if (newUser) {
                 // Завантажуємо профіль асинхронно тільки для нового користувача
-                fetchUserProfile(newUser.id).catch(console.error)
+                fetchUserProfile(newUser.id).catch(() => {})
               } else {
                 setProfile(null)
               }
@@ -129,29 +127,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (error) {
-        console.error('Error fetching user profile:', error)
+
         return
       }
 
       setProfile(data)
     } catch (error) {
-      console.error('Error fetching user profile:', error)
+      // Handle error silently
     }
   }, [])
 
   // Функція для оновлення сесії (для ручного використання)
   const refreshSession = useCallback(async () => {
     try {
-      console.log('🔄 AuthProvider: Manual session refresh requested')
+
       const { data, error } = await supabase.auth.refreshSession()
       if (error) {
-        console.error('❌ AuthProvider: Error refreshing session:', error)
+
         return false
       }
-      console.log('✅ AuthProvider: Session refreshed successfully')
+
       return true
     } catch (error) {
-      console.error('❌ AuthProvider: Error refreshing session:', error)
+
       return false
     }
   }, [])
@@ -196,7 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ])
 
         if (profileError) {
-          console.error('Error creating user profile:', profileError)
+          // Handle profile creation error silently
         }
       }
 
@@ -211,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut()
       
       if (error) {
-        console.error('❌ AuthProvider.signOut: Error during logout:', error)
+
         throw error
       }
       
@@ -223,7 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.push('/auth/login')
       
     } catch (error) {
-      console.error('❌ AuthProvider.signOut: Unexpected error during logout:', error)
+
       throw error
     }
   }

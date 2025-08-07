@@ -35,7 +35,6 @@ export const useChatLogic = () => {
   // === СПРОЩЕНИЙ СТЕЙТ ДЛЯ КОНТЕКСТУ РОЗМОВИ (ТІЛЬКИ РЯДОК) ===
   const [conversationContext, setConversationContext] = useState<ConversationContext>(() => {
     const initialContext = 'Session started';
-    console.log('🆕 [CONVERSATION CONTEXT] Initial context:', initialContext);
     return initialContext;
   });
 
@@ -44,28 +43,16 @@ export const useChatLogic = () => {
 
   // === РОЗУМНЕ ДОДАВАННЯ ДО КОНТЕКСТУ З AI СТИСНЕННЯМ ===
   const addToConversationContext = useCallback(async (addition: string) => {
-    console.log('➕ [CONVERSATION CONTEXT] Adding:', addition.substring(0, 100) + '...');
-    
     const currentContext = conversationContext;
     const newContext = currentContext + ' | ' + addition;
     const currentLength = newContext.length;
     
-    console.log(`📊 [CONVERSATION CONTEXT] Current length: ${currentLength} chars`);
-    
     // Перевіряємо, чи потребує стиснення
     if (compressionService.shouldCompress(newContext)) {
-      console.log('🤖 [CONVERSATION CONTEXT] Context too long, using AI compression...');
-      
       try {
         const compressed = await compressionService.adaptiveCompression(newContext);
-        
-        console.log(`📉 [CONVERSATION CONTEXT] AI Compressed: ${currentLength} → ${compressed.length} chars`);
-        console.log(`💰 [CONVERSATION CONTEXT] Estimated cost: ~$0.0003`);
-        
         setConversationContext(compressed);
       } catch (error) {
-        console.error('❌ [CONVERSATION CONTEXT] AI compression failed:', error);
-        
         // Fallback до простого обрізання
         const parts = newContext.split(' | ');
         const fallback = [
@@ -73,7 +60,6 @@ export const useChatLogic = () => {
           ...parts.slice(-8) // Last 8 interactions
         ].join(' | ');
         
-        console.log(`📉 [CONVERSATION CONTEXT] Fallback truncation: ${currentLength} → ${fallback.length} chars`);
         setConversationContext(fallback);
       }
     } else {
@@ -90,8 +76,6 @@ export const useChatLogic = () => {
       preserveRecentCount?: number;
     } = {}
   ) => {
-    console.log('⚙️ [CONVERSATION CONTEXT] Adding with options:', options);
-    
     const currentContext = conversationContext;
     const newContext = currentContext + ' | ' + addition;
     
@@ -104,10 +88,8 @@ export const useChatLogic = () => {
           recentMessagesCount: options.preserveRecentCount || 3
         });
         
-        console.log('📊 [CONVERSATION CONTEXT] Compression metrics:', result.metrics);
         setConversationContext(result.compressed);
       } catch (error) {
-        console.error('❌ [CONVERSATION CONTEXT] Custom compression failed:', error);
         setConversationContext(newContext);
       }
     } else {
@@ -117,14 +99,11 @@ export const useChatLogic = () => {
 
   // === ОНОВЛЕНІ ФУНКЦІЇ ДЛЯ КЕРУВАННЯ КОНТЕКСТОМ ===
   const updateConversationContext = useCallback((newContext: string) => {
-    console.log('🔄 [CONVERSATION CONTEXT] Direct update to:', newContext.substring(0, 100) + '...');
     setConversationContext(newContext);
   }, []);
 
   const resetConversationContext = useCallback(() => {
-    console.log('🔄 [CONVERSATION CONTEXT] Resetting conversation context');
     const newContext = 'Conversation reset';
-    console.log('🆕 [CONVERSATION CONTEXT] New context:', newContext);
     setConversationContext(newContext);
   }, []);
 
@@ -139,11 +118,8 @@ export const useChatLogic = () => {
     connect: connectSSE
   } = useSlideProgressSSE({
     onProgressUpdate: (data) => {
-      console.log('📊 [CHAT] SSE Progress update:', data);
-      
       // === ОНОВЛЮЄМО TYPING STAGE ПІД ЧАС ГЕНЕРАЦІЇ ===
       setTypingStage('generating');
-      console.log('⌨️ [CHAT] Updated typing stage to generating');
       
       // Оновлюємо повідомлення з прогресом
       setMessages(prevMessages => {
@@ -161,8 +137,6 @@ export const useChatLogic = () => {
             
             // === ВИКЛИК CALLBACK ДЛЯ ОНОВЛЕННЯ ПАНЕЛІ СЛАЙДІВ ===
             if (onLessonUpdateRef.current) {
-              const slideInfo = data.newSlide ? `with new slide: "${data.newSlide.title}"` : `with ${data.lesson.slides?.length || 0} slides`;
-              console.log(`🎨 [CHAT] Lesson updated ${slideInfo}`);
               onLessonUpdateRef.current(data.lesson);
             }
           }
@@ -175,18 +149,14 @@ export const useChatLogic = () => {
       });
     },
     onCompletion: (data) => {
-      console.log('🎉 [CHAT] SSE Generation completed:', data);
-      
       // === ПОКАЗУЄМО FINALIZING STAGE ===
       setTypingStage('finalizing');
-      console.log('⌨️ [CHAT] Updated typing stage to finalizing');
       
       // === ВИМИКАЄМО TYPING VIEW ПІСЛЯ КОРОТКОЇ ЗАТРИМКИ ===
       setTimeout(() => {
         setIsTyping(false);
         setTypingStage('thinking');
         setIsGeneratingSlides(false);
-        console.log('⌨️ [CHAT] Typing view deactivated after slide generation completion');
       }, 1000);
       
       // Оновлюємо повідомлення з фінальним результатом
@@ -201,7 +171,6 @@ export const useChatLogic = () => {
           
           // === ВИКЛИК CALLBACK ДЛЯ ФІНАЛЬНОГО ОНОВЛЕННЯ ПАНЕЛІ СЛАЙДІВ ===
           if (onLessonUpdateRef.current) {
-            console.log(`🎉 [CHAT] Final lesson update with ${data.lesson.slides?.length || 0} slides`);
             onLessonUpdateRef.current(data.lesson);
           }
           
@@ -226,13 +195,10 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       });
     },
     onError: (error) => {
-      console.error('❌ [CHAT] SSE Error:', error);
-      
       // === ВИМИКАЄМО TYPING VIEW ПРИ ПОМИЛЦІ ГЕНЕРАЦІЇ ===
       setIsTyping(false);
       setTypingStage('thinking');
       setIsGeneratingSlides(false);
-      console.log('⌨️ [CHAT] Typing view deactivated due to SSE error');
       
       // Додаємо повідомлення про помилку
       const errorMessage: Message = {
@@ -250,8 +216,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
   
   const [generationState, generationActions] = useRealTimeSlideGeneration(
     (lesson) => {
-      console.log('🔄 [CHAT] Lesson updated from parallel generation:', lesson.slides.length, 'slides');
-      
       // Оновлюємо останнє повідомлення з актуальним уроком
       setMessages(prevMessages => {
         const newMessages = [...prevMessages];
@@ -289,7 +253,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
 
     // === ОНОВЛЮЄМО КОНТЕКСТ РОЗМОВИ З ПОВІДОМЛЕННЯМ КОРИСТУВАЧА ===
     const updatedContext = conversationContext + ' | USER: ' + message;
-    console.log('📝 [CHAT] Updated context with user message');
 
     try {
       setTypingStage('processing');
@@ -368,17 +331,14 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       setIsTyping(true);
       setTypingStage('processing');
       setIsGeneratingSlides(true);
-      console.log('⌨️ [CHAT] Activated typing view for', action, 'with slide generation flag');
     }
 
     // === ОНОВЛЮЄМО КОНТЕКСТ З ДІЄЮ КОРИСТУВАЧА ===
     const updatedContext = conversationContext + ' | ACTION: ' + action;
-    console.log('⚡ [CHAT] Updated context with user action');
 
     try {
       // Спеціальна обробка для approve_plan та generate_slides - використовуємо SSE генерацію з прогресом
       if ((action === 'approve_plan' || action === 'generate_slides') && conversationHistory) {
-        console.log('🚀 [CHAT] Using SSE generation with progress for', action === 'approve_plan' ? 'plan approval' : 'slide generation');
         
         // === ПЕРЕДАЄМО КОНТЕКСТ ДО API ADAPTER ДЛЯ PRE-REQUEST COMPRESSION ===
         const response = await apiAdapter.sendMessage('', conversationHistory, action, updatedContext);
@@ -411,18 +371,14 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
 
         // === АВТОМАТИЧНО ВІДКРИВАЄМО ПАНЕЛЬ СЛАЙДІВ ===
         if (onSlidePanelOpenRef.current) {
-          console.log('🎯 [CHAT] Opening slide panel automatically for generation');
           onSlidePanelOpenRef.current();
         }
 
         // Якщо є описи слайдів та sessionId, запускаємо PARALLEL генерацію
         if (response.conversationHistory?.slideDescriptions && response.lesson && response.sessionId) {
           try {
-            console.log('🚀 [CHAT] Starting PARALLEL slide generation with sessionId:', response.sessionId);
-            
             // === ОНОВЛЮЄМО TYPING STAGE ДЛЯ ПОЧАТКУ ГЕНЕРАЦІЇ ===
             setTypingStage('processing');
-            console.log('⌨️ [CHAT] Updated typing stage to processing for parallel generation start');
             
             // === ОНОВЛЮЄМО КОНТЕКСТ ПРИ ПОЧАТКУ ГЕНЕРАЦІЇ СЛАЙДІВ ===
             const generationContext = updatedContext + ' | PARALLEL_GENERATION: Starting parallel slide generation';
@@ -454,13 +410,10 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
             );
             
           } catch (error) {
-            console.error('❌ [CHAT] Parallel generation failed:', error);
-            
             // === ВИМИКАЄМО TYPING VIEW ПРИ ПОМИЛЦІ ГЕНЕРАЦІЇ ===
             setIsTyping(false);
             setTypingStage('thinking');
             setIsGeneratingSlides(false);
-            console.log('⌨️ [CHAT] Typing view deactivated due to parallel generation error');
             
             // === ОНОВЛЮЄМО КОНТЕКСТ ПРИ ПОМИЛЦІ ГЕНЕРАЦІЇ ===
             const errorContext = updatedContext + ' | GENERATION_ERROR: ' + (error instanceof Error ? error.message : 'Unknown error');
@@ -521,7 +474,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         setIsTyping(false);
         setTypingStage('thinking');
         setIsGeneratingSlides(false);
-        console.log('⌨️ [CHAT] Typing view deactivated due to action error');
       } else {
         // Для approve_plan та generate_slides помилок, також вимикаємо флаг генерації слайдів
         setIsGeneratingSlides(false);
@@ -565,7 +517,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     lesson: any,
     progressMessageId: number
   ) => {
-    console.log('🚀 [PARALLEL] Starting parallel generation of', slideDescriptions.length, 'slides');
     
     // Initialize progress tracking
     const progressMap = new Map<number, any>();
@@ -645,7 +596,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     // Update lesson immediately so placeholders appear in the panel
     if (onLessonUpdateRef.current) {
       onLessonUpdateRef.current(lessonWithPlaceholders);
-      console.log('🎯 [PARALLEL] Created', placeholderSlides.length, 'placeholder slides for immediate feedback');
     }
 
     // Update initial progress in conversation history
@@ -677,7 +627,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
             slideGenerationProgress: Array.from(progressMap.values())
           } : prev);
           
-          console.log(`📊 [RANDOMIZED PROGRESS] Slide ${slideNumber}: ${newProgress}% (step: ${stepSize}%, max: ${maxProgress}%, next: ${getRandomInterval()}ms)`);
+
           
           // Schedule next update with new random interval
           if (newProgress < maxProgress) {
@@ -698,7 +648,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       if (timeoutId) {
         clearTimeout(timeoutId);
         progressIntervals.delete(slideNumber);
-        console.log(`⏹️ [RANDOMIZED PROGRESS] Stopped for slide ${slideNumber}`);
       }
     };
 
@@ -723,7 +672,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
             slideGenerationProgress: Array.from(progressMap.values())
           } : prev);
 
-          console.log(`📤 [PARALLEL] Generating slide ${desc.slideNumber}: ${desc.title}`);
+
 
           const response = await fetch('/api/generation/slides/single', {
             method: 'POST',
@@ -761,8 +710,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
           // Generate thumbnail BEFORE adding slide to store
           if (onLessonUpdateRef.current && result.slide) {
             try {
-              console.log(`🎨 [PRE-GENERATION] Generating thumbnail for slide ${desc.slideNumber} before store update`);
-              
               // Import thumbnail generation service
               const { getLocalThumbnailStorage } = await import('@/services/slides/LocalThumbnailService');
               const localThumbnailStorage = getLocalThumbnailStorage();
@@ -774,9 +721,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
                   `slide-${desc.slideNumber}-${sessionId}`, // Use the stable ID
                   result.slide.htmlContent
                 );
-                console.log(`✅ [PRE-GENERATION] Thumbnail generated for slide ${desc.slideNumber}`);
               } catch (thumbError) {
-                console.warn(`⚠️ [PRE-GENERATION] Thumbnail generation failed for slide ${desc.slideNumber}:`, thumbError);
                 // Continue without thumbnail - slide will show "Preparing..." state
               }
 
@@ -805,7 +750,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
 
                   // Update lesson immediately in the panel
                   onLessonUpdateRef.current!(updatedLesson);
-                  console.log(`🔄 [PARALLEL] Added fully ready slide ${desc.slideNumber} to store:`, result.slide.title);
 
                   return {
                     ...prev,
@@ -815,7 +759,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
                 return prev;
               });
             } catch (error) {
-              console.error(`❌ [PRE-GENERATION] Failed to process slide ${desc.slideNumber}:`, error);
               // Fallback to basic slide addition without thumbnail
               setConversationHistory((prev: ConversationHistory | undefined) => {
                 if (prev?.currentLesson?.slides) {
@@ -847,7 +790,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
             }
           }
 
-          console.log(`✅ [PARALLEL] Slide ${desc.slideNumber} completed:`, result.slide?.title);
+
 
           return {
             slideNumber: desc.slideNumber,
@@ -856,7 +799,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
           };
 
         } catch (error) {
-          console.error(`❌ [PARALLEL] Slide ${desc.slideNumber} failed:`, error);
           
           // Stop randomized progress and update status to error
           stopFakeProgress(desc.slideNumber);
@@ -883,18 +825,14 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       });
 
       // Wait for all slides to complete
-      console.log('⏳ [PARALLEL] Waiting for all slides to complete...');
       const results = await Promise.all(slidePromises);
       
       // Process results
       const successfulSlides = results.filter(r => r.success).map(r => r.slide);
       const failedSlides = results.filter(r => !r.success);
-      
-      console.log(`🎉 [PARALLEL] Generation completed! ${successfulSlides.length}/${slideDescriptions.length} slides successful`);
 
       // 🛡️ PRESERVE EXISTING SLIDES: Don't recreate slides array to prevent re-renders
       // Slides were already updated individually during generation
-      console.log('🛡️ [PARALLEL] Preserving existing slides array to prevent re-renders');
       
       // Update conversation history with completion flags ONLY (no slides array change)
       setConversationHistory((prev: ConversationHistory | undefined) => {
@@ -936,7 +874,6 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       setConversationContext(completionContext);
 
     } catch (error) {
-      console.error('❌ [PARALLEL] Critical error during parallel generation:', error);
       
       // Add error message
       const errorMessage = {
@@ -964,11 +901,8 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       // Clean up all randomized progress timeouts
       progressIntervals.forEach((timeoutId, slideNumber) => {
         clearTimeout(timeoutId);
-        console.log(`🧹 [CLEANUP] Cleared timeout for slide ${slideNumber}`);
       });
       progressIntervals.clear();
-      
-      console.log('⌨️ [PARALLEL] Typing view deactivated after generation completion');
     }
   };
 

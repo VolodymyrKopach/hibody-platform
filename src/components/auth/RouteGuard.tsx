@@ -52,26 +52,17 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     // Do nothing while loading
     if (loading) return;
 
-    console.log(`🛡️ RouteGuard: Checking access to ${pathname}`);
-    console.log(`🛡️ RouteGuard: User status: ${user ? `Authenticated (${user.email})` : 'Not authenticated'}`);
-    
-    // Determine route type for logging
-    let routeType = 'Unknown';
-    if (isPublicRoute) routeType = 'Public';
-    else if (isProtectedRoute) routeType = 'Protected';
-    else if (!isKnownRoute) routeType = '404/Not Found';
-    
-    console.log(`🛡️ RouteGuard: Route type: ${routeType}`);
+
 
     // If this is an unknown route (404), allow the 404 page to show
     if (!isKnownRoute) {
-      console.log(`📄 RouteGuard: Unknown route, allowing 404 page to show`);
+
       return;
     }
 
     // If the user is not authenticated and tries to access a protected page
     if (!user && isProtectedRoute) {
-      console.log(`🔄 RouteGuard: Redirecting unauthorized user to login`);
+
       const redirectUrl = `/auth/login?redirectTo=${encodeURIComponent(pathname)}`;
       router.replace(redirectUrl);
       return;
@@ -84,16 +75,16 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
       const redirectTo = urlParams.get('redirectTo');
       
       if (redirectTo && redirectTo !== '/auth/login' && redirectTo !== '/auth/register') {
-        console.log(`🔄 RouteGuard: Redirecting authenticated user to saved URL: ${redirectTo}`);
+
         router.replace(redirectTo);
       } else {
-        console.log(`🔄 RouteGuard: Redirecting authenticated user to home`);
+
         router.replace('/');
       }
       return;
     }
 
-    console.log(`✅ RouteGuard: Access granted to ${pathname}`);
+
   }, [user, loading, pathname, router, routeInfo]);
 
   // Show loading screen while authentication is being checked

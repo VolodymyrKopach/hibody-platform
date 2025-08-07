@@ -17,7 +17,6 @@ export async function generateSlidePreview(
   htmlContent: string,
   options: SlidePreviewOptions = {}
 ): Promise<string> {
-  console.log('🖼️ Generating slide preview with snapDOM');
   return generateSlideThumbnail(htmlContent, options);
 }
 
@@ -29,8 +28,6 @@ export async function generateSlidePreviewAlt(
   htmlContent: string,
   options: SlidePreviewOptions = {}
 ): Promise<string> {
-  console.log('🖼️ Alternative preview generation with snapDOM (compatible mode)');
-  
   // Use more conservative settings for better compatibility
   const altOptions = {
     compress: false,
@@ -50,8 +47,6 @@ export async function generateSlideThumbnail(
   htmlContent: string, 
   options: SlidePreviewOptions = {}
 ): Promise<string> {
-  console.log('🎨 SNAPDOM THUMBNAIL: Starting generation');
-  
   try {
     // Default options optimized for slide thumbnails
     const defaultOptions: Required<SlidePreviewOptions> = {
@@ -132,7 +127,6 @@ export async function generateSlideThumbnail(
     
     try {
       // Fast-forward animations to their final state and allow fonts to load
-      console.log('⚡ SNAPDOM THUMBNAIL: Fast-forwarding animations to final state and loading fonts...');
       await new Promise(resolve => setTimeout(resolve, 200)); // Increased delay for DOM and fonts to settle
       
       // Configure snapDOM options with hardcoded dimensions
@@ -175,10 +169,9 @@ export async function generateSlideThumbnail(
       }
     }
     
-  } catch (error) {
-    console.warn('⚠️ SNAPDOM THUMBNAIL: Generation failed, using fallback:', error);
-    return generateFallbackPreview(options);
-  }
+      } catch (error) {
+      return generateFallbackPreview(options);
+    }
 }
 
 /**
@@ -189,8 +182,6 @@ export async function generateLessonPreviews(
   slides: Array<{ id: string; htmlContent: string }>,
   options: SlidePreviewOptions = {}
 ): Promise<Array<{ slideId: string; preview: string; thumbnail: string }>> {
-  console.log('🖼️ Generating lesson previews with snapDOM');
-  
   const results: Array<{ slideId: string; preview: string; thumbnail: string }> = [];
   
   for (const slide of slides) {
@@ -215,7 +206,6 @@ export async function generateLessonPreviews(
       });
       
     } catch (error) {
-      console.warn(`⚠️ Failed to generate preview for slide ${slide.id}, using fallback:`, error);
       const fallbackPreview = generateFallbackPreview(options);
       results.push({
         slideId: slide.id,
@@ -244,7 +234,6 @@ export function generateFallbackPreview(options: SlidePreviewOptions = {}): stri
   
   const ctx = canvas.getContext('2d');
   if (!ctx) {
-    console.error('Could not create 2D context for fallback preview');
     return '';
   }
   
@@ -306,7 +295,6 @@ export async function savePreviewAsFile(
     const result = await response.json();
     return result.imagePath;
   } catch (error) {
-    console.error('Error saving preview as file:', error);
     throw error;
   }
 }
@@ -457,8 +445,6 @@ function replaceImagesWithPlaceholders(htmlContent: string): string {
     const isEmpty = !src || src.trim() === '';
     
     if (isExternal || isEmpty) {
-      console.log(`🔄 Replacing image ${index + 1} with placeholder (src: ${src?.substring(0, 50)}...)`);
-      
       // Get dimensions from attributes or CSS
       const width = img.getAttribute('width') || img.style.width || '200px';
       const height = img.getAttribute('height') || img.style.height || '150px';
@@ -486,7 +472,6 @@ function replaceImagesWithPlaceholders(htmlContent: string): string {
       // Replace img with placeholder
       img.parentNode?.replaceChild(placeholder, img);
     } else if (isDataUrl) {
-      console.log(`✅ Keeping data URL image ${index + 1}`);
       // Data URL images are kept as is
     }
   });

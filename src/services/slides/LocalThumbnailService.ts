@@ -33,22 +33,18 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
   private generationInProgress = new Set<string>();
 
   constructor() {
-    console.log('📦 LOCAL THUMBNAIL: Ініціалізовано локальне сховище thumbnail\'ів');
+    // Initialized local thumbnail storage
   }
 
   // === ЛОКАЛЬНІ ОПЕРАЦІЇ ===
 
   get(slideId: string): string | null {
     const thumbnail = this.memoryCache.get(slideId) || null;
-    if (thumbnail) {
-      console.log('⚡ LOCAL THUMBNAIL: Знайдено в локальному кеші:', slideId);
-    }
     return thumbnail;
   }
 
   set(slideId: string, thumbnailBase64: string): void {
     this.memoryCache.set(slideId, thumbnailBase64);
-    console.log('💾 LOCAL THUMBNAIL: Збережено локально:', slideId, `(${Math.round(thumbnailBase64.length / 1024)}KB)`);
   }
 
   has(slideId: string): boolean {
@@ -57,9 +53,6 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
 
   delete(slideId: string): void {
     const deleted = this.memoryCache.delete(slideId);
-    if (deleted) {
-      console.log('🗑️ LOCAL THUMBNAIL: Видалено з локального кешу:', slideId);
-    }
   }
 
   getAll(): Record<string, string> {
@@ -67,24 +60,20 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
     this.memoryCache.forEach((thumbnail, slideId) => {
       all[slideId] = thumbnail;
     });
-    console.log('📋 LOCAL THUMBNAIL: Отримано всі локальні thumbnail\'и:', Object.keys(all));
     return all;
   }
 
   clear(): void {
     const count = this.memoryCache.size;
     this.memoryCache.clear();
-    console.log(`🧹 LOCAL THUMBNAIL: Очищено локальний кеш (${count} thumbnail'ів)`);
   }
 
   // === ГЕНЕРАЦІЯ THUMBNAIL'ІВ ===
 
   async generateThumbnail(slideId: string, htmlContent: string, options: ThumbnailOptions = {}): Promise<string> {
-    console.log('🎨 LOCAL THUMBNAIL: Генерація thumbnail для слайду:', slideId);
 
     // Перевіряємо чи вже генерується
     if (this.generationInProgress.has(slideId)) {
-      console.log('⏳ LOCAL THUMBNAIL: Генерація вже в процесі для слайду:', slideId);
       // Повертаємо існуючий або fallback
       return this.get(slideId) || generateFallbackPreview(options);
     }
@@ -108,11 +97,9 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
       // Зберігаємо локально
       this.set(slideId, thumbnailBase64);
       
-      console.log('✅ LOCAL THUMBNAIL: Thumbnail згенеровано та збережено локально:', slideId);
       return thumbnailBase64;
 
     } catch (error) {
-      console.warn('⚠️ LOCAL THUMBNAIL: Помилка генерації, створюємо fallback:', error);
       const fallbackThumbnail = generateFallbackPreview({
         quality: 0.85,
         background: '#ffffff',
@@ -128,11 +115,9 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
   // === ЗАВАНТАЖЕННЯ В SUPABASE STORAGE ===
 
   async uploadToStorage(slideId: string, lessonId: string): Promise<string | null> {
-    console.log('☁️ LOCAL THUMBNAIL: Завантаження в Storage:', slideId, 'для уроку:', lessonId);
 
     const thumbnailBase64 = this.get(slideId);
     if (!thumbnailBase64) {
-      console.warn('⚠️ LOCAL THUMBNAIL: Немає локального thumbnail для завантаження:', slideId);
       return null;
     }
 
@@ -155,7 +140,6 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
         });
 
       if (error) {
-        console.error('❌ LOCAL THUMBNAIL: Помилка завантаження в Storage:', error);
         return null;
       }
 
@@ -165,19 +149,15 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
         .getPublicUrl(filePath);
 
       const publicUrl = urlData.publicUrl;
-      console.log('✅ LOCAL THUMBNAIL: Успішно завантажено в Storage:', publicUrl);
       
       return publicUrl;
 
     } catch (error) {
-      console.error('❌ LOCAL THUMBNAIL: Критична помилка завантаження в Storage:', error);
       return null;
     }
   }
 
   async uploadAllToStorage(lessonId: string, slideIds: string[]): Promise<Record<string, string>> {
-    console.log('☁️ LOCAL THUMBNAIL: Завантаження всіх thumbnail\'ів в Storage для уроку:', lessonId);
-    console.log('📋 LOCAL THUMBNAIL: Слайди для завантаження:', slideIds);
 
     const results: Record<string, string> = {};
     const uploadPromises = slideIds.map(async (slideId) => {
@@ -191,16 +171,8 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
     try {
       const uploadResults = await Promise.all(uploadPromises);
       
-      console.log('📊 LOCAL THUMBNAIL: Результати завантаження:', {
-        total: slideIds.length,
-        successful: Object.keys(results).length,
-        failed: slideIds.length - Object.keys(results).length,
-        results: uploadResults
-      });
-
       return results;
     } catch (error) {
-      console.error('❌ LOCAL THUMBNAIL: Помилка масового завантаження:', error);
       return results; // Повертаємо часткові результати
     }
   }

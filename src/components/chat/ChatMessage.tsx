@@ -69,14 +69,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   // Automatic lesson creation when a message with a slide is received
   React.useEffect(() => {
-    console.log('🔍 ChatMessage useEffect triggered:', {
-      messageId: message.id,
-      sender: message.sender,
-      hasFirstSlideText: message.text.includes('✅ **First slide ready!**'),
-      hasSlideReadyText: message.text.includes('ready!**'),
-      hasLessonObject: !!(message as any).lesson,
-      messagePreview: message.text.substring(0, 100) + '...'
-    });
     
     // Extended condition for handling first, subsequent slides, and editing
     if (message.sender === 'ai' && onLessonCreate && (message as any).lesson) {
@@ -100,15 +92,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                            (message.text.includes('**What changed:**') && message.text.includes('Same slide'));
       
       if (isSlideReady || isSlideEdited) {
-        console.log(`🎨 Auto-updating lesson from ${isSlideEdited ? 'slide editing' : 'slide generation'}...`);
-        console.log('🎯 Found lesson object in message:', (message as any).lesson);
-        console.log('🎯 Lesson slides count:', (message as any).lesson.slides?.length);
-        
         if ((message as any).lesson.slides?.length > 0) {
-          const lastSlideIndex = (message as any).lesson.slides.length - 1;
-          console.log('🎯 Last slide htmlContent preview:', 
-            (message as any).lesson.slides[lastSlideIndex]?.htmlContent?.substring(0, 100) + '...');
-          
           // If this is a slide edit, set the current time as updatedAt
           if (isSlideEdited) {
             const updatedLesson = {
@@ -118,7 +102,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 updatedAt: new Date() // Set current time to force preview update
               }))
             };
-            console.log('🔄 Setting current time as updatedAt for edited slides');
             onLessonCreate(updatedLesson);
           } else {
             onLessonCreate((message as any).lesson);
@@ -132,10 +115,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     
     // Old code for compatibility (for the first slide without a lesson object)
     if (message.sender === 'ai' && message.text.includes('✅ **First slide ready!**') && onLessonCreate && !(message as any).lesson) {
-      console.log('🎨 Auto-creating lesson from approved plan (fallback)...');
-      
       // Fallback option - creating a lesson without real HTML data (NOT RECOMMENDED)
-      console.warn('⚠️ No lesson object found in message, creating fallback lesson');
       
       const topicMatch = message.text.match(/про\s+([^"]+?)[\s]*для/i);
       const topic = topicMatch ? topicMatch[1].trim() : 'New lesson';
@@ -159,7 +139,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         }]
       };
       
-      console.log('🎨 Auto-created fallback lesson:', lesson);
       onLessonCreate(lesson);
     }
   }, [message, onLessonCreate]);

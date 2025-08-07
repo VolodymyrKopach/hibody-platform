@@ -411,13 +411,12 @@ const useSlideManagement = (
   // === УПРАВЛІННЯ УРОКАМИ ===
 
   const updateCurrentLesson = useCallback((lesson: SimpleLesson | null) => {
-    console.log('🔄 NEW LESSON: Оновлення поточного уроку:', lesson?.id || 'null');
     
     setSlideUIState(prev => {
       // Скидаємо флаг ручного відкриття для нового уроку
       if (lesson && (!prev.currentLesson || lesson.id !== prev.currentLesson.id)) {
         panelOpenedManuallyRef.current = false;
-        console.log('🔄 NEW LESSON: Скидаємо флаг ручного відкриття панелі');
+
       }
       
       return {
@@ -428,7 +427,7 @@ const useSlideManagement = (
 
     // Очищуємо локальний кеш при зміні уроку
     if (lesson) {
-      console.log('🧹 NEW LESSON: Очищення локального кешу для нового уроку');
+
       localThumbnailStorage.clear();
       setSlidePreviews({});
       generatedPreviewsRef.current.clear(); // Очищуємо трекінг згенерованих превью
@@ -442,7 +441,7 @@ const useSlideManagement = (
         !slideUIState.slidePanelOpen &&
         !panelOpenedManuallyRef.current) {
       
-      console.log('🎯 NEW LESSON: Автоматично відкриваємо панель слайдів');
+
       
       setSlideUIState(prev => ({
         ...prev,
@@ -455,7 +454,7 @@ const useSlideManagement = (
     panelOpenedManuallyRef.current = true;
     
     setSlideUIState(prev => {
-      console.log(`🔄 NEW PANEL: ${prev.slidePanelOpen ? 'Закриваємо' : 'Відкриваємо'} панель слайдів вручну`);
+
       return {
         ...prev,
         slidePanelOpen: !prev.slidePanelOpen
