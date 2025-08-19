@@ -12,8 +12,9 @@ import {
 // Layout
 import Layout from '@/components/layout/Layout';
 
-// SnapDOM test component
+// Test components
 import SnapdomTest from '@/components/debug/SnapdomTest';
+import { TempStorageTest } from '@/components/debug';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -69,11 +70,16 @@ const TestPage: React.FC = () => {
           <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
             <Tabs value={tabValue} onChange={handleTabChange} aria-label="test tabs">
               <Tab label="🖼️ SnapDOM Thumbnails" />
+              <Tab label="☁️ Temp Storage" />
             </Tabs>
           </Box>
 
           <TabPanel value={tabValue} index={0}>
             <SnapdomTest />
+          </TabPanel>
+          
+          <TabPanel value={tabValue} index={1}>
+            <TempStorageTest />
           </TabPanel>
         </Box>
       </Container>
