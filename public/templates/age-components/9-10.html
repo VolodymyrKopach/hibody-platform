@@ -180,6 +180,14 @@ body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;backg
 .dark-theme .tc,.dark-theme .va,.dark-theme .ic{background:#2d2d2d;color:#e0e0e0}
 .dark-theme .ct th{background:#1F4E79}
 .dark-theme .ct td{background:#2d2d2d;color:#e0e0e0}
+.audio-toggle{position:fixed;top:20px;right:20px;width:80px;height:80px;border-radius:50%;border:4px solid rgba(255,255,255,0.9);background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:40px;color:white;transition:all 0.3s;z-index:1000;box-shadow:0 10px 20px rgba(0,0,0,0.3);outline:none}
+.audio-toggle:hover{transform:scale(1.1);box-shadow:0 15px 30px rgba(0,0,0,0.4)}
+.audio-toggle.muted{background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);animation:muted-pulse 2s infinite}
+.audio-toggle::before{content:'🔊'}
+.audio-toggle.muted::before{content:'🔇'}
+.audio-status{position:fixed;top:110px;right:20px;background:rgba(0,0,0,0.8);color:white;padding:10px 15px;border-radius:20px;font-size:16px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;z-index:1000;opacity:0;transform:translateY(-10px);transition:all 0.3s;pointer-events:none}
+.audio-status.show{opacity:1;transform:translateY(0)}
+@keyframes muted-pulse{0%,100%{opacity:1}50%{opacity:0.7}}
 @media (max-width:768px){
 .c{padding:15px}
 .t{font-size:28px}
@@ -192,10 +200,14 @@ body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;backg
 .co{grid-template-columns:1fr}
 .dda{grid-template-columns:1fr}
 .nc{flex-direction:column;gap:15px}
+.audio-toggle{width:70px;height:70px;font-size:35px}
+.audio-status{font-size:14px}
 }
 </style>
 </head>
 <body>
+<div class="audio-toggle" onclick="toggleAudio()" role="button" tabindex="0" aria-label="Toggle audio on/off"></div>
+<div class="audio-status" id="audioStatus">Audio: ON</div>
 <div class="c">
 <h1 class="t">🎓 Visual Components for Children 9-10 Years</h1>
 <div class="s">
@@ -676,6 +688,7 @@ function initializeNewComponents(){const sl=document.querySelector('.ds2');const
 function initializeSequence(){const con=document.getElementById('sequence-container');const cb=document.querySelector('.csb');if(!con||!cb)return;let de=null;con.addEventListener('dragstart',function(e){de=e.target;e.target.classList.add('dragging')});con.addEventListener('dragend',function(e){e.target.classList.remove('dragging')});con.addEventListener('dragover',function(e){e.preventDefault()});con.addEventListener('drop',function(e){e.preventDefault();const dt=e.target.closest('.sei');if(dt&&de&&dt!==de){const p=dt.parentNode;const di=Array.from(p.children).indexOf(de);const ti=Array.from(p.children).indexOf(dt);if(di<ti)p.insertBefore(de,dt.nextSibling);else p.insertBefore(de,dt)}});cb.addEventListener('click',function(){const its=con.querySelectorAll('.sei');let ic=true;its.forEach((it,idx)=>{const eo=parseInt(it.dataset.order);if(eo!==idx+1)ic=false});if(ic)showFeedback('Correct! The sequence is right.','sequence');else showFeedback('Try again. The sequence is wrong.','sequence')})}
 function initializeTimer(){const sb=document.querySelector('.stb');const td=document.querySelector('.tl');const qi=document.querySelector('.qi');if(!sb||!td||!qi)return;let ti=null,tl=30;sb.addEventListener('click',function(){if(ti){clearInterval(ti);ti=null;sb.textContent='Start';qi.disabled=true;return}tl=30;td.textContent=tl;qi.value='';qi.disabled=false;sb.textContent='Stop';ti=setInterval(function(){tl--;td.textContent=tl;if(tl<=0){clearInterval(ti);ti=null;qi.disabled=true;sb.textContent='Start';showFeedback('Time is up! Try again.','timer')}},1000)});qi.addEventListener('keypress',function(e){if(e.key==='Enter'&&ti){clearInterval(ti);ti=null;sb.textContent='Start';qi.disabled=true;const a=this.value.trim();if(a==='3/4'||a==='0.75')showFeedback('Correct! Excellent work!','timer');else showFeedback('Try again. Correct answer: 3/4','timer')}})}
 function initializeMemoryGame(){const gc=document.querySelectorAll('.gc');const md=document.getElementById('moves-count');const pd=document.getElementById('pairs-found');const rb=document.querySelector('.rgb');if(!gc.length||!md||!pd||!rb)return;let fc=[],m=0,p=0;const pl={'1/2':'0.5','0.5':'1/2','1/4':'0.25','0.25':'1/4','3/4':'0.75','0.75':'3/4'};function resetGame(){gc.forEach(c=>c.classList.remove('flipped','matched'));fc=[];m=0;p=0;md.textContent=m;pd.textContent=p}function checkMatch(){const[c1,c2]=fc;const v1=c1.dataset.value;const v2=c2.dataset.value;if(pl[v1]===v2){c1.classList.add('matched');c2.classList.add('matched');p++;pd.textContent=p;if(p===3)setTimeout(()=>showFeedback('Congratulations! You found all pairs!','memory'),500)}else setTimeout(()=>{c1.classList.remove('flipped');c2.classList.remove('flipped')},1000);fc=[]}gc.forEach(c=>c.addEventListener('click',function(){if(this.classList.contains('flipped')||this.classList.contains('matched')||fc.length>=2)return;this.classList.add('flipped');fc.push(this);if(fc.length===2){m++;md.textContent=m;setTimeout(checkMatch,500)}}));rb.addEventListener('click',resetGame);resetGame()}
+function toggleAudio(){const audioToggle=document.querySelector('.audio-toggle');const audioStatus=document.getElementById('audioStatus');const isMuted=audioToggle.classList.contains('muted');if(isMuted){audioToggle.classList.remove('muted');audioStatus.textContent='Audio: ON';audioStatus.style.color='#4CAF50'}else{audioToggle.classList.add('muted');audioStatus.textContent='Audio: OFF';audioStatus.style.color='#f44336'}audioStatus.classList.add('show');setTimeout(()=>{audioStatus.classList.remove('show')},2000);audioToggle.style.transform='scale(0.9)';setTimeout(()=>audioToggle.style.transform='',100);console.log('Audio',!isMuted?'enabled':'disabled')}
 document.addEventListener('DOMContentLoaded',function(){initializeComponents();setupEventListeners();startTimer();initializeNewComponents();changeSubject('math')});
 window.addEventListener('load',loadProgress);
 window.addEventListener('beforeunload',saveProgress);

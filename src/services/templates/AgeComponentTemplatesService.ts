@@ -1,4 +1,9 @@
 import { AgeGroup } from '@/types/generation';
+import { 
+  AGE_COMPONENT_TEMPLATES, 
+  AGE_TEMPLATE_DESCRIPTIONS, 
+  AGE_CONFIGURATIONS 
+} from '@/constants';
 
 /**
  * === SOLID: SRP - Сервіс для управління age-specific компонентними шаблонами ===
@@ -15,6 +20,7 @@ export class AgeComponentTemplatesService implements IAgeComponentTemplatesServi
 
   /**
    * === SOLID: SRP - Отримати HTML шаблон для вікової групи ===
+   * Always uses templates from constants for reliability and simplicity
    */
   async getTemplateForAge(ageGroup: AgeGroup): Promise<string> {
     // Перевіряємо кеш
@@ -23,21 +29,17 @@ export class AgeComponentTemplatesService implements IAgeComponentTemplatesServi
     }
 
     try {
-      let template: string;
+      // Завжди використовуємо шаблони з констант
+      const template = AGE_COMPONENT_TEMPLATES[ageGroup];
       
-      // Визначаємо середовище виконання
-      if (typeof window === 'undefined') {
-        // Серверне середовище - використовуємо fs
-        template = await this.loadTemplateFromFS(ageGroup);
-      } else {
-        // Браузерне середовище - використовуємо fetch
-        template = await this.loadTemplateFromFetch(ageGroup);
+      if (!template) {
+        throw new Error(`No template found for age group ${ageGroup}`);
       }
       
       // Кешуємо шаблон
       this.templateCache.set(ageGroup, template);
       
-      console.log(`✅ Loaded template for age group ${ageGroup} (${template.length} chars)`);
+      console.log(`✅ Loaded template for age group ${ageGroup} from constants (${template.length} chars)`);
       return template;
       
     } catch (error) {
@@ -50,14 +52,7 @@ export class AgeComponentTemplatesService implements IAgeComponentTemplatesServi
    * === SOLID: SRP - Отримати опис шаблону ===
    */
   getTemplateDescription(ageGroup: AgeGroup): string {
-    const descriptions: Record<AgeGroup, string> = {
-      '2-3': 'Візуальні компоненти для малюків 2-3 роки: великі кнопки, анімації, звукові ефекти, яскраві кольори',
-      '4-6': 'Компоненти для дошкільнят 4-6 років: інтерактивні ігри, персонажі, прості завдання, музика',
-      '7-8': 'Елементи для молодших школярів 7-8 років: навчальні ігри, тести, прогрес-бари, досягнення',
-      '9-10': 'Компоненти для старших школярів 9-10 років: складні інтерфейси, деталізовані дані, аналітика'
-    };
-    
-    return descriptions[ageGroup] || 'Базові компоненти для навчання';
+    return AGE_TEMPLATE_DESCRIPTIONS[ageGroup] || 'Базові компоненти для навчання';
   }
 
   /**
@@ -76,148 +71,59 @@ export class AgeComponentTemplatesService implements IAgeComponentTemplatesServi
     return templates;
   }
 
-  /**
-   * === Завантаження шаблону через файлову систему (серверне середовище) ===
-   */
-  private async loadTemplateFromFS(ageGroup: AgeGroup): Promise<string> {
-    // Динамічні імпорти Node.js модулів
-    const { promises: fs } = await import('fs');
-    const path = await import('path');
-    
-    const templatePath = path.join(process.cwd(), 'public', 'templates', 'age-components', `${ageGroup}.html`);
-    
-    try {
-      const template = await fs.readFile(templatePath, 'utf-8');
-      return template;
-    } catch (error) {
-      console.warn(`Template file for age ${ageGroup} not found at ${templatePath}, using fallback`);
-      throw error;
-    }
-  }
 
-  /**
-   * === Завантаження шаблону через fetch (браузерне середовище) ===
-   */
-  private async loadTemplateFromFetch(ageGroup: AgeGroup): Promise<string> {
-    const templatePath = `/templates/age-components/${ageGroup}.html`;
-    const response = await fetch(templatePath);
-    
-    if (!response.ok) {
-      console.warn(`Template for age ${ageGroup} not found via fetch, using fallback`);
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    return await response.text();
-  }
 
   /**
    * === SOLID: SRP - Fallback шаблон ===
+   * This should rarely be called since we always have templates in constants
    */
   private getFallbackTemplate(ageGroup: AgeGroup): string {
-    const ageConfig = this.getAgeConfig(ageGroup);
+    console.log(`⚠️ Using fallback template for ${ageGroup}`);
     
-    return `
-<!-- Fallback шаблон для вікової групи ${ageGroup} -->
-<div class="age-components-${ageGroup}">
-  <style>
-    .age-components-${ageGroup} {
-      font-family: 'Comic Sans MS', cursive;
-      background: linear-gradient(135deg, #FFE66D 0%, #4ECDC4 50%, #FF6B6B 100%);
-      padding: ${ageConfig.padding}px;
-      border-radius: ${ageConfig.borderRadius}px;
+    // First try constants template
+    const constantsTemplate = AGE_COMPONENT_TEMPLATES[ageGroup];
+    if (constantsTemplate) {
+      console.log(`✅ Found constants template for ${ageGroup}, length: ${constantsTemplate.length}`);
+      return constantsTemplate;
     }
     
-    .big-button-${ageGroup} {
-      font-size: ${ageConfig.fontSize}px;
-      padding: ${ageConfig.buttonPadding}px;
-      background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
-      border: none;
-      border-radius: ${ageConfig.borderRadius}px;
-      color: white;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin: ${ageConfig.margin}px;
-    }
-    
-    .big-button-${ageGroup}:hover {
-      transform: scale(1.1);
-    }
-  </style>
-  
-  <h1 style="font-size: ${ageConfig.titleSize}px; color: #FF6B6B; text-align: center;">
-    ${ageConfig.title}
-  </h1>
-  
-  <button class="big-button-${ageGroup}" onclick="playSound('button')">
-    ${ageConfig.buttonText}
-  </button>
-  
-  <div style="margin-top: ${ageConfig.margin}px;">
-    ${ageConfig.description}
-  </div>
-</div>
-
-<script>
-function playSound(type) {
-  // Базовий звуковий ефект
-  console.log('Playing sound:', type);
-}
-</script>
-    `.trim();
+    // If constants template is missing, use basic fallback
+    return this.getBasicFallbackTemplate(ageGroup);
   }
 
-  /**
-   * === SOLID: SRP - Конфігурація для fallback шаблонів ===
-   */
-  private getAgeConfig(ageGroup: AgeGroup) {
-    const configs = {
-      '2-3': {
-        fontSize: 48,
-        titleSize: 60,
-        buttonPadding: 40,
-        padding: 40,
-        margin: 30,
-        borderRadius: 30,
-        title: '🎈 Малюки 2-3 роки',
-        buttonText: '🎉 Натисни мене!',
-        description: 'Великі кнопки та яскраві кольори для найменших'
-      },
-      '4-6': {
-        fontSize: 36,
-        titleSize: 48,
-        buttonPadding: 30,
-        padding: 30,
-        margin: 25,
-        borderRadius: 25,
-        title: '🎨 Дошкільнята 4-6 років',
-        buttonText: '🎯 Грати разом!',
-        description: 'Ігрові елементи та інтерактивні завдання'
-      },
-      '7-8': {
-        fontSize: 28,
-        titleSize: 36,
-        buttonPadding: 20,
-        padding: 25,
-        margin: 20,
-        borderRadius: 20,
-        title: '📚 Молодші школярі 7-8 років',
-        buttonText: '✏️ Виконати',
-        description: 'Навчальні ігри та систематизовані завдання'
-      },
-      '9-10': {
-        fontSize: 24,
-        titleSize: 32,
-        buttonPadding: 15,
-        padding: 20,
-        margin: 15,
-        borderRadius: 15,
-        title: '🧠 Старші школярі 9-10 років',
-        buttonText: '🎯 Почати',
-        description: 'Складні інтерфейси та детальна інформація'
-      }
-    };
-
-    return configs[ageGroup] || configs['4-6'];
+  private getBasicFallbackTemplate(ageGroup: AgeGroup): string {
+    const ageConfig = AGE_CONFIGURATIONS[ageGroup] || AGE_CONFIGURATIONS['4-6'];
+    
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fallback Template for ${ageGroup} Years</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Comic Sans MS',cursive;background:linear-gradient(135deg,${ageConfig.colors.join(',')});min-height:100vh;display:flex;align-items:center;justify-content:center;padding:${ageConfig.padding}px}
+.fallback-container{text-align:center;background:rgba(255,255,255,0.9);padding:${ageConfig.padding}px;border-radius:${ageConfig.borderRadius}px;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+.fallback-title{font-size:${ageConfig.fontSize}px;color:#2c3e50;margin-bottom:20px;font-weight:bold}
+.fallback-button{width:${ageConfig.buttonSize}px;height:${ageConfig.buttonSize}px;border-radius:50%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;font-size:${Math.floor(ageConfig.fontSize * 0.8)}px;cursor:pointer;transition:all 0.3s;box-shadow:0 10px 20px rgba(0,0,0,0.2)}
+.fallback-button:hover{transform:scale(1.1)}
+.audio-toggle{position:fixed;top:20px;right:20px;width:60px;height:60px;border-radius:50%;background:#667eea;color:white;border:none;font-size:24px;cursor:pointer;z-index:1000}
+.audio-toggle::before{content:'🔊'}
+</style>
+</head>
+<body>
+<div class="audio-toggle" onclick="toggleAudio()"></div>
+<div class="fallback-container">
+<h1 class="fallback-title">Age ${ageGroup} Template</h1>
+<button class="fallback-button" onclick="alert('Interactive element clicked!')">🎯</button>
+</div>
+<script>
+let audioEnabled=true;
+function toggleAudio(){audioEnabled=!audioEnabled;const btn=document.querySelector('.audio-toggle');btn.style.background=audioEnabled?'#667eea':'#e74c3c';console.log('Audio',audioEnabled?'enabled':'disabled')}
+</script>
+</body>
+</html>`;
   }
 
   /**
