@@ -19,6 +19,7 @@ export interface CreateLessonRequest {
     type?: string;
     status?: string;
   }>;
+  // Note: Temporary images are auto-extracted from slide HTML content - no need to send separately
 }
 
 export interface CreateLessonResponse {

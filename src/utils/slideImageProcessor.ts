@@ -624,6 +624,112 @@ export async function migrateTemporaryImagesToPermanent(
 }
 
 /**
+ * Extracts temporary image information from HTML content
+ * Looks for img tags with data-storage-type="temporary"
+ */
+export function extractTemporaryImagesFromHtml(htmlContent: string): TemporaryImageInfo[] {
+  const temporaryImages: TemporaryImageInfo[] = [];
+  
+  // Regex to find img tags with temporary storage data
+  const imgRegex = /<img[^>]*data-storage-type="temporary"[^>]*>/gi;
+  const matches = htmlContent.match(imgRegex);
+  
+  if (!matches) {
+    console.log('📝 No temporary images found in HTML');
+    return temporaryImages;
+  }
+  
+  console.log(`🔍 Found ${matches.length} temporary images in HTML`);
+  
+  matches.forEach((imgTag, index) => {
+    try {
+      // Extract attributes from img tag
+      const srcMatch = imgTag.match(/src="([^"]*)"/) || imgTag.match(/src='([^']*)'/) ;
+      const promptMatch = imgTag.match(/data-prompt="([^"]*)"/) || imgTag.match(/data-prompt='([^']*)'/) ;
+      const widthMatch = imgTag.match(/width="?(\d+)"?/) || imgTag.match(/width='?(\d+)'?/) ;
+      const heightMatch = imgTag.match(/height="?(\d+)"?/) || imgTag.match(/height='?(\d+)'?/) ;
+      const tempUrlMatch = imgTag.match(/data-temp-url="([^"]*)"/) || imgTag.match(/data-temp-url='([^']*)'/) ;
+      const sessionIdMatch = imgTag.match(/data-session-id="([^"]*)"/) || imgTag.match(/data-session-id='([^']*)'/) ;
+      
+      if (srcMatch && srcMatch[1] && srcMatch[1].includes('temp-images')) {
+        const tempUrl = srcMatch[1];
+        const prompt = promptMatch ? promptMatch[1] : `Extracted image ${index + 1}`;
+        const width = widthMatch ? parseInt(widthMatch[1]) : 640;
+        const height = heightMatch ? parseInt(heightMatch[1]) : 480;
+        const sessionId = sessionIdMatch ? sessionIdMatch[1] : 'unknown';
+        
+        // Extract file path from URL
+        const urlParts = tempUrl.split('/');
+        const bucketIndex = urlParts.findIndex(part => part === 'temp-images');
+        const filePath = bucketIndex >= 0 ? urlParts.slice(bucketIndex + 1).join('/') : '';
+        const fileName = urlParts[urlParts.length - 1] || `img_${index}.webp`;
+        
+        temporaryImages.push({
+          tempUrl,
+          fileName,
+          filePath,
+          prompt,
+          width,
+          height,
+          sessionId
+        });
+        
+        console.log(`✅ Extracted temporary image ${index + 1}:`, {
+          fileName,
+          tempUrl: tempUrl.substring(0, 80) + '...',
+          dimensions: `${width}x${height}`,
+          sessionId
+        });
+      }
+    } catch (error) {
+      console.warn(`⚠️ Failed to extract temporary image ${index + 1}:`, error);
+    }
+  });
+  
+  console.log(`🎯 Extracted ${temporaryImages.length} temporary images from HTML`);
+  return temporaryImages;
+}
+
+/**
+ * Simplified migration function that extracts temporary images from HTML automatically
+ */
+export async function migrateTemporaryImagesFromHtml(
+  htmlContent: string,
+  lessonId: string
+): Promise<{
+  updatedHtml: string;
+  migrationResults: Array<{ success: boolean; tempUrl: string; permanentUrl?: string; error?: string }>;
+  temporaryImagesFound: number;
+}> {
+  console.log('🔄 Auto-extracting and migrating temporary images from HTML...');
+  
+  // Extract temporary images from HTML
+  const temporaryImages = extractTemporaryImagesFromHtml(htmlContent);
+  
+  if (temporaryImages.length === 0) {
+    console.log('📝 No temporary images found to migrate');
+    return {
+      updatedHtml: htmlContent,
+      migrationResults: [],
+      temporaryImagesFound: 0
+    };
+  }
+  
+  // Migrate using existing function
+  const { updatedHtml, migrationResults } = await migrateTemporaryImagesToPermanent(
+    htmlContent,
+    temporaryImages,
+    lessonId
+  );
+  
+  return {
+    updatedHtml,
+    migrationResults,
+    temporaryImagesFound: temporaryImages.length
+  };
+}
+
+/**
  * Legacy compatibility function - now always uses temporary storage
  * @deprecated Use processSlideWithTempImages instead
  */

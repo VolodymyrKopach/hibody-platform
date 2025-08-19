@@ -341,7 +341,9 @@ const useSlideManagement = (
         storageUrl: lessonThumbnailUrl
       });
 
-      // 3. ВІДПРАВЛЯЄМО НА СЕРВЕР
+      // 3. ВІДПРАВЛЯЄМО НА СЕРВЕР (СЕРВЕР АВТОМАТИЧНО ЗНАЙДЕ TEMPORARY IMAGES В HTML)
+      console.log('🔄 NEW SAVE: Preparing data for server (auto-migration enabled)...');
+
       const response = await fetch('/api/lessons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -357,9 +359,10 @@ const useSlideManagement = (
             return {
               title: slide.title,
               description: slide.content,
-              htmlContent: slide.htmlContent
+              htmlContent: slide.htmlContent // Сервер автоматично знайде temporary URLs тут
             };
           })
+          // Не передаємо temporaryImages - сервер витягне їх з HTML автоматично
         })
       });
 
@@ -373,7 +376,7 @@ const useSlideManagement = (
       // 4. СТВОРЮЄМО ПОВІДОМЛЕННЯ ПРО УСПІХ
       const successMessage: Message = {
         id: generateMessageId(),
-        text: `✅ **Урок "${dialogData.title}" успішно збережено!**\n\n📚 **Деталі:**\n- Слайдів збережено: ${selectedSlideIds.length}\n- Предмет: ${dialogData.subject}\n- Вікова група: ${dialogData.ageGroup}\n\n🎯 Урок тепер доступний в бібліотеці матеріалів.`,
+        text: `✅ **Урок "${dialogData.title}" успішно збережено!**\n\n📚 **Деталі:**\n- Слайдів збережено: ${selectedSlideIds.length}\n- Предмет: ${dialogData.subject}\n- Вікова група: ${dialogData.ageGroup}\n- Зображення автоматично мігровані в постійне сховище\n\n🎯 Урок тепер доступний в бібліотеці матеріалів.`,
         sender: 'ai',
         timestamp: new Date(),
         status: 'delivered'

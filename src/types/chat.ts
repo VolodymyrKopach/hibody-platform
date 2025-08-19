@@ -41,6 +41,7 @@ export interface SimpleLesson {
   createdAt: Date;
   updatedAt: Date;
   authorId: string;
+  // Note: Temporary images are auto-migrated from slide HTML content when saving
 }
 
 export interface SlideUIState {

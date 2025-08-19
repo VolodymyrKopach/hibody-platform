@@ -4,6 +4,7 @@ import { lessonService } from '@/services/database';
 import { LessonInsert, LessonFilters, LessonWithSlides } from '@/types/database';
 import { CreateLessonRequest, CreateLessonResponse } from '@/types/api';
 import { Lesson } from '@/types/lesson';
+import { migrateTemporaryImagesFromHtml } from '@/utils/slideImageProcessor';
 
 // Function to get authenticated user
 async function getAuthenticatedUser(request: NextRequest) {
@@ -209,7 +210,8 @@ export async function POST(request: NextRequest) {
       duration: body.duration,
       thumbnail_url: body.thumbnail_url,
       slidesCount: body.slides?.length || 0,
-      hasSlides: !!(body.slides && body.slides.length > 0)
+      hasSlides: !!(body.slides && body.slides.length > 0),
+      willAutoMigrateImages: true
     });
     
     if (body.slides && body.slides.length > 0) {
@@ -338,6 +340,77 @@ export async function POST(request: NextRequest) {
         console.log(`✅ LESSONS API: Slide ${i + 1} created with ID:`, createdSlide.id);
       }
       console.log('🎉 LESSONS API: All slides created successfully');
+
+      // Auto-migrate temporary images from slide HTML content
+      console.log('🔄 LESSONS API: Auto-migrating temporary images from slide HTML...');
+      const { slideService: slideServiceForUpdate } = await import('@/services/database');
+      let totalMigrated = 0;
+      let migrationErrors: string[] = [];
+
+      // Process each slide and auto-extract temporary images
+      for (let i = 0; i < body.slides.length; i++) {
+        const slideData = body.slides[i];
+        
+        if (slideData.htmlContent && slideData.htmlContent.includes('data-storage-type="temporary"')) {
+          console.log(`🔄 LESSONS API: Auto-migrating images for slide ${i + 1}: ${slideData.title}`);
+          
+          try {
+            const { updatedHtml, migrationResults, temporaryImagesFound } = await migrateTemporaryImagesFromHtml(
+              slideData.htmlContent,
+              lesson.id
+            );
+
+            const successful = migrationResults.filter(r => r.success).length;
+            const failed = migrationResults.length - successful;
+            
+            if (temporaryImagesFound > 0) {
+              console.log(`📊 LESSONS API: Found ${temporaryImagesFound} temporary images in slide ${i + 1}`);
+              
+              // Update slide with permanent URLs
+              const slideToUpdate = await slideServiceForUpdate.getLessonSlides(lesson.id);
+              const currentSlide = slideToUpdate.find((s: any) => s.slide_number === i + 1);
+              
+              if (currentSlide) {
+                await slideServiceForUpdate.updateSlide(currentSlide.id, {
+                  html_content: updatedHtml,
+                  metadata: {
+                    ...currentSlide.metadata,
+                    imagesMigrated: successful,
+                    migrationErrors: failed,
+                    temporaryImagesFound,
+                    migratedAt: new Date().toISOString()
+                  }
+                });
+                
+                console.log(`✅ LESSONS API: Slide ${i + 1} updated with ${successful} permanent image URLs`);
+                totalMigrated += successful;
+              } else {
+                console.warn(`⚠️ LESSONS API: Could not find slide ${i + 1} for update`);
+              }
+
+              if (failed > 0) {
+                migrationErrors.push(`Slide ${i + 1}: ${failed} images failed to migrate`);
+                console.warn(`⚠️ LESSONS API: ${failed} images failed to migrate for slide ${i + 1}`);
+              }
+            } else {
+              console.log(`📝 LESSONS API: No temporary images found in slide ${i + 1}`);
+            }
+
+          } catch (migrationError) {
+            const errorMsg = `Slide ${i + 1}: Migration failed - ${migrationError instanceof Error ? migrationError.message : 'Unknown error'}`;
+            migrationErrors.push(errorMsg);
+            console.error(`❌ LESSONS API: Migration error for slide ${i + 1}:`, migrationError);
+          }
+        } else {
+          console.log(`⏭️ LESSONS API: Slide ${i + 1} has no temporary images to migrate`);
+        }
+      }
+
+      console.log(`🎯 LESSONS API: Auto-migration completed - ${totalMigrated} images migrated successfully`);
+      
+      if (migrationErrors.length > 0) {
+        console.warn(`⚠️ LESSONS API: Migration errors:`, migrationErrors);
+      }
     } else {
       console.log('📝 LESSONS API: Creating default slides...');
       // Create default slides
