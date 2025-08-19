@@ -238,7 +238,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           position: 'relative',
           paddingBottom: '8px',
           borderBottom: `2px solid ${theme.palette.primary.main}20`, // 20% opacity
-          '&:first-child': { marginTop: 0 },
+          '&:first-of-type': { marginTop: 0 },
           '& + br': { display: 'none' },
         },
         '& h2': {
@@ -252,7 +252,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           backgroundColor: `${theme.palette.primary.main}08`, // 8% opacity
           padding: '8px 12px',
           borderRadius: '8px',
-          '&:first-child': { marginTop: 0 },
+          '&:first-of-type': { marginTop: 0 },
           '& + br': { display: 'none' },
         },
         '& h3': {
@@ -260,7 +260,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           fontWeight: 600,
           margin: '16px 0 10px 0',
           color: theme.palette.primary.main, // #6366F1
-          '&:first-child': { marginTop: 0 },
+          '&:first-of-type': { marginTop: 0 },
           '& + br': { display: 'none' },
         },
         '& h4': {
@@ -284,7 +284,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             fontSize: '1em',
           },
           
-          '&:first-child': { marginTop: 0 },
+          '&:first-of-type': { marginTop: 0 },
           '& + br': { display: 'none' },
         },
         '& h5': {
@@ -292,7 +292,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           fontWeight: 600,
           margin: '12px 0 6px 0',
           color: theme.palette.grey[700], // #334155
-          '&:first-child': { marginTop: 0 },
+          '&:first-of-type': { marginTop: 0 },
           '& + br': { display: 'none' },
         },
         
@@ -300,7 +300,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
         '& p': {
           margin: '12px 0',
           lineHeight: 1.6,
-          '&:first-child': { marginTop: 0 },
+          '&:first-of-type': { marginTop: 0 },
           '&:last-child': { marginBottom: 0 },
           '&:empty': { display: 'none' },
         },
