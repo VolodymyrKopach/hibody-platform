@@ -122,20 +122,12 @@ const ChatInterface: React.FC = () => {
     console.log('📋 CHAT PAGE: Save dialog data:', saveDialogData);
     
     try {
-      const resultMessage = await saveSelectedSlides(saveDialogData);
-      console.log('✅ CHAT PAGE: Save completed successfully, adding result message');
-      setMessages(prev => [...prev, resultMessage]);
+      await saveSelectedSlides(saveDialogData);
+      console.log('✅ CHAT PAGE: Save completed successfully');
+      // Note: Success message is already added by saveSelectedSlides function
     } catch (error) {
       console.error('❌ CHAT PAGE: Save failed:', error);
-      const errorMessage: Message = {
-        id: generateMessageId(),
-        text: `❌ **Save Error**\n\n${error instanceof Error ? error.message : 'Unknown error'}`,
-        sender: 'ai',
-        timestamp: new Date(),
-        status: 'sent',
-
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      // Note: Error message is already added by saveSelectedSlides function
     }
   };
 
