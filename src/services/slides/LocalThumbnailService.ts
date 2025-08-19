@@ -127,7 +127,7 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
       const blob = await response.blob();
 
       // Створюємо ім'я файлу
-      const fileName = `${slideId}_${Date.now()}.png`;
+      const fileName = `${slideId}_${Date.now()}.webp`;
       const filePath = `lessons/${lessonId}/thumbnails/${fileName}`;
 
       // Завантажуємо в Supabase Storage
@@ -135,7 +135,7 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
       const { data, error } = await supabase.storage
         .from('lesson-assets')
         .upload(filePath, blob, {
-          contentType: 'image/png',
+          contentType: 'image/webp',
           upsert: true // Перезаписуємо якщо файл існує
         });
 

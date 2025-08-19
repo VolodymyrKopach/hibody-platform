@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Generate filename for Supabase Storage (WebP format from new snapDOM system)
     const timestamp = Date.now();
     const fileName = `${slideId}-${type}-${timestamp}.webp`;
-    const filePath = `lesson-thumbnails/${lessonId}/${fileName}`;
+    const filePath = `lessons/${lessonId}/thumbnails/${fileName}`;
 
     console.log('📤 PREVIEW API: Uploading to Supabase Storage:', {
       bucket: 'lesson-assets',
@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
     // Get list of files from Supabase Storage
     const { data: files, error: listError } = await supabase.storage
       .from('lesson-assets')
-      .list(`lesson-thumbnails/${lessonId}`, {
+      .list(`lessons/${lessonId}/thumbnails`, {
         limit: 100,
         sortBy: { column: 'created_at', order: 'desc' }
       });
@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
 
     // Generate public URLs for files
     const previews = files?.map(file => {
-      const filePath = `lesson-thumbnails/${lessonId}/${file.name}`;
+      const filePath = `lessons/${lessonId}/thumbnails/${file.name}`;
       const { data: urlData } = supabase.storage
         .from('lesson-assets')
         .getPublicUrl(filePath);

@@ -129,7 +129,7 @@ export class TemporaryImageService {
 
         // 2. Генеруємо новий шлях для постійного зберігання
         const permanentFileName = `slide-${i + 1}-${Date.now()}.webp`;
-        const permanentFilePath = `lessons/${lessonId}/${permanentFileName}`;
+        const permanentFilePath = `lessons/${lessonId}/images/${permanentFileName}`;
 
         // 3. Завантажуємо в постійний bucket
         const { data: uploadData, error: uploadError } = await this.supabase.storage
