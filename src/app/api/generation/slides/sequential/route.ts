@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SlideGenerationService } from '@/services/chat/services/SlideGenerationService';
 import { SlideDescription, SimpleLesson, SimpleSlide, SlideGenerationProgress } from '@/types/chat';
 import { sendProgressUpdate, sendCompletion } from '../progress/route';
-import { processSlideWithTempImages } from '@/utils/slideImageProcessor';
-import { getTempStorageOptions, TEMP_STORAGE_FEATURES, logTempStorageConfig } from '@/utils/tempStorageConfig';
 import { TemporaryImageInfo } from '@/services/images/TemporaryImageService';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
     const { slideDescriptions, lesson, topic, age, sessionId, planText, tempStorageOptions } = await request.json();
 
     // Initialize temporary storage configuration
-    const tempOptions = getTempStorageOptions(tempStorageOptions);
-    const tempSessionId = tempOptions.sessionId || `seq_${sessionId || Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const tempSessionId = tempStorageOptions?.sessionId || `seq_${sessionId || Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Get authenticated Supabase client for temporary storage
+    const supabase = await createClient();
 
     console.log('🎨 SEQUENTIAL API: Starting content-driven slide generation...');
     console.log('📋 SEQUENTIAL API: Request details:', {
@@ -23,13 +24,11 @@ export async function POST(request: NextRequest) {
       sessionId,
       hasPlanText: !!planText,
       tempSessionId,
-      tempStorageEnabled: tempOptions.useTemporaryStorage
+      tempStorageEnabled: tempStorageOptions?.useTemporaryStorage ?? true
     });
 
-    // Log temp storage configuration
-    if (TEMP_STORAGE_FEATURES.SLIDES_API_ENABLED()) {
-      logTempStorageConfig();
-    }
+    // Temporary storage is always enabled in production
+    console.log('🔄 Using temporary storage for slide generation');
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -56,7 +55,7 @@ export async function POST(request: NextRequest) {
           age || '6-8 years',
           {
             sessionId: tempSessionId,
-            useTemporaryStorage: tempOptions.useTemporaryStorage
+            useTemporaryStorage: tempStorageOptions?.useTemporaryStorage ?? true
           }
         );
 
@@ -84,7 +83,7 @@ export async function POST(request: NextRequest) {
           age || '6-8 years',
           {
             sessionId: tempSessionId,
-            useTemporaryStorage: tempOptions.useTemporaryStorage
+            useTemporaryStorage: tempStorageOptions?.useTemporaryStorage ?? true
           }
         );
 
@@ -141,7 +140,7 @@ export async function POST(request: NextRequest) {
           totalSlides: generatedSlides.length,
           completedSlides: generatedSlides.length,
           approach: planText ? 'content-driven' : 'adaptive',
-          tempStorageUsed: tempOptions.useTemporaryStorage
+          tempStorageUsed: tempStorageOptions?.useTemporaryStorage ?? true
         },
         tempSessionId
       });

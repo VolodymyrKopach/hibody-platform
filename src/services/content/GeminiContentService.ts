@@ -1,9 +1,9 @@
 // Service for content generation using Gemini 2.5 Flash
 import { GoogleGenAI } from '@google/genai';
 import { processSlideWithTempImages, type ProcessedSlideDataWithTemp } from '@/utils/slideImageProcessor';
-import { getTempStorageOptions, TEMP_STORAGE_FEATURES } from '@/utils/tempStorageConfig';
 import { ageComponentTemplatesService } from '@/services/templates/AgeComponentTemplatesService';
 import { AgeGroup } from '@/types/generation';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class GeminiContentService {
   private client: GoogleGenAI;
@@ -278,14 +278,13 @@ IMPORTANT:
       console.log('🎨 Processing images in slide...');
       
       // Use enhanced processor with temporary storage
-      const tempOptions = getTempStorageOptions(options);
       console.log('🔄 Using enhanced image processor with temporary storage');
       
       const imageProcessingResult: ProcessedSlideDataWithTemp = await processSlideWithTempImages(
         content,
-        tempOptions.sessionId,
+        options.sessionId,
         {
-          useTemporaryStorage: tempOptions.useTemporaryStorage
+          useTemporaryStorage: options.useTemporaryStorage ?? true
         }
       );
       
