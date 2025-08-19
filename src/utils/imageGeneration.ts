@@ -13,66 +13,27 @@ export interface ImageGenerationResponse {
   error?: string;
 }
 
-// Function to get the base URL
-function getBaseUrl(): string {
-  // If we are in the browser, use window.location
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-  
-  // If we are on the server, use environment variables or localhost
-  const vercelUrl = process.env.VERCEL_URL;
-  const nextPublicUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  
-  if (vercelUrl) {
-    return `https://${vercelUrl}`;
-  }
-  
-  if (nextPublicUrl) {
-    return nextPublicUrl;
-  }
-  
-  // Fallback for local development
-  return 'http://localhost:3000';
-}
+// Note: getBaseUrl() function removed - we now use direct function calls instead of HTTP requests
 
 export async function generateImage(params: ImageGenerationRequest): Promise<ImageGenerationResponse> {
   try {
-    const baseUrl = getBaseUrl();
-    const apiUrl = `${baseUrl}/api/images`;
-    
-    console.log(`🔗 Generating image via: ${apiUrl}`);
+    // Always use direct function call - faster and more reliable
+    console.log(`🔗 Direct function call to images handler`);
     console.log(`📝 Request params:`, JSON.stringify(params, null, 2));
     
-    const response = await fetch(apiUrl, {
+    // Import and call the API handler directly
+    const { POST } = await import('@/app/api/images/route');
+    const mockRequest = new Request('http://localhost:3000/api/images', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(params),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
     });
-
-    console.log(`📥 Response status: ${response.status} ${response.statusText}`);
-    console.log(`📥 Response headers:`, Object.fromEntries(response.headers.entries()));
-
-    if (!response.ok) {
-      let errorMessage = 'Failed to generate image';
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error || errorMessage;
-      } catch (parseError) {
-        // If we cannot parse JSON, use status text
-        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        console.error('Failed to parse error response as JSON:', parseError);
-      }
-      
-      return {
-        success: false,
-        error: errorMessage
-      };
-    }
-
+    
+    const response = await POST(mockRequest as any);
     const result = await response.json();
+    
+    console.log(`📥 Direct call result:`, { success: result.success, hasImage: !!result.image });
+    
     return result;
   } catch (error) {
     console.error('Image generation error:', error);
