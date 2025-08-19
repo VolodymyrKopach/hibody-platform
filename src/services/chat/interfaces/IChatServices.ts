@@ -16,9 +16,9 @@ export interface ISlideGenerationService {
 }
 
 export interface ISlideEditingService {
-  editSlide(slide: SimpleSlide, instruction: string, topic: string, age: string): Promise<SimpleSlide>;
-  regenerateSlide(slide: SimpleSlide, topic: string, age: string): Promise<SimpleSlide>;
-  improveSlide(slide: SimpleSlide, instruction: string, topic: string, age: string): Promise<SimpleSlide>;
+  editSlide(slide: SimpleSlide, instruction: string, topic: string, age: string, sessionId?: string): Promise<SimpleSlide>;
+  regenerateSlide(slide: SimpleSlide, topic: string, age: string, sessionId?: string): Promise<SimpleSlide>;
+  improveSlide(slide: SimpleSlide, instruction: string, topic: string, age: string, sessionId?: string): Promise<SimpleSlide>;
 }
 
 export interface ILessonManagementService {

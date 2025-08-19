@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SlideGenerationService } from '@/services/chat/services/SlideGenerationService';
 import { SlideDescription, SimpleLesson, SimpleSlide, SlideGenerationProgress } from '@/types/chat';
 import { sendProgressUpdate, sendCompletion } from '../progress/route';
+import { processSlideWithTempImages } from '@/utils/slideImageProcessor';
+import { getTempStorageOptions, TEMP_STORAGE_FEATURES, logTempStorageConfig } from '@/utils/tempStorageConfig';
+import { TemporaryImageInfo } from '@/services/images/TemporaryImageService';
 
 export async function POST(request: NextRequest) {
   try {
-    const { slideDescriptions, lesson, topic, age, sessionId, planText } = await request.json();
+    const { slideDescriptions, lesson, topic, age, sessionId, planText, tempStorageOptions } = await request.json();
+
+    // Initialize temporary storage configuration
+    const tempOptions = getTempStorageOptions(tempStorageOptions);
+    const tempSessionId = tempOptions.sessionId || `seq_${sessionId || Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     console.log('🎨 SEQUENTIAL API: Starting content-driven slide generation...');
     console.log('📋 SEQUENTIAL API: Request details:', {
@@ -14,8 +21,15 @@ export async function POST(request: NextRequest) {
       topic,
       age,
       sessionId,
-      hasPlanText: !!planText
+      hasPlanText: !!planText,
+      tempSessionId,
+      tempStorageEnabled: tempOptions.useTemporaryStorage
     });
+
+    // Log temp storage configuration
+    if (TEMP_STORAGE_FEATURES.SLIDES_API_ENABLED()) {
+      logTempStorageConfig();
+    }
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -39,7 +53,11 @@ export async function POST(request: NextRequest) {
         generatedSlides = await slideGenerationService.generateSlidesFromPlan(
           planText,
           topic || 'general topic',
-          age || '6-8 years'
+          age || '6-8 years',
+          {
+            sessionId: tempSessionId,
+            useTemporaryStorage: tempOptions.useTemporaryStorage
+          }
         );
 
         // Create progress updates for the generated slides
@@ -63,7 +81,11 @@ export async function POST(request: NextRequest) {
           contentText,
           slideDescriptions.length,
           topic || 'general topic',
-          age || '6-8 years'
+          age || '6-8 years',
+          {
+            sessionId: tempSessionId,
+            useTemporaryStorage: tempOptions.useTemporaryStorage
+          }
         );
 
         currentProgress = generatedSlides.map((slide, index) => ({
@@ -92,31 +114,36 @@ export async function POST(request: NextRequest) {
 
       console.log(`✅ SEQUENTIAL API: Successfully generated ${generatedSlides.length} slides`);
 
+      // Images are now processed within GeminiContentService.generateSlideContent()
+      // No need for additional processing here
+      console.log('✅ SEQUENTIAL API: Slides generated with images already processed');
+
+      const finalLesson = {
+        ...lesson,
+        slides: generatedSlides,
+        tempSessionId,
+        updatedAt: new Date()
+      };
+
       // Send completion notification
       if (sessionId) {
         sendCompletion(sessionId, {
-          lesson: {
-            ...lesson,
-            slides: generatedSlides,
-            updatedAt: new Date()
-          },
-          message: `Successfully generated ${generatedSlides.length} slides from lesson content!`
+          lesson: finalLesson,
+          message: `Successfully generated ${generatedSlides.length} slides with temporary storage!`
         });
       }
 
       return NextResponse.json({
         success: true,
-        lesson: {
-          ...lesson,
-          slides: generatedSlides,
-          updatedAt: new Date()
-        },
+        lesson: finalLesson,
         message: `Successfully generated ${generatedSlides.length} slides using content-driven approach!`,
         generationStats: {
           totalSlides: generatedSlides.length,
           completedSlides: generatedSlides.length,
-          approach: planText ? 'content-driven' : 'adaptive'
-        }
+          approach: planText ? 'content-driven' : 'adaptive',
+          tempStorageUsed: tempOptions.useTemporaryStorage
+        },
+        tempSessionId
       });
 
     } catch (generationError) {

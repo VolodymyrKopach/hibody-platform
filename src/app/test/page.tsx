@@ -14,7 +14,6 @@ import Layout from '@/components/layout/Layout';
 
 // Test components
 import SnapdomTest from '@/components/debug/SnapdomTest';
-import { TempStorageTest, ImageProcessorTempTest } from '@/components/debug';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -70,21 +69,11 @@ const TestPage: React.FC = () => {
           <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
             <Tabs value={tabValue} onChange={handleTabChange} aria-label="test tabs">
               <Tab label="🖼️ SnapDOM Thumbnails" />
-              <Tab label="☁️ Temp Storage" />
-              <Tab label="🔄 Image Processor" />
             </Tabs>
           </Box>
 
           <TabPanel value={tabValue} index={0}>
             <SnapdomTest />
-          </TabPanel>
-          
-          <TabPanel value={tabValue} index={1}>
-            <TempStorageTest />
-          </TabPanel>
-          
-          <TabPanel value={tabValue} index={2}>
-            <ImageProcessorTempTest />
           </TabPanel>
         </Box>
       </Container>

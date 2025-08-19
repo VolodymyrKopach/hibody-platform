@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface TemporaryImageInfo {
   tempUrl: string;
@@ -18,11 +19,12 @@ export interface ImageMigrationResult {
 }
 
 export class TemporaryImageService {
-  private supabase = createClient();
+  private supabase: SupabaseClient;
   private sessionId: string;
 
-  constructor(sessionId?: string) {
+  constructor(sessionId?: string, supabaseClient?: SupabaseClient) {
     this.sessionId = sessionId || this.generateSessionId();
+    this.supabase = supabaseClient || createClient();
   }
 
   private generateSessionId(): string {
@@ -44,7 +46,7 @@ export class TemporaryImageService {
       const { data: { user }, error: authError } = await this.supabase.auth.getUser();
       if (authError || !user) {
         console.error('❌ User not authenticated for temp image upload');
-        return null;
+        throw new Error('User authentication required for image upload');
       }
 
       // 2. Конвертуємо Base64 в buffer
@@ -67,7 +69,7 @@ export class TemporaryImageService {
 
       if (error) {
         console.error('❌ Temp image upload error:', error);
-        return null;
+        throw new Error(`Failed to upload image to temporary storage: ${error.message}`);
       }
 
       // 5. Отримуємо публічний URL

@@ -1,6 +1,7 @@
 // Service for content generation using Gemini 2.5 Flash
 import { GoogleGenAI } from '@google/genai';
-import { processSlideWithImages, type ProcessedSlideData } from '@/utils/slideImageProcessor';
+import { processSlideWithTempImages, type ProcessedSlideDataWithTemp } from '@/utils/slideImageProcessor';
+import { getTempStorageOptions, TEMP_STORAGE_FEATURES } from '@/utils/tempStorageConfig';
 import { ageComponentTemplatesService } from '@/services/templates/AgeComponentTemplatesService';
 import { AgeGroup } from '@/types/generation';
 
@@ -241,7 +242,12 @@ IMPORTANT:
 - Focus on pedagogical approaches and student engagement rather than technical implementation details`;
   }
 
-  async generateSlideContent(slideDescription: string, topic: string, age: string): Promise<string> {
+  async generateSlideContent(
+    slideDescription: string, 
+    topic: string, 
+    age: string, 
+    options: { sessionId?: string; useTemporaryStorage?: boolean } = {}
+  ): Promise<string> {
     const prompt = await this.buildSlideContentPrompt(slideDescription, topic, age);
 
     try {
@@ -268,18 +274,30 @@ IMPORTANT:
       content = this.cleanHtmlFromMarkdown(content);
       console.log('✅ Base slide HTML generated, length:', content.length);
 
-      // НОВИЙ ЕТАП: Обробляємо зображення
+      // НОВИЙ ЕТАП: Обробляємо зображення з підтримкою temporary storage
       console.log('🎨 Processing images in slide...');
-      const imageProcessingResult: ProcessedSlideData = await processSlideWithImages(content);
       
-      console.log('🎨 Image processing result:', {
+      // Use enhanced processor with temporary storage
+      const tempOptions = getTempStorageOptions(options);
+      console.log('🔄 Using enhanced image processor with temporary storage');
+      
+      const imageProcessingResult: ProcessedSlideDataWithTemp = await processSlideWithTempImages(
+        content,
+        tempOptions.sessionId,
+        {
+          useTemporaryStorage: tempOptions.useTemporaryStorage
+        }
+      );
+      
+      console.log('🎨 Enhanced image processing result:', {
         originalLength: content.length,
         processedLength: imageProcessingResult.htmlWithImages.length,
         imagesGenerated: imageProcessingResult.generatedImages?.length || 0,
-        processingErrors: imageProcessingResult.processingErrors?.length || 0
+        tempImagesStored: imageProcessingResult.temporaryImages?.length || 0,
+        processingErrors: imageProcessingResult.processingErrors?.length || 0,
+        sessionId: imageProcessingResult.sessionId
       });
 
-      // Повертаємо оброблений контент з реальними зображеннями
       return imageProcessingResult.htmlWithImages;
 
     } catch (error) {

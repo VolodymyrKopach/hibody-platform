@@ -16,7 +16,8 @@ export class SlideGenerationService {
   async generateSlidesFromPlan(
     planText: string,
     lessonTopic: string,
-    lessonAge: string
+    lessonAge: string,
+    options: { sessionId?: string; useTemporaryStorage?: boolean } = {}
   ): Promise<SimpleSlide[]> {
     logger.chat.info('Generating slides from lesson plan', {
       method: 'generateSlidesFromPlan',
@@ -42,11 +43,15 @@ export class SlideGenerationService {
         try {
           logger.chat.debug(`Generating HTML for slide ${i + 1}: ${template.title}`);
           
-          // Generate HTML content using AI
+          // Generate HTML content using AI with temporary storage support
           const htmlContent = await this.contentService.generateSlideContent(
             template.content || template.description,
             lessonTopic,
-            lessonAge
+            lessonAge,
+            { 
+              sessionId: options.sessionId || `plan_${Date.now()}`,
+              useTemporaryStorage: options.useTemporaryStorage !== false
+            }
           );
 
           const slide: SimpleSlide = {
@@ -102,7 +107,8 @@ export class SlideGenerationService {
     content: string,
     slideCount: number,
     lessonTopic: string,
-    lessonAge: string
+    lessonAge: string,
+    options: { sessionId?: string; useTemporaryStorage?: boolean } = {}
   ): Promise<SimpleSlide[]> {
     logger.chat.info('Generating adaptive slides from content', {
       method: 'generateAdaptiveSlides',
@@ -127,7 +133,11 @@ export class SlideGenerationService {
           const htmlContent = await this.contentService.generateSlideContent(
             template.content || template.description,
             lessonTopic,
-            lessonAge
+            lessonAge,
+            { 
+              sessionId: options.sessionId || `adaptive_${Date.now()}`,
+              useTemporaryStorage: options.useTemporaryStorage !== false
+            }
           );
 
           const slide: SimpleSlide = {
@@ -207,7 +217,11 @@ export class SlideGenerationService {
       const htmlContent = await this.contentService.generateSlideContent(
         description,
         lessonTopic,
-        lessonAge
+        lessonAge,
+        { 
+          sessionId: `single_${Date.now()}`,
+          useTemporaryStorage: true 
+        }
       );
 
       // Analyze content to determine properties

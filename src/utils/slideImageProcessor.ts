@@ -1,6 +1,10 @@
-// Utilities for processing images in slides
+// Main utilities for processing images in slides with temporary storage
+// This file replaces the old slideImageProcessor.ts with enhanced functionality
 import { generateImage, type ImageGenerationRequest, type ImageGenerationResponse } from './imageGeneration';
+import { TemporaryImageService, type TemporaryImageInfo } from '@/services/images/TemporaryImageService';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
+// Core interfaces
 export interface ImagePromptComment {
   fullComment: string;
   prompt: string;
@@ -24,8 +28,64 @@ export interface GeneratedImageInfo {
   success: boolean;
 }
 
+// Enhanced interfaces for temporary storage support
+export interface GeneratedImageInfoWithTemp extends GeneratedImageInfo {
+  tempUrl?: string; // URL from temporary storage
+  tempInfo?: TemporaryImageInfo; // Full temporary image info
+}
+
+export interface ProcessedSlideDataWithTemp {
+  htmlWithImages: string;
+  generatedImages: GeneratedImageInfoWithTemp[];
+  temporaryImages: TemporaryImageInfo[];
+  processingErrors: string[];
+  sessionId: string;
+}
+
 // Regex for extracting IMAGE_PROMPT comments
 const IMAGE_COMMENT_REGEX = /<!--\s*IMAGE_PROMPT:\s*"([^"]+)"\s+WIDTH:\s*(\d+)\s+HEIGHT:\s*(\d+)\s*-->/gi;
+
+/**
+ * Extracts all IMAGE_PROMPT comments from HTML
+ */
+export function extractImagePrompts(htmlContent: string): ImagePromptComment[] {
+  const prompts: ImagePromptComment[] = [];
+  let match;
+  
+  // Reset regex lastIndex
+  IMAGE_COMMENT_REGEX.lastIndex = 0;
+  
+  while ((match = IMAGE_COMMENT_REGEX.exec(htmlContent)) !== null) {
+    const [fullComment, prompt, widthStr, heightStr] = match;
+    const originalWidth = parseInt(widthStr);
+    const originalHeight = parseInt(heightStr);
+    
+    // Validate and correct dimensions
+    const { width, height, corrected } = validateAndCorrectDimensions(originalWidth, originalHeight);
+    
+    if (corrected) {
+      console.warn(`⚠️ Image dimensions corrected for FLUX compatibility`);
+    }
+    
+    // Validate the prompt
+    if (!prompt || prompt.trim().length === 0) {
+      console.warn(`⚠️ Empty image prompt found, skipping`);
+      continue;
+    }
+    
+    // Add to the result
+    prompts.push({
+      fullComment,
+      prompt: prompt.trim(),
+      width,
+      height,
+      index: match.index || 0
+    });
+  }
+  
+  console.log(`🔍 Found ${prompts.length} image prompts in HTML`);
+  return prompts;
+}
 
 /**
  * Validates and corrects image dimensions for FLUX API
@@ -71,50 +131,6 @@ function validateAndCorrectDimensions(width: number, height: number): { width: n
   
   return { width, height, corrected };
 }
-
-/**
- * Extracts all IMAGE_PROMPT comments from HTML
- */
-export function extractImagePrompts(htmlContent: string): ImagePromptComment[] {
-  const prompts: ImagePromptComment[] = [];
-  let match;
-  
-  // Reset regex lastIndex
-  IMAGE_COMMENT_REGEX.lastIndex = 0;
-  
-  while ((match = IMAGE_COMMENT_REGEX.exec(htmlContent)) !== null) {
-    const [fullComment, prompt, widthStr, heightStr] = match;
-    const originalWidth = parseInt(widthStr);
-    const originalHeight = parseInt(heightStr);
-    
-    // Validate and correct dimensions
-    const { width, height, corrected } = validateAndCorrectDimensions(originalWidth, originalHeight);
-    
-    if (corrected) {
-      console.warn(`⚠️ Image dimensions corrected for FLUX compatibility`);
-    }
-    
-    // Validate the prompt
-    if (!prompt || prompt.trim().length === 0) {
-      console.warn(`⚠️ Empty image prompt found, skipping`);
-      continue;
-    }
-    
-    // Add to the result
-    prompts.push({
-      fullComment,
-      prompt: prompt.trim(),
-      width,
-      height,
-      index: match.index || 0
-    });
-  }
-  
-  console.log(`🔍 Found ${prompts.length} image prompts in HTML`);
-  return prompts;
-}
-
-
 
 /**
  * Delay function for rate limiting
@@ -171,19 +187,39 @@ async function generateImageWithRetry(imageRequest: ImageGenerationRequest, maxR
 }
 
 /**
- * Generates all images sequentially with delays to avoid rate limiting
+ * Generates all images with temporary storage support
  */
-export async function generateAllImages(prompts: ImagePromptComment[]): Promise<GeneratedImageInfo[]> {
+export async function generateAllImagesWithTempStorage(
+  prompts: ImagePromptComment[],
+  sessionId?: string,
+  options: {
+    useTemporaryStorage?: boolean;
+    supabaseClient?: SupabaseClient;
+  } = {}
+): Promise<{
+  generatedImages: GeneratedImageInfoWithTemp[];
+  temporaryImages: TemporaryImageInfo[];
+}> {
+  
+  const {
+    useTemporaryStorage = true,
+    supabaseClient
+  } = options;
+
   if (prompts.length === 0) {
     console.log('📷 No image prompts found, skipping image generation');
-    return [];
+    return { generatedImages: [], temporaryImages: [] };
   }
   
-  console.log(`🚀 Starting sequential generation of ${prompts.length} images (with rate limiting)...`);
-  
-  const results: GeneratedImageInfo[] = [];
-  
-  // Generate images sequentially with a 1.5 second delay between requests
+  console.log(`🚀 Starting image generation with temporary storage for ${prompts.length} prompts`);
+  console.log(`⚙️ Options: tempStorage=${useTemporaryStorage} (no Base64 fallback - always use bucket)`);
+
+  // Initialize temporary storage service if needed
+  const tempService = useTemporaryStorage ? new TemporaryImageService(sessionId, supabaseClient) : null;
+  const generatedImages: GeneratedImageInfoWithTemp[] = [];
+  const temporaryImages: TemporaryImageInfo[] = [];
+
+  // Generate images sequentially with rate limiting
   for (let index = 0; index < prompts.length; index++) {
     const promptData = prompts[index];
     const { width, height } = validateAndCorrectDimensions(promptData.width, promptData.height);
@@ -197,22 +233,66 @@ export async function generateAllImages(prompts: ImagePromptComment[]): Promise<
         height
       };
       
-      // Generate images with automatic retry attempts
+      // Generate the image
       const result = await generateImageWithRetry(imageRequest, 3);
       
       if (result.success && result.image) {
         console.log(`✅ [${index + 1}/${prompts.length}] Generated successfully`);
-        results.push({
-          prompt: promptData.prompt,
-          width,
-          height,
-          base64Image: result.image,
-          model: result.model || 'FLUX.1-schnell',
-          success: true
-        });
+        
+        // Always upload to temporary storage (no fallback)
+        if (!tempService) {
+          throw new Error('Temporary storage is required but disabled');
+        }
+
+        try {
+          console.log(`📤 [${index + 1}/${prompts.length}] Uploading to temporary storage...`);
+          
+          const tempInfo = await tempService.uploadTemporaryImage(
+            result.image,
+            promptData.prompt,
+            width,
+            height,
+            index
+          );
+
+          if (tempInfo) {
+            temporaryImages.push(tempInfo);
+            console.log(`✅ [${index + 1}/${prompts.length}] Uploaded to temp storage: ${tempInfo.tempUrl}`);
+          } else {
+            console.error(`❌ [${index + 1}/${prompts.length}] Failed to upload to temp storage: null response`);
+          }
+
+          // Create the result object - no Base64 stored
+          const imageInfo: GeneratedImageInfoWithTemp = {
+            prompt: promptData.prompt,
+            width,
+            height,
+            base64Image: '', // Never store Base64 - always use temp storage
+            tempUrl: tempInfo?.tempUrl,
+            tempInfo: tempInfo || undefined,
+            model: result.model || 'FLUX.1-schnell',
+            success: !!tempInfo // Success only if temp storage worked
+          };
+
+          generatedImages.push(imageInfo);
+          
+        } catch (uploadError) {
+          console.error(`❌ [${index + 1}/${prompts.length}] Failed to upload to temp storage:`, uploadError);
+          
+          // Create failed result object
+          generatedImages.push({
+            prompt: promptData.prompt,
+            width,
+            height,
+            base64Image: '',
+            model: result.model || 'FLUX.1-schnell',
+            success: false
+          });
+        }
+        
       } else {
         console.error(`❌ [${index + 1}/${prompts.length}] Generation failed:`, result.error);
-        results.push({
+        generatedImages.push({
           prompt: promptData.prompt,
           width,
           height,
@@ -223,7 +303,7 @@ export async function generateAllImages(prompts: ImagePromptComment[]): Promise<
       }
     } catch (error) {
       console.error(`💥 [${index + 1}/${prompts.length}] Exception during generation:`, error);
-      results.push({
+      generatedImages.push({
         prompt: promptData.prompt,
         width: promptData.width,
         height: promptData.height,
@@ -233,38 +313,39 @@ export async function generateAllImages(prompts: ImagePromptComment[]): Promise<
       });
     }
     
-    // Delay between requests (except the last one)
+    // Rate limiting delay between requests (except the last one)
     if (index < prompts.length - 1) {
       console.log(`⏱️ Waiting 2 seconds before next image (rate limiting)...`);
       await delay(2000);
     }
   }
   
-  const successful = results.filter(r => r.success).length;
-  const failed = results.length - successful;
+  const successful = generatedImages.filter(r => r.success).length;
+  const tempStored = temporaryImages.length;
+  const failed = generatedImages.length - successful;
   
-  console.log(`🎯 Image generation complete: ${successful} successful, ${failed} failed`);
+  console.log(`🎯 Image generation complete: ${successful} successful, ${tempStored} stored temporarily, ${failed} failed`);
   
-  // Additional information about failed attempts
+  // Log failed attempts
   if (failed > 0) {
     console.log(`❌ Failed images details:`);
-    results.forEach((result, index) => {
+    generatedImages.forEach((result, index) => {
       if (!result.success) {
         console.log(`   ${index + 1}. "${result.prompt.substring(0, 40)}..." - ${result.model || 'unknown'}`);
       }
     });
   }
   
-  return results;
+  return { generatedImages, temporaryImages };
 }
 
 /**
- * Replaces IMAGE_PROMPT comments with actual img tags with base64 images
+ * Replaces IMAGE_PROMPT comments with img tags using temporary URLs or Base64 fallback
  */
-export function replaceImageComments(
+export function replaceImageCommentsWithTempUrls(
   htmlContent: string, 
   prompts: ImagePromptComment[], 
-  generatedImages: GeneratedImageInfo[]
+  generatedImages: GeneratedImageInfoWithTemp[]
 ): string {
   if (prompts.length === 0) {
     console.log('📝 No image prompts found to replace');
@@ -274,7 +355,7 @@ export function replaceImageComments(
   let processedHtml = htmlContent;
   let replacements = 0;
   
-  console.log(`🔄 Processing ${prompts.length} image prompts with ${generatedImages.length} generated images`);
+  console.log(`🔄 Processing ${prompts.length} image prompts with temporary storage support`);
   
   // Process comments from end to beginning to avoid breaking indices
   for (let i = prompts.length - 1; i >= 0; i--) {
@@ -283,46 +364,43 @@ export function replaceImageComments(
     
     let replacement: string;
     
-    if (imageData && imageData.success && imageData.base64Image) {
-      // Successfully generated image - create a properly contained img element
-      replacement = `<div class="image-container" style="max-width: 100%; margin: 15px auto; display: flex; justify-content: center; align-items: center; box-sizing: border-box;"><img src="data:image/webp;base64,${imageData.base64Image}" alt="${imageData.prompt.replace(/"/g, '&quot;')}" width="${imageData.width}" height="${imageData.height}" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); display: block; object-fit: cover;" loading="lazy" data-prompt="${imageData.prompt.replace(/"/g, '&quot;')}" data-model="${imageData.model}" data-generated="true" /></div>`;
+    if (imageData && imageData.success && imageData.tempUrl) {
+      // Use temporary URL - no Base64 fallback
+      const imageSrc = imageData.tempUrl;
       
-      console.log(`✅ Replacing comment ${i + 1} with generated image (${imageData.width}x${imageData.height})`);
+      replacement = `<div class="image-container" style="max-width: 100%; margin: 15px auto; display: flex; justify-content: center; align-items: center; box-sizing: border-box;">
+        <img src="${imageSrc}" 
+             alt="${imageData.prompt.replace(/"/g, '&quot;')}" 
+             width="${imageData.width}" 
+             height="${imageData.height}" 
+             style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); display: block; object-fit: cover;" 
+             loading="lazy" 
+             data-prompt="${imageData.prompt.replace(/"/g, '&quot;')}" 
+             data-model="${imageData.model}" 
+             data-storage-type="temporary"
+             data-temp-url="${imageData.tempUrl}"
+             data-session-id="${imageData.tempInfo?.sessionId || ''}" />
+      </div>`;
+      
+      console.log(`✅ Replacing comment ${i + 1} with temporary URL image (${imageData.width}x${imageData.height})`);
+    } else if (imageData && imageData.success) {
+      // This should not happen with new logic, but handle gracefully
+      replacement = createErrorPlaceholder(prompt, 'Image uploaded but no temporary URL available');
+      console.log(`⚠️ Replacing comment ${i + 1} with error placeholder: No temp URL`);
     } else {
-      // Failed generation or missing image
+      // Failed generation - create error placeholder
       const errorInfo = imageData ? 'Generation failed' : 'No image data';
-      replacement = `<div class="image-placeholder" style="width: ${prompt.width}px; height: ${prompt.height}px; max-width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 3px dashed rgba(255,255,255,0.3); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: 'Comic Sans MS', cursive; text-align: center; font-size: 16px; margin: 15px auto; position: relative; overflow: hidden; box-sizing: border-box;" data-failed-prompt="${prompt.prompt.replace(/"/g, '&quot;')}"><div style="font-size: 32px; margin-bottom: 8px;">🎨</div><div style="font-weight: bold; margin-bottom: 4px;">Image is being generated...</div><div style="font-size: 12px; opacity: 0.8; max-width: 80%; word-wrap: break-word;">${prompt.prompt.substring(0, 60)}${prompt.prompt.length > 60 ? '...' : ''}</div><div style="font-size: 10px; opacity: 0.6; margin-top: 4px;">⚠️ ${errorInfo}</div></div>`;
-      
-      console.log(`⚠️ Replacing comment ${i + 1} with placeholder: ${errorInfo}`);
+      replacement = createErrorPlaceholder(prompt, errorInfo);
+      console.log(`⚠️ Replacing comment ${i + 1} with error placeholder: ${errorInfo}`);
     }
 
-    // Check if the comment still exists in HTML
+    // Replace the comment in HTML
     if (processedHtml.includes(prompt.fullComment)) {
-      // Replace the comment with the image
       processedHtml = processedHtml.replace(prompt.fullComment, replacement);
       replacements++;
 
-      // Also try to remove any placeholder div that might follow the comment
-      // Look for placeholder divs that contain emojis and text like "🖼️", "🧠", "Brain", etc.
-      const placeholderPatterns = [
-        // Generic placeholder pattern
-        /<div[^>]*class[^>]*image-placeholder[^>]*>.*?<\/div>/gi,
-        // Gemini-generated placeholder pattern
-        /<div[^>]*style[^>]*>🖼️[^<]*Image will be generated here[^<]*<\/div>/gi,
-        // Common placeholder patterns with emojis and text
-        /<div[^>]*>\s*🧠[^<]*Brain[^<]*<\/div>/gi,
-        /<div[^>]*>\s*🖼️[^<]*<\/div>/gi,
-        /<div[^>]*>\s*📷[^<]*<\/div>/gi,
-        /<div[^>]*>\s*🎨[^<]*<\/div>/gi,
-      ];
-
-      placeholderPatterns.forEach((pattern) => {
-        const matches = processedHtml.match(pattern);
-        if (matches) {
-          console.log(`🧹 Removing ${matches.length} placeholder div(s) near image ${i + 1}`);
-          processedHtml = processedHtml.replace(pattern, '');
-        }
-      });
+      // Clean up any existing placeholder divs
+      processedHtml = cleanupPlaceholderDivs(processedHtml, i + 1);
     } else {
       console.warn(`⚠️ Comment ${i + 1} not found in HTML: "${prompt.fullComment.substring(0, 50)}..."`);
     }
@@ -330,7 +408,55 @@ export function replaceImageComments(
 
   console.log(`🎯 Completed ${replacements}/${prompts.length} image replacements`);
 
-  // Additional cleanup: Remove any remaining standalone placeholder divs
+  // Final cleanup
+  processedHtml = finalCleanupPlaceholders(processedHtml);
+
+  return processedHtml;
+}
+
+/**
+ * Creates an error placeholder for failed image generation
+ */
+function createErrorPlaceholder(prompt: ImagePromptComment, errorInfo: string): string {
+  return `<div class="image-placeholder" style="width: ${prompt.width}px; height: ${prompt.height}px; max-width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 3px dashed rgba(255,255,255,0.3); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: 'Comic Sans MS', cursive; text-align: center; font-size: 16px; margin: 15px auto; position: relative; overflow: hidden; box-sizing: border-box;" data-failed-prompt="${prompt.prompt.replace(/"/g, '&quot;')}">
+    <div style="font-size: 32px; margin-bottom: 8px;">🎨</div>
+    <div style="font-weight: bold; margin-bottom: 4px;">Image generation failed</div>
+    <div style="font-size: 12px; opacity: 0.8; max-width: 80%; word-wrap: break-word;">${prompt.prompt.substring(0, 60)}${prompt.prompt.length > 60 ? '...' : ''}</div>
+    <div style="font-size: 10px; opacity: 0.6; margin-top: 4px;">⚠️ ${errorInfo}</div>
+  </div>`;
+}
+
+/**
+ * Cleans up placeholder divs that might interfere with image replacement
+ */
+function cleanupPlaceholderDivs(html: string, imageIndex: number): string {
+  const placeholderPatterns = [
+    // Generic placeholder pattern
+    /<div[^>]*class[^>]*image-placeholder[^>]*>.*?<\/div>/gi,
+    // Gemini-generated placeholder pattern
+    /<div[^>]*style[^>]*>🖼️[^<]*Image will be generated here[^<]*<\/div>/gi,
+    // Common placeholder patterns with emojis
+    /<div[^>]*>\s*🧠[^<]*Brain[^<]*<\/div>/gi,
+    /<div[^>]*>\s*🖼️[^<]*<\/div>/gi,
+    /<div[^>]*>\s*📷[^<]*<\/div>/gi,
+    /<div[^>]*>\s*🎨[^<]*<\/div>/gi,
+  ];
+
+  placeholderPatterns.forEach((pattern) => {
+    const matches = html.match(pattern);
+    if (matches) {
+      console.log(`🧹 Removing ${matches.length} placeholder div(s) near image ${imageIndex}`);
+      html = html.replace(pattern, '');
+    }
+  });
+
+  return html;
+}
+
+/**
+ * Final cleanup of any remaining placeholder divs
+ */
+function finalCleanupPlaceholders(html: string): string {
   const finalCleanupPatterns = [
     // Remove placeholder divs with just emojis
     /<div[^>]*class[^>]*image-placeholder[^>]*>\s*[🧠🖼️📷🎨][^<]*<\/div>/gi,
@@ -339,25 +465,34 @@ export function replaceImageComments(
   ];
 
   finalCleanupPatterns.forEach((pattern) => {
-    const matches = processedHtml.match(pattern);
+    const matches = html.match(pattern);
     if (matches) {
       console.log(`🧹 Final cleanup: Removing ${matches.length} remaining placeholder div(s)`);
-      processedHtml = processedHtml.replace(pattern, '');
+      html = html.replace(pattern, '');
     }
   });
 
-  return processedHtml;
+  return html;
 }
 
 /**
- * Main function for processing slides with images
+ * Main function for processing slides with images using temporary storage
  */
-export async function processSlideWithImages(htmlContent: string): Promise<ProcessedSlideData> {
+export async function processSlideWithTempImages(
+  htmlContent: string,
+  sessionId?: string,
+  options: {
+    useTemporaryStorage?: boolean;
+    supabaseClient?: SupabaseClient;
+  } = {}
+): Promise<ProcessedSlideDataWithTemp> {
   const processingErrors: string[] = [];
+  const finalSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
   try {
-    console.log('🎨 Starting slide image processing...');
-    
+    console.log('🔄 Processing slide with temporary image storage...');
+    console.log(`🆔 Session ID: ${finalSessionId}`);
+
     // 1. Extract all IMAGE_PROMPT comments
     const imagePrompts = extractImagePrompts(htmlContent);
     
@@ -366,39 +501,142 @@ export async function processSlideWithImages(htmlContent: string): Promise<Proce
       return {
         htmlWithImages: htmlContent,
         generatedImages: [],
-        processingErrors: []
+        temporaryImages: [],
+        processingErrors: [],
+        sessionId: finalSessionId
       };
     }
-    
-    // 2. Generate all images in parallel
-    const generatedImages = await generateAllImages(imagePrompts);
-    
-    // 3. Replace comments with actual images
-    const htmlWithImages = replaceImageComments(htmlContent, imagePrompts, generatedImages);
-    
-    // 4. Collect error information
+
+    // 2. Generate images with temporary storage
+    const { generatedImages, temporaryImages } = await generateAllImagesWithTempStorage(
+      imagePrompts,
+      finalSessionId,
+      options
+    );
+
+    // 3. Replace comments with img tags using temporary URLs
+    const htmlWithImages = replaceImageCommentsWithTempUrls(
+      htmlContent,
+      imagePrompts,
+      generatedImages
+    );
+
+    // 4. Collect processing errors
     generatedImages.forEach((img, index) => {
       if (!img.success) {
         processingErrors.push(`Failed to generate image ${index + 1}: "${img.prompt.substring(0, 50)}..."`);
       }
     });
+
+    // 5. Verify all successful images have temporary URLs
+    const missingTempUrls = generatedImages.filter(img => 
+      img.success && !img.tempUrl
+    ).length;
     
-    console.log('✅ Slide image processing completed');
-    
+    if (missingTempUrls > 0) {
+      processingErrors.push(`${missingTempUrls} image(s) are missing temporary URLs (should not happen)`);
+    }
+
+    console.log('✅ Slide processing with temporary storage completed');
+
     return {
       htmlWithImages,
       generatedImages,
-      processingErrors
+      temporaryImages,
+      processingErrors,
+      sessionId: finalSessionId
     };
     
   } catch (error) {
-    console.error('💥 Error in slide image processing:', error);
+    console.error('💥 Error in slide processing with temporary storage:', error);
     processingErrors.push(`Processing error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     
     return {
       htmlWithImages: htmlContent, // return original HTML
       generatedImages: [],
-      processingErrors
+      temporaryImages: [],
+      processingErrors,
+      sessionId: finalSessionId
     };
   }
-} 
+}
+
+/**
+ * Utility function to migrate temporary images to permanent storage
+ * This would typically be called when a lesson is saved
+ */
+export async function migrateTemporaryImagesToPermanent(
+  htmlContent: string,
+  temporaryImages: TemporaryImageInfo[],
+  lessonId: string,
+  sessionId?: string,
+  supabaseClient?: SupabaseClient
+): Promise<{
+  updatedHtml: string;
+  migrationResults: Array<{ success: boolean; tempUrl: string; permanentUrl?: string; error?: string }>;
+}> {
+  console.log(`🔄 Migrating ${temporaryImages.length} temporary images to permanent storage for lesson: ${lessonId}`);
+
+  if (temporaryImages.length === 0) {
+    return {
+      updatedHtml: htmlContent,
+      migrationResults: []
+    };
+  }
+
+  const tempService = new TemporaryImageService(sessionId, supabaseClient);
+  const migrationResults = await tempService.migrateToPermament(temporaryImages, lessonId);
+
+  // Update HTML to replace temporary URLs with permanent URLs
+  let updatedHtml = htmlContent;
+  
+  migrationResults.forEach(result => {
+    if (result.success && result.permanentUrl) {
+      // Replace temporary URL with permanent URL in HTML
+      const tempUrlEscaped = result.tempUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const tempUrlRegex = new RegExp(tempUrlEscaped, 'g');
+      
+      updatedHtml = updatedHtml.replace(tempUrlRegex, result.permanentUrl);
+      
+      // Also update data attributes
+      updatedHtml = updatedHtml.replace(
+        /data-storage-type="temporary"/g,
+        'data-storage-type="permanent"'
+      );
+      updatedHtml = updatedHtml.replace(
+        /data-temp-url="[^"]*"/g,
+        `data-permanent-url="${result.permanentUrl}"`
+      );
+      
+      console.log(`✅ Migrated: ${result.tempUrl} → ${result.permanentUrl}`);
+    } else {
+      console.error(`❌ Failed to migrate: ${result.tempUrl}`, result.error);
+    }
+  });
+
+  const successful = migrationResults.filter(r => r.success).length;
+  console.log(`🎯 Migration complete: ${successful}/${temporaryImages.length} images migrated successfully`);
+
+  return {
+    updatedHtml,
+    migrationResults
+  };
+}
+
+/**
+ * Legacy compatibility function - now always uses temporary storage
+ * @deprecated Use processSlideWithTempImages instead
+ */
+export async function processSlideWithImages(htmlContent: string): Promise<ProcessedSlideData> {
+  console.warn('⚠️ DEPRECATED: processSlideWithImages is deprecated. Use processSlideWithTempImages instead.');
+  
+  const result = await processSlideWithTempImages(htmlContent, undefined, {
+    useTemporaryStorage: true // Always use temporary storage
+  });
+  
+  return {
+    htmlWithImages: result.htmlWithImages,
+    generatedImages: result.generatedImages,
+    processingErrors: result.processingErrors
+  };
+}
