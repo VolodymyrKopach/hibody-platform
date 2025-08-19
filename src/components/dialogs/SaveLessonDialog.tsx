@@ -56,7 +56,7 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
     console.log('🎨 SAVE DIALOG: Selected slides:', selectedSlides.map(slide => ({
       id: slide.id,
       title: slide.title,
-      type: slide.type,
+      status: slide.status,
       hasHtmlContent: !!slide.htmlContent
     })));
     console.log('🖼️ SAVE DIALOG: Cached previews:', Object.keys(cachedPreviews).map(key => ({
@@ -262,7 +262,8 @@ const SaveLessonDialog: React.FC<SaveLessonDialogProps> = ({
                 id: slide.id,
                 title: slide.title,
                 htmlContent: slide.htmlContent,
-                type: slide.type
+                type: 'content', // Default type since SimpleSlide doesn't have type property
+                thumbnailUrl: slide.thumbnailUrl
               }))}
               selectedPreviewId={dialogData.selectedPreviewId}
               onPreviewSelect={onPreviewSelect}

@@ -115,11 +115,21 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
   // === ЗАВАНТАЖЕННЯ В SUPABASE STORAGE ===
 
   async uploadToStorage(slideId: string, lessonId: string): Promise<string | null> {
-
+    console.log(`📤 THUMBNAIL STORAGE: Uploading thumbnail for slide ${slideId} to lesson ${lessonId}`);
+    
     const thumbnailBase64 = this.get(slideId);
     if (!thumbnailBase64) {
+      console.log(`❌ THUMBNAIL STORAGE: No thumbnail found for slide ${slideId}`, {
+        availableSlides: Array.from(this.memoryCache.keys()),
+        cacheSize: this.memoryCache.size
+      });
       return null;
     }
+    
+    console.log(`✅ THUMBNAIL STORAGE: Found thumbnail for slide ${slideId}`, {
+      thumbnailLength: thumbnailBase64.length,
+      isDataUrl: thumbnailBase64.startsWith('data:')
+    });
 
     try {
       // Конвертуємо base64 в Blob
@@ -140,8 +150,11 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
         });
 
       if (error) {
+        console.error(`❌ THUMBNAIL STORAGE: Upload failed for slide ${slideId}:`, error);
         return null;
       }
+      
+      console.log(`✅ THUMBNAIL STORAGE: Upload successful for slide ${slideId}`, data);
 
       // Отримуємо публічний URL
       const { data: urlData } = supabase.storage
@@ -149,10 +162,12 @@ export class LocalThumbnailStorage implements ILocalThumbnailStorage {
         .getPublicUrl(filePath);
 
       const publicUrl = urlData.publicUrl;
+      console.log(`🌐 THUMBNAIL STORAGE: Public URL generated for slide ${slideId}:`, publicUrl);
       
       return publicUrl;
 
     } catch (error) {
+      console.error(`❌ THUMBNAIL STORAGE: Upload process failed for slide ${slideId}:`, error);
       return null;
     }
   }

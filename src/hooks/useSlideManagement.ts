@@ -318,19 +318,34 @@ const useSlideManagement = (
       const selectedSlideIds = Array.from(slideUIState.selectedSlides);
       console.log('📋 NEW SAVE: Слайди для збереження:', selectedSlideIds);
 
-      // 1. ЗАВАНТАЖУЄМО ТІЛЬКИ ВИБРАНИЙ THUMBNAIL В SUPABASE STORAGE
-      let lessonThumbnailUrl: string | null = null;
+      // 1. ПІДГОТОВКА THUMBNAIL DATA ДЛЯ ВІДПРАВКИ НА СЕРВЕР
+      let thumbnailData: string | null = null;
       
       if (dialogData.selectedPreviewId && dialogData.previewUrl) {
-        console.log('☁️ NEW SAVE: Завантаження вибраного превью в Storage:', dialogData.selectedPreviewId);
-        const lessonId = `lesson_${Date.now()}`; // Тимчасовий ID для нового уроку
+        console.log('🎯 NEW SAVE: Підготовка thumbnail data для відправки на сервер:', {
+          slideId: dialogData.selectedPreviewId,
+          previewUrlLength: dialogData.previewUrl.length,
+          isDataUrl: dialogData.previewUrl.startsWith('data:')
+        });
         
-        // Завантажуємо тільки вибраний thumbnail як превью уроку
-        lessonThumbnailUrl = await localThumbnailStorage.uploadToStorage(dialogData.selectedPreviewId, lessonId);
+        // Спочатку зберігаємо preview URL в локальному кеші, якщо його там немає
+        if (!localThumbnailStorage.has(dialogData.selectedPreviewId)) {
+          console.log('💾 NEW SAVE: Storing preview URL in local cache');
+          localThumbnailStorage.set(dialogData.selectedPreviewId, dialogData.previewUrl);
+        }
         
-        console.log('📊 NEW SAVE: Превью уроку завантажено:', lessonThumbnailUrl);
+        // Отримуємо thumbnail data для відправки на сервер
+        thumbnailData = localThumbnailStorage.get(dialogData.selectedPreviewId);
+        
+        console.log('📊 NEW SAVE: Thumbnail data підготовлено:', {
+          hasThumbnailData: !!thumbnailData,
+          thumbnailDataLength: thumbnailData?.length || 0
+        });
       } else {
-        console.log('⚠️ NEW SAVE: Превью для уроку не вибрано');
+        console.log('⚠️ NEW SAVE: Превью для уроку не вибрано', {
+          hasSelectedPreviewId: !!dialogData.selectedPreviewId,
+          hasPreviewUrl: !!dialogData.previewUrl
+        });
       }
 
       // 2. ПІДГОТОВКА ДАНИХ ДЛЯ ВІДПРАВКИ НА СЕРВЕР
@@ -338,7 +353,7 @@ const useSlideManagement = (
       console.log('🎯 NEW SAVE: Вибраний превью:', {
         slideId: dialogData.selectedPreviewId,
         hasPreviewUrl: !!dialogData.previewUrl,
-        storageUrl: lessonThumbnailUrl
+        hasThumbnailData: !!thumbnailData
       });
 
       // 3. ВІДПРАВЛЯЄМО НА СЕРВЕР (СЕРВЕР АВТОМАТИЧНО ЗНАЙДЕ TEMPORARY IMAGES В HTML)
@@ -353,7 +368,7 @@ const useSlideManagement = (
           subject: dialogData.subject,
           targetAge: dialogData.ageGroup,
           duration: slideUIState.currentLesson.duration,
-          thumbnail_url: lessonThumbnailUrl, // Тільки вибраний превью
+          thumbnail_data: thumbnailData, // Тільки вибраний превью
           slides: selectedSlideIds.map(slideId => {
             const slide = slideUIState.currentLesson!.slides.find(s => s.id === slideId)!;
             return {

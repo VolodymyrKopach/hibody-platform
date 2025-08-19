@@ -165,10 +165,8 @@ export class TemporaryImageService {
           success: true
         });
 
-        // 5. Видаляємо тимчасовий файл (опціонально)
-        await this.supabase.storage
-          .from('temp-images')
-          .remove([tempImage.filePath]);
+        // Keep temporary file for potential reuse in other lessons
+        console.log(`💾 TEMP MIGRATION: Keeping temp image for reuse: ${tempImage.filePath}`);
 
       } catch (error) {
         console.error(`💥 Error migrating image ${tempImage.filePath}:`, error);

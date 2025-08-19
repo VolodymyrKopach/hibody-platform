@@ -74,19 +74,27 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
       // Priority: 1) cachedPreviews, 2) slide.thumbnailUrl, 3) fallback
       if (cachedPreviews[slide.id]) {
         previewUrl = cachedPreviews[slide.id];
-        console.log(`✅ PREVIEW SELECTOR: Using cached preview for slide ${slide.id}`);
+        console.log(`✅ PREVIEW SELECTOR: Using cached preview for slide ${slide.id}`, {
+          previewLength: previewUrl.length,
+          isDataUrl: previewUrl.startsWith('data:')
+        });
       } else if (slide.thumbnailUrl) {
         previewUrl = slide.thumbnailUrl;
-        console.log(`💾 PREVIEW SELECTOR: Using database thumbnailUrl for slide ${slide.id}`);
+        console.log(`💾 PREVIEW SELECTOR: Using database thumbnailUrl for slide ${slide.id}`, {
+          thumbnailUrl: slide.thumbnailUrl
+        });
       } else {
         previewUrl = generateFallbackPreview();
-        console.log(`🎨 PREVIEW SELECTOR: Using fallback preview for slide ${slide.id}`);
+        console.log(`🎨 PREVIEW SELECTOR: Generated fallback preview for slide ${slide.id}`, {
+          previewLength: previewUrl.length,
+          isDataUrl: previewUrl.startsWith('data:')
+        });
       }
       
       initialPreviews[slide.id] = {
         url: previewUrl,
         loading: false,
-        error: !previewUrl || previewUrl === generateFallbackPreview()
+        error: !previewUrl
       };
     });
 

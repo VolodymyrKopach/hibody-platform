@@ -10,6 +10,7 @@ export interface CreateLessonRequest {
   subject: string;
   duration: number;
   thumbnail_url?: string;
+  thumbnail_data?: string; // Base64 thumbnail data to be uploaded by server
   initialSlides?: Partial<LessonSlide>[];
   slides?: Array<{
     title: string;

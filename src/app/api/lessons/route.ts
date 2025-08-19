@@ -209,6 +209,8 @@ export async function POST(request: NextRequest) {
       targetAge: body.targetAge,
       duration: body.duration,
       thumbnail_url: body.thumbnail_url,
+      hasThumbnailData: !!body.thumbnail_data,
+      thumbnailDataLength: body.thumbnail_data?.length || 0,
       slidesCount: body.slides?.length || 0,
       hasSlides: !!(body.slides && body.slides.length > 0),
       willAutoMigrateImages: true
@@ -306,6 +308,50 @@ export async function POST(request: NextRequest) {
     console.log('🔄 LESSONS API: Creating lesson in database...');
     const lesson = await lessonService.createLesson(lessonData);
     console.log('✅ LESSONS API: Lesson created with ID:', lesson.id);
+
+    // Upload thumbnail if provided
+    let finalThumbnailUrl: string | null = null;
+    if (body.thumbnail_data) {
+      console.log('🖼️ LESSONS API: Uploading thumbnail to storage...');
+      try {
+        // Convert base64 to blob
+        const response = await fetch(body.thumbnail_data);
+        const blob = await response.blob();
+
+        // Create filename and path
+        const fileName = `lesson_thumbnail_${Date.now()}.webp`;
+        const filePath = `lessons/${lesson.id}/thumbnails/${fileName}`;
+
+        // Upload to Supabase Storage
+        const supabase = await createClient();
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('lesson-assets')
+          .upload(filePath, blob, {
+            contentType: 'image/webp',
+            upsert: true
+          });
+
+        if (uploadError) {
+          console.error('❌ LESSONS API: Thumbnail upload failed:', uploadError);
+        } else {
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from('lesson-assets')
+            .getPublicUrl(filePath);
+
+          finalThumbnailUrl = urlData.publicUrl;
+          console.log('✅ LESSONS API: Thumbnail uploaded successfully:', finalThumbnailUrl);
+
+          // Update lesson with thumbnail URL
+          await lessonService.updateLesson(lesson.id, {
+            thumbnail_url: finalThumbnailUrl
+          });
+          console.log('📝 LESSONS API: Lesson updated with thumbnail URL');
+        }
+      } catch (error) {
+        console.error('❌ LESSONS API: Thumbnail upload process failed:', error);
+      }
+    }
 
     // If slides are provided, create them
     if (body.slides && body.slides.length > 0) {
