@@ -205,7 +205,8 @@ export class SlideGenerationService {
     description: string,
     title: string,
     lessonTopic: string,
-    lessonAge: string
+    lessonAge: string,
+    supabaseClient?: any
   ): Promise<SimpleSlide> {
     logger.chat.info('Generating single slide', {
       method: 'generateSlide',
@@ -220,7 +221,8 @@ export class SlideGenerationService {
         lessonAge,
         { 
           sessionId: `single_${Date.now()}`,
-          useTemporaryStorage: true 
+          useTemporaryStorage: true,
+          supabaseClient
         }
       );
 

@@ -246,7 +246,7 @@ IMPORTANT:
     slideDescription: string, 
     topic: string, 
     age: string, 
-    options: { sessionId?: string; useTemporaryStorage?: boolean } = {}
+    options: { sessionId?: string; useTemporaryStorage?: boolean; supabaseClient?: SupabaseClient } = {}
   ): Promise<string> {
     const prompt = await this.buildSlideContentPrompt(slideDescription, topic, age);
 
@@ -284,7 +284,8 @@ IMPORTANT:
         content,
         options.sessionId,
         {
-          useTemporaryStorage: options.useTemporaryStorage ?? true
+          useTemporaryStorage: options.useTemporaryStorage ?? true,
+          supabaseClient: options.supabaseClient
         }
       );
       

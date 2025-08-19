@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SlideGenerationService } from '@/services/chat/services/SlideGenerationService';
 import { SimpleSlide } from '@/types/chat';
+import { createClient } from '@/lib/supabase/server';
 
 interface SingleSlideGenerationRequest {
   title: string;
@@ -52,6 +53,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get authenticated Supabase client for temporary storage
+    const supabase = await createClient();
+    
     // Create slide generation service
     const slideGenerationService = new SlideGenerationService();
     
@@ -63,7 +67,8 @@ export async function POST(request: NextRequest) {
         description,
         title,
         topic,
-        age
+        age,
+        supabase
       );
 
       console.log('✅ SINGLE SLIDE API: Successfully generated slide:', {
