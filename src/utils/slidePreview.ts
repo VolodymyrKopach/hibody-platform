@@ -126,8 +126,26 @@ export async function generateSlideThumbnail(
     }
     
     try {
+      // Wait for images to load before capturing
+      const images = container.querySelectorAll('img');
+      const imagePromises = Array.from(images).map(img => {
+        return new Promise<void>((resolve) => {
+          if (img.complete) {
+            resolve();
+          } else {
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // Continue even if image fails to load
+            // Timeout after 3 seconds to prevent hanging
+            setTimeout(() => resolve(), 3000);
+          }
+        });
+      });
+      
+      // Wait for all images to load (or timeout)
+      await Promise.all(imagePromises);
+      
       // Fast-forward animations to their final state and allow fonts to load
-      await new Promise(resolve => setTimeout(resolve, 200)); // Increased delay for DOM and fonts to settle
+      await new Promise(resolve => setTimeout(resolve, 300)); // Increased delay for DOM, fonts, and images to settle
       
       // Configure snapDOM options with hardcoded dimensions
       const snapdomOptions = {
@@ -221,7 +239,7 @@ export async function generateLessonPreviews(
 /**
  * Creates a fallback preview as a gradient with text
  */
-export function generateFallbackPreview(options: SlidePreviewOptions = {}): string {
+export function generateFallbackPreview(options: SlidePreviewOptions & { width?: number; height?: number } = {}): string {
   const {
     width = 640,         // Standard width for fallback preview
     height = 480,        // Standard height for fallback preview
@@ -479,6 +497,37 @@ function replaceImagesWithPlaceholders(htmlContent: string): string {
   return doc.documentElement.outerHTML;
 }
 
+
+
+/**
+ * Converts an image to data URL for better snapDOM compatibility
+ */
+async function convertImageToDataUrl(img: HTMLImageElement): Promise<string | null> {
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    
+    // Wait for image to load if not already loaded
+    if (!img.complete) {
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Image failed to load'));
+        setTimeout(() => reject(new Error('Image load timeout')), 5000);
+      });
+    }
+    
+    canvas.width = img.naturalWidth || img.width || 200;
+    canvas.height = img.naturalHeight || img.height || 200;
+    
+    ctx.drawImage(img, 0, 0);
+    return canvas.toDataURL('image/webp', 0.8);
+  } catch (error) {
+    console.warn('Failed to convert image to data URL:', error);
+    return null;
+  }
+}
+
 /**
  * Optimizes HTML content specifically for snapDOM capture
  * Handles both complete HTML documents and HTML fragments
@@ -504,38 +553,67 @@ function optimizeHtmlForSnapdom(htmlContent: string): string {
   const elementsToRemove = doc.querySelectorAll('script, iframe, embed, object, video, audio, noscript');
   elementsToRemove.forEach(el => el.remove());
 
-  // Handle external images - replace with placeholders or data URLs
+  // Handle external images - keep trusted domains and convert to data URLs when possible
   const images = doc.querySelectorAll('img');
-  images.forEach((img, index) => {
+  
+  for (let index = 0; index < images.length; index++) {
+    const img = images[index];
     const src = img.getAttribute('src');
+    
     if (src && (src.startsWith('http') || src.startsWith('//'))) {
-      // Replace external images with CSS-based placeholders
-      const placeholder = doc.createElement('div');
-      placeholder.style.cssText = `
-        width: ${img.width || 200}px;
-        height: ${img.height || 200}px;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-        border-radius: 8px;
-        text-align: center;
-        vertical-align: ${img.style.verticalAlign || 'top'};
-        margin: ${img.style.margin || '0'};
-      `;
-      placeholder.textContent = img.alt || `🖼️ Image ${index + 1}`;
+      // Check if it's from trusted domains (Supabase storage, etc.)
+      const isTrustedDomain = src.includes('supabase.co') || 
+                             src.includes('localhost') ||
+                             src.includes('127.0.0.1') ||
+                             src.startsWith('data:');
       
-      // Copy any classes
-      if (img.className) {
-        placeholder.className = img.className;
+      if (isTrustedDomain) {
+        // For trusted domains, optimize for snapDOM compatibility
+        try {
+          // Add crossorigin attribute for CORS (important for external images)
+          img.setAttribute('crossorigin', 'anonymous');
+          
+          // Add loading attribute to ensure image loads before capture
+          img.setAttribute('loading', 'eager');
+          
+          // Optimize image styling for snapDOM
+          img.style.maxWidth = '100%';
+          img.style.height = 'auto';
+          img.style.display = 'block';
+          
+
+        } catch (error) {
+          console.warn(`⚠️ Could not optimize trusted image, keeping as-is: ${error}`);
+        }
+      } else {
+        // Only replace untrusted external images with placeholders
+        const placeholder = doc.createElement('div');
+        placeholder.style.cssText = `
+          width: ${img.width || 200}px;
+          height: ${img.height || 200}px;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-family: Arial, sans-serif;
+          font-size: 14px;
+          border-radius: 8px;
+          text-align: center;
+          vertical-align: ${img.style.verticalAlign || 'top'};
+          margin: ${img.style.margin || '0'};
+        `;
+        placeholder.textContent = img.alt || `🖼️ External Image`;
+        
+        // Copy any classes
+        if (img.className) {
+          placeholder.className = img.className;
+        }
+        
+        img.parentNode?.replaceChild(placeholder, img);
       }
-      
-      img.parentNode?.replaceChild(placeholder, img);
     }
-  });
+  }
 
   // Convert interactive elements to static ones with preserved styling
   const interactiveElements = doc.querySelectorAll('button, input, select, textarea, a[href]');
@@ -543,8 +621,8 @@ function optimizeHtmlForSnapdom(htmlContent: string): string {
     const staticDiv = doc.createElement('div');
     staticDiv.className = el.className;
     
-    // Copy all computed styles
-    const computedStyle = window.getComputedStyle ? null : (el as HTMLElement).style;
+    // Copy all computed styles (getComputedStyle is always available in modern browsers)
+    // const computedStyle = window.getComputedStyle ? null : (el as HTMLElement).style;
     staticDiv.style.cssText = (el as HTMLElement).style.cssText;
     
     // Set content
