@@ -3,7 +3,7 @@ import { Message, SimpleLesson } from '@/types/chat';
 import { ChatServiceAPIAdapter } from '@/services/chat/ChatServiceAPIAdapter';
 import { ConversationHistory } from '@/services/chat/types';
 import { useRealTimeSlideGeneration } from './useRealTimeSlideGeneration';
-import { useSlideProgressSSE } from './useSlideProgressSSE';
+// import { useSlideProgressSSE } from './useSlideProgressSSE'; // Removed - no longer needed
 import { ContextCompressionService } from '@/services/context/ContextCompressionService';
 
 // === СПРОЩЕНИЙ КОНТЕКСТ РОЗМОВИ (ТІЛЬКИ РЯДОК) ===
@@ -110,109 +110,7 @@ export const useChatLogic = () => {
   // API adapter for client-server communication
   const apiAdapter = new ChatServiceAPIAdapter();
   
-  // SSE progress tracking
-  const {
-    isGenerating: isSSEGenerating,
-    currentProgress,
-    startGenerationWithProgress,
-    connect: connectSSE
-  } = useSlideProgressSSE({
-    onProgressUpdate: (data) => {
-      // === ОНОВЛЮЄМО TYPING STAGE ПІД ЧАС ГЕНЕРАЦІЇ ===
-      setTypingStage('generating');
-      
-      // Оновлюємо повідомлення з прогресом
-      setMessages(prevMessages => {
-        const newMessages = [...prevMessages];
-        const lastMessage = newMessages[newMessages.length - 1];
-        
-        if (lastMessage && lastMessage.sender === 'ai') {
-          // Додаємо прогрес до повідомлення
-          (lastMessage as any).slideGenerationProgress = data.progress;
-          (lastMessage as any).isGeneratingSlides = true;
-          
-          // Оновлюємо урок якщо є
-          if (data.lesson) {
-            lastMessage.lesson = data.lesson;
-            
-            // === ВИКЛИК CALLBACK ДЛЯ ОНОВЛЕННЯ ПАНЕЛІ СЛАЙДІВ ===
-            if (onLessonUpdateRef.current) {
-              onLessonUpdateRef.current(data.lesson);
-            }
-          }
-            
-            // Примусово оновлюємо повідомлення для тригеру useEffect
-            return [...newMessages];
-        }
-        
-        return newMessages;
-      });
-    },
-    onCompletion: (data) => {
-      // === ПОКАЗУЄМО FINALIZING STAGE ===
-      setTypingStage('finalizing');
-      
-      // === ВИМИКАЄМО TYPING VIEW ПІСЛЯ КОРОТКОЇ ЗАТРИМКИ ===
-      setTimeout(() => {
-        setIsTyping(false);
-        setTypingStage('thinking');
-        setIsGeneratingSlides(false);
-      }, 1000);
-      
-      // Оновлюємо повідомлення з фінальним результатом
-      setMessages(prevMessages => {
-        const newMessages = [...prevMessages];
-        const lastMessage = newMessages[newMessages.length - 1];
-        
-        if (lastMessage && lastMessage.sender === 'ai') {
-          (lastMessage as any).slideGenerationProgress = data.finalProgress;
-          (lastMessage as any).isGeneratingSlides = false;
-          lastMessage.lesson = data.lesson;
-          
-          // === ВИКЛИК CALLBACK ДЛЯ ФІНАЛЬНОГО ОНОВЛЕННЯ ПАНЕЛІ СЛАЙДІВ ===
-          if (onLessonUpdateRef.current) {
-            onLessonUpdateRef.current(data.lesson);
-          }
-          
-          // Прибираємо кнопку скасування після завершення генерації
-          lastMessage.availableActions = lastMessage.availableActions?.filter(
-            action => action.action !== 'cancel_generation'
-          ) || [];
-          
-          // Перевіряємо, чи вже додано статистику, щоб уникнути дублювання
-          if (!lastMessage.text.includes('✅ **Генерація завершена!**')) {
-            // Замінюємо початковий текст про прогрес на фінальну статистику
-            const planSection = lastMessage.text.split('⏳ **Прогрес:**')[0];
-            lastMessage.text = planSection + `✅ **Генерація завершена!**
-📊 **Статистика:**
-
-Створено слайдів: ${data.statistics.completedSlides}/${data.statistics.totalSlides}
-${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSlides}` : ''}`;
-          }
-        }
-        
-        return newMessages;
-      });
-    },
-    onError: (error) => {
-      // === ВИМИКАЄМО TYPING VIEW ПРИ ПОМИЛЦІ ГЕНЕРАЦІЇ ===
-      setIsTyping(false);
-      setTypingStage('thinking');
-      setIsGeneratingSlides(false);
-      
-      // Додаємо повідомлення про помилку
-      const errorMessage: Message = {
-        id: Date.now(),
-        text: `❌ **Помилка генерації:** ${error}`,
-        sender: 'ai',
-        timestamp: new Date(),
-        status: 'delivered',
-
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
-    }
-  });
+  // SSE progress tracking removed - using parallel generation instead
   
   const [generationState, generationActions] = useRealTimeSlideGeneration(
     (lesson) => {
@@ -504,7 +402,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
         setIsGeneratingSlides(false);
       }
     }
-  }, [isLoading, conversationHistory, apiAdapter, generationActions, startGenerationWithProgress, conversationContext]);
+  }, [isLoading, conversationHistory, apiAdapter, generationActions, conversationContext]);
 
 
 
@@ -928,9 +826,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     generationState,
     generationActions,
     
-    // Додаємо інформацію про SSE прогрес
-    isSSEGenerating,
-    currentProgress,
+    // SSE progress removed - using parallel generation instead
     
     // Функція для встановлення callback оновлення уроку
     setOnLessonUpdate,

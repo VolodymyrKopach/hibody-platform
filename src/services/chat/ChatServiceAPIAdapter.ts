@@ -176,19 +176,8 @@ export class ChatServiceAPIAdapter {
   //
   //     console.log('📋 [API Adapter] Extracted slide descriptions:', slideDescriptions.length);
   //
-  //     // Make API call to sequential generation endpoint
-  //     const response = await fetch('/api/generation/slides/sequential', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         slideDescriptions,
-  //         lesson: conversationHistory.currentLesson,
-  //         topic: conversationHistory.lessonTopic || 'Unknown topic',
-  //         age: '6-12'
-  //       }),
-  //     });
+  //     // Note: Sequential generation endpoint has been removed
+  //     throw new Error('Sequential generation endpoint has been removed. Use parallel generation instead.');
   //
   //     if (!response.ok) {
   //       const errorData = await response.json();
