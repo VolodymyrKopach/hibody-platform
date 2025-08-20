@@ -7,9 +7,9 @@ import { IIntentHandler } from './handlers/IIntentHandler';
 import { GeminiContentService } from '@/services/content/GeminiContentService';
 import { GeminiSimpleEditService } from '@/services/content/GeminiSimpleEditService';
 import { FallbackHandler } from './handlers/FallbackHandler';
-import { EditPlanHandler } from './handlers/EditPlanHandler';
+
 import { EnhancedCreateLessonHandler } from './handlers/EnhancedCreateLessonHandler';
-import { HelpHandler } from './handlers/HelpHandler';
+
 import { DataCollectionHandler } from './handlers/DataCollectionHandler';
 import { type ConversationHistory, type ChatResponse } from './types';
 
@@ -72,8 +72,6 @@ export class ChatService {
     this.handlers = [
       new DataCollectionHandler(),
       new EnhancedCreateLessonHandler(),
-      new EditPlanHandler(),
-      new HelpHandler(),
       new FallbackHandler()
     ];
   }
@@ -111,19 +109,11 @@ export class ChatService {
         return await this.actionHandlerService.handleAction(action, conversationHistory, intentResult);
       }
       
-      if (intentResult.intent === 'generate_slides') {
-        // Handle GENERATE_SLIDES intent by delegating to action handler
-        // This supports both text-based intent detection and direct action calls
-        return await this.actionHandlerService.handleAction('generate_slides', conversationHistory, intentResult);
-      }
 
-      if (intentResult.intent === 'create_slide') {
-        return await this.handleCreateSlide(conversationHistory, intentResult);
-      }
 
-      if (intentResult.intent === 'regenerate_slide') {
-        return await this.actionHandlerService.handleAction('regenerate_slide', conversationHistory, intentResult);
-      }
+
+
+
 
       if (intentResult.intent === 'edit_slide') {
         return await this.handleEditSlide(conversationHistory, intentResult);
@@ -172,68 +162,9 @@ export class ChatService {
     );
   }
 
-  private async handleCreateSlide(conversationHistory?: ConversationHistory, intentResult?: any): Promise<ChatResponse> {
-    if (conversationHistory?.currentLesson) {
-      return await this.handleCreateAdditionalSlide(conversationHistory, intentResult);
-    }
-    
-    return {
-      success: false,
-      message: '🤔 It seems you want to create a slide, but first you need to create a lesson.',
-      conversationHistory,
-      error: 'CREATE_SLIDE without lesson context'
-    };
-  }
 
-  private async handleCreateAdditionalSlide(conversationHistory: ConversationHistory, intentResult?: any): Promise<ChatResponse> {
-    if (!conversationHistory.currentLesson) {
-      throw new Error('No lesson context for additional slide creation');
-    }
 
-    const slideTitle = intentResult?.parameters?.slideTitle || `Additional slide`;
-    const slideDescription = intentResult?.parameters?.slideDescription || 
-      `Additional educational material for the lesson about ${conversationHistory.lessonTopic}`;
 
-    try {
-      const newSlide = await this.slideGenerationService.generateSlide(
-        slideDescription,
-        slideTitle,
-        conversationHistory.lessonTopic || 'lesson',
-        conversationHistory.lessonAge || '6-8 years'
-      );
-
-      newSlide.title = slideTitle;
-
-      const updatedLesson = this.lessonManagementService.addSlideToLesson(
-        conversationHistory.currentLesson,
-        newSlide
-      );
-
-      return {
-        success: true,
-        message: `✅ **New slide added!**\n\nSlide "${slideTitle}" successfully created and added to the lesson.`,
-        conversationHistory: {
-          ...conversationHistory,
-          currentLesson: updatedLesson
-        },
-        actions: [
-          {
-            action: 'create_slide',
-            label: '➕ Add another slide',
-            description: 'Create another slide for this lesson'
-          }
-        ],
-        lesson: updatedLesson
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: `😔 An error occurred while creating a new slide.`,
-        conversationHistory,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
-  }
 
   private async handleEditSlide(conversationHistory?: ConversationHistory, intentResult?: any): Promise<ChatResponse> {
     if (!conversationHistory?.currentLesson) {
@@ -289,13 +220,7 @@ export class ChatService {
           currentLesson: updatedLesson,
           currentSlideIndex: slideNumber
         },
-        actions: [
-          {
-            action: 'regenerate_slide',
-            label: '🔄 Regenerate',
-            description: `Create a new version of slide ${slideNumber}`
-          }
-        ],
+        actions: [],
         lesson: updatedLesson
       };
     } catch (error) {
@@ -361,13 +286,7 @@ export class ChatService {
           ...conversationHistory,
           currentLesson: updatedLesson
         },
-        actions: [
-          {
-            action: 'regenerate_slide',
-            label: '🔄 Regenerate',
-            description: `Create a new version of slide ${slideNumber}`
-          }
-        ],
+        actions: [],
         lesson: updatedLesson
       };
     } catch (error) {
@@ -439,13 +358,7 @@ export class ChatService {
           ...conversationHistory,
           currentLesson: updatedLesson
         },
-        actions: [
-          {
-            action: 'regenerate_slide',
-            label: '🔄 Regenerate',
-            description: `Create a new version of slide ${slideNumber}`
-          }
-        ],
+        actions: [],
         lesson: updatedLesson
       };
     } catch (error) {
@@ -469,13 +382,7 @@ export class ChatService {
       success: true,
       message,
       conversationHistory,
-      actions: [
-        {
-          action: 'help',
-          label: '❓ Help',
-          description: 'Show available commands'
-        }
-      ]
+      actions: []
     };
   }
 } 

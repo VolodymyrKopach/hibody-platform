@@ -38,13 +38,7 @@ export class FallbackHandler implements IIntentHandler {
       success: true,
       message,
       conversationHistory,
-      actions: [
-        {
-          action: 'help',
-          label: intent.language === 'uk' ? '❓ Допомога' : intent.language === 'ru' ? '❓ Помощь' : '❓ Help',
-          description: intent.language === 'uk' ? 'Показати доступні команди' : intent.language === 'ru' ? 'Показать доступные команды' : 'Show available commands'
-        }
-      ]
+      actions: []
     };
   }
 

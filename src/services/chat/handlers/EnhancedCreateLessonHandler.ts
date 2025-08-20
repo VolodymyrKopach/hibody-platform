@@ -90,16 +90,6 @@ export class EnhancedCreateLessonHandler implements IIntentHandler {
             action: 'approve_plan',
             label: '✅ Approve plan and generate slides', // Translated
             description: 'Approve the plan and proceed to slide creation' // Translated
-          },
-          {
-            action: 'edit_plan',
-            label: '✏️ Edit plan', // Translated
-            description: 'Make changes to the lesson plan' // Translated
-          },
-          {
-            action: 'regenerate_plan',
-            label: '🔄 Create new plan', // Translated
-            description: 'Generate an alternative plan version' // Translated
           }
         ]
       };

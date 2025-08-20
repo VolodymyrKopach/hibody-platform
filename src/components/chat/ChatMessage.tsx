@@ -34,38 +34,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const { t } = useTranslation('chat');
   const theme = useTheme();
 
-  // Handle lesson creation from message
-  const handleLessonCreate = () => {
-    if (message.text.includes('```html') && onLessonCreate) {
-      // Parsing lesson from Assistant response
-      const lessonMatch = message.text.match(/## 📚 (.*?)\n/);
-      const title = lessonMatch ? lessonMatch[1] : 'New lesson';
-      
-      // Simple parser for creating slides from HTML
-      const htmlMatch = message.text.match(/```html\n([\s\S]*?)\n```/);
-      if (htmlMatch) {
-        const lesson: SimpleLesson = {
-          id: `lesson_${Date.now()}`,
-          title,
-          description: `Lesson created from chat`,
-          subject: 'General education',
-          ageGroup: '6-12 years',
-          duration: 30,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          authorId: 'ai-chat',
-          slides: [{
-            id: `slide_${Date.now()}`,
-            title: title,
-            content: htmlMatch[1],
-            htmlContent: htmlMatch[1],
-            status: 'completed'
-          }]
-        };
-        onLessonCreate(lesson);
-      }
-    }
-  };
+
 
   // Automatic lesson creation when a message with a slide is received
   React.useEffect(() => {
@@ -313,22 +282,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 </Box>
               )}
 
-              {message.sender === 'ai' && message.text.includes('```html') && (
-                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={handleLessonCreate}
-                    sx={{
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      fontSize: '0.75rem',
-                    }}
-                  >
-                    {t('actions.createLesson')}
-                  </Button>
-                </Box>
-              )}
+
 
               {/* Message Status */}
               {message.sender === 'user' && (

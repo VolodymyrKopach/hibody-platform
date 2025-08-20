@@ -327,7 +327,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     setIsLoading(true);
 
     // === АКТИВУЄМО TYPING VIEW ДЛЯ APPROVE_PLAN ===
-    if (action === 'approve_plan' || action === 'generate_slides') {
+    if (action === 'approve_plan') {
       setIsTyping(true);
       setTypingStage('processing');
       setIsGeneratingSlides(true);
@@ -337,8 +337,8 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
     const updatedContext = conversationContext + ' | ACTION: ' + action;
 
     try {
-      // Спеціальна обробка для approve_plan та generate_slides - використовуємо SSE генерацію з прогресом
-      if ((action === 'approve_plan' || action === 'generate_slides') && conversationHistory) {
+      // Спеціальна обробка для approve_plan - використовуємо SSE генерацію з прогресом
+      if (action === 'approve_plan' && conversationHistory) {
         
         // === ПЕРЕДАЄМО КОНТЕКСТ ДО API ADAPTER ДЛЯ PRE-REQUEST COMPRESSION ===
         const response = await apiAdapter.sendMessage('', conversationHistory, action, updatedContext);
@@ -470,7 +470,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       console.error('Error handling action:', error);
       
       // === ВИМИКАЄМО TYPING VIEW ПРИ ПОМИЛЦІ (ОКРІМ APPROVE_PLAN) ===
-      if (action !== 'approve_plan' && action !== 'generate_slides') {
+      if (action !== 'approve_plan') {
         setIsTyping(false);
         setTypingStage('thinking');
         setIsGeneratingSlides(false);
@@ -498,7 +498,7 @@ ${data.statistics.failedSlides > 0 ? `Помилок: ${data.statistics.failedSl
       
       // === НЕ ВИМИКАЄМО TYPING ДЛЯ APPROVE_PLAN І GENERATE_SLIDES ===
       // Typing буде вимкнено в onCompletion або onError callbacks SSE
-      if (action !== 'approve_plan' && action !== 'generate_slides') {
+      if (action !== 'approve_plan') {
         setIsTyping(false);
         setTypingStage('thinking');
         setIsGeneratingSlides(false);

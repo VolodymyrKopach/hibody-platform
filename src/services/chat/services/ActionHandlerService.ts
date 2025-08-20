@@ -1,6 +1,6 @@
 import { type ConversationHistory, type ChatResponse } from '../types';
 import { type SlideDescription, type SlideGenerationProgress, type SimpleLesson, type SimpleSlide } from '@/types/chat';
-import { HelpHandler } from '../handlers/HelpHandler';
+
 import { 
   IActionHandlerService,
   ISlideGenerationService,
@@ -23,21 +23,11 @@ export class ActionHandlerService implements IActionHandlerService {
       case 'approve_plan':
         return await this.handleApprovePlan(history);
       
-      case 'generate_slides':
-        // IMPORTANT: Generate slides behaves exactly like approve_plan
-        // This ensures both "approve plan" and "generate slides" quick actions create lesson context
-        // and trigger bulk slide generation from the lesson plan
-        return await this.handleApprovePlan(history);
-      
-      case 'edit_plan':
-        return await this.handleEditPlanAction(history);
 
-      case 'regenerate_slide':
-        return await this.handleRegenerateSlide(history, intent);
-        
-      case 'help':
-        const helpHandler = new HelpHandler();
-        return await helpHandler.handle(intent || { intent: 'help', language: 'uk' });
+      
+
+
+
       
       default:
         throw new Error(`Unknown action: ${action}`);
@@ -87,111 +77,9 @@ export class ActionHandlerService implements IActionHandlerService {
     };
   }
 
-  private async handleEditPlanAction(history?: ConversationHistory): Promise<ChatResponse> {
-    if (!history) {
-      throw new Error('No conversation history for plan editing');
-    }
 
-    const newConversationHistory: ConversationHistory = {
-      ...history,
-      step: 'plan_editing'
-    };
 
-    return {
-      success: true,
-      message: `Write what changes you want to make to the plan. For example:
-        
-- "Add a slide about flying dinosaurs"
-- "Change the children's age to 8 years"  
-- "Make the lesson shorter - 4 slides"
-- "Add more games"`,
-      conversationHistory: newConversationHistory,
-      actions: []
-    };
-  }
 
-  private async handleRegenerateSlide(history?: ConversationHistory, intent?: any): Promise<ChatResponse> {
-    if (!history?.currentLesson) {
-      return {
-        success: false,
-        message: `❌ **Regeneration error**
-
-No lesson found for slide regeneration.`,
-        conversationHistory: history,
-        error: 'No lesson context for slide regeneration'
-      };
-    }
-
-    const slideNumber = intent?.parameters?.slideNumber || history.currentSlideIndex || 1;
-    
-    if (slideNumber < 1 || slideNumber > history.currentLesson.slides.length) {
-      return {
-        success: false,
-        message: `❌ **Regeneration error**
-
-Slide ${slideNumber} does not exist.`,
-        conversationHistory: history,
-        error: `Slide ${slideNumber} does not exist`
-      };
-    }
-
-    try {
-      const currentSlide = history.currentLesson.slides[slideNumber - 1];
-      const regeneratedSlide = await this.slideEditingService.regenerateSlide(
-        currentSlide,
-        history.lessonTopic || 'lesson',
-        history.lessonAge || '6-8 years'
-      );
-
-      // Update lesson with regenerated slide
-      const updatedSlides = history.currentLesson.slides.map((slide, index) => 
-        index === slideNumber - 1 ? regeneratedSlide : slide
-      );
-
-      const updatedLesson = this.lessonManagementService.updateLesson(history.currentLesson, {
-        slides: updatedSlides
-      });
-
-      const detectedChanges = this.slideAnalysisService.analyzeSlideChanges(
-        currentSlide, 
-        regeneratedSlide.htmlContent || '', 
-        'Complete slide regeneration'
-      );
-
-      return {
-        success: true,
-        message: `🔄 **Slide ${slideNumber} regenerated!**
-
-📋 **Detailed change report:**
-${detectedChanges.map(change => `• ${change}`).join('\n')}`,
-        conversationHistory: {
-          ...history,
-          currentLesson: updatedLesson,
-          currentSlideIndex: slideNumber
-        },
-        actions: [
-          {
-            action: 'generate_next_slide',
-            label: '▶️ Next slide',
-            description: `Generate slide ${slideNumber + 1}`
-          },
-          {
-            action: 'regenerate_slide',
-            label: '🔄 Regenerate again',
-            description: `Create another version of slide ${slideNumber}`
-          }
-        ],
-        lesson: updatedLesson
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: `😔 An error occurred while regenerating slide ${slideNumber}.`,
-        conversationHistory: history,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
-  }
 
   // Synchronous slide generation - waits for all slides to complete
   private async generateAllSlidesSync(
