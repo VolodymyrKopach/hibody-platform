@@ -9,7 +9,7 @@ import { GeminiSimpleEditService } from '@/services/content/GeminiSimpleEditServ
 import { FallbackHandler } from './handlers/FallbackHandler';
 
 import { EnhancedCreateLessonHandler } from './handlers/EnhancedCreateLessonHandler';
-
+import { EditPlanHandler } from './handlers/EditPlanHandler';
 import { DataCollectionHandler } from './handlers/DataCollectionHandler';
 import { type ConversationHistory, type ChatResponse } from './types';
 
@@ -72,6 +72,7 @@ export class ChatService {
     this.handlers = [
       new DataCollectionHandler(),
       new EnhancedCreateLessonHandler(),
+      new EditPlanHandler(),
       new FallbackHandler()
     ];
   }

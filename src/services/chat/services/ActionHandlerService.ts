@@ -23,11 +23,8 @@ export class ActionHandlerService implements IActionHandlerService {
       case 'approve_plan':
         return await this.handleApprovePlan(history);
       
-
-      
-
-
-
+      case 'edit_plan_more':
+        return await this.handleEditPlanMore(history);
       
       default:
         throw new Error(`Unknown action: ${action}`);
@@ -188,5 +185,30 @@ export class ActionHandlerService implements IActionHandlerService {
 
   setMessageCallback(callback: (message: any) => void) {
     this.onMessageCallback = callback;
+  }
+
+  private async handleEditPlanMore(history?: ConversationHistory): Promise<ChatResponse> {
+    if (!history?.planningResult) {
+      throw new Error('No plan to edit');
+    }
+
+    // Return a prompt for the user to provide more editing instructions
+    return {
+      success: true,
+      message: `📝 **Ready for more changes!**
+
+Current lesson plan is ready for additional edits. 
+
+**What would you like to change?** You can:
+• Add new slides about specific topics
+• Remove or modify existing slides  
+• Change the focus or difficulty level
+• Make the lesson shorter or longer
+• Adjust content for better engagement
+
+Just tell me what you'd like to change and I'll update the plan accordingly.`,
+      conversationHistory: history,
+      actions: []
+    };
   }
 } 

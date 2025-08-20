@@ -20,7 +20,7 @@ export class GeminiContentService {
   async generateLessonPlan(
     topic: string, 
     age: string, 
-    language: string = 'uk', 
+    language: string = 'en', 
     conversationContext?: string
   ): Promise<string> {
     const prompt = this.buildLessonPlanPrompt(topic, age, language, conversationContext);
@@ -80,84 +80,7 @@ Based on this conversation history, consider the user's preferences, style, and 
 `;
     }
 
-    if (language === 'en') {
-      return `You are an expert in developing educational programs for children. Create a detailed and engaging lesson plan.
-
-${contextSection}
-
-INPUT DATA:
-- Topic: ${topic}
-- Children's age: ${age}
-- Language: English
-
-LESSON PLAN REQUIREMENTS:
-1. Create an engaging title
-2. Clear learning objectives
-3. Age-appropriate content structure
-4. Interactive elements and activities
-5. Assessment methods
-6. Required materials
-
-STRUCTURE:
-## 📚 [Lesson Title]
-
-**Target Audience:** ${age}
-**Duration:** 30-45 minutes
-**Subject:** [Subject area]
-
-### 🎯 Learning Objectives
-- [Objective 1]
-- [Objective 2]
-- [Objective 3]
-
-### 📋 Lesson Plan
-
-#### Slide 1: Introduction
-- [Content description]
-- [Interactive element]
-
-#### Slide 2: Main Content
-- [Content description]
-- [Activities]
-
-[Continue with more slides...]
-
-### 🎮 Interactive Activities
-- [Activity 1]
-- [Activity 2]
-
-### 📊 Assessment
-- [Assessment method]
-
-### 📚 Required Materials
-- [Material 1]
-- [Material 2]
-
-### 💡 Recommendations
-- [Teaching tips]
-- [Adaptation suggestions]
-
-${this.getAgeSpecificComponentGuidance(age)}
-
-**LESSON PLAN CONTENT INTEGRATION:**
-- Seamlessly integrate age-appropriate interactive elements into slide content descriptions
-- Naturally weave teaching approaches and activities based on component guidance
-- Consider cognitive load and attention span for ${age} year olds
-- Balance interactive elements with content delivery
-- Plan for progressive difficulty across slides
-- Write educational content that teachers can directly implement
-
-IMPORTANT:
-- Use clear slide structure: "#### Slide X: [Title]"
-- DO NOT include duration in slide titles (e.g. use "Introduction" not "Introduction (5 minutes)")
-- Integrate teaching approaches naturally within slide descriptions
-- Focus on pedagogical methods rather than technical specifications
-- Write in educational language that emphasizes student engagement and learning outcomes
-
-Create a complete, detailed lesson plan that is engaging and educational for the specified age group.`;
-    }
-
-    // English prompt (default - changed from Ukrainian)
+    // Always use English prompt
     return `You are an expert in developing educational programs for children. Create a detailed and engaging lesson plan.
 
 ${contextSection}
@@ -823,5 +746,178 @@ Provide the updated plan in the same format as the original, with clear slide st
       console.error('Gemini plan editing error:', error);
       throw error;
     }
+  }
+
+  async editLessonPlan(
+    currentPlan: string,
+    editInstruction: string,
+    topic: string,
+    age: string,
+    language: string = 'en',
+    conversationContext?: string
+  ): Promise<string> {
+    const prompt = this.buildEditPlanPrompt(currentPlan, editInstruction, topic, age, language, conversationContext);
+
+    console.log('🔧 Editing lesson plan with instruction:', editInstruction);
+    console.log('📝 Edit prompt length:', prompt.length);
+
+    try {
+      const response = await this.client.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          thinkingConfig: {
+            thinkingBudget: 0, // Disable thinking for faster generation
+          },
+          temperature: 0.7
+        }
+      });
+
+      const content = response.text;
+
+      if (!content) {
+        throw new Error('No content in Gemini response');
+      }
+
+      console.log(`📏 Generated edited plan length: ${content.length} characters`);
+
+      return content;
+    } catch (error) {
+      console.error('Gemini plan editing error:', error);
+      throw error;
+    }
+  }
+
+  async summarizePlanChanges(
+    originalPlan: string,
+    updatedPlan: string,
+    editInstruction: string,
+    language: string = 'en'
+  ): Promise<string> {
+    const prompt = this.buildChangesSummaryPrompt(originalPlan, updatedPlan, editInstruction, language);
+
+    console.log('📋 Summarizing plan changes');
+
+    try {
+      const response = await this.client.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          thinkingConfig: {
+            thinkingBudget: 0,
+          },
+          temperature: 0.5 // Lower temperature for more consistent summaries
+        }
+      });
+
+      const content = response.text;
+
+      if (!content) {
+        throw new Error('No content in Gemini response');
+      }
+
+      return content;
+    } catch (error) {
+      console.error('Gemini changes summary error:', error);
+      throw error;
+    }
+  }
+
+  private buildEditPlanPrompt(
+    currentPlan: string,
+    editInstruction: string,
+    topic: string,
+    age: string,
+    language: string,
+    conversationContext?: string
+  ): string {
+    let contextSection = '';
+    if (conversationContext) {
+      contextSection = `
+CONVERSATION CONTEXT:
+${conversationContext}
+
+Use this context to better understand the user's intent and provide more relevant edits.
+`;
+    }
+
+    return `You are an expert educational content creator specializing in lesson plans for children.
+
+${contextSection}
+
+TASK: Edit the existing lesson plan based on the user's instructions.
+
+CURRENT LESSON PLAN:
+${currentPlan}
+
+USER'S EDIT INSTRUCTION:
+"${editInstruction}"
+
+LESSON DETAILS:
+- Topic: ${topic}
+- Age Group: ${age}
+- Language: English
+
+EDITING GUIDELINES:
+1. Carefully analyze the user's instruction to understand what changes they want
+2. Make ONLY the requested changes - don't modify unrelated parts
+3. Maintain the same structure and format as the original plan
+4. Keep the same slide numbering format (## Слайд X: or ## Slide X:)
+5. Ensure all changes are age-appropriate for ${age}
+6. Preserve the educational quality and coherence of the plan
+7. If adding new slides, number them appropriately
+8. If removing slides, adjust numbering accordingly
+
+COMMON EDIT TYPES:
+- Add new slides: Insert new content with proper numbering
+- Remove slides: Delete specified content and renumber
+- Modify existing slides: Update content while keeping structure
+- Change focus/theme: Adjust content to new direction
+- Make shorter/longer: Add or remove content as needed
+- Change difficulty: Adjust complexity for age group
+
+RESPONSE FORMAT:
+Return ONLY the updated lesson plan in the same format as the original.
+Respond in English.
+
+Do NOT include explanations, just the updated plan.`;
+  }
+
+  private buildChangesSummaryPrompt(
+    originalPlan: string,
+    updatedPlan: string,
+    editInstruction: string,
+    language: string
+  ): string {
+    return `You are an expert at analyzing changes in educational content.
+
+TASK: Compare the original and updated lesson plans and provide a concise summary of what was changed.
+
+ORIGINAL PLAN:
+${originalPlan}
+
+UPDATED PLAN:
+${updatedPlan}
+
+USER'S INSTRUCTION WAS:
+"${editInstruction}"
+
+ANALYSIS GUIDELINES:
+1. Identify what specific changes were made
+2. Focus on the most important modifications
+3. Be concise but informative
+4. Use bullet points for clarity
+5. Mention if slides were added, removed, or modified
+6. Note any changes in content focus or difficulty
+
+RESPONSE FORMAT:
+Provide a brief summary in English using bullet points.
+Examples:
+• Added new slide about carnivorous dinosaurs
+• Modified first slide - made more interactive
+• Removed slide about herbivorous dinosaurs
+• Shortened plan from 5 to 3 slides
+
+Keep it under 5 bullet points and focus on the most significant changes.`;
   }
 } 

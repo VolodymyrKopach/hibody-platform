@@ -24,12 +24,22 @@ export class GeminiIntentService implements IIntentDetectionService {
   async detectIntent(message: string, conversationHistory?: any): Promise<EnhancedIntentDetectionResult> {
     // Debug: Check if lesson plan exists
     const hasLessonPlan = conversationHistory?.planningResult ? true : false;
+    const isInPlanningStep = conversationHistory?.step === 'planning';
     console.log('🔍 [DEBUG] Has lesson plan:', hasLessonPlan);
     console.log('🔍 [DEBUG] Conversation step:', conversationHistory?.step);
-    if (hasLessonPlan && (message.toLowerCase().includes('generate') || message.toLowerCase().includes('slides'))) {
+    
+    // Check if this is a plan editing request (in planning step with plan modifications)
+    const planEditKeywords = ['add slide', 'remove slide', 'delete slide', 'modify', 'change', 'edit', 'update', 'shorter', 'longer', 'keep only'];
+    const isPlanEdit = isInPlanningStep && hasLessonPlan && 
+      planEditKeywords.some(keyword => message.toLowerCase().includes(keyword));
+    
+    if (isPlanEdit) {
+      console.log('🔍 [DEBUG] This is plan editing - step=planning, has plan, contains edit keywords');
+      // Let AI handle plan editing - don't force GENERATE_SLIDES
+    } else if (hasLessonPlan && (message.toLowerCase().includes('generate') || message.toLowerCase().includes('slides'))) {
       console.log('🔍 [DEBUG] Should be GENERATE_SLIDES - plan exists and message mentions generation/slides');
       
-      // TEMPORARY FIX: Force correct intent when plan exists and user mentions slides/generation
+      // Force GENERATE_SLIDES only for clear generation requests
       console.log('🔧 [TEMPORARY FIX] Forcing GENERATE_SLIDES intent');
       return {
         intent: UserIntent.GENERATE_SLIDES,
@@ -154,8 +164,9 @@ The conversation state determines the correct intent:
 
 1. If conversationHistory.planningResult exists AND user says approval phrases ("go", "proceed", "continue", "start", "let's go", "approve", "yes") → GENERATE_SLIDES
 2. If conversationHistory.planningResult exists AND user says slide generation phrases (even with typos: "generate slides", "generete slides", "create slides", "make slides", "then generate slides", "lets generate it", "okay, lets generate it") → GENERATE_SLIDES
-3. If conversationHistory.currentLesson exists (but no planningResult) AND user asks for slides → CREATE_NEW_SLIDE  
-4. If no lesson context and user wants to create content → CREATE_LESSON
+3. **CRITICAL: If conversationHistory.step === 'planning' AND conversationHistory.planningResult exists AND user wants to modify the plan → EDIT_PLAN**
+4. If conversationHistory.currentLesson exists (but no planningResult) AND user asks for slides → CREATE_NEW_SLIDE  
+5. If no lesson context and user wants to create content → CREATE_LESSON
 
 **TYPO TOLERANCE**: Be flexible with spelling mistakes in key phrases. Focus on the intent rather than exact spelling.
 
@@ -205,8 +216,13 @@ If user says just "create lesson" or "let's create lesson", scan the conversatio
    - **IMPORTANT**: Only if currentLesson exists AND no planningResult waiting for approval
 
 4. **EDIT_PLAN** - editing lesson plan:
-   - Phrases: "change plan", "improve plan", "add to plan"
-   - Context: conversationHistory.step === 'planning'
+   - **CRITICAL**: If conversationHistory.step === 'planning' AND planningResult exists, ANY modification request is EDIT_PLAN
+   - Phrases: "change plan", "improve plan", "add to plan", "modify plan", "update plan"
+   - **SLIDE MODIFICATION**: "add slide", "remove slide", "delete slide"
+   - **CONTENT CHANGES**: "make shorter", "make longer", "change focus"
+   - **DIFFICULTY CHANGES**: "make easier", "make harder"
+   - Context: conversationHistory.step === 'planning' AND conversationHistory.planningResult exists
+   - **PRIORITY**: This takes precedence over CREATE_SLIDE when in planning phase
 
 4. **HELP** - help request:
    - Phrases: "help", "how to use", "what can you do"
@@ -373,15 +389,15 @@ RESPONSE:
   "suggestedQuestion": "For what age should I create a lesson about Batman?"
 }
 
-MESSAGE: "підкажи хто такі динозаври"
+MESSAGE: "tell me about dinosaurs"
 ANALYSIS: asking about topic, but NOT requesting lesson creation
 RESPONSE:
 {
   "intent": "FREE_CHAT",
   "confidence": 0.90,
-  "language": "uk",
+  "language": "en",
   "parameters": {
-    "rawMessage": "підкажи хто такі динозаври"
+    "rawMessage": "tell me about dinosaurs"
   },
   "isDataSufficient": true,
   "missingData": []
@@ -421,6 +437,38 @@ RESPONSE:
   "isDataSufficient": false,
   "missingData": ["age"],
   "suggestedQuestion": "For what age should I create a lesson about space?"
+}
+
+MESSAGE: "Add slide about carnivorous dinosaurs" (with conversationHistory.step === 'planning' and planningResult exists)
+ANALYSIS: User wants to edit the existing lesson plan by adding a slide about carnivorous dinosaurs
+RESPONSE:
+{
+  "intent": "EDIT_PLAN",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "topic": "carnivorous dinosaurs",
+    "instruction": "add slide about carnivorous dinosaurs",
+    "rawMessage": "Add slide about carnivorous dinosaurs"
+  },
+  "isDataSufficient": true,
+  "missingData": []
+}
+
+MESSAGE: "Remove the first slide" (with conversationHistory.step === 'planning' and planningResult exists)
+ANALYSIS: User wants to edit the existing lesson plan by removing a slide
+RESPONSE:
+{
+  "intent": "EDIT_PLAN",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "slideNumber": 1,
+    "instruction": "remove the first slide",
+    "rawMessage": "Remove the first slide"
+  },
+  "isDataSufficient": true,
+  "missingData": []
 }
 
 ANALYZE THIS MESSAGE:
@@ -469,7 +517,7 @@ ANALYZE THIS MESSAGE:
       console.log('📊 Gemini Intent Analysis:', {
         intent: result.intent,
         confidence: result.confidence,
-        language: parsed.language || 'uk',
+        language: parsed.language || 'en',
         isDataSufficient: result.isDataSufficient,
         missingData: result.missingData,
         parameters: result.parameters
