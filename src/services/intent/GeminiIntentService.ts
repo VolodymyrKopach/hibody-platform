@@ -33,30 +33,14 @@ export class GeminiIntentService implements IIntentDetectionService {
     const isPlanEdit = isInPlanningStep && hasLessonPlan && 
       planEditKeywords.some(keyword => message.toLowerCase().includes(keyword));
     
-    if (isPlanEdit) {
-      console.log('🔍 [DEBUG] This is plan editing - step=planning, has plan, contains edit keywords');
-      // Let AI handle plan editing - don't force GENERATE_SLIDES
-    } else if (hasLessonPlan && (message.toLowerCase().includes('generate') || message.toLowerCase().includes('slides'))) {
-      console.log('🔍 [DEBUG] Should be GENERATE_SLIDES - plan exists and message mentions generation/slides');
-      
-      // Force GENERATE_SLIDES only for clear generation requests
-      console.log('🔧 [TEMPORARY FIX] Forcing GENERATE_SLIDES intent');
-      return {
-        intent: UserIntent.GENERATE_SLIDES,
-        confidence: 0.95,
-        language: 'en',
-        parameters: {
-          topic: undefined,
-          age: undefined,
-          regenerationInstruction: 'generate slides from lesson plan',
-          rawMessage: message
-        },
-        isDataSufficient: true,
-        missingData: [],
-        suggestedQuestion: undefined,
-        reasoning: 'Lesson plan exists and user mentions slide generation'
-      };
-    }
+    // Debug logging for context
+    console.log('🔍 [DEBUG] Context analysis:');
+    console.log('  - isPlanEdit:', isPlanEdit);
+    console.log('  - isInPlanningStep:', isInPlanningStep);
+    console.log('  - hasLessonPlan:', hasLessonPlan);
+    console.log('  - message contains keywords:', planEditKeywords.filter(k => message.toLowerCase().includes(k)));
+    
+    // Let AI handle all intent detection with proper context
     
     // Let AI detect language naturally instead of hardcoded detection
     const prompt = this.buildGeminiPrompt(message, conversationHistory);
@@ -98,7 +82,10 @@ CONVERSATION CONTEXT:
 - Generated slides: ${conversationHistory.generatedSlides?.length || 0}
 - Has lesson plan: ${conversationHistory.planningResult ? 'YES - PLAN EXISTS, READY FOR SLIDE GENERATION' : 'NO'}
 
-CRITICAL: If lesson plan exists and user mentions generating/creating slides or says "it"/"them" referring to slides → GENERATE_SLIDES!
+CRITICAL CONTEXT RULES:
+- If step === 'planning' AND planningResult exists → User is still editing the plan, NOT ready for generation
+- Only when user explicitly approves the plan (says "approve", "ok", "generate") → GENERATE_SLIDES
+- If step === 'planning' and user wants to modify plan → EDIT_PLAN (even if they mention "slides")
 
 IMPORTANT: If there's an active lesson and user asks about slides ("next", "third", "another slide", "let's go"), this is almost always CREATE_NEW_SLIDE!
 `;
@@ -130,10 +117,12 @@ TASK: Analyze the user's message and conversation context, then:
 
 IMPORTANT: Detect the user's language from their message and respond in the SAME language!
 
-**PRIORITY RULES**: 
-- If lesson plan exists (planningResult) + user mentions slides/generation → ALWAYS GENERATE_SLIDES
-- Keywords that trigger GENERATE_SLIDES when plan exists: "generate", "create", "make", "build", "slides", "them", "it" (referring to slides)
-- Phrases like "then generate slides", "lets generate it", "okay, lets generate it" → ALWAYS GENERATE_SLIDES if plan exists
+**CONTEXT-AWARE PRIORITY RULES**: 
+- CRITICAL: Check conversation step FIRST before deciding intent
+- If step === 'planning' → User is still working on the plan, NOT ready for generation
+- If step === 'planning' AND user mentions "add/remove/change slides" → EDIT_PLAN
+- If step === 'planning' AND user says "approve/ok/generate" → GENERATE_SLIDES  
+- If step !== 'planning' AND plan exists AND user mentions generation → GENERATE_SLIDES
 - Be tolerant of typos and variations in key phrases
 
 SUPPORTED INTENTS (exact values):
@@ -162,9 +151,11 @@ INTENT DETECTION LOGIC:
 **CRITICAL: CONTEXT-DEPENDENT DECISION MAKING**
 The conversation state determines the correct intent:
 
-1. If conversationHistory.planningResult exists AND user says approval phrases ("go", "proceed", "continue", "start", "let's go", "approve", "yes") → GENERATE_SLIDES
-2. If conversationHistory.planningResult exists AND user says slide generation phrases (even with typos: "generate slides", "generete slides", "create slides", "make slides", "then generate slides", "lets generate it", "okay, lets generate it") → GENERATE_SLIDES
-3. **CRITICAL: If conversationHistory.step === 'planning' AND conversationHistory.planningResult exists AND user wants to modify the plan → EDIT_PLAN**
+1. **CRITICAL FIRST CHECK**: If conversationHistory.step === 'planning' → User is still editing the plan
+   - If user wants to modify plan ("add slides", "remove slides", "change", "edit") → EDIT_PLAN
+   - If user explicitly approves ("approve", "ok", "generate", "proceed") → GENERATE_SLIDES
+2. If conversationHistory.step !== 'planning' AND planningResult exists AND user says approval phrases → GENERATE_SLIDES
+3. If conversationHistory.step !== 'planning' AND planningResult exists AND user says slide generation phrases → GENERATE_SLIDES
 4. If conversationHistory.currentLesson exists (but no planningResult) AND user asks for slides → CREATE_NEW_SLIDE  
 5. If no lesson context and user wants to create content → CREATE_LESSON
 
