@@ -97,8 +97,17 @@ DETAILED CONVERSATION HISTORY:
 ${conversationHistory.conversationContext}
 
 CRITICAL: Use this conversation history to better understand the user's intent and provide more accurate responses.
-When user says "create lesson" or similar, look at the conversation history to identify what topic they were discussing.
-Example: If they previously asked "who is batman" and now say "create lesson", the topic should be "batman" or "superheroes".
+When user says "create lesson", "create studying plan", or similar, look at the conversation history to identify:
+1. TOPIC: What subject/topic they were discussing (e.g., "present simple", "batman", "dinosaurs")
+2. AGE: What age group was mentioned (e.g., "9 years old", "5-6 years", "children")
+3. CONTEXT: Any additional details about the lesson structure
+
+Examples:
+- Previous: "rate lesson about present simple for 9 years old" → Current: "create studying plan" → Extract: topic="present simple", age="9 years old"
+- Previous: "who is batman" → Current: "create lesson" → Extract: topic="batman" or "superheroes"
+- Previous: "tell me about dinosaurs for 6 year olds" → Current: "make a lesson" → Extract: topic="dinosaurs", age="6 years old"
+- Previous: "lesson about math for 8 year olds" → Current: "create study plan" → Extract: topic="math", age="8 years old"
+- Previous: "teaching colors to toddlers" → Current: "make educational plan" → Extract: topic="colors", age="toddlers" or "2-3 years old"
 `;
       }
     }
@@ -126,8 +135,8 @@ IMPORTANT: Detect the user's language from their message and respond in the SAME
 - Be tolerant of typos and variations in key phrases
 
 SUPPORTED INTENTS (exact values):
-- CREATE_LESSON: create a lesson (requires: topic, age)
-- GENERATE_PLAN: create lesson plan  
+- CREATE_LESSON: create a lesson (requires: topic, age) - includes "create studying plan", "make lesson plan", "create educational content"
+- GENERATE_PLAN: **DEPRECATED** - use CREATE_LESSON instead
 - EDIT_PLAN: modify/improve lesson plan (phrases: "improve plan", "change plan", "update plan")
 - GENERATE_SLIDES: generate all slides from lesson plan (bulk generation)
 - CREATE_SLIDE: create a single slide
@@ -135,6 +144,7 @@ SUPPORTED INTENTS (exact values):
 - REGENERATE_SLIDE: regenerate slide
 - EDIT_HTML_INLINE: text changes in HTML
 - EDIT_SLIDE: improve slide
+- BATCH_EDIT_SLIDES: edit multiple slides at once ("make all titles bigger", "edit slides 1-3")
 - IMPROVE_HTML: general HTML code improvements
 - FREE_CHAT: general conversation, greetings, non-lesson questions
 - HELP: help request
@@ -143,6 +153,11 @@ PARAMETERS to extract:
 - topic: lesson topic (from user text OR conversation history)
 - age: children's age (numbers, ranges, "preschoolers", "schoolchildren")
 - slideNumber: slide number (if mentioned)
+- slideNumbers: array of slide numbers for batch operations ([1, 3, 5])
+- editInstruction: specific editing instruction for batch operations
+- affectedSlides: 'all' | 'specific' | 'range' | 'single'
+- slideRange: {start: number, end: number} for range operations
+- batchOperation: true for batch editing operations
 - instruction: specific user instruction
 - rawMessage: original message
 
@@ -186,10 +201,13 @@ Examples:
 If user says just "create lesson" or "let's create lesson", scan the conversation history for any educational topics they were discussing.
 
 1. **CREATE_LESSON** - if user explicitly wants to create a lesson:
-   - EXPLICIT phrases: "create lesson", "make lesson", "lesson about", "teach children"
+   - **EXPLICIT phrases**: "create lesson", "make lesson", "lesson about", "teach children", "create studying plan", "make study plan", "create educational plan", "develop lesson", "design lesson"
    - **CONTEXTUAL phrases**: "lesson about it", "lesson about that", or just "create lesson" (scan history)
+   - **PLANNING phrases**: "create studying plan", "make study plan", "plan a lesson", "design curriculum"
    - Must have CLEAR intent to create educational content
-   - **IMPORTANT**: If no explicit topic, search conversation history for educational topics discussed
+   - **CRITICAL**: If no explicit topic in current message, ALWAYS search conversation history for:
+     - Educational topics discussed ("present simple", "dinosaurs", "batman")
+     - Age mentions ("9 years old", "for children 5", "preschoolers")
    - Just asking about a topic (like "tell me about dinosaurs") is NOT lesson creation UNLESS followed by lesson creation request
 
 2. **GENERATE_SLIDES** - if user wants to generate all slides from an existing lesson plan:
@@ -215,7 +233,16 @@ If user says just "create lesson" or "let's create lesson", scan the conversatio
    - Context: conversationHistory.step === 'planning' AND conversationHistory.planningResult exists
    - **PRIORITY**: This takes precedence over CREATE_SLIDE when in planning phase
 
-4. **HELP** - help request:
+5. **BATCH_EDIT_SLIDES** - editing multiple slides at once:
+   - **CRITICAL**: If conversationHistory.currentLesson exists AND user wants to edit multiple slides
+   - **ALL SLIDES**: "make all titles bigger", "change all backgrounds", "improve all slides"
+   - **SPECIFIC SLIDES**: "edit slides 1, 3, and 5", "change slides 2 and 4"
+   - **RANGE SLIDES**: "edit slides 1-3", "improve slides 2 through 5", "change first 3 slides"
+   - **BATCH KEYWORDS**: "all slides", "multiple slides", "slides 1-3", "first few slides"
+   - Context: conversationHistory.currentLesson exists (active lesson with slides)
+   - **PRIORITY**: Takes precedence over single EDIT_SLIDE when multiple slides mentioned
+
+6. **HELP** - help request:
    - Phrases: "help", "how to use", "what can you do"
 
 5. **FREE_CHAT** - general communication and questions:
@@ -380,6 +407,23 @@ RESPONSE:
   "suggestedQuestion": "For what age should I create a lesson about Batman?"
 }
 
+MESSAGE: "create studying plan" (after conversation: "rate lesson about present simple for 9 years old")
+ANALYSIS: User previously discussed "present simple" and "9 years old", now wants to create studying plan. Extract both topic and age from conversation history.
+RESPONSE:
+{
+  "intent": "CREATE_LESSON",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "topic": "present simple",
+    "age": "9 years old",
+    "rawMessage": "create studying plan"
+  },
+  "isDataSufficient": true,
+  "missingData": [],
+  "suggestedQuestion": null
+}
+
 MESSAGE: "tell me about dinosaurs"
 ANALYSIS: asking about topic, but NOT requesting lesson creation
 RESPONSE:
@@ -462,6 +506,62 @@ RESPONSE:
   "missingData": []
 }
 
+**BATCH EDITING EXAMPLES:**
+
+MESSAGE: "make all titles bigger" (with active lesson)
+ANALYSIS: User wants to edit all slides in the lesson to make titles bigger
+RESPONSE:
+{
+  "intent": "BATCH_EDIT_SLIDES",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "editInstruction": "make titles bigger",
+    "affectedSlides": "all",
+    "batchOperation": true,
+    "rawMessage": "make all titles bigger"
+  },
+  "isDataSufficient": true,
+  "missingData": []
+}
+
+MESSAGE: "edit slides 1, 3, and 5 - change background color" (with active lesson)
+ANALYSIS: User wants to edit specific slides (1, 3, 5) to change background color
+RESPONSE:
+{
+  "intent": "BATCH_EDIT_SLIDES",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "slideNumbers": [1, 3, 5],
+    "editInstruction": "change background color",
+    "affectedSlides": "specific",
+    "batchOperation": true,
+    "rawMessage": "edit slides 1, 3, and 5 - change background color"
+  },
+  "isDataSufficient": true,
+  "missingData": []
+}
+
+MESSAGE: "improve slides 2-4" (with active lesson)
+ANALYSIS: User wants to improve slides in range 2 to 4
+RESPONSE:
+{
+  "intent": "BATCH_EDIT_SLIDES",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "slideNumbers": [2, 3, 4],
+    "slideRange": {"start": 2, "end": 4},
+    "editInstruction": "improve slides",
+    "affectedSlides": "range",
+    "batchOperation": true,
+    "rawMessage": "improve slides 2-4"
+  },
+  "isDataSufficient": true,
+  "missingData": []
+}
+
 ANALYZE THIS MESSAGE:
 "${message}"`;
   }
@@ -539,13 +639,14 @@ ANALYZE THIS MESSAGE:
   private normalizeIntent(intent: string): UserIntent {
     const intentMap: Record<string, UserIntent> = {
       'CREATE_LESSON': UserIntent.CREATE_LESSON,
-      'GENERATE_PLAN': UserIntent.GENERATE_PLAN,
+      'GENERATE_PLAN': UserIntent.CREATE_LESSON, // Map GENERATE_PLAN to CREATE_LESSON
       'EDIT_PLAN': UserIntent.EDIT_PLAN,
       'CREATE_SLIDE': UserIntent.CREATE_SLIDE,
       'CREATE_NEW_SLIDE': UserIntent.CREATE_NEW_SLIDE,
       'REGENERATE_SLIDE': UserIntent.REGENERATE_SLIDE,
       'EDIT_HTML_INLINE': UserIntent.EDIT_HTML_INLINE,
       'EDIT_SLIDE': UserIntent.EDIT_SLIDE,
+      'BATCH_EDIT_SLIDES': UserIntent.BATCH_EDIT_SLIDES,
       'IMPROVE_HTML': UserIntent.IMPROVE_HTML,
       'FREE_CHAT': UserIntent.FREE_CHAT,
       'HELP': UserIntent.HELP

@@ -17,13 +17,16 @@ import { type ConversationHistory, type ChatResponse } from './types';
 import { 
   ISlideGenerationService,
   ISlideEditingService,
+  IBatchSlideEditingService,
   ILessonManagementService,
   ISlideAnalysisService,
   IActionHandlerService,
-  IIntentMappingService
+  IIntentMappingService,
+  BatchEditParams
 } from './interfaces/IChatServices';
 import { SlideGenerationService } from './services/SlideGenerationService';
 import { SlideEditingService } from './services/SlideEditingService';
+import { BatchSlideEditingService } from './services/BatchSlideEditingService';
 import { LessonManagementService } from './services/LessonManagementService';
 import { SlideAnalysisService } from './services/SlideAnalysisService';
 import { ActionHandlerService } from './services/ActionHandlerService';
@@ -36,6 +39,7 @@ export class ChatService {
   private handlers: IIntentHandler[];
   private slideGenerationService: ISlideGenerationService;
   private slideEditingService: ISlideEditingService;
+  private batchSlideEditingService: IBatchSlideEditingService;
   private lessonManagementService: ILessonManagementService;
   private slideAnalysisService: ISlideAnalysisService;
   private actionHandlerService: IActionHandlerService;
@@ -56,6 +60,7 @@ export class ChatService {
     this.intentDetectionService = IntentDetectionServiceFactory.create();
     this.slideGenerationService = new SlideGenerationService();
     this.slideEditingService = new SlideEditingService(simpleEditService);
+    this.batchSlideEditingService = new BatchSlideEditingService();
     this.lessonManagementService = new LessonManagementService();
     this.slideAnalysisService = new SlideAnalysisService();
     this.intentMappingService = new IntentMappingService();
@@ -126,6 +131,10 @@ export class ChatService {
 
       if (intentResult.intent === 'edit_html_inline') {
         return await this.handleInlineEditSlide(conversationHistory, intentResult);
+      }
+
+      if (intentResult.intent === 'batch_edit_slides') {
+        return await this.handleBatchEditSlides(conversationHistory, intentResult);
       }
       
       // Find appropriate handler
@@ -366,6 +375,107 @@ export class ChatService {
       return {
         success: false,
         message: `😔 An error occurred while editing slide ${slideNumber}.`,
+        conversationHistory,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  private async handleBatchEditSlides(conversationHistory?: ConversationHistory, intentResult?: any): Promise<ChatResponse> {
+    if (!conversationHistory?.currentLesson) {
+      return {
+        success: false,
+        message: `❌ **Batch editing error** - No lesson found for editing slides.`,
+        conversationHistory,
+        error: 'No lesson context for batch slide editing'
+      };
+    }
+
+    const { parameters } = intentResult;
+    const editInstruction = parameters?.editInstruction || parameters?.instruction || parameters?.rawMessage || 'Improve slides';
+    const affectedSlides = parameters?.affectedSlides || 'all';
+    const slideNumbers = parameters?.slideNumbers || [];
+    const slideRange = parameters?.slideRange;
+    const totalSlides = conversationHistory.currentLesson.slides.length;
+
+    try {
+      // Determine which slides to edit
+      let targetSlideNumbers: number[];
+      
+      if (affectedSlides === 'all') {
+        targetSlideNumbers = Array.from({ length: totalSlides }, (_, i) => i + 1);
+      } else if (affectedSlides === 'specific' && slideNumbers.length > 0) {
+        targetSlideNumbers = slideNumbers.filter((num: number) => num >= 1 && num <= totalSlides);
+      } else if (affectedSlides === 'range' && slideRange) {
+        const { start, end } = slideRange;
+        targetSlideNumbers = Array.from(
+          { length: Math.min(end, totalSlides) - Math.max(start, 1) + 1 }, 
+          (_, i) => Math.max(start, 1) + i
+        );
+      } else {
+        // Fallback to all slides
+        targetSlideNumbers = Array.from({ length: totalSlides }, (_, i) => i + 1);
+      }
+
+      if (targetSlideNumbers.length === 0) {
+        return {
+          success: false,
+          message: `❌ **Batch editing error** - No valid slides found to edit.`,
+          conversationHistory,
+          error: 'No valid slides specified'
+        };
+      }
+
+      console.log(`🔄 [CHAT SERVICE] Starting batch edit of ${targetSlideNumbers.length} slides`);
+      console.log(`📝 [CHAT SERVICE] Instruction: "${editInstruction}"`);
+      console.log(`🎯 [CHAT SERVICE] Target slides: ${targetSlideNumbers.join(', ')}`);
+
+      // Prepare batch edit parameters
+      const batchParams: BatchEditParams = {
+        lessonId: conversationHistory.currentLesson.id,
+        slideNumbers: targetSlideNumbers,
+        editInstruction,
+        sessionId: `session_${Date.now()}`,
+        topic: conversationHistory.lessonTopic || 'lesson',
+        age: conversationHistory.lessonAge || '6-8 years'
+      };
+
+      // Start batch editing
+      const batchSession = await this.batchSlideEditingService.startBatchEdit(batchParams);
+
+      // Format response message
+      const slideText = targetSlideNumbers.length === 1 ? 'slide' : 'slides';
+      const slideList = targetSlideNumbers.length <= 5 
+        ? targetSlideNumbers.join(', ')
+        : `${targetSlideNumbers.slice(0, 3).join(', ')} and ${targetSlideNumbers.length - 3} more`;
+
+      const responseMessage = `🔄 **Starting batch edit of ${targetSlideNumbers.length} ${slideText}**\n\n` +
+        `📝 **Edit instruction:** "${editInstruction}"\n` +
+        `🎯 **Target slides:** ${slideList}\n` +
+        `⏱️ **Estimated time:** ~${Math.ceil(targetSlideNumbers.length * 30 / 60)} minutes\n\n` +
+        `The editing process has started. You can track progress and see results as slides are completed.`;
+
+      return {
+        success: true,
+        message: responseMessage,
+        conversationHistory,
+        actions: [],
+        batchEdit: {
+          batchId: batchSession.batchId,
+          progressEndpoint: `/api/slides/batch-edit/${batchSession.batchId}/progress`,
+          affectedSlides: targetSlideNumbers,
+          editInstruction,
+          totalSlides: targetSlideNumbers.length,
+          estimatedTime: targetSlideNumbers.length * 30 // seconds
+        }
+      };
+
+    } catch (error) {
+      console.error('❌ [CHAT SERVICE] Batch edit error:', error);
+      
+      return {
+        success: false,
+        message: `😔 An error occurred while starting batch edit: ${error instanceof Error ? error.message : 'Unknown error'}`,
         conversationHistory,
         error: error instanceof Error ? error.message : 'Unknown error'
       };

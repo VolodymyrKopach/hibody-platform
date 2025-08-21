@@ -38,6 +38,16 @@ export interface ChatResponse {
   error?: string;
   lesson?: SimpleLesson; // Use SimpleLesson instead of any
   sessionId?: string; // SSE session ID for frontend to listen to progress
+  batchEdit?: BatchEditResponse; // Batch editing information
+}
+
+export interface BatchEditResponse {
+  batchId: string;
+  progressEndpoint: string;
+  affectedSlides: number[];
+  editInstruction: string;
+  totalSlides: number;
+  estimatedTime: number; // in seconds
 }
 
 export interface ChatAction {
