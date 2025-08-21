@@ -23,12 +23,12 @@ export class GeminiSimpleEditService {
     age: string
   ): Promise<string> {
 
-    // Витягуємо base64 зображення та стискаємо HTML
-    const { cleanedHTML, extractedImages } = this.extractBase64Images(currentSlideHTML);
+    // Витягуємо URL зображення та стискаємо HTML
+    const { cleanedHTML, extractedImages } = this.extractImageUrls(currentSlideHTML);
     const compressedHTML = this.compressHTML(cleanedHTML);
     
     console.log(`📏 Original: ${currentSlideHTML.length}, Cleaned: ${cleanedHTML.length}, Compressed: ${compressedHTML.length}`);
-    console.log(`🖼️ Extracted ${extractedImages.length} base64 images`);
+    console.log(`🖼️ Extracted ${extractedImages.length} image URLs`);
 
     const prompt = this.buildSimpleEditPrompt(compressedHTML, userInstruction, topic, age);
 
@@ -55,8 +55,8 @@ export class GeminiSimpleEditService {
       // Очищаємо від markdown обгортки
       editedHTML = this.cleanHtmlFromMarkdown(editedHTML);
 
-      // Повертаємо зображення назад
-      const finalHTML = this.restoreBase64Images(editedHTML, extractedImages);
+      // Повертаємо URL зображення назад
+      const finalHTML = this.restoreImageUrls(editedHTML, extractedImages);
 
       console.log(`✅ Simple slide edit successful, final length: ${finalHTML.length}`);
       return finalHTML;
@@ -107,24 +107,26 @@ Provide ONLY the updated HTML code, without any explanations or comments.
     return cleaned;
   }
 
+
+
   /**
-   * Витягує base64 зображення з HTML для зменшення розміру
+   * Витягує URL зображення з HTML для зменшення розміру
    */
-  private extractBase64Images(html: string): {
+  private extractImageUrls(html: string): {
     cleanedHTML: string;
-    extractedImages: Array<{ placeholder: string; data: string }>;
+    extractedImages: Array<{ placeholder: string; url: string }>;
   } {
-    const extractedImages: Array<{ placeholder: string; data: string }> = [];
+    const extractedImages: Array<{ placeholder: string; url: string }> = [];
     let imageCounter = 0;
 
-    // Знаходимо всі base64 зображення
-    const base64ImageRegex = /src="data:image\/[^;]+;base64,[^"]+"/g;
+    // Знаходимо всі зображення з URL (http/https посилання)
+    const imageUrlRegex = /src="(https?:\/\/[^"]+)"/g;
     
-    const cleanedHTML = html.replace(base64ImageRegex, (match) => {
-      const placeholder = `[BASE64_IMAGE_${imageCounter}]`;
+    const cleanedHTML = html.replace(imageUrlRegex, (match, url) => {
+      const placeholder = `[IMAGE_URL_${imageCounter}]`;
       extractedImages.push({
         placeholder,
-        data: match
+        url: match // Зберігаємо повний src="url"
       });
       imageCounter++;
       return `src="${placeholder}"`;
@@ -133,18 +135,24 @@ Provide ONLY the updated HTML code, without any explanations or comments.
     return { cleanedHTML, extractedImages };
   }
 
+
+
+
+
   /**
-   * Повертає base64 зображення назад в HTML
+   * Повертає URL зображення назад в HTML
    */
-  private restoreBase64Images(html: string, extractedImages: Array<{ placeholder: string; data: string }>): string {
+  private restoreImageUrls(html: string, extractedImages: Array<{ placeholder: string; url: string }>): string {
     let restoredHTML = html;
     
-    extractedImages.forEach(({ placeholder, data }) => {
-      restoredHTML = restoredHTML.replace(`src="${placeholder}"`, data);
+    extractedImages.forEach(({ placeholder, url }) => {
+      restoredHTML = restoredHTML.replace(`src="${placeholder}"`, url);
     });
 
     return restoredHTML;
   }
+
+
 
   /**
    * Стискає HTML для зменшення токенів
@@ -302,7 +310,7 @@ Provide ONLY the updated HTML code, without any explanations or comments.
     
     return {
       length: html.length,
-      hasImages: html.includes('<img') || html.includes('data:image'),
+      hasImages: html.includes('<img') || html.includes('https://') || html.includes('http://'),
       hasInteractivity: html.includes('onclick') || html.includes('addEventListener'),
       hasAnimations: html.includes('@keyframes') || html.includes('animation:'),
       textLength: textContent.length
