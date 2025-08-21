@@ -145,23 +145,9 @@ Provide ONLY the updated HTML code, without any explanations or comments.
   private restoreImageUrls(html: string, extractedImages: Array<{ placeholder: string; url: string }>): string {
     let restoredHTML = html;
     
-    extractedImages.forEach(({ placeholder, url }, index) => {
-      const searchPattern = `src="${placeholder}"`;
-      const beforeReplace = restoredHTML.includes(searchPattern);
-      
-      // Replace the placeholder with the original URL
-      restoredHTML = restoredHTML.replace(searchPattern, url);
-      
-      const afterReplace = restoredHTML.includes(searchPattern);
-      
-      console.log(`🔄 [IMAGE RESTORE] ${index}: ${placeholder} -> ${url.substring(0, 50)}... (found: ${beforeReplace}, remaining: ${afterReplace})`);
+    extractedImages.forEach(({ placeholder, url }) => {
+      restoredHTML = restoredHTML.replace(`src="${placeholder}"`, url);
     });
-
-    // Check for any remaining placeholders
-    const remainingPlaceholders = restoredHTML.match(/\[IMAGE_URL_\d+\]/g);
-    if (remainingPlaceholders) {
-      console.warn(`⚠️ [IMAGE RESTORE] Found ${remainingPlaceholders.length} unreplaced placeholders:`, remainingPlaceholders);
-    }
 
     return restoredHTML;
   }

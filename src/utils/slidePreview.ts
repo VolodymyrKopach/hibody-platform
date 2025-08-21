@@ -240,38 +240,9 @@ export async function generateLessonPreviews(
  * Creates a fallback preview as a gradient with text
  */
 export function generateFallbackPreview(options: SlidePreviewOptions & { width?: number; height?: number } = {}): string {
-  // Check if we're running in a browser environment
-  if (typeof document === 'undefined') {
-    // Server-side: return a static SVG data URL as fallback
-    const {
-      width = 640,
-      height = 480,
-      background = '#ffffff'
-    } = options;
-    
-    const svgContent = `
-      <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-            <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
-          </linearGradient>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grad)" />
-        <rect x="${width * 0.2}" y="${height * 0.4}" width="${width * 0.6}" height="${height * 0.2}" fill="rgba(255,255,255,0.9)" rx="8" />
-        <text x="${width / 2}" y="${height / 2 - 10}" font-family="Arial, sans-serif" font-size="${Math.floor(width / 20)}" text-anchor="middle" fill="#333333">📋</text>
-        <text x="${width / 2}" y="${height / 2 + 20}" font-family="Arial, sans-serif" font-size="${Math.floor(width / 25)}" text-anchor="middle" fill="#333333">Slide Preview</text>
-      </svg>
-    `;
-    
-    return `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`;
-  }
-  
-  // Client-side: use canvas as before
   const {
-    width = 640,
-    height = 480,
+    width = 640,         // Standard width for fallback preview
+    height = 480,        // Standard height for fallback preview
     background = '#ffffff'
   } = options;
   

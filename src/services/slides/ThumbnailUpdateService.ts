@@ -44,8 +44,8 @@ export class ThumbnailUpdateService implements IThumbnailUpdateService {
 
     // Check if we're running on server-side
     if (typeof document === 'undefined') {
-      console.log(`⚠️ [THUMBNAIL UPDATE] Server-side thumbnail generation not supported, using fallback for slide ${slideId}`);
-      // Return a simple fallback URL or empty string for server-side
+      console.log(`⚠️ [THUMBNAIL UPDATE] Server-side thumbnail generation not supported, skipping for slide ${slideId}`);
+      // Return empty string for server-side to avoid breaking the editing flow
       return '';
     }
 
@@ -90,8 +90,7 @@ export class ThumbnailUpdateService implements IThumbnailUpdateService {
 
     } catch (error) {
       console.error(`❌ [THUMBNAIL UPDATE] Failed to regenerate thumbnail for slide ${slideId}:`, error);
-      // Don't throw error, just return empty string to avoid breaking the editing flow
-      return '';
+      throw error;
     } finally {
       this.regenerationQueue.delete(slideId);
     }
@@ -104,6 +103,17 @@ export class ThumbnailUpdateService implements IThumbnailUpdateService {
     slides: Array<{ id: string; htmlContent: string }>
   ): Promise<Record<string, string>> {
     console.log(`🔄 [THUMBNAIL UPDATE] Regenerating thumbnails for ${slides.length} slides`);
+
+    // Check if we're running on server-side
+    if (typeof document === 'undefined') {
+      console.log(`⚠️ [THUMBNAIL UPDATE] Server-side batch thumbnail generation not supported, skipping ${slides.length} slides`);
+      // Return empty results for server-side
+      const results: Record<string, string> = {};
+      slides.forEach(slide => {
+        results[slide.id] = '';
+      });
+      return results;
+    }
 
     const results: Record<string, string> = {};
     const promises = slides.map(async (slide) => {
