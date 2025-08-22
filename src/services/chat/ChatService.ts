@@ -31,6 +31,9 @@ import { LessonManagementService } from './services/LessonManagementService';
 import { SlideAnalysisService } from './services/SlideAnalysisService';
 import { ActionHandlerService } from './services/ActionHandlerService';
 import { IntentMappingService } from './services/IntentMappingService';
+import { AIClarificationService } from './services/AIClarificationService';
+import { ErrorObserver } from './observers/ErrorObserver';
+import { SlideValidationHelper } from './helpers/SlideValidationHelper';
 
 // === SOLID: Dependency Inversion Principle ===
 // Main ChatService depends on abstractions, not concretions
@@ -44,6 +47,9 @@ export class ChatService {
   private slideAnalysisService: ISlideAnalysisService;
   private actionHandlerService: IActionHandlerService;
   private intentMappingService: IIntentMappingService;
+  private clarificationService: AIClarificationService;
+  private errorObserver: ErrorObserver;
+  private slideValidationHelper: SlideValidationHelper;
   private onAsyncMessageCallback?: (message: any) => void;
 
   constructor() {
@@ -64,6 +70,9 @@ export class ChatService {
     this.lessonManagementService = new LessonManagementService();
     this.slideAnalysisService = new SlideAnalysisService();
     this.intentMappingService = new IntentMappingService();
+    this.clarificationService = new AIClarificationService();
+    this.errorObserver = new ErrorObserver();
+    this.slideValidationHelper = new SlideValidationHelper(this.clarificationService);
     
     this.actionHandlerService = new ActionHandlerService(
       this.slideGenerationService,
@@ -112,7 +121,15 @@ export class ChatService {
       
       // Handle actions first
       if (action) {
-        return await this.actionHandlerService.handleAction(action, conversationHistory, intentResult);
+        const response = await this.actionHandlerService.handleAction(action, conversationHistory, intentResult);
+        if (!response.success) {
+          return await this.errorObserver.interceptError(response, {
+            userMessage: message,
+            conversationHistory,
+            intentResult
+          });
+        }
+        return response;
       }
       
 
@@ -122,19 +139,51 @@ export class ChatService {
 
 
       if (intentResult.intent === 'edit_slide') {
-        return await this.handleEditSlide(conversationHistory, intentResult);
+        const response = await this.handleEditSlide(conversationHistory, intentResult);
+        if (!response.success) {
+          return await this.errorObserver.interceptError(response, {
+            userMessage: message,
+            conversationHistory,
+            intentResult
+          });
+        }
+        return response;
       }
 
       if (intentResult.intent === 'improve_html') {
-        return await this.handleImproveSlide(conversationHistory, intentResult);
+        const response = await this.handleImproveSlide(conversationHistory, intentResult);
+        if (!response.success) {
+          return await this.errorObserver.interceptError(response, {
+            userMessage: message,
+            conversationHistory,
+            intentResult
+          });
+        }
+        return response;
       }
 
       if (intentResult.intent === 'edit_html_inline') {
-        return await this.handleInlineEditSlide(conversationHistory, intentResult);
+        const response = await this.handleInlineEditSlide(conversationHistory, intentResult);
+        if (!response.success) {
+          return await this.errorObserver.interceptError(response, {
+            userMessage: message,
+            conversationHistory,
+            intentResult
+          });
+        }
+        return response;
       }
 
       if (intentResult.intent === 'batch_edit_slides') {
-        return await this.handleBatchEditSlides(conversationHistory, intentResult);
+        const response = await this.handleBatchEditSlides(conversationHistory, intentResult);
+        if (!response.success) {
+          return await this.errorObserver.interceptError(response, {
+            userMessage: message,
+            conversationHistory,
+            intentResult
+          });
+        }
+        return response;
       }
       
       // Find appropriate handler
@@ -145,24 +194,59 @@ export class ChatService {
         if (mappedIntent) {
           const mappedHandler = this.findHandler(mappedIntent, conversationHistory);
           if (mappedHandler) {
-            return await mappedHandler.handle(mappedIntent, conversationHistory as any);
+            const response = await mappedHandler.handle(mappedIntent, conversationHistory as any);
+            if (!response.success) {
+              return await this.errorObserver.interceptError(response, {
+                userMessage: message,
+                conversationHistory,
+                intentResult: mappedIntent
+              });
+            }
+            return response;
           }
         }
         
-        return this.generateFallbackResponse(intentResult, conversationHistory);
+        const response = this.generateFallbackResponse(intentResult, conversationHistory);
+        if (!response.success) {
+          return await this.errorObserver.interceptError(response, {
+            userMessage: message,
+            conversationHistory,
+            intentResult
+          });
+        }
+        return response;
       }
 
-      return await handler.handle(intentResult, conversationHistory);
+      const response = await handler.handle(intentResult, conversationHistory);
+      
+      // 🔍 ERROR OBSERVER: Перехоплюємо помилки перед відправкою клієнту
+      if (!response.success) {
+        console.log('🔍 [ERROR OBSERVER] Intercepting error response from handler');
+        return await this.errorObserver.interceptError(response, {
+          userMessage: message,
+          conversationHistory,
+          intentResult
+        });
+      }
+      
+      return response;
 
     } catch (error) {
-      console.error('Chat service error:', error);
+      console.error('💥 [CHAT SERVICE] Exception occurred:', error);
       
-      return {
+      // Навіть exception перетворюємо на дружнє повідомлення через ErrorObserver
+      const errorResponse: ChatResponse = {
         success: false,
-        message: `Sorry, an error occurred: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
+        message: `System error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         conversationHistory,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
+      
+      return await this.errorObserver.interceptError(errorResponse, {
+        userMessage: message,
+        conversationHistory,
+        intentResult: await this.intentDetectionService.detectIntent(message, conversationHistory)
+      });
     }
   }
 
@@ -176,39 +260,21 @@ export class ChatService {
 
 
 
-  private async handleEditSlide(conversationHistory?: ConversationHistory, intentResult?: any): Promise<ChatResponse> {
-    if (!conversationHistory?.currentLesson) {
-      return {
-        success: false,
-        message: `❌ **Editing error** - No lesson found for editing slides.`,
-        conversationHistory,
-        error: 'No lesson context for slide editing'
-      };
-    }
-
+    private async handleEditSlide(conversationHistory?: ConversationHistory, intentResult?: any): Promise<ChatResponse> {
     const slideNumber = intentResult?.parameters?.slideNumber;
     
-    // Require explicit slide number when multiple slides exist
-    if (!slideNumber && conversationHistory.currentLesson.slides.length > 1) {
-      return {
-        success: false,
-        message: `🤔 **Which slide would you like to edit?**\n\nYour lesson has ${conversationHistory.currentLesson.slides.length} slides:\n${conversationHistory.currentLesson.slides.map((slide: any, index: number) => `${index + 1}. ${slide.title}`).join('\n')}\n\nPlease specify the slide number (e.g., "edit slide 2").`,
-        conversationHistory,
-        error: 'Slide number required for editing'
-      };
+    // Використовуємо helper для валідації
+    const validation = await this.slideValidationHelper.validateSlideAccess(slideNumber, {
+      conversationHistory,
+      intentResult,
+      operation: 'edit'
+    });
+    
+    if (validation.error) {
+      return validation.error;
     }
     
-    // Default to first slide if only one slide exists
-    const finalSlideNumber = slideNumber ?? 1;
-    
-    if (finalSlideNumber < 1 || finalSlideNumber > conversationHistory.currentLesson.slides.length) {
-      return {
-        success: false,
-        message: `❌ **Editing error** - Slide ${finalSlideNumber} does not exist. Available slides: 1-${conversationHistory.currentLesson.slides.length}.`,
-        conversationHistory,
-        error: `Slide ${finalSlideNumber} does not exist`
-      };
-    }
+    const finalSlideNumber = validation.finalSlideNumber!;
 
     try {
       const currentSlide = conversationHistory.currentLesson.slides[finalSlideNumber - 1];
@@ -256,38 +322,20 @@ export class ChatService {
   }
 
   private async handleImproveSlide(conversationHistory?: ConversationHistory, intentResult?: any): Promise<ChatResponse> {
-    if (!conversationHistory?.currentLesson) {
-      return {
-        success: false,
-        message: `❌ **Improvement error** - No lesson found for improving slides.`,
-        conversationHistory,
-        error: 'No lesson context for slide improvement'
-      };
-    }
-
     const slideNumber = intentResult?.parameters?.slideNumber;
     
-    // Require explicit slide number when multiple slides exist
-    if (!slideNumber && conversationHistory.currentLesson.slides.length > 1) {
-      return {
-        success: false,
-        message: `🤔 **Which slide would you like to improve?**\n\nYour lesson has ${conversationHistory.currentLesson.slides.length} slides:\n${conversationHistory.currentLesson.slides.map((slide: any, index: number) => `${index + 1}. ${slide.title}`).join('\n')}\n\nPlease specify the slide number (e.g., "improve slide 2").`,
-        conversationHistory,
-        error: 'Slide number required for improvement'
-      };
+    // Використовуємо helper для валідації
+    const validation = await this.slideValidationHelper.validateSlideAccess(slideNumber, {
+      conversationHistory,
+      intentResult,
+      operation: 'improve'
+    });
+    
+    if (validation.error) {
+      return validation.error;
     }
     
-    // Default to first slide if only one slide exists
-    const finalSlideNumber = slideNumber ?? 1;
-    
-    if (finalSlideNumber < 1 || finalSlideNumber > conversationHistory.currentLesson.slides.length) {
-      return {
-        success: false,
-        message: `❌ **Improvement error** - Slide ${finalSlideNumber} does not exist. Available slides: 1-${conversationHistory.currentLesson.slides.length}.`,
-        conversationHistory,
-        error: `Slide ${finalSlideNumber} does not exist`
-      };
-    }
+    const finalSlideNumber = validation.finalSlideNumber!;
 
     try {
       const currentSlide = conversationHistory.currentLesson.slides[finalSlideNumber - 1];
@@ -335,38 +383,20 @@ export class ChatService {
   }
 
   private async handleInlineEditSlide(conversationHistory?: ConversationHistory, intentResult?: any): Promise<ChatResponse> {
-    if (!conversationHistory?.currentLesson) {
-      return {
-        success: false,
-        message: `❌ **Editing error** - No lesson found for editing slides.`,
-        conversationHistory,
-        error: 'No lesson context for inline slide editing'
-      };
-    }
-
     const slideNumber = intentResult?.parameters?.slideNumber;
     
-    // Require explicit slide number when multiple slides exist
-    if (!slideNumber && conversationHistory.currentLesson.slides.length > 1) {
-      return {
-        success: false,
-        message: `🤔 **Which slide would you like to edit?**\n\nYour lesson has ${conversationHistory.currentLesson.slides.length} slides:\n${conversationHistory.currentLesson.slides.map((slide: any, index: number) => `${index + 1}. ${slide.title}`).join('\n')}\n\nPlease specify the slide number (e.g., "edit slide 2").`,
-        conversationHistory,
-        error: 'Slide number required for inline editing'
-      };
+    // Використовуємо helper для валідації
+    const validation = await this.slideValidationHelper.validateSlideAccess(slideNumber, {
+      conversationHistory,
+      intentResult,
+      operation: 'edit'
+    });
+    
+    if (validation.error) {
+      return validation.error;
     }
     
-    // Default to first slide if only one slide exists
-    const finalSlideNumber = slideNumber ?? 1;
-    
-    if (finalSlideNumber < 1 || finalSlideNumber > conversationHistory.currentLesson.slides.length) {
-      return {
-        success: false,
-        message: `❌ **Editing error** - Slide ${finalSlideNumber} does not exist. Available slides: 1-${conversationHistory.currentLesson.slides.length}.`,
-        conversationHistory,
-        error: `Slide ${finalSlideNumber} does not exist`
-      };
-    }
+    const finalSlideNumber = validation.finalSlideNumber!;
 
     try {
       const currentSlide = conversationHistory.currentLesson.slides[finalSlideNumber - 1];
@@ -521,11 +551,8 @@ export class ChatService {
   }
 
   private generateFallbackResponse(intentResult: any, conversationHistory?: ConversationHistory): ChatResponse {
-    const language = intentResult.language || 'uk';
-    
-    const message = language === 'uk' 
-      ? `🤔 I\'m not yet sure how to help you with this request.\n\n**Here\'s what I can do:**\n• 📚 Create a new lesson\n• 📝 Edit existing lesson plans\n• 🎨 Add new slides to lessons\n• ❓ Provide help with commands`
-      : `🤔 I\'m not sure how to help you with this request yet.\n\n**Here\'s what I can do:**\n• 📚 Create a new lesson\n• 📝 Edit existing lesson plans\n• 🎨 Add new slides to lessons\n• ❓ Provide help with commands`;
+    // Use a generic helpful message - AI will respond in user's language
+    const message = `🤔 I'm not sure how to help you with this request yet.\n\n**Here's what I can do:**\n• 📚 Create a new lesson\n• 📝 Edit existing lesson plans\n• 🎨 Add new slides to lessons\n• ❓ Provide help with commands`;
 
     return {
       success: true,
@@ -534,4 +561,6 @@ export class ChatService {
       actions: []
     };
   }
+
+
 } 

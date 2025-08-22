@@ -8,6 +8,7 @@ export { LessonManagementService } from './LessonManagementService';
 export { SlideAnalysisService } from './SlideAnalysisService';
 export { ActionHandlerService } from './ActionHandlerService';
 export { IntentMappingService } from './IntentMappingService';
+export { AIClarificationService } from './AIClarificationService';
 
 // Re-export interfaces for convenience
 export type {

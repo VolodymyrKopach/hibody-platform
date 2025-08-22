@@ -46,9 +46,7 @@ export class EnhancedCreateLessonHandler implements IIntentHandler {
       console.log('❌ Missing required data for lesson creation');
       return {
         success: false,
-        message: intent.language === 'uk' 
-          ? `❌ **Недостатньо даних для створення уроку**\n\nБудь ласка, вкажіть:\n${!topic ? '• Тему уроку' : ''}\n${!age ? '• Вік дітей' : ''}\n\n💡 **Приклад:** "Створи урок про тварин для дітей 6 років"` // Translated
-          : `❌ **Insufficient data for lesson creation**\n\nPlease specify:\n${!topic ? '• Lesson topic' : ''}\n${!age ? '• Children age' : ''}\n\n💡 **Example:** "Create a lesson about animals for 6-year-old children"`,
+        message: `❌ **Insufficient data for lesson creation**\n\nPlease specify:\n${!topic ? '• Lesson topic' : ''}\n${!age ? '• Children age' : ''}\n\n💡 **Example:** "Create a lesson about animals for 6-year-old children"`,
         error: 'Missing required parameters'
       };
     }

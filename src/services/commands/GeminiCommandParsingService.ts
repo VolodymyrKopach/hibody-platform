@@ -51,7 +51,7 @@ export class GeminiCommandParsingService {
       return {
         command: result,
         confidence: this.calculateConfidence(result, message),
-        language: 'uk' // Default to Ukrainian, Gemini will respond in user's language automatically
+        language: 'uk' // Default language, Gemini will respond in user's language automatically
       };
       
     } catch (error) {
