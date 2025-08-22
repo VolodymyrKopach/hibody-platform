@@ -58,7 +58,6 @@ export class ActionHandlerService implements IActionHandlerService {
       step: 'bulk_generation',
       slideDescriptions,
       slideGenerationProgress: initialProgress,
-      bulkGenerationStartTime: new Date(),
       isGeneratingAllSlides: true,
       currentLesson: lesson
     };

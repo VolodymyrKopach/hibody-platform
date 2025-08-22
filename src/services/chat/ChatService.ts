@@ -186,19 +186,32 @@ export class ChatService {
       };
     }
 
-    const slideNumber = intentResult?.parameters?.slideNumber || conversationHistory.currentSlideIndex || 1;
+    const slideNumber = intentResult?.parameters?.slideNumber;
     
-    if (slideNumber < 1 || slideNumber > conversationHistory.currentLesson.slides.length) {
+    // Require explicit slide number when multiple slides exist
+    if (!slideNumber && conversationHistory.currentLesson.slides.length > 1) {
       return {
         success: false,
-        message: `❌ **Editing error** - Slide ${slideNumber} does not exist.`,
+        message: `🤔 **Which slide would you like to edit?**\n\nYour lesson has ${conversationHistory.currentLesson.slides.length} slides:\n${conversationHistory.currentLesson.slides.map((slide: any, index: number) => `${index + 1}. ${slide.title}`).join('\n')}\n\nPlease specify the slide number (e.g., "edit slide 2").`,
         conversationHistory,
-        error: `Slide ${slideNumber} does not exist`
+        error: 'Slide number required for editing'
+      };
+    }
+    
+    // Default to first slide if only one slide exists
+    const finalSlideNumber = slideNumber ?? 1;
+    
+    if (finalSlideNumber < 1 || finalSlideNumber > conversationHistory.currentLesson.slides.length) {
+      return {
+        success: false,
+        message: `❌ **Editing error** - Slide ${finalSlideNumber} does not exist. Available slides: 1-${conversationHistory.currentLesson.slides.length}.`,
+        conversationHistory,
+        error: `Slide ${finalSlideNumber} does not exist`
       };
     }
 
     try {
-      const currentSlide = conversationHistory.currentLesson.slides[slideNumber - 1];
+      const currentSlide = conversationHistory.currentLesson.slides[finalSlideNumber - 1];
       const editInstruction = intentResult?.parameters?.rawMessage || 'Improve slide';
       
       const editedSlide = await this.slideEditingService.editSlide(
@@ -209,7 +222,7 @@ export class ChatService {
       );
 
       const updatedSlides = conversationHistory.currentLesson.slides.map((slide, index) => 
-        index === slideNumber - 1 ? editedSlide : slide
+        index === finalSlideNumber - 1 ? editedSlide : slide
       );
 
       const updatedLesson = this.lessonManagementService.updateLesson(conversationHistory.currentLesson, {
@@ -224,11 +237,10 @@ export class ChatService {
 
       return {
         success: true,
-        message: `🔧 **Slide ${slideNumber} edited!**\n\n📋 **Detailed change report:**\n${detectedChanges.map(change => `• ${change}`).join('\n')}`,
+        message: `🔧 **Slide ${finalSlideNumber} edited!**\n\n📋 **Detailed change report:**\n${detectedChanges.map(change => `• ${change}`).join('\n')}`,
         conversationHistory: {
           ...conversationHistory,
-          currentLesson: updatedLesson,
-          currentSlideIndex: slideNumber
+          currentLesson: updatedLesson
         },
         actions: [],
         lesson: updatedLesson
@@ -236,7 +248,7 @@ export class ChatService {
     } catch (error) {
       return {
         success: false,
-        message: `😔 An error occurred while editing slide ${slideNumber}.`,
+        message: `😔 An error occurred while editing slide ${finalSlideNumber}.`,
         conversationHistory,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
@@ -253,19 +265,32 @@ export class ChatService {
       };
     }
 
-    const slideNumber = intentResult?.parameters?.slideNumber || conversationHistory.currentSlideIndex || 1;
+    const slideNumber = intentResult?.parameters?.slideNumber;
     
-    if (slideNumber < 1 || slideNumber > conversationHistory.currentLesson.slides.length) {
+    // Require explicit slide number when multiple slides exist
+    if (!slideNumber && conversationHistory.currentLesson.slides.length > 1) {
       return {
         success: false,
-        message: `❌ **Improvement error** - Slide ${slideNumber} does not exist.`,
+        message: `🤔 **Which slide would you like to improve?**\n\nYour lesson has ${conversationHistory.currentLesson.slides.length} slides:\n${conversationHistory.currentLesson.slides.map((slide: any, index: number) => `${index + 1}. ${slide.title}`).join('\n')}\n\nPlease specify the slide number (e.g., "improve slide 2").`,
         conversationHistory,
-        error: `Slide ${slideNumber} does not exist`
+        error: 'Slide number required for improvement'
+      };
+    }
+    
+    // Default to first slide if only one slide exists
+    const finalSlideNumber = slideNumber ?? 1;
+    
+    if (finalSlideNumber < 1 || finalSlideNumber > conversationHistory.currentLesson.slides.length) {
+      return {
+        success: false,
+        message: `❌ **Improvement error** - Slide ${finalSlideNumber} does not exist. Available slides: 1-${conversationHistory.currentLesson.slides.length}.`,
+        conversationHistory,
+        error: `Slide ${finalSlideNumber} does not exist`
       };
     }
 
     try {
-      const currentSlide = conversationHistory.currentLesson.slides[slideNumber - 1];
+      const currentSlide = conversationHistory.currentLesson.slides[finalSlideNumber - 1];
       const improvementInstruction = intentResult?.parameters?.rawMessage || 'Make the slide brighter and more interactive';
       
       const improvedSlide = await this.slideEditingService.improveSlide(
@@ -276,7 +301,7 @@ export class ChatService {
       );
 
       const updatedSlides = conversationHistory.currentLesson.slides.map((slide, index) => 
-        index === slideNumber - 1 ? improvedSlide : slide
+        index === finalSlideNumber - 1 ? improvedSlide : slide
       );
 
       const updatedLesson = this.lessonManagementService.updateLesson(conversationHistory.currentLesson, {
@@ -291,7 +316,7 @@ export class ChatService {
 
       return {
         success: true,
-        message: `🎨 **Slide ${slideNumber} improved!**\n\n📋 **Detailed improvement report:**\n${detectedChanges.map(change => `• ${change}`).join('\n')}`,
+        message: `🎨 **Slide ${finalSlideNumber} improved!**\n\n📋 **Detailed improvement report:**\n${detectedChanges.map(change => `• ${change}`).join('\n')}`,
         conversationHistory: {
           ...conversationHistory,
           currentLesson: updatedLesson
@@ -302,7 +327,7 @@ export class ChatService {
     } catch (error) {
       return {
         success: false,
-        message: `😔 An error occurred while improving slide ${slideNumber}.`,
+        message: `😔 An error occurred while improving slide ${finalSlideNumber}.`,
         conversationHistory,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
@@ -319,19 +344,32 @@ export class ChatService {
       };
     }
 
-    const slideNumber = intentResult?.parameters?.slideNumber || conversationHistory.currentSlideIndex || 1;
+    const slideNumber = intentResult?.parameters?.slideNumber;
     
-    if (slideNumber < 1 || slideNumber > conversationHistory.currentLesson.slides.length) {
+    // Require explicit slide number when multiple slides exist
+    if (!slideNumber && conversationHistory.currentLesson.slides.length > 1) {
       return {
         success: false,
-        message: `❌ **Editing error** - Slide ${slideNumber} does not exist.`,
+        message: `🤔 **Which slide would you like to edit?**\n\nYour lesson has ${conversationHistory.currentLesson.slides.length} slides:\n${conversationHistory.currentLesson.slides.map((slide: any, index: number) => `${index + 1}. ${slide.title}`).join('\n')}\n\nPlease specify the slide number (e.g., "edit slide 2").`,
         conversationHistory,
-        error: `Slide ${slideNumber} does not exist`
+        error: 'Slide number required for inline editing'
+      };
+    }
+    
+    // Default to first slide if only one slide exists
+    const finalSlideNumber = slideNumber ?? 1;
+    
+    if (finalSlideNumber < 1 || finalSlideNumber > conversationHistory.currentLesson.slides.length) {
+      return {
+        success: false,
+        message: `❌ **Editing error** - Slide ${finalSlideNumber} does not exist. Available slides: 1-${conversationHistory.currentLesson.slides.length}.`,
+        conversationHistory,
+        error: `Slide ${finalSlideNumber} does not exist`
       };
     }
 
     try {
-      const currentSlide = conversationHistory.currentLesson.slides[slideNumber - 1];
+      const currentSlide = conversationHistory.currentLesson.slides[finalSlideNumber - 1];
       const editInstruction = intentResult?.parameters?.rawMessage || '';
       const targetText = intentResult?.parameters?.targetText || '';
       const newText = intentResult?.parameters?.newText || '';
@@ -348,7 +386,7 @@ export class ChatService {
       );
 
       const updatedSlides = conversationHistory.currentLesson.slides.map((slide, index) => 
-        index === slideNumber - 1 ? editedSlide : slide
+        index === finalSlideNumber - 1 ? editedSlide : slide
       );
 
       const updatedLesson = this.lessonManagementService.updateLesson(conversationHistory.currentLesson, {
@@ -363,7 +401,7 @@ export class ChatService {
 
       return {
         success: true,
-        message: `🔧 **Slide ${slideNumber} edited!**\n\n📋 **Detailed editing report:**\n${detectedChanges.map(change => `• ${change}`).join('\n')}`,
+        message: `🔧 **Slide ${finalSlideNumber} edited!**\n\n📋 **Detailed editing report:**\n${detectedChanges.map(change => `• ${change}`).join('\n')}`,
         conversationHistory: {
           ...conversationHistory,
           currentLesson: updatedLesson
@@ -374,7 +412,7 @@ export class ChatService {
     } catch (error) {
       return {
         success: false,
-        message: `😔 An error occurred while editing slide ${slideNumber}.`,
+        message: `😔 An error occurred while editing slide ${finalSlideNumber}.`,
         conversationHistory,
         error: error instanceof Error ? error.message : 'Unknown error'
       };

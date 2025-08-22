@@ -79,8 +79,9 @@ CONVERSATION CONTEXT:
 - Active lesson: ${conversationHistory.currentLesson ? 'YES (id: ' + conversationHistory.currentLesson.id + ')' : 'NO'}
 - Lesson topic: ${conversationHistory.lessonTopic || 'not specified'}
 - Children age: ${conversationHistory.lessonAge || 'not specified'}
-- Generated slides: ${conversationHistory.generatedSlides?.length || 0}
-- Has lesson plan: ${conversationHistory.planningResult ? 'YES - PLAN EXISTS, READY FOR SLIDE GENERATION' : 'NO'}
+- Has lesson plan: ${conversationHistory.planningResult ? 'YES - PLAN EXISTS, READY FOR SLIDE GENERATION' : 'NO'}${conversationHistory.currentLesson?.slides ? `
+- Available slides: ${conversationHistory.currentLesson.slides.length} slides (1-${conversationHistory.currentLesson.slides.length})
+- Slide titles: ${conversationHistory.currentLesson.slides.map((slide: any, index: number) => `${index + 1}. "${slide.title}"`).join(', ')}` : ''}
 
 CRITICAL CONTEXT RULES:
 - If step === 'planning' AND planningResult exists → User is still editing the plan, NOT ready for generation
@@ -152,7 +153,7 @@ SUPPORTED INTENTS (exact values):
 PARAMETERS to extract:
 - topic: lesson topic (from user text OR conversation history)
 - age: children's age (numbers, ranges, "preschoolers", "schoolchildren")
-- slideNumber: slide number (if mentioned)
+- slideNumber: slide number (if mentioned) - **CRITICAL: ALWAYS try to extract slide number from user message**
 - slideNumbers: array of slide numbers for batch operations ([1, 3, 5])
 - editInstruction: specific editing instruction for batch operations
 - affectedSlides: 'all' | 'specific' | 'range' | 'single'
@@ -160,6 +161,13 @@ PARAMETERS to extract:
 - batchOperation: true for batch editing operations
 - instruction: specific user instruction
 - rawMessage: original message
+
+**SLIDE NUMBER DETECTION RULES:**
+- EXPLICIT numbers: "edit slide 3", "change slide 2", "improve slide 1"
+- ORDINAL numbers: "edit first slide", "change second slide", "improve third slide"
+- POSITIONAL words: "edit next slide", "change previous slide", "improve last slide"
+- CONTEXTUAL references: "edit this slide", "change that slide" (try to infer from context)
+- If NO slide number mentioned and multiple slides exist → set slideNumber: null (will trigger validation)
 
 INTENT DETECTION LOGIC:
 
@@ -560,6 +568,57 @@ RESPONSE:
   },
   "isDataSufficient": true,
   "missingData": []
+}
+
+**SINGLE SLIDE EDITING EXAMPLES:**
+
+MESSAGE: "edit slide 3" (with active lesson)
+ANALYSIS: User wants to edit specific slide number 3
+RESPONSE:
+{
+  "intent": "EDIT_SLIDE",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "slideNumber": 3,
+    "instruction": "edit slide",
+    "rawMessage": "edit slide 3"
+  },
+  "isDataSufficient": true,
+  "missingData": []
+}
+
+MESSAGE: "improve first slide" (with active lesson)
+ANALYSIS: User wants to improve the first slide (ordinal number)
+RESPONSE:
+{
+  "intent": "EDIT_SLIDE",
+  "confidence": 0.95,
+  "language": "en",
+  "parameters": {
+    "slideNumber": 1,
+    "instruction": "improve slide",
+    "rawMessage": "improve first slide"
+  },
+  "isDataSufficient": true,
+  "missingData": []
+}
+
+MESSAGE: "change the slide" (with active lesson having multiple slides)
+ANALYSIS: User wants to change a slide but didn't specify which one
+RESPONSE:
+{
+  "intent": "EDIT_SLIDE",
+  "confidence": 0.85,
+  "language": "en",
+  "parameters": {
+    "slideNumber": null,
+    "instruction": "change slide",
+    "rawMessage": "change the slide"
+  },
+  "isDataSufficient": false,
+  "missingData": ["slideNumber"],
+  "suggestedQuestion": "Which slide would you like to change? Please specify the slide number (1-3)."
 }
 
 ANALYZE THIS MESSAGE:

@@ -74,7 +74,6 @@ export class EnhancedCreateLessonHandler implements IIntentHandler {
       const newConversationHistory: ConversationHistory = {
         step: 'planning',
         planningResult: generatedPlan,
-        generationMode: 'individual',
         totalSlides: this.extractSlideCount(generatedPlan),
         originalMessage: intent.parameters.rawMessage,
         lessonTopic: topic,
