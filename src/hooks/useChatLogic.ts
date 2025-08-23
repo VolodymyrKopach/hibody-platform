@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Message, SimpleLesson } from '@/types/chat';
+import { Message, SimpleLesson, SlideGenerationProgress } from '@/types/chat';
 import { ChatServiceAPIAdapter } from '@/services/chat/ChatServiceAPIAdapter';
-import { ConversationHistory } from '@/services/chat/types';
+import { ConversationHistory, EnhancedBatchEditResponse } from '@/services/chat/types';
 import { useRealTimeSlideGeneration } from './useRealTimeSlideGeneration';
+import { useOptimizedBatchEdit } from './useOptimizedBatchEdit';
 // import { useSlideProgressSSE } from './useSlideProgressSSE'; // Removed - no longer needed
 import { ContextCompressionService } from '@/services/context/ContextCompressionService';
 
@@ -31,6 +32,13 @@ export const useChatLogic = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<any>(null);
   const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
+  
+  // === LOCAL SLIDE GENERATION PROGRESS STATE ===
+  const [slideProgress, setSlideProgress] = useState<Map<number, SlideGenerationProgress>>(new Map());
+  
+  // === OPTIMIZED BATCH EDIT STATE ===
+  const [batchEditInProgress, setBatchEditInProgress] = useState(false);
+  const [currentBatchEdit, setCurrentBatchEdit] = useState<EnhancedBatchEditResponse | null>(null);
   
   // === СПРОЩЕНИЙ СТЕЙТ ДЛЯ КОНТЕКСТУ РОЗМОВИ (ТІЛЬКИ РЯДОК) ===
   const [conversationContext, setConversationContext] = useState<ConversationContext>(() => {
@@ -128,6 +136,9 @@ export const useChatLogic = () => {
     }
   );
 
+  // === OPTIMIZED BATCH EDIT HOOK ===
+  const batchEdit = useOptimizedBatchEdit();
+
 
 
   const sendMessage = useCallback(async (message: string) => {
@@ -171,6 +182,11 @@ export const useChatLogic = () => {
         // === ОНОВЛЮЄМО КОНТЕКСТ З ІНФОРМАЦІЄЮ З CONVERSATION HISTORY ===
         const contextWithTopic = updatedContext + ' | TOPIC: ' + (response.conversationHistory.lessonTopic || 'Unknown topic');
         setConversationContext(contextWithTopic);
+      }
+
+      // === HANDLE ENHANCED BATCH EDIT ===
+      if (response.enhancedBatchEdit) {
+        await handleEnhancedBatchEdit(response.enhancedBatchEdit, response.conversationHistory);
       }
 
       setTypingStage('finalizing');
@@ -218,6 +234,105 @@ export const useChatLogic = () => {
       setTypingStage('thinking');
     }
   }, [isLoading, conversationHistory, apiAdapter, conversationContext]);
+
+  // === HANDLE ENHANCED BATCH EDIT ===
+  const handleEnhancedBatchEdit = useCallback(async (
+    enhancedBatchEdit: EnhancedBatchEditResponse,
+    conversationHistory?: any
+  ) => {
+    console.log('🔄 [CHAT LOGIC] Starting enhanced batch edit:', enhancedBatchEdit);
+    
+    if (!conversationHistory?.currentLesson?.slides) {
+      console.error('❌ [CHAT LOGIC] No slides found for batch edit');
+      return;
+    }
+
+    // Set batch edit state
+    setCurrentBatchEdit(enhancedBatchEdit);
+    setBatchEditInProgress(true);
+
+    try {
+      // Extract lesson data
+      const { currentLesson } = conversationHistory;
+      const { batchEditPlan } = enhancedBatchEdit;
+      
+      // Start batch edit using the hook
+      await batchEdit.startBatchEdit(
+        batchEditPlan,
+        currentLesson.slides,
+        {
+          topic: conversationHistory.lessonTopic || 'lesson',
+          age: conversationHistory.lessonAge || '6-8 years'
+        }
+      );
+
+      console.log('✅ [CHAT LOGIC] Batch edit started successfully');
+      
+    } catch (error) {
+      console.error('❌ [CHAT LOGIC] Failed to start batch edit:', error);
+      setBatchEditInProgress(false);
+      setCurrentBatchEdit(null);
+      
+      // Add error message
+      const errorMessage: Message = {
+        id: Date.now(),
+        text: `❌ **Batch edit failed:** ${error instanceof Error ? error.message : 'Unknown error'}`,
+        sender: 'ai',
+        timestamp: new Date(),
+        status: 'delivered'
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  }, [batchEdit]);
+
+  // === HANDLE BATCH EDIT COMPLETION ===
+  const handleBatchEditComplete = useCallback((results: any) => {
+    console.log('🎉 [CHAT LOGIC] Batch edit completed:', results);
+    
+    setBatchEditInProgress(false);
+    setCurrentBatchEdit(null);
+    
+    // Update slides in conversation history
+    if (results.updatedSlides && results.updatedSlides.length > 0) {
+      setConversationHistory((prev: any) => {
+        if (!prev?.currentLesson) return prev;
+        
+        const updatedSlides = prev.currentLesson.slides.map((slide: any) => {
+          const updatedSlide = results.updatedSlides.find((updated: any) => updated.id === slide.id);
+          return updatedSlide || slide;
+        });
+        
+        const updatedLesson = {
+          ...prev.currentLesson,
+          slides: updatedSlides,
+          updatedAt: new Date()
+        };
+        
+        // Update lesson in panel
+        if (onLessonUpdateRef.current) {
+          onLessonUpdateRef.current(updatedLesson);
+        }
+        
+        return {
+          ...prev,
+          currentLesson: updatedLesson
+        };
+      });
+    }
+    
+    // Add completion message
+    const completionMessage: Message = {
+      id: Date.now(),
+      text: `🎉 **Batch edit completed!**\n\n✨ ${results.successCount || 0} slides were updated successfully.${results.errorCount ? ` ${results.errorCount} slide${results.errorCount > 1 ? 's' : ''} had errors.` : ''}\n\n📚 Check the slide panel to see your changes.`,
+      sender: 'ai',
+      timestamp: new Date(),
+      status: 'delivered'
+    };
+    
+    setMessages(prev => [...prev, completionMessage]);
+    
+  }, []);
 
   const handleActionClick = useCallback(async (action: string) => {
     if (isLoading) return;
@@ -496,10 +611,10 @@ export const useChatLogic = () => {
       onLessonUpdateRef.current(lessonWithPlaceholders);
     }
 
-    // Update initial progress in conversation history
+    // Update local progress state and conversation history
+    setSlideProgress(new Map(progressMap));
     setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
       ...prev,
-      slideGenerationProgress: Array.from(progressMap.values()),
       currentLesson: lessonWithPlaceholders
     } : prev);
 
@@ -519,11 +634,8 @@ export const useChatLogic = () => {
             progress: newProgress
           });
           
-          // Update conversation history
-          setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
-            ...prev,
-            slideGenerationProgress: Array.from(progressMap.values())
-          } : prev);
+          // Update local progress state
+          setSlideProgress(new Map(progressMap));
           
 
           
@@ -564,11 +676,8 @@ export const useChatLogic = () => {
           // Start randomized progress simulation for this slide
           startFakeProgress(desc.slideNumber);
           
-          // Update progress in conversation history
-          setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
-            ...prev,
-            slideGenerationProgress: Array.from(progressMap.values())
-          } : prev);
+          // Update local progress state
+          setSlideProgress(new Map(progressMap));
 
 
 
@@ -714,11 +823,8 @@ export const useChatLogic = () => {
             error: error instanceof Error ? error.message : 'Unknown error'
           };
         } finally {
-          // Update progress after each slide completes
-          setConversationHistory((prev: ConversationHistory | undefined) => prev ? {
-            ...prev,
-            slideGenerationProgress: Array.from(progressMap.values())
-          } : prev);
+          // Update local progress state after each slide completes
+          setSlideProgress(new Map(progressMap));
         }
       });
 
@@ -745,10 +851,12 @@ export const useChatLogic = () => {
         return {
           ...prev,
           currentLesson: preservedLesson, // Preserve existing lesson with individual slide updates
-          isGeneratingAllSlides: false,   // Update completion flag
-          slideGenerationProgress: Array.from(progressMap.values()) // Update progress
+          isGeneratingAllSlides: false   // Update completion flag
         };
       });
+
+      // Final update to local progress state
+      setSlideProgress(new Map(progressMap));
 
       // Add completion message (get current lesson from state, don't recreate)
       const currentLesson = conversationHistory?.currentLesson;
@@ -839,6 +947,15 @@ export const useChatLogic = () => {
     updateConversationContext,
     addToConversationContext,
     addToConversationContextWithOptions,
-    resetConversationContext
+    resetConversationContext,
+    
+    // === LOCAL SLIDE GENERATION PROGRESS ===
+    slideProgress: Array.from(slideProgress.values()), // Convert Map to Array for components
+    
+    // === OPTIMIZED BATCH EDIT ===
+    batchEditInProgress,
+    currentBatchEdit,
+    batchEditState: batchEdit,
+    handleBatchEditComplete
   };
 }; 

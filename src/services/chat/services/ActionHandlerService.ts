@@ -44,22 +44,16 @@ export class ActionHandlerService implements IActionHandlerService {
 
     console.log('🚀 Starting PARALLEL slide generation using single slide endpoint');
 
-    // Initialize progress tracking
+    // Initialize session for tracking
     const sessionId = `parallel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const initialProgress: SlideGenerationProgress[] = slideDescriptions.map(desc => ({
-      slideNumber: desc.slideNumber,
-      title: desc.title,
-      status: 'pending',
-      progress: 0
-    }));
 
     const newConversationHistory: ConversationHistory = {
       ...history,
       step: 'bulk_generation',
       slideDescriptions,
-      slideGenerationProgress: initialProgress,
       isGeneratingAllSlides: true,
-      currentLesson: lesson
+      currentLesson: lesson,
+      sessionId
     };
 
     // Return minimal response - actual generation will happen client-side

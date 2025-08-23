@@ -14,7 +14,8 @@ import ChatMessage from '@/components/chat/ChatMessage';
 import ChatInput from '@/components/chat/ChatInput';
 import TypingIndicator from '@/components/chat/TypingIndicator';
 import SlidePanel from '@/components/slides/SlidePanel';
-import { SlideDialog } from '@/components/slides';
+import { SlideDialog, OptimizedBatchEditProgress } from '@/components/slides';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import SaveLessonDialog from '@/components/dialogs/SaveLessonDialog';
 import SimpleGenerationDialog from '@/components/dialogs/SimpleGenerationDialog';
 
@@ -44,7 +45,14 @@ const ChatInterface: React.FC = () => {
     handleActionClick,
     conversationHistory,
     setOnLessonUpdate,
-    setOnSlidePanelOpen
+    setOnSlidePanelOpen,
+    // Local slide progress state
+    slideProgress,
+    // Batch edit state
+    batchEditInProgress,
+    currentBatchEdit,
+    batchEditState,
+    handleBatchEditComplete
   } = useChatLogic();
 
   // Slide management
@@ -181,7 +189,7 @@ const ChatInterface: React.FC = () => {
                     message={message}
                     onLessonCreate={updateCurrentLesson}
                     onActionClick={handleActionClick}
-                    slideGenerationProgress={conversationHistory?.slideGenerationProgress}
+                    slideGenerationProgress={slideProgress}
                     isGeneratingSlides={conversationHistory?.isGeneratingAllSlides || isGeneratingSlides}
                   />
                 ))}
@@ -278,6 +286,48 @@ const ChatInterface: React.FC = () => {
             setTimeout(() => sendMessage(prompt), 100);
           }}
         />
+
+        {/* Optimized Batch Edit Progress Modal */}
+        <Dialog
+          open={batchEditInProgress && !!batchEditState.progress}
+          maxWidth="md"
+          fullWidth
+          disableEscapeKeyDown
+        >
+          <DialogTitle>
+            Batch Slide Editing
+          </DialogTitle>
+          <DialogContent>
+            {batchEditState.progress && (
+              <OptimizedBatchEditProgress
+                progress={batchEditState.progress}
+                showDetails={true}
+                compact={false}
+              />
+            )}
+          </DialogContent>
+          {batchEditState.progress?.isCompleted && (
+            <DialogActions>
+              <Button 
+                onClick={() => {
+                  console.log('🎉 [CHAT PAGE] Batch edit completed, closing modal');
+                  const results = batchEditState.progress?.results || [];
+                  const errors = batchEditState.progress?.errors || [];
+                  
+                  handleBatchEditComplete({
+                    updatedSlides: results.map(r => r.originalSlide).filter(Boolean),
+                    successCount: results.length,
+                    errorCount: errors.length
+                  });
+                }}
+                variant="contained"
+                color="primary"
+              >
+                Close
+              </Button>
+            </DialogActions>
+          )}
+        </Dialog>
       </Box>
           </Layout>
   );
