@@ -364,7 +364,7 @@
       "description": "Any special requirements or notes?",
       "placeholder": "Add any additional information, special requirements, or notes for your lesson..."
     },
-    "nextStep": "Next step: Create plan →",
+    "nextStep": "Create Plan →",
     "topics": {
       "2-3": {
         "animals": "Animals",
