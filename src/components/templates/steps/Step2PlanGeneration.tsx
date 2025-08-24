@@ -20,6 +20,7 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { MarkdownRenderer } from '@/components/markdown';
+import { StructuredLessonPlan } from '@/components/templates/lesson-plan';
 import { lessonPlanService, LessonPlanServiceError } from '@/services/templates/LessonPlanService';
 import { TemplateData, GenerationState } from '@/types/templates';
 
@@ -65,7 +66,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
           if (prev >= 90) return prev;
           return prev + Math.random() * 10;
         });
-      }, 500);
+      }, 1000);
     }
     
     return () => {
@@ -75,7 +76,6 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
 
   const handleGeneratePlan = async () => {
     try {
-      console.log('🎯 Step2PlanGeneration: Starting lesson plan generation');
       setGenerationState('generating');
       setError(null);
       setProgress(0);
@@ -229,15 +229,15 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
 
         {/* Plan Content */}
         <Box sx={{ 
-          maxHeight: 600, 
+          maxHeight: 800, 
           overflow: 'auto',
           border: `1px solid ${theme.palette.divider}`,
           borderRadius: 2,
-          p: 3,
-          backgroundColor: theme.palette.background.paper
+          p: 2,
+          backgroundColor: theme.palette.background.default
         }}>
           {generatedPlan && (
-            <MarkdownRenderer content={generatedPlan} />
+            <StructuredLessonPlan markdown={generatedPlan} />
           )}
         </Box>
 

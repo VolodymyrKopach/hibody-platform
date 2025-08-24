@@ -68,6 +68,71 @@ export class GeminiContentService {
     }
   }
 
+  async generateLessonPlanJSON(
+    topic: string, 
+    age: string, 
+    language: string = 'en', 
+    conversationContext?: string,
+    slideCount: number = 5
+  ): Promise<string> {
+    const prompt = this.buildLessonPlanJSONPrompt(topic, age, language, conversationContext, slideCount);
+
+    console.log('📝 Generated JSON prompt length:', prompt.length);
+    console.log('🎯 JSON API request details:', {
+      model: 'gemini-2.5-flash',
+      hasConversationContext: !!conversationContext,
+      slideCount
+    });
+
+    try {
+      const response = await this.client.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          thinkingConfig: {
+            thinkingBudget: 0, // Disable thinking for faster generation
+          },
+          temperature: 0.7
+        }
+      });
+
+      const content = response.text;
+
+      if (!content) {
+        throw new Error('No content in Gemini response');
+      }
+
+      console.log('✅ Gemini JSON response received');
+      console.log('📏 JSON Response length:', content.length);
+
+      // Try to parse JSON to validate structure
+      try {
+        JSON.parse(content);
+        console.log('✅ JSON structure validated');
+      } catch (parseError) {
+        console.warn('⚠️ Response is not valid JSON, attempting to extract JSON from response');
+        // Try to extract JSON from markdown code blocks
+        const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+        if (jsonMatch) {
+          const extractedJSON = jsonMatch[1];
+          try {
+            JSON.parse(extractedJSON);
+            console.log('✅ Extracted JSON from code block');
+            return extractedJSON;
+          } catch (extractError) {
+            console.error('❌ Extracted content is also not valid JSON');
+          }
+        }
+        throw new Error(`Invalid JSON response: ${parseError}`);
+      }
+
+      return content;
+    } catch (error) {
+      console.error('Gemini JSON content generation error:', error);
+      throw error;
+    }
+  }
+
   private buildLessonPlanPrompt(topic: string, age: string, language: string, conversationContext?: string, slideCount: number = 5): string {
     let contextSection = '';
     
@@ -846,6 +911,181 @@ Provide the updated plan in the same format as the original, with clear slide st
       console.error('Gemini changes summary error:', error);
       throw error;
     }
+  }
+
+  private buildLessonPlanJSONPrompt(topic: string, age: string, language: string, conversationContext?: string, slideCount: number = 5): string {
+    let contextSection = '';
+    
+    if (conversationContext) {
+      contextSection = `
+CONVERSATION HISTORY:
+${conversationContext}
+
+Based on this conversation history, consider the user's preferences, style, and any specific requirements mentioned throughout the conversation when creating the lesson plan.
+`;
+    }
+
+    return `You are an expert in developing educational programs for children. Create a detailed and engaging lesson plan in JSON format.
+
+${contextSection}
+
+INPUT DATA:
+- Topic: ${topic}
+- Children's age: ${age}
+- Number of slides requested: ${slideCount}
+- Language: English
+
+REQUIRED JSON STRUCTURE:
+Generate a valid JSON object with the following exact structure:
+
+{
+  "metadata": {
+    "title": "Engaging lesson title",
+    "targetAudience": "${age}",
+    "duration": "30-45 minutes",
+    "goal": "Main educational goal of the lesson"
+  },
+  "objectives": [
+    {
+      "id": "obj1",
+      "text": "Learning objective description",
+      "category": "knowledge|skills|attitude"
+    }
+  ],
+  "slides": [
+    {
+      "slideNumber": 1,
+      "type": "Introduction|Educational|Activity|Summary",
+      "title": "Slide title",
+      "goal": "Specific goal for this slide",
+      "content": "Detailed content description (minimum 100 words)",
+      "duration": "5-10 minutes",
+      "interactiveElements": ["element1", "element2"],
+      "teacherNotes": "Additional notes for teacher",
+      "structure": {
+        "greeting": {
+          "text": "Welcome message or opening statement",
+          "action": "Recommended gesture or movement",
+          "tone": "enthusiastic|calm|encouraging"
+        },
+        "mainContent": {
+          "text": "Core information to present",
+          "keyPoints": ["Key point 1", "Key point 2"],
+          "visualElements": ["Show image", "Point to object"]
+        },
+        "interactions": [
+          {
+            "type": "touch|sound|movement|verbal|visual",
+            "description": "What children should do",
+            "instruction": "How teacher should guide",
+            "feedback": "Expected response or outcome"
+          }
+        ],
+        "activities": [
+          {
+            "name": "Activity name",
+            "description": "What children do",
+            "duration": "2-3 minutes",
+            "materials": ["item1", "item2"],
+            "expectedOutcome": "What should happen"
+          }
+        ],
+        "teacherGuidance": {
+          "preparation": ["Setup step 1", "Setup step 2"],
+          "delivery": ["Teaching tip 1", "Teaching tip 2"],
+          "adaptations": ["For shy children", "For active children"],
+          "troubleshooting": ["If children lose interest", "If activity is too hard"]
+        }
+      }
+    }
+  ],
+  "gameElements": [
+    {
+      "id": "game1",
+      "name": "Game name",
+      "description": "Game description",
+      "type": "movement|cognitive|creative|social",
+      "duration": "5-10 minutes"
+    }
+  ],
+  "materials": [
+    {
+      "id": "mat1",
+      "name": "Material name",
+      "quantity": "Amount needed",
+      "category": "required|optional",
+      "description": "Brief description"
+    }
+  ],
+  "recommendations": [
+    {
+      "id": "rec1",
+      "category": "preparation|delivery|adaptation",
+      "text": "Recommendation text",
+      "priority": "high|medium|low"
+    }
+  ]
+}
+
+SLIDE GENERATION RULES:
+- Generate EXACTLY ${slideCount} slides
+- First slide must be type "Introduction"
+- Last slide must be type "Summary"
+- If more than 2 slides, second-to-last should be "Activity"
+- Middle slides should be "Educational"
+- Each slide content must be minimum 100 words
+- Include age-appropriate interactive elements
+- Adapt all content for ${age} age group
+
+${this.getAgeSpecificComponentGuidance(age)}
+
+SLIDE STRUCTURE REQUIREMENTS:
+For each slide, provide BOTH "content" (legacy) AND "structure" (new detailed format):
+
+1. GREETING SECTION (for Introduction slides):
+   - Warm, age-appropriate welcome message
+   - Specific gestures or actions for teacher
+   - Appropriate tone (enthusiastic for young children)
+
+2. MAIN CONTENT SECTION:
+   - Core educational information
+   - 2-4 key points children should remember
+   - Visual elements to show or demonstrate
+
+3. INTERACTIONS (2-4 per slide):
+   - Specific type: touch, sound, movement, verbal, visual
+   - Clear description of what children do
+   - Step-by-step teacher instructions
+   - Expected feedback or response
+
+4. ACTIVITIES (1-3 per slide):
+   - Concrete activity name
+   - Clear description of actions
+   - Realistic duration (2-5 minutes for young children)
+   - Required materials
+   - Learning outcome
+
+5. TEACHER GUIDANCE:
+   - Preparation steps before slide
+   - Delivery tips during slide
+   - Adaptations for different children
+   - Troubleshooting common issues
+
+IMPORTANT REQUIREMENTS:
+- Return ONLY valid JSON, no markdown formatting or code blocks
+- Ensure all strings are properly escaped
+- Include at least 3 learning objectives
+- Include at least 2 game elements
+- Include at least 3 materials
+- Include at least 3 teacher recommendations
+- Make content engaging and educational for ${age}
+- All content should be in English
+- Focus on interactive and hands-on learning approaches
+- Consider attention span and cognitive abilities of ${age} children
+- EVERY slide must have complete "structure" object with all sections
+- Make interactions age-appropriate and achievable
+- Provide specific, actionable teacher instructions
+- Include realistic timing for all activities`;
   }
 
   private buildEditPlanPrompt(

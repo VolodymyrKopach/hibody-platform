@@ -24,11 +24,11 @@ const StepProgress: React.FC<StepProgressProps> = ({ currentStep }) => {
     <Box
       sx={{
         width: "100%",
-        mb: 4,
-        py: 3,
-        px: 4,
+        mb: 2,
+        py: 1.5,
+        px: 2,
         backgroundColor: "background.paper",
-        borderRadius: 3,
+        borderRadius: 2,
         border: `1px solid ${theme.palette.divider}`,
         boxShadow: theme.shadows[1],
       }}
@@ -38,10 +38,10 @@ const StepProgress: React.FC<StepProgressProps> = ({ currentStep }) => {
         alternativeLabel
         sx={{
           "& .MuiStepConnector-root": {
-            top: 22,
+            top: 18,
             "& .MuiStepConnector-line": {
               borderColor: theme.palette.divider,
-              borderTopWidth: 2,
+              borderTopWidth: 1,
             },
           },
           "& .MuiStepConnector-active .MuiStepConnector-line": {
@@ -58,7 +58,7 @@ const StepProgress: React.FC<StepProgressProps> = ({ currentStep }) => {
               sx={{
                 "& .MuiStepLabel-iconContainer": {
                   "& .MuiSvgIcon-root": {
-                    fontSize: "2rem",
+                    fontSize: "1.5rem",
                     color:
                       currentStep > index
                         ? theme.palette.primary.main
@@ -74,11 +74,12 @@ const StepProgress: React.FC<StepProgressProps> = ({ currentStep }) => {
               }}
             >
               <Typography
-                variant="h6"
+                variant="subtitle2"
                 color={currentStep > index ? "primary" : "text.secondary"}
                 sx={{
                   fontWeight: currentStep > index ? 600 : 400,
-                  mt: 1,
+                  mt: 0.5,
+                  fontSize: "0.875rem",
                 }}
               >
                 {step.label}

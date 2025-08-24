@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     console.log(`🎯 LESSON PLAN API: Starting lesson plan generation [${requestId}]`);
     const contentService = new GeminiContentService();
     
-    const generatedPlan = await contentService.generateLessonPlan(
+    const generatedPlan = await contentService.generateLessonPlanJSON(
       body.topic,
       body.ageGroup,
       body.language || 'en',
