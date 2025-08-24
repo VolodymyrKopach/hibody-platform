@@ -7,12 +7,14 @@
     "lessons": "Lessons",
     "slides": "Slides",
     "aiChat": "Assistant Chat",
-    "myMaterials": "My Materials"
+    "myMaterials": "My Materials",
+    "createLesson": "Create Lesson"
   },
   "pages": {
     "chatTitle": "Assistant Chat",
     "materialsTitle": "My Materials",
-    "accountTitle": "Account"
+    "accountTitle": "Account",
+    "createLessonTitle": "Create Lesson"
   },
   "buttons": {
     "save": "Save",
@@ -65,6 +67,9 @@
     "savePassword": "Save Password",
     "regenerate": "Regenerate",
     "profile": "Profile",
+    "tryAgain": "Try Again",
+    "goHome": "Go Home",
+    "goBack": "Go Back",
     "logout": "Logout"
   },
   "status": {
@@ -124,7 +129,20 @@
     "connectionToServer": "Server connection error",
     "passwordChangeError": "Error changing password",
     "saveError": "Error saving",
-    "fillAllFields": "Fill all fields"
+    "fillAllFields": "Fill all fields",
+    "page": {
+      "title": "Something went wrong",
+      "subtitle": "Unfortunately, an unexpected error occurred. We are working on fixing it.",
+      "testTitle": "Test Error Page",
+      "testSubtitle": "This is a test page to check the display of contact information in case of errors.",
+      "testInfo": "Test Information:",
+      "testDescription": "This demonstrates what the error page looks like with contact information. Check if the email and Telegram links below are displayed correctly.",
+      "problemPersists": "Problem persists?",
+      "contactMessage": "If the error persists, try clearing your browser cache or contact us via email",
+      "orTelegram": "or on Telegram",
+      "errorDetails": "Error details (development mode only):",
+      "errorId": "Error ID"
+    }
   },
   "ageGroups": {
     "3-5": "3-5 years old",
@@ -264,20 +282,92 @@
     "teacherAssistant": "Teacher Assistant",
     "defaultUser": "User"
   },
-  "chat": {
-    "assistantName": "Teacher Assistant",
-    "typingIndicator": "Typing..."
-  },
-  "stats": {
-    "yourStats": "Your Statistics",
-    "activityAnalysis": "Activity Analysis",
-    "averageSlides": "Average slides",
-    "slidesPerLesson": "slides per lesson",
-    "subscriptionType": "Subscription Type",
-    "accountInfo": "Account Information"
-  },
-  "dates": {
-    "joinedAt": "Joined",
-    "lastSignIn": "Last Sign In"
+
+  "createLesson": {
+    "steps": {
+      "basicInfo": "Basic Information",
+      "planReview": "Plan Review", 
+      "generation": "Generation"
+    },
+    "ageGroup": {
+      "title": "🎯 Age Group",
+      "2-3": "2-3 years",
+      "4-6": "4-6 years", 
+      "7-8": "7-8 years",
+      "9-10": "9-10 years",
+      "earlyChildhood": "Early childhood",
+      "preschool": "Preschool age",
+      "primarySchool": "Primary school",
+      "middleSchool": "Middle school"
+    },
+    "topic": {
+      "title": "📚 Topic",
+      "description": "What do you want to tell about?",
+      "placeholder": "Enter your lesson topic...",
+      "popularFor": "Popular topics for age",
+      "popular": "Popular topics:"
+    },
+    "slideCount": {
+      "title": "📊 Number of slides",
+      "description": "How many slides do you need?",
+      "other": "Other",
+      "customCount": "Custom count"
+    },
+    "additionalInfo": {
+      "title": "📝 Additional Information",
+      "description": "Any special requirements or notes?",
+      "placeholder": "Add any additional information, special requirements, or notes for your lesson..."
+    },
+    "nextStep": "Next step: Create plan →",
+    "topics": {
+      "2-3": {
+        "animals": "Animals",
+        "colors": "Colors", 
+        "momAndDad": "Mom and Dad",
+        "toys": "Toys",
+        "food": "Food",
+        "sounds": "Sounds",
+        "bodyParts": "Body parts",
+        "clothes": "Clothes",
+        "home": "Home",
+        "sleep": "Sleep"
+      },
+      "4-6": {
+        "letters": "Letters",
+        "numbers": "Numbers",
+        "shapes": "Shapes", 
+        "colors": "Colors",
+        "animals": "Animals",
+        "professions": "Professions",
+        "transport": "Transport",
+        "family": "Family",
+        "friends": "Friends",
+        "holidays": "Holidays"
+      },
+      "7-8": {
+        "reading": "Reading",
+        "mathematics": "Mathematics",
+        "nature": "Nature",
+        "planets": "Planets", 
+        "stories": "Stories",
+        "countries": "Countries",
+        "sports": "Sports",
+        "art": "Art",
+        "music": "Music",
+        "science": "Science"
+      },
+      "9-10": {
+        "science": "Science",
+        "history": "History",
+        "geography": "Geography",
+        "inventions": "Inventions",
+        "ecology": "Ecology",
+        "technology": "Technology",
+        "culture": "Culture",
+        "languages": "Languages",
+        "mathematics": "Mathematics",
+        "physics": "Physics"
+      }
+    }
   }
 } 

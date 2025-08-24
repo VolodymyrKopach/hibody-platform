@@ -16,16 +16,27 @@ import {
   RefreshCw,
   AlertTriangle
 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 
-interface ErrorPageProps {
-  error: Error & { digest?: string };
-  reset: () => void;
-}
-
-export default function ErrorPage({ error, reset }: ErrorPageProps) {
+const ErrorTestPage: React.FC = () => {
   const theme = useTheme();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useTranslation('common');
+  const isTest = searchParams.get('test') === 'true';
+
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
+  const handleGoHome = () => {
+    router.push('/');
+  };
+
+  const handleGoBack = () => {
+    router.back();
+  };
 
   return (
     <Box
@@ -69,7 +80,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
 
       <Container maxWidth="md" sx={{ textAlign: 'center', zIndex: 1 }}>
         <Box sx={{ mb: 4 }}>
-          {/* Error icon with animation */}
+          {/* Error Icon */}
           <Box
             sx={{
               display: 'inline-flex',
@@ -78,14 +89,9 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
               width: '120px',
               height: '120px',
               borderRadius: '50%',
-              background: `linear-gradient(135deg, ${alpha(theme.palette.error.main, 0.1)}, ${alpha(theme.palette.warning.main, 0.1)})`,
+              background: `linear-gradient(135deg, ${alpha(theme.palette.error.main, 0.15)}, ${alpha(theme.palette.warning.main, 0.1)})`,
               border: `2px solid ${alpha(theme.palette.error.main, 0.2)}`,
               mb: 3,
-              animation: 'pulse 2s ease-in-out infinite',
-              '@keyframes pulse': {
-                '0%, 100%': { transform: 'scale(1)' },
-                '50%': { transform: 'scale(1.05)' },
-              },
             }}
           >
             <AlertTriangle 
@@ -94,17 +100,17 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
             />
           </Box>
 
-          {/* Title */}
+          {/* Main Error Message */}
           <Typography
             variant="h3"
             sx={{
               fontWeight: 700,
               color: theme.palette.text.primary,
               mb: 2,
-              fontSize: { xs: '2rem', sm: '3rem' },
+              fontSize: { xs: '2rem', md: '3rem' },
             }}
           >
-{t('errors.page.title')}
+{isTest ? t('errors.page.testTitle') : t('errors.page.title')}
           </Typography>
 
           <Typography
@@ -112,62 +118,45 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
             sx={{
               color: theme.palette.text.secondary,
               mb: 4,
-              maxWidth: '600px',
-              mx: 'auto',
+              fontWeight: 400,
               lineHeight: 1.6,
-              fontSize: { xs: '1rem', sm: '1.2rem' },
             }}
           >
-{t('errors.page.subtitle')}
+{isTest ? t('errors.page.testSubtitle') : t('errors.page.subtitle')}
           </Typography>
 
-          {/* Error details (only in development) */}
-          {process.env.NODE_ENV === 'development' && (
+          {isTest && (
             <Box
               sx={{
-                mt: 3,
                 p: 3,
                 borderRadius: '12px',
-                backgroundColor: alpha(theme.palette.error.main, 0.1),
-                border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+                backgroundColor: alpha(theme.palette.info.main, 0.1),
+                border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
                 textAlign: 'left',
                 maxWidth: '600px',
                 mx: 'auto',
+                mb: 4,
               }}
             >
               <Typography
                 variant="subtitle2"
                 sx={{
-                  color: theme.palette.error.main,
+                  color: theme.palette.info.main,
                   fontWeight: 600,
                   mb: 1,
                 }}
               >
-{t('errors.page.errorDetails')}
+{t('errors.page.testInfo')}
               </Typography>
               <Typography
                 variant="body2"
                 sx={{
-                  color: theme.palette.error.dark,
-                  fontFamily: 'monospace',
-                  fontSize: '0.85rem',
-                  wordBreak: 'break-word',
+                  color: theme.palette.info.dark,
+                  fontSize: '0.9rem',
                 }}
               >
-                {error.message}
+{t('errors.page.testDescription')}
               </Typography>
-              {error.digest && (
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: theme.palette.text.secondary,
-                    display: 'block',
-                    mt: 1,
-                  }}
-                >
-{t('errors.page.errorId')}: {error.digest}
-                </Typography>
-              )}
             </Box>
           )}
         </Box>
@@ -175,70 +164,73 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
         {/* Action buttons */}
         <Stack 
           direction={{ xs: 'column', sm: 'row' }} 
-          spacing={2} 
-          justifyContent="center"
-          sx={{ mb: 4 }}
+          spacing={2}
+          sx={{ 
+            justifyContent: 'center',
+            mb: 4,
+            maxWidth: '400px',
+            mx: 'auto'
+          }}
         >
-          <Button
-            onClick={reset}
-            variant="contained"
-            size="large"
-            startIcon={<RefreshCw size={20} />}
-            sx={{
-              borderRadius: '12px',
-              px: 4,
-              py: 1.5,
-              textTransform: 'none',
-              fontSize: '1.1rem',
-              fontWeight: 600,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-              boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.4)}`,
-              '&:hover': {
-                background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                transform: 'translateY(-2px)',
-                boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
-              },
-              transition: 'all 0.3s ease',
-            }}
-          >
+          {isTest ? (
+            <Button
+              variant="contained"
+              onClick={handleGoBack}
+              startIcon={<Home size={18} />}
+              sx={{
+                py: 1.5,
+                px: 3,
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 600,
+              }}
+            >
+{t('goBack')}
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="contained"
+                onClick={handleRetry}
+                startIcon={<RefreshCw size={18} />}
+                sx={{
+                  py: 1.5,
+                  px: 3,
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                }}
+              >
 {t('tryAgain')}
-          </Button>
+              </Button>
 
-          <Button
-            onClick={() => window.location.href = '/'}
-            variant="outlined"
-            size="large"
-            startIcon={<Home size={20} />}
-            sx={{
-              borderRadius: '12px',
-              px: 4,
-              py: 1.5,
-              textTransform: 'none',
-              fontSize: '1.1rem',
-              fontWeight: 600,
-              borderColor: theme.palette.primary.main,
-              color: theme.palette.primary.main,
-              '&:hover': {
-                borderColor: theme.palette.primary.dark,
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                transform: 'translateY(-2px)',
-              },
-              transition: 'all 0.3s ease',
-            }}
-          >
+              <Button
+                variant="outlined"
+                onClick={handleGoHome}
+                startIcon={<Home size={18} />}
+                sx={{
+                  py: 1.5,
+                  px: 3,
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                }}
+              >
 {t('goHome')}
-          </Button>
+              </Button>
+            </>
+          )}
         </Stack>
 
-        {/* Additional info */}
+        {/* Contact Information */}
         <Box
           sx={{
-            mt: 6,
             p: 3,
-            borderRadius: '16px',
-            backgroundColor: alpha(theme.palette.background.paper, 0.7),
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            borderRadius: '12px',
+            backgroundColor: alpha(theme.palette.background.paper, 0.8),
+            border: `1px solid ${theme.palette.divider}`,
+            maxWidth: '500px',
+            mx: 'auto',
           }}
         >
           <Typography
@@ -287,4 +279,6 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
       </Container>
     </Box>
   );
-} 
+};
+
+export default ErrorTestPage;

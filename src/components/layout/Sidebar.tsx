@@ -21,6 +21,7 @@ import {
 import {
   MessageSquare,
   FileText,
+  Plus,
   X
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -43,6 +44,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
       label: t('navigation.aiChat'),
       icon: MessageSquare,
       href: '/chat'
+    },
+    {
+      label: t('navigation.createLesson'),
+      icon: Plus,
+      href: '/create-lesson'
     },
     {
       label: t('navigation.myMaterials'),
