@@ -289,6 +289,29 @@
       "planReview": "Plan Review",
       "generation": "Generation"
     },
+    "step2": {
+      "title": "Lesson Plan Review",
+      "ageGroup": "Age Group",
+      "topic": "Topic",
+      "slides": "Slides",
+      "back": "Back",
+      "next": "Next: Generate Slides",
+      "regenerate": "Regenerate Plan",
+      "generating": {
+        "title": "Generating Lesson Plan",
+        "description": "Our AI is creating a personalized lesson plan based on your requirements. This may take a few moments.",
+        "progress": "complete"
+      },
+      "success": {
+        "title": "Lesson Plan Ready!",
+        "description": "Review your personalized lesson plan below. You can regenerate it or proceed to create slides."
+      },
+      "error": {
+        "title": "Generation Failed",
+        "generic": "Failed to generate lesson plan. Please try again.",
+        "retry": "Try Again"
+      }
+    },
     "ageGroup": {
       "title": "🎯 Age Group",
       "description": "Select the target age group for your lesson",

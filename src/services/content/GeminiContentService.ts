@@ -21,9 +21,10 @@ export class GeminiContentService {
     topic: string, 
     age: string, 
     language: string = 'en', 
-    conversationContext?: string
+    conversationContext?: string,
+    slideCount: number = 5
   ): Promise<string> {
-    const prompt = this.buildLessonPlanPrompt(topic, age, language, conversationContext);
+    const prompt = this.buildLessonPlanPrompt(topic, age, language, conversationContext, slideCount);
 
     console.log('📝 Generated prompt length:', prompt.length);
     console.log('🎯 API request details:', {
@@ -67,7 +68,7 @@ export class GeminiContentService {
     }
   }
 
-  private buildLessonPlanPrompt(topic: string, age: string, language: string, conversationContext?: string): string {
+  private buildLessonPlanPrompt(topic: string, age: string, language: string, conversationContext?: string, slideCount: number = 5): string {
     let contextSection = '';
     
     // === ADD CONVERSATION CONTEXT TO LESSON PLAN GENERATION ===
@@ -88,6 +89,7 @@ ${contextSection}
 INPUT DATA:
 - Topic: ${topic}
 - Children's age: ${age}
+- Number of slides requested: ${slideCount}
 - Language: English
 
 MANDATORY LESSON PLAN STRUCTURE:
@@ -105,30 +107,7 @@ MANDATORY LESSON PLAN STRUCTURE:
 
 ## 📋 Lesson Structure
 
-### Slide 1: Greeting and Introduction to Topic
-**Type:** Introduction
-**Goal:** [Slide goal]
-**Content:** [Detailed content description integrated with age-appropriate interactive elements and teaching approaches based on the component guidance above]
-
-### Slide 2: Main Material - Part 1
-**Type:** Educational
-**Goal:** [Slide goal]
-**Content:** [Detailed content description integrated with age-appropriate interactive elements and teaching approaches based on the component guidance above]
-
-### Slide 3: Main Material - Part 2
-**Type:** Educational
-**Goal:** [Slide goal]
-**Content:** [Detailed content description integrated with age-appropriate interactive elements and teaching approaches based on the component guidance above]
-
-### Slide 4: Practical Task
-**Type:** Activity
-**Goal:** [Slide goal]
-**Content:** [Detailed activity description integrated with age-appropriate interactive elements and teaching approaches based on the component guidance above]
-
-### Slide 5: Summary and Reinforcement
-**Type:** Summary
-**Goal:** [Slide goal]
-**Content:** [Detailed summary description integrated with age-appropriate interactive elements and teaching approaches based on the component guidance above]
+${this.generateSlideStructure(slideCount)}
 
 ## 🎮 Game Elements
 - [Game/activity 1]
@@ -155,6 +134,7 @@ ${this.getAgeSpecificComponentGuidance(age)}
 
 IMPORTANT:
 - STRICTLY follow the structure "### Slide X: [Title]"
+- Generate EXACTLY ${slideCount} slides as requested
 - Each slide must contain detailed description (minimum 100 words)
 - Adapt content for age ${age}
 - Include interactive elements naturally within content descriptions
@@ -163,6 +143,51 @@ IMPORTANT:
 - Write content descriptions in natural, educational language that teachers can follow
 - Integrate component recommendations seamlessly into teaching suggestions rather than as technical specifications
 - Focus on pedagogical approaches and student engagement rather than technical implementation details`;
+  }
+
+  private generateSlideStructure(slideCount: number): string {
+    const slideTypes = [
+      { type: 'Introduction', title: 'Greeting and Introduction to Topic', description: 'To warmly greet children and introduce the topic, sparking their initial interest.' },
+      { type: 'Educational', title: 'Main Material - Part 1', description: 'To introduce core concepts and engage children with interactive elements.' },
+      { type: 'Educational', title: 'Main Material - Part 2', description: 'To expand knowledge and reinforce learning through varied activities.' },
+      { type: 'Activity', title: 'Practical Task', description: 'To reinforce learning through hands-on activities and interactive games.' },
+      { type: 'Summary', title: 'Summary and Reinforcement', description: 'To review learned concepts and celebrate children\'s participation and learning.' }
+    ];
+
+    let structure = '';
+    
+    for (let i = 0; i < slideCount; i++) {
+      const slideNum = i + 1;
+      let slideInfo;
+      
+      if (i === 0) {
+        // First slide is always introduction
+        slideInfo = slideTypes[0];
+      } else if (i === slideCount - 1) {
+        // Last slide is always summary
+        slideInfo = slideTypes[4];
+      } else if (i === slideCount - 2 && slideCount > 2) {
+        // Second to last slide is activity (if we have more than 2 slides)
+        slideInfo = slideTypes[3];
+      } else {
+        // Middle slides are educational content
+        const partNum = i;
+        slideInfo = {
+          type: 'Educational',
+          title: `Main Material - Part ${partNum}`,
+          description: 'To introduce and explore key concepts through engaging, age-appropriate activities.'
+        };
+      }
+
+      structure += `### Slide ${slideNum}: ${slideInfo.title}
+**Type:** ${slideInfo.type}
+**Goal:** ${slideInfo.description}
+**Content:** [Detailed content description integrated with age-appropriate interactive elements and teaching approaches based on the component guidance above]
+
+`;
+    }
+    
+    return structure;
   }
 
   async generateSlideContent(

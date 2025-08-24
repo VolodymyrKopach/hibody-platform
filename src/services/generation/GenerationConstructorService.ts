@@ -160,7 +160,9 @@ export class GenerationConstructorService {
       const enhancedText = await this.contentService.generateLessonPlan(
         enhancementPrompt,
         context.ageGroup.ageRange || '6-8 years',
-        'en'
+        'en',
+        undefined,
+        3 // Short description generation
       );
       
       if (enhancedText && enhancedText.length > 10 && enhancedText.length < 500) {

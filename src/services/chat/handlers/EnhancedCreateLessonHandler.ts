@@ -64,7 +64,8 @@ export class EnhancedCreateLessonHandler implements IIntentHandler {
         topic, 
         age, 
         intent.language,
-        conversationContext
+        conversationContext,
+        5 // Default to 5 slides for chat-based generation
       );
 
       console.log('✅ Lesson plan generated successfully');
