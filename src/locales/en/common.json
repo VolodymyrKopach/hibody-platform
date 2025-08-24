@@ -295,7 +295,7 @@
       "topic": "Topic",
       "slides": "Slides",
       "back": "Back",
-      "next": "Next: Generate Slides",
+      "next": "Generate Slides",
       "regenerate": "Regenerate Plan",
       "generating": {
         "title": "Generating Lesson Plan",
