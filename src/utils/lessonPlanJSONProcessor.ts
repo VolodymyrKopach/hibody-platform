@@ -2,6 +2,54 @@ import { LessonPlanJSON, ParsedLessonPlan, LessonMetadata, ParsedSlide } from '@
 
 export class LessonPlanJSONProcessor {
   /**
+   * Process JSON lesson plan object directly (when already parsed)
+   */
+  static processJSONObject(lessonPlan: any): ParsedLessonPlan {
+    try {
+      // Validate required fields
+      if (!lessonPlan.metadata || !lessonPlan.slides) {
+        throw new Error('Invalid lesson plan JSON structure');
+      }
+
+      // Convert to legacy format
+      const metadata: LessonMetadata = {
+        targetAudience: lessonPlan.metadata.targetAudience,
+        duration: lessonPlan.metadata.duration,
+        goal: lessonPlan.metadata.goal
+      };
+
+      const slides: ParsedSlide[] = lessonPlan.slides.map((slide: any) => ({
+        slideNumber: slide.slideNumber,
+        title: slide.title,
+        type: slide.type as 'Introduction' | 'Educational' | 'Activity' | 'Summary',
+        goal: slide.goal,
+        content: slide.content,
+        // Preserve structure for new components
+        structure: slide.structure
+      } as any));
+
+      const objectives = lessonPlan.objectives?.map((obj: any) => obj.text) || [];
+      const gameElements = lessonPlan.gameElements?.map((game: any) => game.description) || [];
+      const materials = lessonPlan.materials?.map((material: any) => material.name) || [];
+      const recommendations = lessonPlan.recommendations?.map((rec: any) => rec.text) || [];
+
+      return {
+        title: lessonPlan.metadata.title,
+        metadata,
+        objectives,
+        slides,
+        gameElements,
+        materials,
+        recommendations,
+        rawMarkdown: JSON.stringify(lessonPlan) // Store original JSON as "markdown" for fallback
+      };
+    } catch (error) {
+      console.error('Error processing lesson plan JSON object:', error);
+      throw new Error(`Failed to process lesson plan JSON object: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Process JSON lesson plan and convert to legacy format for backward compatibility
    */
   static processJSON(jsonString: string): ParsedLessonPlan {

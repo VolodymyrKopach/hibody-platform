@@ -16,19 +16,53 @@ import LessonPlanHeader from './LessonPlanHeader';
 import LessonPlanTabs from './LessonPlanTabs';
 
 interface StructuredLessonPlanProps {
-  markdown: string;
+  markdown: string | any; // Can be markdown string or JSON object
 }
 
 const StructuredLessonPlan: React.FC<StructuredLessonPlanProps> = ({ markdown }) => {
   const theme = useTheme();
   
-  // Parse content to structured data (try JSON first, fallback to markdown)
+  // Parse content to structured data (handle both JSON object and markdown string)
   const parsedPlan: ParsedLessonPlan = useMemo(() => {
-    // Try to parse as JSON first
-    if (LessonPlanJSONProcessor.validateJSON(markdown)) {
-      return LessonPlanJSONProcessor.processJSON(markdown);
-    } else {
-      return LessonPlanParser.parse(markdown);
+    try {
+      // If it's already a JSON object, process it directly
+      if (typeof markdown === 'object' && markdown !== null) {
+        console.log('📋 [StructuredLessonPlan] Processing JSON object directly');
+        return LessonPlanJSONProcessor.processJSONObject(markdown);
+      }
+      
+      // If it's a string, try to parse as JSON first
+      if (typeof markdown === 'string') {
+        if (LessonPlanJSONProcessor.validateJSON(markdown)) {
+          console.log('📋 [StructuredLessonPlan] Processing JSON string');
+          return LessonPlanJSONProcessor.processJSON(markdown);
+        } else {
+          console.log('📋 [StructuredLessonPlan] Processing markdown string');
+          return LessonPlanParser.parse(markdown);
+        }
+      }
+      
+      // Fallback
+      console.warn('⚠️ [StructuredLessonPlan] Unknown data format, using fallback');
+      return LessonPlanParser.parse(String(markdown));
+      
+    } catch (error) {
+      console.error('❌ [StructuredLessonPlan] Error parsing plan:', error);
+      // Return minimal fallback structure
+      return {
+        title: 'Lesson Plan',
+        metadata: {
+          targetAudience: 'Unknown',
+          duration: '30-45 minutes',
+          goal: 'Educational lesson'
+        },
+        objectives: [],
+        slides: [],
+        gameElements: [],
+        materials: [],
+        recommendations: [],
+        rawMarkdown: String(markdown)
+      };
     }
   }, [markdown]);
 

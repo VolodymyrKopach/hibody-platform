@@ -312,6 +312,28 @@
         "retry": "Try Again"
       }
     },
+    "step3": {
+      "title": "Generate Slides",
+      "description": "Creating slides for your lesson...",
+      "status": {
+        "generating": "Generating slides...",
+        "completed": "Generation complete!",
+        "paused": "Generation paused",
+        "error": "Generation failed"
+      },
+      "progress": {
+        "slidesCompleted": "slides completed",
+        "estimatedTime": "Estimated time remaining",
+        "overallProgress": "Overall progress"
+      },
+      "controls": {
+        "pause": "Pause",
+        "resume": "Resume", 
+        "stop": "Stop",
+        "restart": "Restart",
+        "saveLesson": "Save Lesson"
+      }
+    },
     "ageGroup": {
       "title": "🎯 Age Group",
       "description": "Select the target age group for your lesson",

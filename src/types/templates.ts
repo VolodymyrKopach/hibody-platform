@@ -184,3 +184,200 @@ export interface SlideTypeConfig {
   icon: string;
   label: string;
 }
+
+// === Template Slide Generation Types ===
+
+// Стани генерації слайдів
+export type TemplateGenerationStatus = 'idle' | 'initializing' | 'generating' | 'paused' | 'completed' | 'error';
+
+export type SlideGenerationStatus = 'pending' | 'generating' | 'completed' | 'error';
+
+// Інтерфейс для прогресу генерації окремого слайду
+export interface TemplateSlideProgress {
+  slideId: string;
+  slideNumber: number;
+  title: string;
+  status: SlideGenerationStatus;
+  progress: number; // 0-100
+  estimatedTime?: number; // в секундах
+  startTime?: Date;
+  endTime?: Date;
+  error?: string;
+}
+
+// Загальний прогрес генерації
+export interface TemplateGenerationProgress {
+  status: TemplateGenerationStatus;
+  totalSlides: number;
+  completedSlides: number;
+  failedSlides: number;
+  currentSlideNumber?: number;
+  overallProgress: number; // 0-100
+  estimatedTimeRemaining?: number; // в секундах
+  startTime?: Date;
+  endTime?: Date;
+  slides: TemplateSlideProgress[];
+}
+
+// Налаштування генерації
+export interface TemplateGenerationConfig {
+  // Паралельність
+  maxConcurrentSlides?: number;
+  
+  // Таймаути
+  slideTimeoutMs?: number;
+  retryAttempts?: number;
+  retryDelayMs?: number;
+  
+  // Якість
+  imageQuality?: 'low' | 'medium' | 'high';
+  generateThumbnails?: boolean;
+  
+  // Callbacks
+  enableProgressCallbacks?: boolean;
+  progressUpdateIntervalMs?: number;
+  
+  // Збереження
+  autoSave?: boolean;
+  saveInterval?: number;
+}
+
+// Результат генерації
+export interface TemplateGenerationResult {
+  success: boolean;
+  lesson?: import('@/types/chat').SimpleLesson;
+  stats?: import('@/services/chat/ParallelSlideGenerationService').GenerationStats;
+  slideDescriptions?: import('@/types/chat').SlideDescription[];
+  error?: string;
+  progress?: TemplateGenerationProgress;
+}
+
+// Callbacks для генерації
+export interface TemplateGenerationCallbacks {
+  onSlideReady?: (slide: import('@/types/chat').SimpleSlide, lesson: import('@/types/chat').SimpleLesson) => void;
+  onProgressUpdate?: (progress: import('@/types/chat').SlideGenerationProgress[]) => void;
+  onSlideError?: (error: string, slideNumber: number) => void;
+  onComplete?: (lesson: import('@/types/chat').SimpleLesson, stats: import('@/services/chat/ParallelSlideGenerationService').GenerationStats) => void;
+  onError?: (error: string) => void;
+  onStatusChange?: (status: TemplateGenerationStatus) => void;
+}
+
+// Стан template генерації для UI
+export interface TemplateGenerationUIState {
+  // Основний стан
+  isGenerating: boolean;
+  isPaused: boolean;
+  isCompleted: boolean;
+  hasError: boolean;
+  errorMessage?: string;
+  
+  // Дані
+  currentLesson?: import('@/types/chat').SimpleLesson | null;
+  slides: import('@/types/chat').SimpleSlide[];
+  progress: TemplateGenerationProgress;
+  
+  // UI стан
+  selectedSlideId?: string;
+  currentPreviewIndex: number;
+  showPreview: boolean;
+  
+  // Нотифікації
+  notifications: TemplateNotification[];
+}
+
+// Нотифікації для template flow
+export interface TemplateNotification {
+  id: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  title: string;
+  message: string;
+  timestamp: Date;
+  duration?: number; // в мілісекундах, undefined = не зникає автоматично
+  actions?: TemplateNotificationAction[];
+}
+
+export interface TemplateNotificationAction {
+  label: string;
+  action: () => void;
+  variant?: 'text' | 'outlined' | 'contained';
+  color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
+}
+
+// Налаштування UI компонентів
+export interface TemplateSlideGridConfig {
+  columns?: number;
+  showProgress?: boolean;
+  showStats?: boolean;
+  compact?: boolean;
+  autoScroll?: boolean;
+  selectionMode?: 'single' | 'multiple' | 'none';
+}
+
+export interface TemplatePreviewConfig {
+  aspectRatio?: '16:9' | '4:3' | '1:1';
+  showNavigation?: boolean;
+  showControls?: boolean;
+  autoPlay?: boolean;
+  showThumbnails?: boolean;
+}
+
+export interface TemplateControlsConfig {
+  showDetailedStats?: boolean;
+  showEstimatedTime?: boolean;
+  compact?: boolean;
+  enablePause?: boolean;
+  enableStop?: boolean;
+  enableRestart?: boolean;
+}
+
+// Контекст для template генерації
+export interface TemplateGenerationContext {
+  // Дані
+  templateData: TemplateData;
+  generatedPlan: string;
+  
+  // Стан
+  uiState: TemplateGenerationUIState;
+  config: TemplateGenerationConfig;
+  
+  // Методи
+  actions: {
+    startGeneration: () => Promise<TemplateGenerationResult>;
+    pauseGeneration: () => void;
+    resumeGeneration: () => void;
+    stopGeneration: () => void;
+    restartGeneration: () => Promise<TemplateGenerationResult>;
+    selectSlide: (slideId: string) => void;
+    setPreviewIndex: (index: number) => void;
+    addNotification: (notification: Omit<TemplateNotification, 'id' | 'timestamp'>) => void;
+    removeNotification: (id: string) => void;
+    updateConfig: (config: Partial<TemplateGenerationConfig>) => void;
+  };
+}
+
+// Помічники для роботи з типами
+export namespace TemplateGenerationTypes {
+  export const isGenerating = (status: TemplateGenerationStatus): boolean => {
+    return status === 'generating' || status === 'initializing';
+  };
+  
+  export const isCompleted = (status: TemplateGenerationStatus): boolean => {
+    return status === 'completed';
+  };
+  
+  export const hasError = (status: TemplateGenerationStatus): boolean => {
+    return status === 'error';
+  };
+  
+  export const canPause = (status: TemplateGenerationStatus): boolean => {
+    return status === 'generating';
+  };
+  
+  export const canResume = (status: TemplateGenerationStatus): boolean => {
+    return status === 'paused';
+  };
+  
+  export const canRestart = (status: TemplateGenerationStatus): boolean => {
+    return status === 'completed' || status === 'error';
+  };
+}

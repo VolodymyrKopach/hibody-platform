@@ -275,6 +275,11 @@ export class SlideStore implements ISlideStore {
       return { ...DEFAULT_SLIDE_STATE };
     }
 
+    // Перевіряємо доступність localStorage (SSR compatibility)
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return { ...DEFAULT_SLIDE_STATE };
+    }
+
     try {
       const stored = localStorage.getItem(this.config.persistence.key);
       if (stored) {
@@ -295,6 +300,11 @@ export class SlideStore implements ISlideStore {
   }
 
   private persistState(): void {
+    // Перевіряємо доступність localStorage (SSR compatibility)
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return;
+    }
+
     try {
       const serializable = {
         ...this.state,

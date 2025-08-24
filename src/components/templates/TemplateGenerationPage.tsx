@@ -5,7 +5,9 @@ import { Box, Container } from '@mui/material';
 import StepProgress from './steps/StepProgress';
 import Step1BasicInfo from './steps/Step1BasicInfo';
 import Step2PlanGeneration from './steps/Step2PlanGeneration';
+import Step3SlideGeneration from './steps/Step3SlideGeneration';
 import { TemplateData, GeneratedPlan } from '@/types/templates';
+import { SimpleLesson } from '@/types/chat';
 
 const TemplateGenerationPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -16,6 +18,7 @@ const TemplateGenerationPage: React.FC = () => {
     additionalInfo: ''
   });
   const [generatedPlan, setGeneratedPlan] = useState<string | null>(null);
+  const [generatedLesson, setGeneratedLesson] = useState<SimpleLesson | null>(null);
 
   const handleNext = () => {
     if (currentStep < 3) {
@@ -31,6 +34,16 @@ const TemplateGenerationPage: React.FC = () => {
 
   const handlePlanGenerated = (plan: string) => {
     setGeneratedPlan(plan);
+  };
+
+  const handleLessonSaved = (lesson: SimpleLesson) => {
+    setGeneratedLesson(lesson);
+    console.log('✅ Lesson saved successfully:', lesson.title);
+  };
+
+  const handleGenerationError = (error: string) => {
+    console.error('❌ Generation error:', error);
+    // Можна додати toast notification або інший UI feedback
   };
 
   return (
@@ -62,12 +75,15 @@ const TemplateGenerationPage: React.FC = () => {
           />
         )}
 
-        {currentStep === 3 && (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <h2>🚧 Етап 3: Генерація</h2>
-            <p>В розробці...</p>
-            <button onClick={handleBack}>← Назад</button>
-          </Box>
+        {currentStep === 3 && generatedPlan && (
+          <Step3SlideGeneration
+            templateData={templateData}
+            generatedPlan={generatedPlan}
+            onBack={handleBack}
+            onNext={handleNext}
+            onLessonSaved={handleLessonSaved}
+            onError={handleGenerationError}
+          />
         )}
       </Container>
     </Box>

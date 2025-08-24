@@ -12,7 +12,7 @@ interface LessonPlanRequest {
 
 interface LessonPlanResponse {
   success: boolean;
-  plan?: string;
+  plan?: any; // Changed from string to any to support JSON object
   error?: {
     message: string;
     code: string;
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     console.log(`🎯 LESSON PLAN API: Starting lesson plan generation [${requestId}]`);
     const contentService = new GeminiContentService();
     
-    const generatedPlan = await contentService.generateLessonPlanJSON(
+    const generatedPlanJSON = await contentService.generateLessonPlanJSON(
       body.topic,
       body.ageGroup,
       body.language || 'en',
@@ -109,11 +109,28 @@ export async function POST(request: NextRequest) {
     );
 
     console.log(`✅ LESSON PLAN API: Lesson plan generated successfully [${requestId}]`);
-    console.log(`📏 LESSON PLAN API: Generated plan length [${requestId}]:`, generatedPlan.length);
+    console.log(`📏 LESSON PLAN API: Generated plan length [${requestId}]:`, generatedPlanJSON.length);
+
+    // Parse JSON string to object
+    let parsedPlan;
+    try {
+      parsedPlan = JSON.parse(generatedPlanJSON);
+      console.log(`✅ LESSON PLAN API: JSON parsed successfully [${requestId}]`);
+      console.log(`📋 LESSON PLAN API: Plan contains ${parsedPlan.slides?.length || 0} slides [${requestId}]`);
+    } catch (parseError) {
+      console.error(`❌ LESSON PLAN API: Failed to parse JSON [${requestId}]:`, parseError);
+      return NextResponse.json({
+        success: false,
+        error: {
+          message: 'Generated lesson plan is not valid JSON',
+          code: 'PARSE_ERROR'
+        }
+      }, { status: 500 });
+    }
 
     const response: LessonPlanResponse = {
       success: true,
-      plan: generatedPlan
+      plan: parsedPlan // Now returning parsed object instead of string
     };
 
     return NextResponse.json(response, { status: 200 });

@@ -9,6 +9,7 @@ export class GeminiContentService {
   private client: GoogleGenAI;
 
   constructor() {
+    // Use only server-side API key (client-side generation moved to API endpoints)
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY environment variable is required');
