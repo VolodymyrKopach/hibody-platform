@@ -15,10 +15,10 @@ import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import { 
   AutoStories as PlanIcon,
-  ArrowBack as BackIcon,
   ArrowForward as NextIcon,
   Refresh as RefreshIcon
 } from '@mui/icons-material';
+import { ArrowLeft } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/markdown';
 import { StructuredLessonPlan } from '@/components/templates/lesson-plan';
 import { lessonPlanService, LessonPlanServiceError } from '@/services/templates/LessonPlanService';
@@ -193,7 +193,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
           <Button
             variant="outlined"
-            startIcon={<BackIcon />}
+            startIcon={<ArrowLeft size={18} />}
             onClick={onBack}
             sx={{ minWidth: 120 }}
           >
@@ -253,7 +253,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
         }}>
           <Button
             variant="outlined"
-            startIcon={<BackIcon />}
+            startIcon={<ArrowLeft size={18} />}
             onClick={onBack}
             sx={{ minWidth: 120 }}
           >

@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
+import { ArrowLeft } from 'lucide-react';
 
 // Імпорти наших компонентів
 import TemplateSlideGrid from '../slides/TemplateSlideGrid';
@@ -335,6 +336,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 2, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
           <Button
             variant="outlined"
+            startIcon={<ArrowLeft size={18} />}
             onClick={onBack}
             sx={{ minWidth: 120 }}
           >

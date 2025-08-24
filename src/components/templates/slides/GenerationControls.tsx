@@ -316,7 +316,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               variant="outlined"
-              startIcon={<ArrowLeft />}
+              startIcon={<ArrowLeft size={18} />}
               onClick={onBack}
               size={compact ? "small" : "medium"}
             >
