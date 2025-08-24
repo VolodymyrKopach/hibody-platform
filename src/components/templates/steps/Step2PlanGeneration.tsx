@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -47,34 +47,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
   const [progress, setProgress] = useState(0);
   const hasInitialized = useRef(false);
 
-  // Auto-generate plan when component mounts if no plan exists
-  useEffect(() => {
-    if (!generatedPlan && generationState === 'idle' && !hasInitialized.current) {
-      hasInitialized.current = true;
-      handleGeneratePlan();
-    }
-  }, [generatedPlan, generationState]);
-
-  // Simulate progress during generation
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (generationState === 'generating') {
-      setProgress(0);
-      interval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) return prev;
-          return prev + Math.random() * 10;
-        });
-      }, 1000);
-    }
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [generationState]);
-
-  const handleGeneratePlan = async () => {
+  const handleGeneratePlan = useCallback(async () => {
     try {
       setGenerationState('generating');
       setError(null);
@@ -103,16 +76,48 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
     } catch (error) {
       console.error('Error generating lesson plan:', error);
       setGenerationState('error');
-      
-      if (error instanceof LessonPlanServiceError) {
-        setError(error.getUserMessage());
-      } else if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An unexpected error occurred');
-      }
+      setError(error instanceof LessonPlanServiceError ? error.message : 'Failed to generate lesson plan');
     }
-  };
+  }, [data.ageGroup, data.topic, data.slideCount, data.additionalInfo, onPlanGenerated]);
+
+  // Reset initialization flag when plan is cleared
+  useEffect(() => {
+    if (generatedPlan === null) {
+      hasInitialized.current = false;
+      setGenerationState('idle');
+      setError(null);
+      setProgress(0);
+    }
+  }, [generatedPlan]);
+
+  // Auto-generate plan when component mounts if no plan exists
+  useEffect(() => {
+    if (!generatedPlan && generationState === 'idle' && !hasInitialized.current) {
+      hasInitialized.current = true;
+      handleGeneratePlan();
+    }
+  }, [generatedPlan, generationState]);
+
+  // Simulate progress during generation
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (generationState === 'generating') {
+      setProgress(0);
+      interval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 10;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [generationState]);
+
+
 
   const handleRetry = () => {
     setGenerationState('idle');
@@ -272,11 +277,22 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
             
             <Button
               variant="contained"
+              size="large"
               endIcon={<NextIcon />}
               onClick={onNext}
               sx={{ 
                 minWidth: 160,
-                fontWeight: 600
+                fontWeight: 600,
+                px: 4,
+                py: 1.5,
+                fontSize: '1rem',
+                borderRadius: 2,
+                boxShadow: theme.shadows[4],
+                '&:hover': {
+                  boxShadow: theme.shadows[8],
+                  transform: 'translateY(-2px)'
+                },
+                transition: 'all 0.3s ease'
               }}
             >
               {t('createLesson.step2.next')}

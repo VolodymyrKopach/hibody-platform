@@ -8,6 +8,7 @@ import {
   Card,
   CardContent
 } from '@mui/material';
+import { ArrowForward as NextIcon } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import { getPopularTopicsByAge } from '@/utils/ageTopics';
@@ -106,7 +107,7 @@ const Step1BasicInfo: React.FC<Step1Props> = ({ data, onChange, onNext }) => {
           mt: 6, 
           pt: 4,
           display: 'flex', 
-          justifyContent: 'center',
+          justifyContent: 'flex-end',
           borderTop: `1px solid ${theme.palette.divider}`,
           maxWidth: 800,
           mx: 'auto'
@@ -114,15 +115,16 @@ const Step1BasicInfo: React.FC<Step1Props> = ({ data, onChange, onNext }) => {
           <Button
             variant="contained"
             size="large"
+            endIcon={<NextIcon />}
             onClick={onNext}
             disabled={!isValid}
             sx={{ 
-              px: 8,
-              py: 2,
-              fontSize: '1.1rem',
+              minWidth: 160,
               fontWeight: 600,
-              borderRadius: 3,
-              minWidth: 280,
+              px: 4,
+              py: 1.5,
+              fontSize: '1rem',
+              borderRadius: 2,
               boxShadow: theme.shadows[4],
               '&:hover': {
                 boxShadow: theme.shadows[8],
