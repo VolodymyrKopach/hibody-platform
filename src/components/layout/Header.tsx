@@ -34,6 +34,7 @@ import {
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
+import { useUnsavedChangesContext } from '@/providers/UnsavedChangesProvider';
 import { AuthModal } from '@/components/auth';
 import { Logo } from '@/components/ui';
 
@@ -52,6 +53,7 @@ const Header: React.FC<HeaderProps> = ({
   const theme = useTheme();
   const router = useRouter();
   const { user, profile, signOut, loading } = useAuth();
+  const { navigateWithConfirmation } = useUnsavedChangesContext();
 
   // Logs for tracking state in Header (can be removed for production)
   // React.useEffect(() => {
@@ -101,8 +103,8 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const handleCreateClick = () => {
-    router.push('/chat');
+  const handleCreateClick = async () => {
+    await navigateWithConfirmation('/chat');
   };
 
   const handleLanguageChange = (languageCode: string) => {
@@ -309,9 +311,9 @@ const Header: React.FC<HeaderProps> = ({
           
           <Divider sx={{ my: 1 }} />
           
-          <MenuItem onClick={() => {
+          <MenuItem onClick={async () => {
             handleUserMenuClose();
-            router.push('/account');
+            await navigateWithConfirmation('/account');
           }} sx={{ borderRadius: '8px', mb: 0.5 }}>
             <ListItemIcon>
               <User size={18} />

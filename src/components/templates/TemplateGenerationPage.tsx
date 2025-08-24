@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Box, Container } from '@mui/material';
 import StepProgress from './steps/StepProgress';
 import Step1BasicInfo from './steps/Step1BasicInfo';
 import Step2PlanGeneration from './steps/Step2PlanGeneration';
 import Step3SlideGeneration from './steps/Step3SlideGeneration';
+import { useUnsavedChangesContext } from '@/providers/UnsavedChangesProvider';
 import { TemplateData, GeneratedPlan } from '@/types/templates';
 import { SimpleLesson } from '@/types/chat';
 
 const TemplateGenerationPage: React.FC = () => {
+  const { setHasUnsavedChanges } = useUnsavedChangesContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [templateData, setTemplateData] = useState<TemplateData>({
     ageGroup: '',
@@ -45,6 +47,23 @@ const TemplateGenerationPage: React.FC = () => {
     console.error('❌ Generation error:', error);
     // Можна додати toast notification або інший UI feedback
   };
+
+  // Determine if there are unsaved changes
+  const hasUnsavedChanges = useMemo(() => {
+    // No unsaved changes if lesson is already saved
+    if (generatedLesson) return false;
+    
+    // Has changes if user has filled any data or generated plan
+    const hasFormData = Boolean(templateData.ageGroup || templateData.topic || templateData.additionalInfo);
+    const hasPlan = generatedPlan !== null;
+    
+    return hasFormData || hasPlan;
+  }, [templateData, generatedPlan, generatedLesson]);
+
+  // Update global unsaved changes state
+  useEffect(() => {
+    setHasUnsavedChanges(hasUnsavedChanges);
+  }, [hasUnsavedChanges, setHasUnsavedChanges]);
 
   return (
     <Box sx={{ 

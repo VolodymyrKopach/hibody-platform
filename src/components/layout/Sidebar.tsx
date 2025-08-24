@@ -25,7 +25,7 @@ import {
   X
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import Link from 'next/link';
+import SafeLink from '@/components/ui/SafeLink';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
 
     const menuButton = (
       <ListItemButton
-        component={Link}
+        component={SafeLink}
         href={item.href}
         sx={{
           minHeight: 48,

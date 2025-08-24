@@ -1,0 +1,10 @@
+{
+  "unsavedChanges": {
+    "title": "Unsaved Changes",
+    "subtitle": "Are you sure you want to leave this page?",
+    "description": "If you leave this page now, all unsaved data will be lost. This action cannot be undone.",
+    "saveHint": "Tip: You can save your progress before leaving",
+    "saveAndLeave": "Save & Leave",
+    "leaveAnyway": "Leave Without Saving"
+  }
+}
