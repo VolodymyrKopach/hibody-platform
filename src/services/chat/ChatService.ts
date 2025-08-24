@@ -11,7 +11,7 @@ import { FallbackHandler } from './handlers/FallbackHandler';
 import { EnhancedCreateLessonHandler } from './handlers/EnhancedCreateLessonHandler';
 import { EditPlanHandler } from './handlers/EditPlanHandler';
 import { DataCollectionHandler } from './handlers/DataCollectionHandler';
-import { type ConversationHistory, type ChatResponse } from './types';
+import { type ConversationHistory, type ChatResponse, type BatchEditPlan, type EnhancedBatchEditResponse } from './types';
 
 // === Import new separated services ===
 import { 
@@ -460,13 +460,52 @@ export class ChatService {
     }
 
     const { parameters } = intentResult;
-    const editInstruction = parameters?.editInstruction || parameters?.instruction || parameters?.rawMessage || 'Improve slides';
-    const affectedSlides = parameters?.affectedSlides || 'all';
-    const slideNumbers = parameters?.slideNumbers || [];
-    const slideRange = parameters?.slideRange;
     const totalSlides = conversationHistory.currentLesson.slides.length;
 
     try {
+      // Check if we have a complex batch edit plan (different instructions per slide)
+      if (parameters?.batchEditPlan) {
+        console.log(`🎯 [CHAT SERVICE] Complex batch edit detected`);
+        console.log(`📝 [CHAT SERVICE] Plan:`, parameters.batchEditPlan);
+
+        const batchEditPlan = parameters.batchEditPlan;
+        const affectedSlides = Object.keys(batchEditPlan);
+        
+        // Format response message
+        const slideText = affectedSlides.length === 1 ? 'slide' : 'slides';
+        const planSummary = Object.entries(batchEditPlan)
+          .map(([slideId, instruction]) => `• ${slideId}: ${instruction}`)
+          .join('\n');
+
+        const responseMessage = `🎯 **Batch Edit Plan Created**\n\n` +
+          `📋 **${affectedSlides.length} ${slideText} will be edited:**\n${planSummary}\n\n` +
+          `⏱️ **Estimated time:** ~${Math.ceil(affectedSlides.length * 30)} seconds\n\n` +
+          `✅ Ready to start editing. The client will process each slide individually for optimal performance.`;
+
+        return {
+          success: true,
+          message: responseMessage,
+          conversationHistory,
+          actions: [],
+          enhancedBatchEdit: {
+            intent: 'BATCH_EDIT_SLIDES',
+            batchEditPlan,
+            affectedSlides,
+            requiresClientAction: true,
+            progressTracking: {
+              totalSlides: affectedSlides.length,
+              estimatedTime: affectedSlides.length * 30 // seconds
+            }
+          }
+        };
+      }
+
+      // Handle simple batch edit (same instruction for all slides)
+      const editInstruction = parameters?.editInstruction || parameters?.instruction || parameters?.rawMessage || 'Improve slides';
+      const affectedSlides = parameters?.affectedSlides || 'all';
+      const slideNumbers = parameters?.slideNumbers || [];
+      const slideRange = parameters?.slideRange;
+
       // Determine which slides to edit
       let targetSlideNumbers: number[];
       
@@ -494,22 +533,15 @@ export class ChatService {
         };
       }
 
-      console.log(`🔄 [CHAT SERVICE] Starting batch edit of ${targetSlideNumbers.length} slides`);
+      console.log(`🔄 [CHAT SERVICE] Simple batch edit of ${targetSlideNumbers.length} slides`);
       console.log(`📝 [CHAT SERVICE] Instruction: "${editInstruction}"`);
       console.log(`🎯 [CHAT SERVICE] Target slides: ${targetSlideNumbers.join(', ')}`);
 
-      // Prepare batch edit parameters
-      const batchParams: BatchEditParams = {
-        lessonId: conversationHistory.currentLesson.id,
-        slideNumbers: targetSlideNumbers,
-        editInstruction,
-        sessionId: `session_${Date.now()}`,
-        topic: conversationHistory.lessonTopic || 'lesson',
-        age: conversationHistory.lessonAge || '6-8 years'
-      };
-
-      // Start batch editing
-      const batchSession = await this.batchSlideEditingService.startBatchEdit(batchParams);
+      // Create batch edit plan for simple case
+      const batchEditPlan: Record<string, string> = {};
+      targetSlideNumbers.forEach(slideNum => {
+        batchEditPlan[`slide-${slideNum}`] = editInstruction;
+      });
 
       // Format response message
       const slideText = targetSlideNumbers.length === 1 ? 'slide' : 'slides';
@@ -517,24 +549,26 @@ export class ChatService {
         ? targetSlideNumbers.join(', ')
         : `${targetSlideNumbers.slice(0, 3).join(', ')} and ${targetSlideNumbers.length - 3} more`;
 
-      const responseMessage = `🔄 **Starting batch edit of ${targetSlideNumbers.length} ${slideText}**\n\n` +
+      const responseMessage = `🔄 **Batch Edit Plan Created**\n\n` +
         `📝 **Edit instruction:** "${editInstruction}"\n` +
         `🎯 **Target slides:** ${slideList}\n` +
-        `⏱️ **Estimated time:** ~${Math.ceil(targetSlideNumbers.length * 30 / 60)} minutes\n\n` +
-        `The editing process has started. You can track progress and see results as slides are completed.`;
+        `⏱️ **Estimated time:** ~${Math.ceil(targetSlideNumbers.length * 30)} seconds\n\n` +
+        `✅ Ready to start editing. The client will process each slide individually for optimal performance.`;
 
       return {
         success: true,
         message: responseMessage,
         conversationHistory,
         actions: [],
-        batchEdit: {
-          batchId: batchSession.batchId,
-          progressEndpoint: `/api/slides/batch-edit/${batchSession.batchId}/progress`,
-          affectedSlides: targetSlideNumbers,
-          editInstruction,
-          totalSlides: targetSlideNumbers.length,
-          estimatedTime: targetSlideNumbers.length * 30 // seconds
+        enhancedBatchEdit: {
+          intent: 'BATCH_EDIT_SLIDES',
+          batchEditPlan,
+          affectedSlides: targetSlideNumbers.map(num => `slide-${num}`),
+          requiresClientAction: true,
+          progressTracking: {
+            totalSlides: targetSlideNumbers.length,
+            estimatedTime: targetSlideNumbers.length * 30 // seconds
+          }
         }
       };
 
@@ -543,7 +577,7 @@ export class ChatService {
       
       return {
         success: false,
-        message: `😔 An error occurred while starting batch edit: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: `😔 An error occurred while creating batch edit plan: ${error instanceof Error ? error.message : 'Unknown error'}`,
         conversationHistory,
         error: error instanceof Error ? error.message : 'Unknown error'
       };

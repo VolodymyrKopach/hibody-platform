@@ -588,6 +588,28 @@ RESPONSE:
   "missingData": []
 }
 
+MESSAGE: "в другому слайді зміни заголовок, в третьому додай картинку, а в четвертому зроби текст більшим" (with active lesson)
+ANALYSIS: User wants to edit multiple slides with different instructions for each slide
+RESPONSE:
+{
+  "intent": "BATCH_EDIT_SLIDES",
+  "confidence": 0.95,
+  "language": "uk",
+  "parameters": {
+    "slideNumbers": [2, 3, 4],
+    "batchEditPlan": {
+      "slide-2": "зміни заголовок",
+      "slide-3": "додай картинку", 
+      "slide-4": "зроби текст більшим"
+    },
+    "affectedSlides": "specific",
+    "batchOperation": true,
+    "rawMessage": "в другому слайді зміни заголовок, в третьому додай картинку, а в четвертому зроби текст більшим"
+  },
+  "isDataSufficient": true,
+  "missingData": []
+}
+
 MESSAGE: "improve first slide" (with active lesson)
 ANALYSIS: User wants to improve the first slide (ordinal number)
 RESPONSE:
@@ -620,7 +642,6 @@ RESPONSE:
   "missingData": ["slideNumber"],
   "suggestedQuestion": "Which slide would you like to change? Please specify the slide number (1-3)."
 }
-
 ANALYZE THIS MESSAGE:
 "${message}"`;
   }

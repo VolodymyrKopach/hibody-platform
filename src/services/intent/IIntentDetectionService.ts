@@ -49,6 +49,7 @@ export interface IntentParameters {
   affectedSlides?: 'all' | 'specific' | 'range' | 'single';
   batchOperation?: boolean;       // true для batch операцій
   slideRange?: { start: number; end: number }; // для range операцій
+  batchEditPlan?: Record<string, string>; // slideId -> instruction for complex batch edits
 }
 
 export enum UserIntent {
