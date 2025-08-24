@@ -160,17 +160,4 @@ export const isTopicValidForAge = (
   return validTopics.includes(topic);
 };
 
-export const getAgeGroupLabel = (ageGroup: string): string => {
-  switch (ageGroup) {
-    case AGE_GROUPS.EARLY_CHILDHOOD:
-      return "2-3 роки";
-    case AGE_GROUPS.PRESCHOOL:
-      return "4-6 років";
-    case AGE_GROUPS.PRIMARY_SCHOOL:
-      return "7-8 років";
-    case AGE_GROUPS.MIDDLE_SCHOOL:
-      return "9-10 років";
-    default:
-      return ageGroup;
-  }
-};
+

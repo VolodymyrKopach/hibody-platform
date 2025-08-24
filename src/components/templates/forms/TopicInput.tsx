@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography, TextField, Chip } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { getTopicKeys, getAgeGroupLabel } from "@/utils/ageTopics";
+import { getTopicKeys } from "@/utils/ageTopics";
 
 interface TopicInputProps {
   value: string;
@@ -47,7 +47,7 @@ const TopicInput: React.FC<TopicInputProps> = ({
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
         {ageGroup
-          ? `${t("createLesson.topic.popularFor")} ${getAgeGroupLabel(ageGroup)}:`
+          ? `${t("createLesson.topic.popularFor")} ${t(`createLesson.ageGroup.${ageGroup}`)}:`
           : `${t("createLesson.topic.popular")}`}
       </Typography>
       <Box

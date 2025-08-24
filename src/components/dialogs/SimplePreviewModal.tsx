@@ -179,14 +179,8 @@ interface SimplePreviewModalProps {
 }
 
 // === SOLID: SRP - Age group configurations ===
-const getAgeGroupLabel = (ageGroup: AgeGroup) => {
-  const labels = {
-    '2-3': '2-3 years',
-    '4-6': '4-6 years',
-    '7-8': '7-8 years',
-    '9-10': '9-10 years'
-  };
-  return labels[ageGroup];
+const getAgeGroupLabel = (ageGroup: AgeGroup, t: any) => {
+  return t(`common:createLesson.ageGroup.${ageGroup}`);
 };
 
 // === SOLID: SRP - Get field icon ===
@@ -279,7 +273,7 @@ const SimplePreviewModal: React.FC<SimplePreviewModalProps> = ({
         {/* Age Group */}
         <Box sx={{ mb: 3, textAlign: 'center' }}>
           <Chip 
-            label={`Age Group: ${getAgeGroupLabel(data.ageGroup)}`}
+            label={`${t('common:createLesson.ageGroup.title')}: ${getAgeGroupLabel(data.ageGroup, t)}`}
             color="primary"
             variant="outlined"
             size="medium"
@@ -325,7 +319,7 @@ const SimplePreviewModal: React.FC<SimplePreviewModalProps> = ({
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
             A detailed request will be created to generate a personalized lesson 
-            based on the specified parameters. The lesson will be adapted for age group {getAgeGroupLabel(data.ageGroup)}.
+            based on the specified parameters. The lesson will be adapted for age group {getAgeGroupLabel(data.ageGroup, t)}.
           </Typography>
         </SectionContainer>
       </DialogContent>
