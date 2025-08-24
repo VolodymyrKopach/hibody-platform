@@ -2,7 +2,7 @@
   "navigation": {
     "dashboard": "Dashboard",
     "chat": "Chat",
-    "materials": "Materials", 
+    "materials": "Materials",
     "account": "Account",
     "lessons": "Lessons",
     "slides": "Slides",
@@ -146,7 +146,7 @@
   },
   "ageGroups": {
     "3-5": "3-5 years old",
-    "6-7": "6-7 years old", 
+    "6-7": "6-7 years old",
     "8-9": "8-9 years old",
     "10-11": "10-11 years old",
     "12-13": "12-13 years old",
@@ -237,7 +237,7 @@
   },
   "roles": {
     "teacher": "Teacher",
-    "admin": "Administrator", 
+    "admin": "Administrator",
     "student": "Student",
     "user": "User"
   },
@@ -245,7 +245,7 @@
     "passwordStrength": "Password Strength",
     "veryWeak": "Very Weak",
     "weak": "Weak",
-    "medium": "Medium", 
+    "medium": "Medium",
     "good": "Good",
     "excellent": "Excellent",
     "recommendations": "Security Recommendations"
@@ -286,13 +286,14 @@
   "createLesson": {
     "steps": {
       "basicInfo": "Basic Information",
-      "planReview": "Plan Review", 
+      "planReview": "Plan Review",
       "generation": "Generation"
     },
     "ageGroup": {
       "title": "🎯 Age Group",
+      "description": "Select the target age group for your lesson",
       "2-3": "2-3 years",
-      "4-6": "4-6 years", 
+      "4-6": "4-6 years",
       "7-8": "7-8 years",
       "9-10": "9-10 years",
       "earlyChildhood": "Early childhood",
@@ -322,7 +323,7 @@
     "topics": {
       "2-3": {
         "animals": "Animals",
-        "colors": "Colors", 
+        "colors": "Colors",
         "momAndDad": "Mom and Dad",
         "toys": "Toys",
         "food": "Food",
@@ -335,7 +336,7 @@
       "4-6": {
         "letters": "Letters",
         "numbers": "Numbers",
-        "shapes": "Shapes", 
+        "shapes": "Shapes",
         "colors": "Colors",
         "animals": "Animals",
         "professions": "Professions",
@@ -348,7 +349,7 @@
         "reading": "Reading",
         "mathematics": "Mathematics",
         "nature": "Nature",
-        "planets": "Planets", 
+        "planets": "Planets",
         "stories": "Stories",
         "countries": "Countries",
         "sports": "Sports",
@@ -370,4 +371,4 @@
       }
     }
   }
-} 
+}

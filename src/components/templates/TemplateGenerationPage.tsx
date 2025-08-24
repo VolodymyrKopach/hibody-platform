@@ -51,36 +51,42 @@ const TemplateGenerationPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <StepProgress currentStep={currentStep} />
-      </Box>
-
-      {currentStep === 1 && (
-        <Step1BasicInfo
-          data={templateData}
-          onChange={setTemplateData}
-          onNext={handleNext}
-        />
-      )}
-
-      {currentStep === 2 && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <h2>🚧 Етап 2: Перегляд плану</h2>
-          <p>В розробці...</p>
-          <button onClick={handleBack}>← Назад</button>
-          <button onClick={handleNext}>Далі →</button>
+    <Box sx={{ 
+      minHeight: '100vh',
+      backgroundColor: 'background.default',
+      py: 4
+    }}>
+      <Container maxWidth="lg">
+        <Box sx={{ mb: 4 }}>
+          <StepProgress currentStep={currentStep} />
         </Box>
-      )}
 
-      {currentStep === 3 && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <h2>🚧 Етап 3: Генерація</h2>
-          <p>В розробці...</p>
-          <button onClick={handleBack}>← Назад</button>
-        </Box>
-      )}
-    </Container>
+        {currentStep === 1 && (
+          <Step1BasicInfo
+            data={templateData}
+            onChange={setTemplateData}
+            onNext={handleNext}
+          />
+        )}
+
+        {currentStep === 2 && (
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <h2>🚧 Етап 2: Перегляд плану</h2>
+            <p>В розробці...</p>
+            <button onClick={handleBack}>← Назад</button>
+            <button onClick={handleNext}>Далі →</button>
+          </Box>
+        )}
+
+        {currentStep === 3 && (
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <h2>🚧 Етап 3: Генерація</h2>
+            <p>В розробці...</p>
+            <button onClick={handleBack}>← Назад</button>
+          </Box>
+        )}
+      </Container>
+    </Box>
   );
 };
 

@@ -12,11 +12,10 @@ import {
   alpha
 } from '@mui/material';
 import { 
-  Home, 
-  RefreshCw,
   AlertTriangle
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ActionButtons } from '@/components/ui';
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -104,7 +103,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
               fontSize: { xs: '2rem', sm: '3rem' },
             }}
           >
-{t('errors.page.title')}
+            {t('errors.page.title')}
           </Typography>
 
           <Typography
@@ -118,7 +117,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
               fontSize: { xs: '1rem', sm: '1.2rem' },
             }}
           >
-{t('errors.page.subtitle')}
+            {t('errors.page.subtitle')}
           </Typography>
 
           {/* Error details (only in development) */}
@@ -143,7 +142,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
                   mb: 1,
                 }}
               >
-{t('errors.page.errorDetails')}
+                {t('errors.page.errorDetails')}
               </Typography>
               <Typography
                 variant="body2"
@@ -165,7 +164,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
                     mt: 1,
                   }}
                 >
-{t('errors.page.errorId')}: {error.digest}
+                  {t('errors.page.errorId')}: {error.digest}
                 </Typography>
               )}
             </Box>
@@ -173,62 +172,16 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
         </Box>
 
         {/* Action buttons */}
-        <Stack 
-          direction={{ xs: 'column', sm: 'row' }} 
-          spacing={2} 
-          justifyContent="center"
-          sx={{ mb: 4 }}
-        >
-          <Button
-            onClick={reset}
-            variant="contained"
+        <Box sx={{ mb: 4 }}>
+          <ActionButtons
+            onTryAgain={reset}
+            showTryAgain={true}
+            showGoHome={true}
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
             size="large"
-            startIcon={<RefreshCw size={20} />}
-            sx={{
-              borderRadius: '12px',
-              px: 4,
-              py: 1.5,
-              textTransform: 'none',
-              fontSize: '1.1rem',
-              fontWeight: 600,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-              boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.4)}`,
-              '&:hover': {
-                background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                transform: 'translateY(-2px)',
-                boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
-              },
-              transition: 'all 0.3s ease',
-            }}
-          >
-{t('tryAgain')}
-          </Button>
-
-          <Button
-            onClick={() => window.location.href = '/'}
-            variant="outlined"
-            size="large"
-            startIcon={<Home size={20} />}
-            sx={{
-              borderRadius: '12px',
-              px: 4,
-              py: 1.5,
-              textTransform: 'none',
-              fontSize: '1.1rem',
-              fontWeight: 600,
-              borderColor: theme.palette.primary.main,
-              color: theme.palette.primary.main,
-              '&:hover': {
-                borderColor: theme.palette.primary.dark,
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                transform: 'translateY(-2px)',
-              },
-              transition: 'all 0.3s ease',
-            }}
-          >
-{t('goHome')}
-          </Button>
-        </Stack>
+          />
+        </Box>
 
         {/* Additional info */}
         <Box
@@ -249,7 +202,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
               fontWeight: 500,
             }}
           >
-{t('errors.page.problemPersists')}
+            {t('errors.page.problemPersists')}
           </Typography>
           <Typography
             variant="body2"
@@ -258,7 +211,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
               lineHeight: 1.6,
             }}
           >
-{t('errors.page.contactMessage')}{' '}
+            {t('errors.page.contactMessage')}{' '}
             <Link 
               href="mailto:teachsparkai@gmail.com" 
               sx={{ 

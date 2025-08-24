@@ -1,55 +1,78 @@
-import React from 'react';
-import { 
-  Box, 
-  Typography, 
-  TextField,
-  Chip,
-  Stack
-} from '@mui/material';
+import React from "react";
+import { Box, Typography, TextField, Chip } from "@mui/material";
+import { useTranslation } from "react-i18next";
+import { getTopicKeys, getAgeGroupLabel } from "@/utils/ageTopics";
 
 interface TopicInputProps {
   value: string;
   onChange: (value: string) => void;
+  ageGroup?: string;
 }
 
-const popularTopics = [
-  'Тварини', 'Кольори', 'Числа', 'Літери', 'Фігури', 
-  'Сім\'я', 'Їжа', 'Транспорт', 'Погода', 'Емоції'
-];
+const TopicInput: React.FC<TopicInputProps> = ({
+  value,
+  onChange,
+  ageGroup,
+}) => {
+  const { t } = useTranslation("common");
 
-const TopicInput: React.FC<TopicInputProps> = ({ value, onChange }) => {
+  const popularTopics = React.useMemo(() => {
+    if (!ageGroup) return [];
+
+    const topicKeys = getTopicKeys(ageGroup);
+    return topicKeys.map((key) => {
+      const translationKey = `createLesson.topics.${ageGroup}.${key}`;
+      const fallbackValue = key.charAt(0).toUpperCase() + key.slice(1);
+      return t(translationKey, { defaultValue: fallbackValue });
+    });
+  }, [ageGroup, t]);
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        📚 Тема
+        {t("createLesson.topic.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Про що ви хочете розповісти?
+        {t("createLesson.topic.description")}
       </Typography>
-      
+
       <TextField
         fullWidth
         variant="outlined"
-        placeholder="Введіть тему вашого уроку..."
+        placeholder={t("createLesson.topic.placeholder")}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         sx={{ mb: 2 }}
       />
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        Популярні теми:
+        {ageGroup
+          ? `${t("createLesson.topic.popularFor")} ${getAgeGroupLabel(ageGroup)}:`
+          : `${t("createLesson.topic.popular")}`}
       </Typography>
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 1,
+          mt: 1,
+        }}
+      >
         {popularTopics.map((topic) => (
           <Chip
             key={topic}
             label={topic}
             variant={value === topic ? "filled" : "outlined"}
             onClick={() => onChange(topic)}
-            sx={{ mb: 1 }}
+            sx={{
+              cursor: "pointer",
+              "&:hover": {
+                backgroundColor: value === topic ? undefined : "action.hover",
+              },
+            }}
           />
         ))}
-      </Stack>
+      </Box>
     </Box>
   );
 };

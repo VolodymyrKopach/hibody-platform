@@ -6,6 +6,7 @@ import {
   Button,
   TextField
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 interface SlideCountSelectorProps {
   value: number;
@@ -15,6 +16,7 @@ interface SlideCountSelectorProps {
 const presetCounts = [3, 4, 5, 6];
 
 const SlideCountSelector: React.FC<SlideCountSelectorProps> = ({ value, onChange }) => {
+  const { t } = useTranslation('common');
   const [customMode, setCustomMode] = React.useState(false);
 
   React.useEffect(() => {
@@ -24,42 +26,50 @@ const SlideCountSelector: React.FC<SlideCountSelectorProps> = ({ value, onChange
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        📊 Кількість слайдів
+        {t('createLesson.slideCount.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Скільки слайдів вам потрібно?
+        {t('createLesson.slideCount.description')}
       </Typography>
       
-      <ButtonGroup variant="outlined" sx={{ mb: 2 }}>
-        {presetCounts.map((count) => (
+      <Box sx={{ mb: 2 }}>
+        <ButtonGroup variant="outlined" sx={{ display: 'flex', flexWrap: 'wrap' }}>
+          {presetCounts.map((count) => (
+            <Button
+              key={count}
+              variant={value === count ? "contained" : "outlined"}
+              onClick={() => {
+                onChange(count);
+                setCustomMode(false);
+              }}
+              sx={{ minWidth: 48 }}
+            >
+              {count}
+            </Button>
+          ))}
           <Button
-            key={count}
-            variant={value === count ? "contained" : "outlined"}
-            onClick={() => {
-              onChange(count);
-              setCustomMode(false);
-            }}
+            variant={customMode ? "contained" : "outlined"}
+            onClick={() => setCustomMode(true)}
+            sx={{ minWidth: 60 }}
           >
-            {count}
+            {t('createLesson.slideCount.other')}
           </Button>
-        ))}
-        <Button
-          variant={customMode ? "contained" : "outlined"}
-          onClick={() => setCustomMode(true)}
-        >
-          Інше
-        </Button>
-      </ButtonGroup>
+        </ButtonGroup>
+      </Box>
 
       {customMode && (
-        <TextField
-          type="number"
-          label="Власна кількість"
-          value={value}
-          onChange={(e) => onChange(parseInt(e.target.value) || 1)}
-          inputProps={{ min: 1, max: 20 }}
-          size="small"
-        />
+        <Box sx={{ mt: 2 }}>
+          <TextField
+            type="number"
+            label={t('createLesson.slideCount.customCount')}
+            value={value}
+            onChange={(e) => onChange(parseInt(e.target.value) || 1)}
+            inputProps={{ min: 1, max: 20 }}
+            size="small"
+            fullWidth
+            sx={{ maxWidth: 200 }}
+          />
+        </Box>
       )}
     </Box>
   );

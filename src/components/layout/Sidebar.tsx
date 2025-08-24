@@ -21,7 +21,7 @@ import {
 import {
   MessageSquare,
   FileText,
-  Plus,
+  BookOpen,
   X
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -47,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
     },
     {
       label: t('navigation.createLesson'),
-      icon: Plus,
+      icon: BookOpen,
       href: '/create-lesson'
     },
     {
