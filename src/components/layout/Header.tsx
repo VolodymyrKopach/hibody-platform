@@ -9,7 +9,6 @@ import {
   User, 
   Settings, 
   LogOut,
-  ChevronRight,
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
@@ -42,16 +41,12 @@ interface HeaderProps {
   onToggleSidebar: () => void;
   onToggleSidebarCollapse: () => void;
   sidebarCollapsed: boolean;
-  breadcrumbs?: Array<{ label: string; href?: string }>;
-  title?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   onToggleSidebar, 
   onToggleSidebarCollapse,
-  sidebarCollapsed,
-  breadcrumbs = [], 
-  title
+  sidebarCollapsed
 }) => {
   const { t, i18n } = useTranslation(['common', 'auth']);
   const theme = useTheme();
@@ -179,39 +174,8 @@ const Header: React.FC<HeaderProps> = ({
             {sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
           </IconButton>
 
-          {/* Page Title */}
-          <Box sx={{ ml: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              {title || t('titles.dashboard')}
-            </Typography>
-          </Box>
 
-          {/* Breadcrumbs */}
-          {breadcrumbs.length > 0 && (
-            <Stack
-              direction="row"
-              alignItems="center"
-              spacing={1}
-              sx={{ display: { xs: 'none', md: 'flex' } }}
-            >
-              {breadcrumbs.map((item, index) => (
-                <React.Fragment key={index}>
-                  <ChevronRight size={16} color={theme.palette.text.disabled} />
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: item.href ? 'primary.main' : 'text.primary',
-                      fontWeight: item.href ? 400 : 500,
-                      cursor: item.href ? 'pointer' : 'default',
-                      '&:hover': item.href ? { textDecoration: 'underline' } : {},
-                    }}
-                  >
-                    {item.label}
-                  </Typography>
-                </React.Fragment>
-              ))}
-            </Stack>
-          )}
+
         </Stack>
 
         {/* Right Section */}

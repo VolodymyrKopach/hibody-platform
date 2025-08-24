@@ -136,13 +136,7 @@ const TestPage: React.FC = () => {
   };
 
   return (
-    <Layout 
-      title="Test Suite" 
-      breadcrumbs={[
-        { label: 'Home', href: '/' }, 
-        { label: 'Test Suite' }
-      ]}
-    >
+    <Layout>
       <Container maxWidth="lg">
         <Box sx={{ py: 4 }}>
           <Typography variant="h4" component="h1" gutterBottom>

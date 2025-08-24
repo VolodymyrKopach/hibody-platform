@@ -6,15 +6,11 @@ import Sidebar from './Sidebar';
 
 interface LayoutProps {
   children: React.ReactNode;
-  title?: string;
-  breadcrumbs?: Array<{ label: string; href?: string }>;
   noPadding?: boolean;
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
-  title,
-  breadcrumbs = [],
   noPadding = false
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -31,8 +27,6 @@ const Layout: React.FC<LayoutProps> = ({
         onToggleSidebar={toggleSidebar}
         onToggleSidebarCollapse={toggleSidebarCollapse}
         sidebarCollapsed={sidebarCollapsed}
-        title={title}
-        breadcrumbs={breadcrumbs}
       />
 
       {/* Content area below header */}

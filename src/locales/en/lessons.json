@@ -176,7 +176,6 @@
   "materials": {
     "title": "My Materials",
     "subtitle": "Manage your educational materials and lessons",
-    "breadcrumb": "My Materials",
     "errors": {
       "loadingTimeout": "Loading is taking longer than expected",
       "networkIssue": "There may be a network or server issue",

@@ -141,8 +141,6 @@ const ChatInterface: React.FC = () => {
 
   return (
     <Layout 
-      title={t('pages.chatTitle')} 
-      breadcrumbs={[{ label: t('navigation.home'), href: '/' }, { label: t('navigation.chat') }]}
       noPadding={true}
     >
             <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

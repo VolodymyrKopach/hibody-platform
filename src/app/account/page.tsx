@@ -98,10 +98,7 @@ const AccountPage: React.FC = () => {
   };
 
   return (
-      <Layout 
-        title={t('common:pages.accountTitle')} 
-        breadcrumbs={[{ label: t('common:pages.accountTitle') }]}
-      >
+      <Layout>
         <Container maxWidth="lg" sx={{ py: 4 }}>
           {/* Header with user info */}
           <Card

@@ -696,7 +696,7 @@ const MyMaterials = () => {
   if (isLoading && !loadingTimeout && !isInitialized) {
     return (
       
-        <Layout title={t('lessons:materials.title')} breadcrumbs={[{ label: t('lessons:materials.breadcrumb') }]}>
+        <Layout>
           <Box 
             sx={{ 
               width: '100%',
@@ -719,7 +719,7 @@ const MyMaterials = () => {
   if (loadingTimeout) {
     return (
       
-        <Layout title={t('lessons:materials.title')} breadcrumbs={[{ label: t('lessons:materials.breadcrumb') }]}>
+        <Layout>
           <Box 
             sx={{ 
               width: '100%',
@@ -754,7 +754,7 @@ const MyMaterials = () => {
   if (dbError) {
     return (
       
-        <Layout title={t('lessons:materials.title')} breadcrumbs={[{ label: t('lessons:materials.breadcrumb') }]}>
+        <Layout>
           <Box 
             sx={{ 
               width: '100%',
@@ -789,7 +789,7 @@ const MyMaterials = () => {
 
   return (
     
-      <Layout title={t('lessons:materials.title')} breadcrumbs={[{ label: t('lessons:materials.breadcrumb') }]}>
+      <Layout>
         <Box sx={{ width: '100%', maxWidth: '1400px', mx: 'auto', p: 3 }}>
           {/* Header */}
           <Box sx={{ 
