@@ -57,22 +57,22 @@ const Step1BasicInfo: React.FC<Step1Props> = ({ data, onChange, onNext }) => {
         border: `1px solid ${theme.palette.divider}`
       }}
     >
-      <CardContent sx={{ p: 6 }}>
+      <CardContent sx={{ p: 3 }}>
         {/* Main Form Content */}
-        <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+        <Box sx={{ maxWidth: 900, mx: 'auto' }}>
           
           {/* Step 1: Age Group Selection */}
-          <Box sx={{ mb: 5 }}>
+          <Box sx={{ mb: 4 }}>
             <AgeGroupSelector
               value={data.ageGroup}
               onChange={(value) => handleFieldChange('ageGroup', value)}
             />
           </Box>
 
-          <Divider sx={{ my: 4 }} />
+          <Divider sx={{ my: 3 }} />
 
           {/* Step 2: Topic */}
-          <Box sx={{ mb: 5 }}>
+          <Box sx={{ mb: 4 }}>
             <TopicInput
               value={data.topic}
               onChange={(value) => handleFieldChange('topic', value)}
@@ -80,20 +80,20 @@ const Step1BasicInfo: React.FC<Step1Props> = ({ data, onChange, onNext }) => {
             />
           </Box>
 
-          <Divider sx={{ my: 4 }} />
+          <Divider sx={{ my: 3 }} />
 
           {/* Step 3: Slide Count */}
-          <Box sx={{ mb: 5 }}>
+          <Box sx={{ mb: 4 }}>
             <SlideCountSelector
               value={data.slideCount}
               onChange={(value) => handleFieldChange('slideCount', value)}
             />
           </Box>
 
-          <Divider sx={{ my: 4 }} />
+          <Divider sx={{ my: 3 }} />
 
           {/* Step 4: Additional Information */}
-          <Box sx={{ mb: 4 }}>
+          <Box sx={{ mb: 3 }}>
             <AdditionalInfoInput
               value={data.additionalInfo}
               onChange={(value) => handleFieldChange('additionalInfo', value)}
@@ -104,12 +104,12 @@ const Step1BasicInfo: React.FC<Step1Props> = ({ data, onChange, onNext }) => {
 
         {/* Action Section */}
         <Box sx={{ 
-          mt: 6, 
-          pt: 4,
+          mt: 4, 
+          pt: 3,
           display: 'flex', 
           justifyContent: 'flex-end',
           borderTop: `1px solid ${theme.palette.divider}`,
-          maxWidth: 800,
+          maxWidth: 900,
           mx: 'auto'
         }}>
           <Button
