@@ -29,114 +29,106 @@ const MainContentSection: React.FC<MainContentSectionProps> = ({ mainContent }) 
   const theme = useTheme();
 
   return (
-    <Card 
-      sx={{ 
-        mb: 2,
-        border: `1px solid ${theme.palette.primary.light}40`,
-        backgroundColor: `${theme.palette.primary.light}08`
-      }}
-    >
-      <CardContent sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-          <BookIcon sx={{ color: theme.palette.primary.main, fontSize: '1.2rem' }} />
+    <Box sx={{ mb: 4 }}>
+      <Typography 
+        variant="body1"
+        sx={{ 
+          mb: (mainContent.keyPoints?.length || mainContent.visualElements?.length) ? 3 : 0,
+          color: theme.palette.text.primary,
+          fontSize: '1.1rem',
+          lineHeight: 1.7,
+          fontWeight: 400
+        }}
+      >
+        {mainContent.text}
+      </Typography>
+
+      {mainContent.keyPoints && mainContent.keyPoints.length > 0 && (
+        <Box sx={{ mb: mainContent.visualElements?.length ? 3 : 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <Box sx={{
+              width: 24,
+              height: 24,
+              borderRadius: '4px',
+              backgroundColor: `${theme.palette.success.main}15`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <BulletIcon sx={{ fontSize: '0.75rem', color: theme.palette.success.main }} />
+            </Box>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                fontWeight: 600,
+                color: theme.palette.text.primary,
+                fontSize: '0.9rem'
+              }}
+            >
+              Key Points
+            </Typography>
+          </Box>
+          <Box sx={{ pl: 2 }}>
+            {mainContent.keyPoints.map((point, index) => (
+              <Typography 
+                key={index}
+                variant="body2"
+                sx={{ 
+                  fontSize: '0.875rem', 
+                  lineHeight: 1.5,
+                  color: theme.palette.text.secondary,
+                  mb: 0.5,
+                  '&:before': {
+                    content: '"• "',
+                    color: theme.palette.text.secondary
+                  }
+                }}
+              >
+                {point}
+              </Typography>
+            ))}
+          </Box>
+        </Box>
+      )}
+
+      {mainContent.visualElements && mainContent.visualElements.length > 0 && (
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <Box sx={{
+              width: 24,
+              height: 24,
+              borderRadius: '4px',
+              backgroundColor: `${theme.palette.warning.main}15`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <VisualIcon sx={{ fontSize: '0.75rem', color: theme.palette.warning.main }} />
+            </Box>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                fontWeight: 600,
+                color: theme.palette.text.primary,
+                fontSize: '0.9rem'
+              }}
+            >
+              Visual Elements
+            </Typography>
+          </Box>
           <Typography 
-            variant="subtitle2" 
+            variant="body2"
             sx={{ 
-              fontWeight: 600,
-              color: theme.palette.primary.main,
-              textTransform: 'uppercase',
-              fontSize: '0.75rem',
-              letterSpacing: 0.5
+              color: theme.palette.text.secondary,
+              fontSize: '0.875rem',
+              lineHeight: 1.5
             }}
           >
-            Main Content
+            {mainContent.visualElements.join(', ')}
           </Typography>
         </Box>
-
-        <Typography 
-          variant="body1"
-          sx={{ 
-            mb: (mainContent.keyPoints?.length || mainContent.visualElements?.length) ? 2 : 0,
-            color: theme.palette.text.primary,
-            fontSize: '1rem',
-            lineHeight: 1.6
-          }}
-        >
-          {mainContent.text}
-        </Typography>
-
-        {mainContent.keyPoints && mainContent.keyPoints.length > 0 && (
-          <Box sx={{ mb: mainContent.visualElements?.length ? 2 : 0 }}>
-            <Typography 
-              variant="subtitle2" 
-              sx={{ 
-                fontWeight: 600,
-                color: theme.palette.text.primary,
-                mb: 1,
-                fontSize: '0.875rem'
-              }}
-            >
-              🎯 Key Points:
-            </Typography>
-            <List dense sx={{ py: 0 }}>
-              {mainContent.keyPoints.map((point, index) => (
-                <ListItem key={index} sx={{ py: 0.5, px: 0 }}>
-                  <ListItemIcon sx={{ minWidth: 24 }}>
-                    <BulletIcon 
-                      sx={{ 
-                        color: theme.palette.primary.main,
-                        fontSize: 8
-                      }} 
-                    />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={point}
-                    primaryTypographyProps={{
-                      variant: 'body2',
-                      sx: { fontSize: '0.875rem', lineHeight: 1.4 }
-                    }}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        )}
-
-        {mainContent.visualElements && mainContent.visualElements.length > 0 && (
-          <Box>
-            <Typography 
-              variant="subtitle2" 
-              sx={{ 
-                fontWeight: 600,
-                color: theme.palette.text.primary,
-                mb: 1,
-                fontSize: '0.875rem'
-              }}
-            >
-              👁️ Visual Elements:
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {mainContent.visualElements.map((element, index) => (
-                <Chip
-                  key={index}
-                  icon={<VisualIcon sx={{ fontSize: '0.9rem' }} />}
-                  label={element}
-                  size="small"
-                  sx={{
-                    backgroundColor: `${theme.palette.primary.main}15`,
-                    color: theme.palette.primary.main,
-                    fontSize: '0.75rem',
-                    '& .MuiChip-icon': {
-                      color: theme.palette.primary.main
-                    }
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </Box>
   );
 };
 

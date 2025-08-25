@@ -67,142 +67,70 @@ const InteractionsSection: React.FC<InteractionsSectionProps> = ({ interactions 
   }
 
   return (
-    <Card 
-      sx={{ 
-        mb: 2,
-        border: `1px solid ${theme.palette.success.light}40`,
-        backgroundColor: `${theme.palette.success.light}08`
-      }}
-    >
-      <CardContent sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <InteractionIcon sx={{ color: theme.palette.success.main, fontSize: '1.2rem' }} />
+    <Box sx={{ mb: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+        <Box sx={{
+          width: 28,
+          height: 28,
+          borderRadius: '6px',
+          backgroundColor: `${theme.palette.primary.main}15`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <InteractionIcon sx={{ fontSize: '1rem', color: theme.palette.primary.main }} />
+        </Box>
+        <Typography 
+          variant="subtitle1" 
+          sx={{ 
+            fontWeight: 600,
+            color: theme.palette.text.primary
+          }}
+        >
+          Interactive Elements
+        </Typography>
+      </Box>
+
+      {interactions.map((interaction, index) => (
+        <Box key={index} sx={{ mb: 2, pb: 2, borderBottom: index < interactions.length - 1 ? `1px solid ${theme.palette.divider}` : 'none' }}>
           <Typography 
-            variant="subtitle2" 
+            variant="body1"
             sx={{ 
-              fontWeight: 600,
-              color: theme.palette.success.main,
-              textTransform: 'uppercase',
-              fontSize: '0.75rem',
-              letterSpacing: 0.5
+              mb: 1,
+              color: theme.palette.text.primary,
+              fontWeight: 500
             }}
           >
-            Interactive Elements
+            {interaction.description}
           </Typography>
+
+          <Typography 
+            variant="body2"
+            sx={{ 
+              color: theme.palette.text.secondary,
+              fontSize: '0.875rem',
+              lineHeight: 1.5,
+              mb: interaction.feedback ? 1 : 0
+            }}
+          >
+            <strong>Instructions:</strong> {interaction.instruction}
+          </Typography>
+
+          {interaction.feedback && (
+            <Typography 
+              variant="body2"
+              sx={{ 
+                color: theme.palette.text.secondary,
+                fontSize: '0.875rem',
+                lineHeight: 1.5
+              }}
+            >
+              <strong>Expected outcome:</strong> {interaction.feedback}
+            </Typography>
+          )}
         </Box>
-
-        <Grid container spacing={2}>
-          {interactions.map((interaction, index) => (
-            <Grid item xs={12} key={index}>
-              <Box 
-                sx={{ 
-                  p: 2,
-                  backgroundColor: theme.palette.background.paper,
-                  borderRadius: 2,
-                  border: `1px solid ${getInteractionColor(interaction.type)}30`,
-                  height: '100%'
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                  <Typography sx={{ fontSize: '1.2rem' }}>
-                    {getInteractionEmoji(interaction.type)}
-                  </Typography>
-                  <Chip
-                    label={interaction.type}
-                    size="small"
-                    sx={{
-                      backgroundColor: `${getInteractionColor(interaction.type)}20`,
-                      color: getInteractionColor(interaction.type),
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      textTransform: 'capitalize'
-                    }}
-                  />
-                </Box>
-
-                <Typography 
-                  variant="body2"
-                  sx={{ 
-                    mb: 1.5,
-                    color: theme.palette.text.primary,
-                    fontSize: '0.875rem',
-                    fontWeight: 500
-                  }}
-                >
-                  {interaction.description}
-                </Typography>
-
-                <Box 
-                  sx={{ 
-                    p: 1.5,
-                    backgroundColor: theme.palette.grey[50],
-                    borderRadius: 1,
-                    mb: interaction.feedback ? 1.5 : 0
-                  }}
-                >
-                  <Typography 
-                    variant="caption"
-                    sx={{ 
-                      color: theme.palette.text.secondary,
-                      fontSize: '0.75rem',
-                      fontWeight: 500,
-                      display: 'block',
-                      mb: 0.5
-                    }}
-                  >
-                    👩‍🏫 Teacher Instruction:
-                  </Typography>
-                  <Typography 
-                    variant="body2"
-                    sx={{ 
-                      color: theme.palette.text.primary,
-                      fontSize: '0.8rem',
-                      lineHeight: 1.4
-                    }}
-                  >
-                    {interaction.instruction}
-                  </Typography>
-                </Box>
-
-                {interaction.feedback && (
-                  <Box 
-                    sx={{ 
-                      p: 1.5,
-                      backgroundColor: `${getInteractionColor(interaction.type)}10`,
-                      borderRadius: 1,
-                      borderLeft: `3px solid ${getInteractionColor(interaction.type)}`
-                    }}
-                  >
-                    <Typography 
-                      variant="caption"
-                      sx={{ 
-                        color: getInteractionColor(interaction.type),
-                        fontSize: '0.75rem',
-                        fontWeight: 500,
-                        display: 'block',
-                        mb: 0.5
-                      }}
-                    >
-                      ✨ Expected Feedback:
-                    </Typography>
-                    <Typography 
-                      variant="body2"
-                      sx={{ 
-                        color: theme.palette.text.primary,
-                        fontSize: '0.8rem',
-                        lineHeight: 1.4
-                      }}
-                    >
-                      {interaction.feedback}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      </CardContent>
-    </Card>
+      ))}
+    </Box>
   );
 };
 
