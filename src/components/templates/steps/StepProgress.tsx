@@ -82,6 +82,7 @@ const StepProgress: React.FC<StepProgressProps> = ({
               {isClickable ? (
                 <StepButton
                     onClick={(event) => handleStepClick(stepNumber, event)}
+                    disableRipple
                     sx={{
                       cursor: 'pointer',
                       borderRadius: 2,
