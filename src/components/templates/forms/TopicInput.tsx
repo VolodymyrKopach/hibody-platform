@@ -45,34 +45,36 @@ const TopicInput: React.FC<TopicInputProps> = ({
         sx={{ mb: 2 }}
       />
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {ageGroup
-          ? `${t("createLesson.topic.popularFor")} ${t(`createLesson.ageGroup.${ageGroup}`)}:`
-          : `${t("createLesson.topic.popular")}`}
-      </Typography>
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 1,
-          mt: 1,
-        }}
-      >
-        {popularTopics.map((topic) => (
-          <Chip
-            key={topic}
-            label={topic}
-            variant={value === topic ? "filled" : "outlined"}
-            onClick={() => onChange(topic)}
+      {ageGroup && popularTopics.length > 0 && (
+        <>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {`${t("createLesson.topic.popularFor")} ${t(`createLesson.ageGroup.${ageGroup}`)}:`}
+          </Typography>
+          <Box
             sx={{
-              cursor: "pointer",
-              "&:hover": {
-                backgroundColor: value === topic ? undefined : "action.hover",
-              },
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 1,
+              mt: 1,
             }}
-          />
-        ))}
-      </Box>
+          >
+            {popularTopics.map((topic) => (
+              <Chip
+                key={topic}
+                label={topic}
+                variant={value === topic ? "filled" : "outlined"}
+                onClick={() => onChange(topic)}
+                sx={{
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor: value === topic ? undefined : "action.hover",
+                  },
+                }}
+              />
+            ))}
+          </Box>
+        </>
+      )}
     </Box>
   );
 };
