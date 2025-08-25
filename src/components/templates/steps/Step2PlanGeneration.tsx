@@ -238,16 +238,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
   const renderSuccessState = () => (
     <Card elevation={2} sx={{ borderRadius: 3 }}>
       <CardContent sx={{ p: 6 }}>
-        <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-            {t('createLesson.step2.success.title')}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {t('createLesson.step2.success.description')}
-          </Typography>
-        </Box>
 
-        <Divider sx={{ my: 4 }} />
 
         {/* Plan Content */}
         {generatedPlan && (

@@ -315,8 +315,8 @@
         "progress": "complete"
       },
       "success": {
-        "title": "Lesson Plan Ready!",
-        "description": "Review your personalized lesson plan below. You can regenerate it or proceed to create slides."
+        "title": "",
+        "description": ""
       },
       "error": {
         "title": "Generation Failed",

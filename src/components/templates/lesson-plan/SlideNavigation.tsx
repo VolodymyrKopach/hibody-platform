@@ -92,86 +92,83 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({ slides }) => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* Enhanced Navigation */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <IconButton 
-          onClick={handlePrevSlide}
-          disabled={slides.length <= 1}
-          sx={{
-            backgroundColor: theme.palette.grey[100],
-            borderRadius: 2,
-            width: 40,
-            height: 40,
-            '&:hover': {
-              backgroundColor: theme.palette.primary.light,
-              color: theme.palette.primary.contrastText
-            },
-            '&:disabled': {
-              backgroundColor: theme.palette.grey[50],
-              color: theme.palette.grey[300]
-            }
-          }}
-        >
-          <PrevIcon fontSize="small" />
-        </IconButton>
-
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1,
-          backgroundColor: theme.palette.grey[50],
-          borderRadius: 3,
-          px: 2,
-          py: 1
-        }}>
-          <Typography variant="body2" color="text.primary" sx={{ fontWeight: 600 }}>
-            {currentSlideIndex + 1}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            of
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {slides.length}
-          </Typography>
-        </Box>
-
-        <IconButton 
-          onClick={handleNextSlide}
-          disabled={slides.length <= 1}
-          sx={{
-            backgroundColor: theme.palette.grey[100],
-            borderRadius: 2,
-            width: 40,
-            height: 40,
-            '&:hover': {
-              backgroundColor: theme.palette.primary.light,
-              color: theme.palette.primary.contrastText
-            },
-            '&:disabled': {
-              backgroundColor: theme.palette.grey[50],
-              color: theme.palette.grey[300]
-            }
-          }}
-        >
-          <NextIcon fontSize="small" />
-        </IconButton>
-      </Box>
-
-      {/* Current Slide Card */}
+      {/* Current Slide Card with Embedded Navigation */}
       <Card 
         sx={{ 
           borderRadius: 3,
           boxShadow: theme.shadows[2],
           border: `1px solid ${theme.palette.divider}`,
-          overflow: 'hidden'
+          overflow: 'hidden',
+          position: 'relative'
         }}
       >
         {/* Slide Header */}
         <Box sx={{ 
           p: 4, 
           borderBottom: `1px solid ${theme.palette.divider}`,
-          background: `linear-gradient(135deg, ${theme.palette.primary.main}08, ${theme.palette.background.paper})`
+          background: `linear-gradient(135deg, ${theme.palette.primary.main}08, ${theme.palette.background.paper})`,
+          position: 'relative'
         }}>
+          {/* Navigation Controls - Top Right */}
+          {slides.length > 1 && (
+            <Box sx={{ 
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(8px)',
+              borderRadius: 2,
+              p: 1,
+              boxShadow: theme.shadows[1]
+            }}>
+              <IconButton 
+                onClick={handlePrevSlide}
+                size="small"
+                sx={{
+                  width: 32,
+                  height: 32,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.light,
+                    color: theme.palette.primary.contrastText
+                  }
+                }}
+              >
+                <PrevIcon fontSize="small" />
+              </IconButton>
+
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  px: 1,
+                  fontWeight: 600,
+                  color: theme.palette.text.primary,
+                  minWidth: 40,
+                  textAlign: 'center'
+                }}
+              >
+                {currentSlideIndex + 1}/{slides.length}
+              </Typography>
+
+              <IconButton 
+                onClick={handleNextSlide}
+                size="small"
+                sx={{
+                  width: 32,
+                  height: 32,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.light,
+                    color: theme.palette.primary.contrastText
+                  }
+                }}
+              >
+                <NextIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          )}
+
           {/* Slide Number Badge */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
             <Box sx={{
@@ -236,7 +233,51 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({ slides }) => {
         </Box>
 
         {/* Slide Content */}
-        <CardContent sx={{ p: 4 }}>
+        <CardContent 
+          sx={{ 
+            p: 4,
+            cursor: slides.length > 1 ? 'pointer' : 'default',
+            userSelect: 'none',
+            position: 'relative',
+            '&:hover': slides.length > 1 ? {
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: '50%',
+                height: '100%',
+                backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                pointerEvents: 'none',
+                zIndex: 1
+              },
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                right: 0,
+                top: 0,
+                width: '50%',
+                height: '100%',
+                backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                pointerEvents: 'none',
+                zIndex: 1
+              }
+            } : {}
+          }}
+          onClick={(e) => {
+            if (slides.length <= 1) return;
+            
+            const rect = e.currentTarget.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const centerX = rect.width / 2;
+            
+            if (clickX < centerX) {
+              handlePrevSlide();
+            } else {
+              handleNextSlide();
+            }
+          }}
+        >
           {/* Structured Content Sections */}
           {currentSlide.structure ? (
             <Box>
@@ -545,8 +586,43 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({ slides }) => {
             </Box>
           )}
         </CardContent>
-      </Card>
 
+        {/* Progress Indicator */}
+        {slides.length > 1 && (
+          <Box sx={{ 
+            px: 4, 
+            pb: 3,
+            pt: 0
+          }}>
+            <LinearProgress
+              variant="determinate"
+              value={progress}
+              sx={{
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: theme.palette.grey[200],
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 2,
+                  backgroundColor: theme.palette.primary.main
+                }
+              }}
+            />
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center',
+              mt: 1
+            }}>
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                sx={{ fontSize: '0.75rem' }}
+              >
+                Slide {currentSlideIndex + 1} of {slides.length}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+      </Card>
 
     </Box>
   );
