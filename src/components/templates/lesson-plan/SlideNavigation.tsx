@@ -308,12 +308,7 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({ slides }) => {
         </CardContent>
       </Card>
 
-      {/* Keyboard Navigation Hint */}
-      <Box sx={{ mt: 2, textAlign: 'center' }}>
-        <Typography variant="caption" color="text.secondary">
-          💡 Use arrow buttons or click dots to navigate between slides
-        </Typography>
-      </Box>
+
     </Box>
   );
 };

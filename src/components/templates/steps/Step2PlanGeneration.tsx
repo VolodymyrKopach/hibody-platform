@@ -250,18 +250,9 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
         <Divider sx={{ my: 4 }} />
 
         {/* Plan Content */}
-        <Box sx={{ 
-          maxHeight: 800, 
-          overflow: 'auto',
-          border: `1px solid ${theme.palette.divider}`,
-          borderRadius: 2,
-          p: 2,
-          backgroundColor: theme.palette.background.default
-        }}>
-          {generatedPlan && (
-            <StructuredLessonPlan markdown={generatedPlan} />
-          )}
-        </Box>
+        {generatedPlan && (
+          <StructuredLessonPlan markdown={generatedPlan} />
+        )}
 
         <Divider sx={{ my: 4 }} />
 
