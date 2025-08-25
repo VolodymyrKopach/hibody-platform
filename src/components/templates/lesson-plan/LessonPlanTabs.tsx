@@ -33,7 +33,6 @@ interface TabData {
 
 const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({ parsedPlan }) => {
   const theme = useTheme();
-  const [activeTab, setActiveTab] = useState(0);
 
   // Prepare tab data
   const tabs: TabData[] = [
@@ -73,6 +72,10 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({ parsedPlan }) => {
       component: <TeacherRecommendations recommendations={parsedPlan.recommendations} />
     }
   ].filter(tab => tab.count > 0); // Only show tabs with content
+
+  // Find the index of the "slides" tab, fallback to 0 if not found
+  const defaultTabIndex = tabs.findIndex(tab => tab.id === 'slides');
+  const [activeTab, setActiveTab] = useState(defaultTabIndex !== -1 ? defaultTabIndex : 0);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
