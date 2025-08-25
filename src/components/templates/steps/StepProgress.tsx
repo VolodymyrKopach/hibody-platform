@@ -42,7 +42,7 @@ const StepProgress: React.FC<StepProgressProps> = ({
       sx={{
         width: "100%",
         mb: 2,
-        py: 1.5,
+        py: 2,
         px: 2,
         backgroundColor: "background.paper",
         borderRadius: 2,
@@ -55,7 +55,7 @@ const StepProgress: React.FC<StepProgressProps> = ({
         alternativeLabel
         sx={{
           "& .MuiStepConnector-root": {
-            top: 18,
+            top: 12,
             "& .MuiStepConnector-line": {
               borderColor: theme.palette.divider,
               borderTopWidth: 1,
