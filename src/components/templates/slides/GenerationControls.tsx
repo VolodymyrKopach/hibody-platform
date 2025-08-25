@@ -15,6 +15,7 @@ import {
   Alert
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft,
   Play,
@@ -94,6 +95,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
   compact = false
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation('common');
   const [showStopDialog, setShowStopDialog] = useState(false);
   const [showStatsDialog, setShowStatsDialog] = useState(false);
 
@@ -104,7 +106,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
         status: 'error',
         color: theme.palette.error.main,
         icon: <AlertTriangle size={16} />,
-        text: 'Generation Failed'
+        text: t('createLesson.step3.status.error')
       };
     }
     
@@ -113,7 +115,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
         status: 'completed',
         color: theme.palette.success.main,
         icon: <CheckCircle size={16} />,
-        text: 'Generation Complete'
+        text: t('createLesson.step3.status.completed')
       };
     }
     
@@ -122,7 +124,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
         status: 'paused',
         color: theme.palette.warning.main,
         icon: <Pause size={16} />,
-        text: 'Generation Paused'
+        text: t('createLesson.step3.status.paused')
       };
     }
     
@@ -131,7 +133,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
         status: 'generating',
         color: theme.palette.primary.main,
         icon: <Play size={16} />,
-        text: 'Generating Slides'
+        text: t('createLesson.step3.status.generating')
       };
     }
     
@@ -139,7 +141,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
       status: 'idle',
       color: theme.palette.grey[500],
       icon: <Clock size={16} />,
-      text: 'Ready to Generate'
+              text: t('createLesson.step3.idle.title')
     };
   };
 
@@ -206,7 +208,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
           {/* Quick Actions */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             {showDetailedStats && (
-              <Tooltip title="View detailed statistics">
+              <Tooltip title={t('createLesson.step3.controls.viewStats')}>
                 <IconButton
                   size="small"
                   onClick={() => setShowStatsDialog(true)}
@@ -216,7 +218,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
               </Tooltip>
             )}
             
-            <Tooltip title="Settings">
+            <Tooltip title={t('createLesson.step3.controls.settings')}>
               <IconButton
                 size="small"
                 onClick={onSettings}
@@ -252,12 +254,12 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
             justifyContent: 'space-between'
           }}>
             <Typography variant="body2" color="text.secondary">
-              {completedSlides} of {totalSlides} slides completed ({Math.round(overallProgress)}%)
+              {t('createLesson.step3.controls.slidesCompleted', { count: completedSlides, total: totalSlides, percent: Math.round(overallProgress) })}
             </Typography>
 
             {showEstimatedTime && estimatedTimeRemaining && isGenerating && (
               <Typography variant="body2" color="text.secondary">
-                ~{formatTime(estimatedTimeRemaining)} remaining
+                {t('createLesson.step3.controls.timeRemaining', { time: formatTime(estimatedTimeRemaining) })}
               </Typography>
             )}
           </Box>
@@ -269,7 +271,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
                 <Chip
                   size="small"
                   icon={<CheckCircle size={12} />}
-                  label={`${completedSlides} completed`}
+                  label={t('createLesson.step3.controls.completed', { count: completedSlides })}
                   sx={{
                     backgroundColor: alpha(theme.palette.success.main, 0.1),
                     color: theme.palette.success.main
@@ -281,7 +283,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
                 <Chip
                   size="small"
                   icon={<Play size={12} />}
-                  label="generating"
+                  label={t('createLesson.step3.controls.generating')}
                   sx={{
                     backgroundColor: alpha(theme.palette.primary.main, 0.1),
                     color: theme.palette.primary.main
@@ -293,7 +295,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
                 <Chip
                   size="small"
                   icon={<AlertTriangle size={12} />}
-                  label={`${failedSlides} failed`}
+                  label={t('createLesson.step3.controls.failed', { count: failedSlides })}
                   sx={{
                     backgroundColor: alpha(theme.palette.error.main, 0.1),
                     color: theme.palette.error.main
@@ -320,7 +322,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
               onClick={onBack}
               size={compact ? "small" : "medium"}
             >
-              Back
+              {t('createLesson.step3.controls.back')}
             </Button>
           </Box>
 
@@ -333,7 +335,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
                 onClick={onPause}
                 size={compact ? "small" : "medium"}
               >
-                Pause
+                {t('createLesson.step3.controls.pause')}
               </Button>
             )}
 
@@ -344,7 +346,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
                 onClick={onResume}
                 size={compact ? "small" : "medium"}
               >
-                Resume
+                {t('createLesson.step3.controls.resume')}
               </Button>
             )}
 
@@ -356,7 +358,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
                 onClick={handleStopClick}
                 size={compact ? "small" : "medium"}
               >
-                Stop
+                {t('createLesson.step3.controls.stop')}
               </Button>
             )}
 
@@ -367,7 +369,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
                 onClick={onRestart}
                 size={compact ? "small" : "medium"}
               >
-                Retry
+                {t('createLesson.step3.controls.retry')}
               </Button>
             )}
           </Box>
@@ -382,7 +384,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
                   onClick={onDownload}
                   size={compact ? "small" : "medium"}
                 >
-                  Download
+                  {t('createLesson.step3.controls.download')}
                 </Button>
                 
                 <Button
@@ -391,7 +393,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
                   onClick={onShare}
                   size={compact ? "small" : "medium"}
                 >
-                  Share
+                  {t('createLesson.step3.controls.share')}
                 </Button>
               </>
             )}
@@ -403,7 +405,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
                 onClick={onSave}
                 size={compact ? "small" : "medium"}
               >
-                Save Lesson
+                {t('createLesson.step3.controls.saveLesson')}
               </Button>
             )}
           </Box>
@@ -412,22 +414,21 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
 
       {/* Stop Confirmation Dialog */}
       <Dialog open={showStopDialog} onClose={() => setShowStopDialog(false)}>
-        <DialogTitle>Stop Generation?</DialogTitle>
+        <DialogTitle>{t('createLesson.step3.controls.stopConfirmTitle')}</DialogTitle>
         <DialogContent>
           <Alert severity="warning" sx={{ mb: 2 }}>
-            This will stop the current generation process. Any slides that are currently being generated will be lost.
+            {t('createLesson.step3.controls.stopConfirmMessage')}
           </Alert>
           <Typography>
-            {completedSlides} out of {totalSlides} slides have been completed. 
-            You can save the completed slides and restart generation later.
+            {t('createLesson.step3.controls.stopConfirmDescription', { completedSlides, totalSlides })}
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowStopDialog(false)}>
-            Cancel
+            {t('createLesson.step3.controls.cancel')}
           </Button>
           <Button onClick={handleConfirmStop} color="error" variant="contained">
-            Stop Generation
+            {t('createLesson.step3.controls.stopGeneration')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -439,51 +440,51 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Generation Statistics</DialogTitle>
+        <DialogTitle>{t('createLesson.step3.stats.title')}</DialogTitle>
         <DialogContent>
           {generationStats ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box>
                 <Typography variant="subtitle2" gutterBottom>
-                  Progress
+                  {t('createLesson.step3.stats.progress')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Total slides: {generationStats.totalSlides || 0}
+                  {t('createLesson.step3.stats.totalSlides', { count: generationStats.totalSlides || 0 })}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Completed: {generationStats.completedSlides || 0}
+                  {t('createLesson.step3.stats.completedSlides', { count: generationStats.completedSlides || 0 })}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Failed: {generationStats.failedSlides || 0}
+                  {t('createLesson.step3.stats.failedSlides', { count: generationStats.failedSlides || 0 })}
                 </Typography>
               </Box>
 
               <Box>
                 <Typography variant="subtitle2" gutterBottom>
-                  Timing
+                  {t('createLesson.step3.stats.timing')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Started: {generationStats.startTime ? generationStats.startTime.toLocaleTimeString() : 'N/A'}
+                  {t('createLesson.step3.stats.startTime', { time: generationStats.startTime ? generationStats.startTime.toLocaleTimeString() : 'N/A' })}
                 </Typography>
                 {generationStats.endTime && (
                   <Typography variant="body2" color="text.secondary">
-                    Completed: {generationStats.endTime.toLocaleTimeString()}
+                    {t('createLesson.step3.stats.completedTime', { time: generationStats.endTime.toLocaleTimeString() })}
                   </Typography>
                 )}
                 <Typography variant="body2" color="text.secondary">
-                  Duration: {formatTime(Math.floor((generationStats.totalTimeMs || 0) / 1000))}
+                  {t('createLesson.step3.stats.duration', { time: formatTime(Math.floor((generationStats.totalTimeMs || 0) / 1000)) })}
                 </Typography>
               </Box>
             </Box>
           ) : (
             <Typography color="text.secondary">
-              No statistics available yet.
+              {t('createLesson.step3.stats.noStats')}
             </Typography>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowStatsDialog(false)}>
-            Close
+            {t('createLesson.step3.stats.close')}
           </Button>
         </DialogActions>
       </Dialog>

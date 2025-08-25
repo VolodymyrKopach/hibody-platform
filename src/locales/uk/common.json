@@ -297,8 +297,8 @@
         "progress": "завершено"
       },
       "success": {
-        "title": "",
-        "description": ""
+        "title": "План успішно згенеровано",
+        "description": "Ваш навчальний план готовий до перегляду та генерації слайдів"
       },
       "error": {
         "title": "Помилка генерації",
@@ -333,12 +333,76 @@
         "estimatedTime": "Орієнтовний час до завершення",
         "overallProgress": "Загальний прогрес"
       },
+      "errors": {
+        "demoMode": "Демо режим: Обмежена функціональність",
+        "initializationFailed": "Не вдалося ініціалізувати сервіс генерації слайдів",
+        "slideGenerationFailed": "Не вдалося згенерувати слайд {{slideNumber}}: {{error}}",
+        "unknown": "Невідома помилка під час генерації",
+        "demoModeTitle": "Демо режим активний",
+        "errorTitle": "Помилка генерації",
+        "genericError": "Сталася помилка під час генерації слайдів",
+        "demoModeHint": "Деякі функції можуть бути обмежені в демо режимі"
+      },
+      "slideCard": {
+        "waiting": "Очікування...",
+        "failed": "Помилка",
+        "generating": "Генерується...",
+        "creatingPreview": "Створення превью...",
+        "finalizing": "Завершення...",
+        "content": "контент"
+      },
+      "grid": {
+        "noSlides": "Немає слайдів для відображення",
+        "slidesWillAppear": "Слайди з'являться тут під час генерації"
+      },
+      "preview": {
+        "title": "Попередній перегляд",
+        "generatingSlides": "Генеруємо слайди...",
+        "noSlidesAvailable": "Слайди недоступні",
+        "slidesWillAppear": "Ваші слайди з'являться тут під час генерації",
+        "startGeneration": "Почніть генерацію, щоб побачити превью слайдів",
+        "hidePreview": "Сховати превью",
+        "showPreview": "Показати превью",
+        "refresh": "Оновити",
+        "fullscreen": "Повний екран",
+        "download": "Завантажити",
+        "share": "Поділитися",
+        "keyboardShortcuts": "Використовуйте ← → для навігації • Натисніть F для повного екрану"
+      },
       "controls": {
+        "back": "Назад",
         "pause": "Пауза",
-        "resume": "Продовжити", 
+        "resume": "Продовжити",
         "stop": "Зупинити",
-        "restart": "Перезапустити",
-        "saveLesson": "Зберегти урок"
+        "retry": "Спробувати знову",
+        "download": "Завантажити",
+        "share": "Поділитися",
+        "saveLesson": "Зберегти урок",
+        "stopGeneration": "Зупинити генерацію",
+        "stopConfirmTitle": "Зупинити генерацію?",
+        "stopConfirmMessage": "Це зупинить поточний процес генерації. Слайди, які зараз генеруються, будуть втрачені.",
+        "stopConfirmDescription": "{{completedSlides}} з {{totalSlides}} слайдів завершено. Ви можете зберегти готові слайди і перезапустити генерацію пізніше.",
+        "cancel": "Скасувати",
+        "viewStats": "Переглянути детальну статистику",
+        "settings": "Налаштування",
+        "slidesCompleted": "{{count}} слайдів завершено ({{percent}}%)",
+        "timeRemaining": "~{{time}} залишилось",
+        "completed": "{{count}} завершено",
+        "generating": "генерується",
+        "failed": "{{count}} помилок"
+      },
+      "stats": {
+        "title": "Статистика генерації",
+        "progress": "Прогрес",
+        "timing": "Час",
+        "totalSlides": "Всього слайдів: {{count}}",
+        "completedSlides": "Завершено: {{count}}",
+        "failedSlides": "Помилок: {{count}}",
+        "startTime": "Початок: {{time}}",
+        "completedTime": "Завершено: {{time}}",
+        "duration": "Тривалість: {{time}}",
+        "noStats": "Статистика поки недоступна.",
+        "close": "Закрити"
       }
     },
     "regeneration": {

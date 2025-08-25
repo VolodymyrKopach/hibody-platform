@@ -10,6 +10,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { 
   Eye
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { SimpleSlide } from '@/types/chat';
 
 // Розширені типи для template flow
@@ -45,6 +46,7 @@ const TemplateSlideCard: React.FC<TemplateSlideCardProps> = ({
   compact = false
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation('common');
   const [isHovered, setIsHovered] = useState(false);
   const [internalProgress, setInternalProgress] = useState(0);
 
@@ -231,7 +233,7 @@ const TemplateSlideCard: React.FC<TemplateSlideCardProps> = ({
               fontSize: compact ? '9px' : '10px',
               opacity: 0.6 
             }}>
-              Waiting...
+              {t('createLesson.step3.slideCard.waiting')}
             </Typography>
           </Box>
         )}
@@ -259,7 +261,7 @@ const TemplateSlideCard: React.FC<TemplateSlideCardProps> = ({
               fontSize: compact ? '9px' : '10px',
               opacity: 0.8 
             }}>
-              Failed
+              {t('createLesson.step3.slideCard.failed')}
             </Typography>
           </Box>
         )}
@@ -312,8 +314,8 @@ const TemplateSlideCard: React.FC<TemplateSlideCardProps> = ({
               fontWeight: 600,
               mb: 1
             }}>
-              {internalProgress < 90 ? 'Generating...' : 
-               internalProgress < 100 ? 'Creating preview...' : 'Finalizing...'}
+              {internalProgress < 90 ? t('createLesson.step3.slideCard.generating') : 
+               internalProgress < 100 ? t('createLesson.step3.slideCard.creatingPreview') : t('createLesson.step3.slideCard.finalizing')}
             </Typography>
 
             {/* Progress Bar */}

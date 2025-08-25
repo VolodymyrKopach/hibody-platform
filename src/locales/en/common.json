@@ -315,8 +315,8 @@
         "progress": "complete"
       },
       "success": {
-        "title": "",
-        "description": ""
+        "title": "Plan Generated Successfully",
+        "description": "Your lesson plan is ready for review and slide generation"
       },
       "error": {
         "title": "Generation Failed",
@@ -351,12 +351,76 @@
         "estimatedTime": "Estimated time remaining",
         "overallProgress": "Overall progress"
       },
-            "controls": {
+      "errors": {
+        "demoMode": "Demo mode: Limited functionality available",
+        "initializationFailed": "Failed to initialize slide generation service",
+        "slideGenerationFailed": "Failed to generate slide {{slideNumber}}: {{error}}",
+        "unknown": "Unknown error occurred during generation",
+        "demoModeTitle": "Demo Mode Active",
+        "errorTitle": "Generation Error",
+        "genericError": "An error occurred during slide generation",
+        "demoModeHint": "Some features may be limited in demo mode"
+      },
+      "slideCard": {
+        "waiting": "Waiting...",
+        "failed": "Failed",
+        "generating": "Generating...",
+        "creatingPreview": "Creating preview...",
+        "finalizing": "Finalizing...",
+        "content": "content"
+      },
+      "grid": {
+        "noSlides": "No slides to display",
+        "slidesWillAppear": "Slides will appear here as they are generated"
+      },
+      "preview": {
+        "title": "Preview",
+        "generatingSlides": "Generating slides...",
+        "noSlidesAvailable": "No slides available",
+        "slidesWillAppear": "Your slides will appear here as they are generated",
+        "startGeneration": "Start generation to see slide previews",
+        "hidePreview": "Hide preview",
+        "showPreview": "Show preview",
+        "refresh": "Refresh",
+        "fullscreen": "Fullscreen",
+        "download": "Download",
+        "share": "Share",
+        "keyboardShortcuts": "Use ← → arrows to navigate • Press F for fullscreen"
+      },
+      "controls": {
+        "back": "Back",
         "pause": "Pause",
         "resume": "Resume",
         "stop": "Stop",
-        "restart": "Restart",
-        "saveLesson": "Save Lesson"
+        "retry": "Retry",
+        "download": "Download",
+        "share": "Share",
+        "saveLesson": "Save Lesson",
+        "stopGeneration": "Stop Generation",
+        "stopConfirmTitle": "Stop Generation?",
+        "stopConfirmMessage": "This will stop the current generation process. Any slides that are currently being generated will be lost.",
+        "stopConfirmDescription": "{{completedSlides}} out of {{totalSlides}} slides have been completed. You can save the completed slides and restart generation later.",
+        "cancel": "Cancel",
+        "viewStats": "View detailed statistics",
+        "settings": "Settings",
+        "slidesCompleted": "{{count}} slides completed ({{percent}}%)",
+        "timeRemaining": "~{{time}} remaining",
+        "completed": "{{count}} completed",
+        "generating": "generating",
+        "failed": "{{count}} failed"
+      },
+      "stats": {
+        "title": "Generation Statistics",
+        "progress": "Progress",
+        "timing": "Timing",
+        "totalSlides": "Total slides: {{count}}",
+        "completedSlides": "Completed: {{count}}",
+        "failedSlides": "Failed: {{count}}",
+        "startTime": "Started: {{time}}",
+        "completedTime": "Completed: {{time}}",
+        "duration": "Duration: {{time}}",
+        "noStats": "No statistics available yet.",
+        "close": "Close"
       }
     },
     "regeneration": {

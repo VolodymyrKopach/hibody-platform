@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import TemplateSlideCard from './TemplateSlideCard';
 import { SimpleSlide, SlideGenerationProgress } from '@/types/chat';
 import { getLocalThumbnailStorage } from '@/services/slides/LocalThumbnailService';
@@ -51,6 +52,7 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
   compact = false
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation('common');
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   
@@ -304,10 +306,10 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
             textAlign: 'center'
           }}>
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              No slides to display
+              {t('createLesson.step3.grid.noSlides')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Slides will appear here as they are generated
+              {t('createLesson.step3.grid.slidesWillAppear')}
             </Typography>
           </Box>
         )}

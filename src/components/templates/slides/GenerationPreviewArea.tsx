@@ -21,6 +21,7 @@ import {
   Download,
   Share2
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { SimpleSlide } from '@/types/chat';
 
 export interface GenerationPreviewAreaProps {
@@ -132,6 +133,7 @@ const GenerationPreviewArea: React.FC<GenerationPreviewAreaProps> = ({
   aspectRatio = '16:9'
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation('common');
   const [previewVisible, setPreviewVisible] = useState(true);
 
   // Поточний слайд
@@ -196,13 +198,13 @@ const GenerationPreviewArea: React.FC<GenerationPreviewAreaProps> = ({
       </Typography>
       
       <Typography variant="h6" color="text.secondary" gutterBottom>
-        {isGenerating ? 'Generating slides...' : 'No slides available'}
+        {isGenerating ? t('createLesson.step3.preview.generatingSlides') : t('createLesson.step3.preview.noSlidesAvailable')}
       </Typography>
       
       <Typography variant="body2" color="text.secondary">
         {isGenerating 
-          ? 'Your slides will appear here as they are generated'
-          : 'Start generation to see slide previews'
+          ? t('createLesson.step3.preview.slidesWillAppear')
+          : t('createLesson.step3.preview.startGeneration')
         }
       </Typography>
       
@@ -237,7 +239,7 @@ const GenerationPreviewArea: React.FC<GenerationPreviewAreaProps> = ({
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Preview
+            {t('createLesson.step3.preview.title')}
           </Typography>
           
           {currentSlide && (
@@ -252,7 +254,7 @@ const GenerationPreviewArea: React.FC<GenerationPreviewAreaProps> = ({
         {/* Header Controls */}
         {showControls && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Tooltip title={previewVisible ? 'Hide preview' : 'Show preview'}>
+            <Tooltip title={previewVisible ? t('createLesson.step3.preview.hidePreview') : t('createLesson.step3.preview.showPreview')}>
               <IconButton
                 size="small"
                 onClick={() => setPreviewVisible(!previewVisible)}
@@ -263,7 +265,7 @@ const GenerationPreviewArea: React.FC<GenerationPreviewAreaProps> = ({
             
             {currentSlide && (
               <>
-                <Tooltip title="Refresh">
+                <Tooltip title={t('createLesson.step3.preview.refresh')}>
                   <IconButton
                     size="small"
                     onClick={() => window.location.reload()}
@@ -272,7 +274,7 @@ const GenerationPreviewArea: React.FC<GenerationPreviewAreaProps> = ({
                   </IconButton>
                 </Tooltip>
                 
-                <Tooltip title="Fullscreen">
+                <Tooltip title={t('createLesson.step3.preview.fullscreen')}>
                   <IconButton
                     size="small"
                     onClick={() => onFullscreen?.(currentSlideIndex)}
@@ -305,7 +307,7 @@ const GenerationPreviewArea: React.FC<GenerationPreviewAreaProps> = ({
                 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Chip
-                    label={currentSlide.type || 'content'}
+                    label={currentSlide.type || t('createLesson.step3.slideCard.content')}
                     size="small"
                     sx={{
                       backgroundColor: alpha(theme.palette.primary.main, 0.1),
@@ -390,7 +392,7 @@ const GenerationPreviewArea: React.FC<GenerationPreviewAreaProps> = ({
               startIcon={<Download size={16} />}
               onClick={() => onDownload?.(currentSlide)}
             >
-              Download
+              {t('createLesson.step3.preview.download')}
             </Button>
             
             <Button
@@ -399,7 +401,7 @@ const GenerationPreviewArea: React.FC<GenerationPreviewAreaProps> = ({
               startIcon={<Share2 size={16} />}
               onClick={() => onShare?.(currentSlide)}
             >
-              Share
+              {t('createLesson.step3.preview.share')}
             </Button>
           </Box>
         )}
@@ -413,7 +415,7 @@ const GenerationPreviewArea: React.FC<GenerationPreviewAreaProps> = ({
           borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`
         }}>
           <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', display: 'block' }}>
-            Use ← → arrows to navigate • Press F for fullscreen
+            {t('createLesson.step3.preview.keyboardShortcuts')}
           </Typography>
         </Box>
       )}

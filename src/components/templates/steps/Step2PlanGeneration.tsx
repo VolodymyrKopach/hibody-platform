@@ -45,7 +45,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
   hasSlides = false
 }) => {
   const theme = useTheme();
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
   
   const [generationState, setGenerationState] = useState<GenerationState>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +64,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
         topic: data.topic,
         slideCount: data.slideCount,
         additionalInfo: data.additionalInfo || undefined,
-        language: 'en'
+        language: i18n.language === 'uk' ? 'uk' : 'en'
       };
 
       // Validate request
