@@ -381,3 +381,46 @@ export namespace TemplateGenerationTypes {
     return status === 'completed' || status === 'error';
   };
 }
+
+// === MVP Lesson Creation Global State Types ===
+
+export type LessonCreationStep = 1 | 2 | 3;
+
+export interface LessonCreationState {
+  currentStep: LessonCreationStep;
+  completedSteps: Set<LessonCreationStep>;
+  templateData: TemplateData;
+  generatedPlan: string | null;
+  generatedLesson: import('@/types/chat').SimpleLesson | null;
+  isLoading: boolean;
+  error: string | null;
+  // Generation state persistence
+  slideGenerationState: {
+    isGenerating: boolean;
+    isCompleted: boolean;
+    hasError: boolean;
+    errorMessage: string;
+    slides: import('@/types/chat').SimpleSlide[];
+    currentLesson: import('@/types/chat').SimpleLesson | null;
+    slideProgresses: import('@/types/chat').SlideGenerationProgress[];
+  };
+}
+
+export interface LessonCreationContextValue {
+  state: LessonCreationState;
+  setCurrentStep: (step: LessonCreationStep) => void;
+  updateTemplateData: (data: Partial<TemplateData>) => void;
+  setGeneratedPlan: (plan: string) => void;
+  setGeneratedLesson: (lesson: import('@/types/chat').SimpleLesson) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearGeneratedPlan: () => void;
+  clearGeneratedLesson: () => void;
+  resetState: () => void;
+  // Slide generation state management
+  updateSlideGenerationState: (state: Partial<LessonCreationState['slideGenerationState']>) => void;
+  clearSlideGenerationState: () => void;
+  // Step completion management
+  markStepCompleted: (step: LessonCreationStep) => void;
+  canNavigateToStep: (step: LessonCreationStep) => boolean;
+}

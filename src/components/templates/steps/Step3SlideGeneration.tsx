@@ -15,6 +15,10 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
+import { 
+  Slideshow as SlidesIcon,
+  Refresh as RefreshIcon
+} from '@mui/icons-material';
 
 // Імпорти наших компонентів
 import TemplateSlideGrid from '../slides/TemplateSlideGrid';
@@ -33,6 +37,16 @@ export interface Step3SlideGenerationProps {
   // Дані з попередніх етапів
   templateData: TemplateData;
   generatedPlan: string;
+  generatedLesson?: SimpleLesson | null;
+  slideGenerationState: {
+    isGenerating: boolean;
+    isCompleted: boolean;
+    hasError: boolean;
+    errorMessage: string;
+    slides: SimpleSlide[];
+    currentLesson: SimpleLesson | null;
+    slideProgresses: SlideGenerationProgress[];
+  };
   
   // Навігація
   onBack?: () => void;
@@ -41,15 +55,23 @@ export interface Step3SlideGenerationProps {
   // Callbacks
   onLessonSaved?: (lesson: SimpleLesson) => void;
   onError?: (error: string) => void;
+  onClearLesson?: () => void;
+  onUpdateGenerationState?: (state: Partial<Step3SlideGenerationProps['slideGenerationState']>) => void;
+  onClearGenerationState?: () => void;
 }
 
 const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   templateData,
   generatedPlan,
+  generatedLesson,
+  slideGenerationState,
   onBack,
   onNext,
   onLessonSaved,
-  onError
+  onError,
+  onClearLesson,
+  onUpdateGenerationState,
+  onClearGenerationState
 }) => {
   const theme = useTheme();
   const { t } = useTranslation('common');
@@ -59,18 +81,20 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   const [adapter, setAdapter] = useState<TemplateAPIAdapter | null>(null);
   const [slideStore, setSlideStore] = useState<SlideStore | null>(null);
   
-  // Стан генерації
-  const [isGenerating, setIsGenerating] = useState(false);
+  // Локальний стан (тільки для UI та сервісів)
   const [isPaused, setIsPaused] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
-  
-  // Дані слайдів
-  const [slides, setSlides] = useState<SimpleSlide[]>([]);
-  const [currentLesson, setCurrentLesson] = useState<SimpleLesson | null>(null);
-  const [slideProgresses, setSlideProgresses] = useState<SlideGenerationProgress[]>([]);
   const [generationStats, setGenerationStats] = useState<GenerationStats | null>(null);
+  
+  // Використовуємо глобальний стан генерації
+  const {
+    isGenerating,
+    isCompleted,
+    hasError,
+    errorMessage,
+    slides,
+    currentLesson,
+    slideProgresses
+  } = slideGenerationState;
   
   // UI стан
   const [selectedSlideId, setSelectedSlideId] = useState<string>('');
@@ -99,13 +123,15 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
         console.log('✅ [Step3] Services initialized successfully');
       } catch (error) {
         console.error('❌ [Step3] Failed to initialize services:', error);
-        setHasError(true);
         
-        if (error instanceof Error && error.message.includes('GEMINI_API_KEY')) {
-          setErrorMessage('Demo mode: GEMINI_API_KEY is required for slide generation. Please add your API key to environment variables.');
-        } else {
-          setErrorMessage('Failed to initialize generation services');
-        }
+        const errorMsg = error instanceof Error && error.message.includes('GEMINI_API_KEY')
+          ? 'Demo mode: GEMINI_API_KEY is required for slide generation. Please add your API key to environment variables.'
+          : 'Failed to initialize generation services';
+          
+        onUpdateGenerationState?.({
+          hasError: true,
+          errorMessage: errorMsg
+        });
       }
     };
 
@@ -119,21 +145,46 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     };
   }, []);
 
-  // Автоматичний старт генерації
+  // Ініціалізація стану на основі існуючого уроку та глобального стану генерації
   useEffect(() => {
-    if (adapter && !isGenerating && !isCompleted && !hasError) {
-      startGeneration();
+    if (generatedLesson && !isGenerating) {
+      // Урок вже існує і генерація не йде, показуємо готовий урок
+      onUpdateGenerationState?.({
+        currentLesson: generatedLesson,
+        slides: generatedLesson.slides || [],
+        isCompleted: true,
+        isGenerating: false,
+        hasError: false,
+        errorMessage: ''
+      });
+      console.log('📚 [Step3] Existing lesson loaded:', generatedLesson.title);
+    } else if (!generatedLesson && !isGenerating && !isCompleted && !hasError) {
+      // Уроку немає і генерація не йде, скидаємо до початкового стану
+      onUpdateGenerationState?.({
+        currentLesson: null,
+        slides: [],
+        isCompleted: false,
+        isGenerating: false,
+        hasError: false,
+        errorMessage: ''
+      });
     }
-  }, [adapter]);
+    // Якщо генерація йде (isGenerating: true), не змінюємо стан - продовжуємо генерацію
+  }, [generatedLesson, onUpdateGenerationState]);
 
-  // Підписка на зміни в SlideStore
+
+
+  // Підписка на зміни в SlideStore та синхронізація з глобальним станом
   useEffect(() => {
     if (!slideStore) return;
 
     const unsubscribe = slideStore.subscribe((state) => {
-      setSlides(state.slides || []);
-      setCurrentLesson(state.currentLesson);
-      setIsGenerating(state.isGenerating || false);
+      // Оновлюємо глобальний стан генерації
+      onUpdateGenerationState?.({
+        slides: state.slides || [],
+        currentLesson: state.currentLesson,
+        isGenerating: state.isGenerating || false
+      });
       
       // Автоматично вибираємо перший слайд
       if ((state.slides?.length || 0) > 0 && !selectedSlideId) {
@@ -143,7 +194,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     });
 
     return unsubscribe;
-  }, [slideStore, selectedSlideId]);
+  }, [slideStore, selectedSlideId, onUpdateGenerationState]);
 
   // Callbacks для генерації
   const generationCallbacks: TemplateGenerationCallbacks = {
@@ -152,28 +203,37 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     }, []),
 
     onProgressUpdate: useCallback((progress: SlideGenerationProgress[]) => {
-      setSlideProgresses(progress);
-    }, []),
+      onUpdateGenerationState?.({ slideProgresses: progress });
+    }, [onUpdateGenerationState]),
 
     onSlideError: useCallback((error: string, slideNumber: number) => {
       console.error(`❌ [Step3] Slide ${slideNumber} failed:`, error);
-      setErrorMessage(`Failed to generate slide ${slideNumber}: ${error}`);
-    }, []),
+      const errorMsg = `Failed to generate slide ${slideNumber}: ${error}`;
+      onUpdateGenerationState?.({ errorMessage: errorMsg });
+    }, [onUpdateGenerationState]),
 
     onComplete: useCallback((lesson: SimpleLesson, stats: GenerationStats) => {
       console.log('🎉 [Step3] Generation completed!', stats);
-      setIsCompleted(true);
-      setIsGenerating(false);
+      onUpdateGenerationState?.({
+        isCompleted: true,
+        isGenerating: false,
+        currentLesson: lesson
+      });
       setGenerationStats(stats);
-    }, []),
+      
+      // Автоматично зберігаємо урок при завершенні генерації
+      onLessonSaved?.(lesson);
+    }, [onUpdateGenerationState, onLessonSaved]),
 
     onError: useCallback((error: string) => {
       console.error('❌ [Step3] Generation failed:', error);
-      setHasError(true);
-      setIsGenerating(false);
-      setErrorMessage(error);
+      onUpdateGenerationState?.({
+        hasError: true,
+        isGenerating: false,
+        errorMessage: error
+      });
       onError?.(error);
-    }, [onError])
+    }, [onError, onUpdateGenerationState])
   };
 
   // Функції управління генерацією
@@ -181,9 +241,12 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     if (!adapter) return;
 
     try {
-      setIsGenerating(true);
-      setHasError(false);
-      setErrorMessage('');
+      onUpdateGenerationState?.({
+        isGenerating: true,
+        hasError: false,
+        errorMessage: '',
+        isCompleted: false
+      });
       
       console.log('🚀 [Step3] Starting slide generation...');
       
@@ -195,13 +258,24 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
       
     } catch (error) {
       console.error('❌ [Step3] Failed to start generation:', error);
-      setHasError(true);
-      setIsGenerating(false);
       const message = error instanceof Error ? error.message : 'Unknown error';
-      setErrorMessage(message);
+      onUpdateGenerationState?.({
+        hasError: true,
+        isGenerating: false,
+        errorMessage: message
+      });
       onError?.(message);
     }
-  }, [adapter, generatedPlan, templateData, generationCallbacks, onError]);
+  }, [adapter, generatedPlan, templateData, generationCallbacks, onError, onUpdateGenerationState]);
+
+  // Автоматичне відновлення генерації при поверненні на крок 3
+  useEffect(() => {
+    if (adapter && isGenerating && !currentLesson && !hasError) {
+      // Якщо генерація була в процесі, але адаптер не активний, відновлюємо генерацію
+      console.log('🔄 [Step3] Resuming generation after navigation...');
+      startGeneration();
+    }
+  }, [adapter, isGenerating, currentLesson, hasError, startGeneration]);
 
   const pauseGeneration = useCallback(() => {
     setIsPaused(true);
@@ -219,28 +293,27 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     if (adapter) {
       adapter.stopGeneration();
     }
-    setIsGenerating(false);
+    onUpdateGenerationState?.({
+      isGenerating: false
+    });
     setIsPaused(false);
     console.log('🛑 [Step3] Generation stopped');
-  }, [adapter]);
+  }, [adapter, onUpdateGenerationState]);
 
   const restartGeneration = useCallback(() => {
+    onClearLesson?.(); // Очищаємо урок в глобальному стані
+    onClearGenerationState?.(); // Очищаємо стан генерації
+    
     if (adapter) {
       adapter.cleanup();
     }
-    setSlides([]);
-    setCurrentLesson(null);
-    setSlideProgresses([]);
     setGenerationStats(null);
-    setHasError(false);
-    setErrorMessage('');
-    setIsCompleted(false);
     
     // Перезапускаємо через короткий час
     setTimeout(() => {
       startGeneration();
     }, 500);
-  }, [adapter, startGeneration]);
+  }, [adapter, startGeneration, onClearLesson, onClearGenerationState]);
 
   // Обробники UI подій
   const handleSlideSelect = useCallback((slideId: string) => {
@@ -255,7 +328,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   const handleSaveLesson = useCallback(() => {
     if (currentLesson) {
       onLessonSaved?.(currentLesson);
-      setSuccessMessage('Lesson saved successfully!');
+      console.log('✅ [Step3] Lesson saved successfully!');
     }
   }, [currentLesson, onLessonSaved]);
 
@@ -281,6 +354,182 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     return remainingSlides * 30; // 30 секунд на слайд
   }, [isGenerating, templateData.slideCount, completedSlidesCount]);
 
+  // Idle стан - коли уроку немає і генерація не йде
+  const renderIdleState = () => (
+    <Card elevation={2} sx={{ borderRadius: 3 }}>
+      <CardContent sx={{ p: 6, textAlign: 'center' }}>
+        <SlidesIcon sx={{ fontSize: 64, color: theme.palette.primary.main, mb: 3 }} />
+        
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+          {t('createLesson.step3.idle.title')}
+        </Typography>
+        
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
+          {t('createLesson.step3.idle.description')}
+        </Typography>
+
+        <Box sx={{ mb: 4 }}>
+          <Chip 
+            label={`${templateData.slideCount} ${t('createLesson.step3.slides')}`}
+            variant="outlined" 
+            sx={{ mr: 1 }}
+          />
+          <Chip 
+            label={templateData.ageGroup}
+            variant="outlined" 
+            sx={{ mr: 1 }}
+          />
+          <Chip 
+            label={templateData.topic}
+            variant="outlined" 
+          />
+        </Box>
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowLeft size={18} />}
+            onClick={onBack}
+            sx={{ minWidth: 120 }}
+          >
+            {t('createLesson.step3.back')}
+          </Button>
+          
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<SlidesIcon />}
+            onClick={startGeneration}
+            disabled={!adapter}
+            sx={{ 
+              minWidth: 200,
+              fontWeight: 600,
+              px: 4,
+              py: 1.5,
+              fontSize: '1rem',
+              borderRadius: 2,
+              boxShadow: theme.shadows[4],
+              '&:hover': {
+                boxShadow: theme.shadows[8],
+                transform: 'translateY(-2px)'
+              },
+              transition: 'all 0.3s ease'
+            }}
+          >
+            {t('createLesson.step3.generateSlides')}
+          </Button>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+
+  // Completed стан - коли урок готовий
+  const renderCompletedState = () => (
+    <Card 
+      elevation={2}
+      sx={{ 
+        borderRadius: 3,
+        border: `1px solid ${theme.palette.divider}`
+      }}
+    >
+      <CardContent sx={{ p: 6 }}>
+        <Box sx={{ mb: 4, textAlign: 'center' }}>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+            {t('createLesson.step3.completed.title')}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            {t('createLesson.step3.completed.description')}
+          </Typography>
+        </Box>
+
+        {/* Slide Grid */}
+        <Box sx={{ mb: 4 }}>
+          <TemplateSlideGrid
+            slides={slides}
+            totalSlides={templateData.slideCount}
+            generationProgress={slideStore?.getState().generationProgress || new Map()}
+            slideProgresses={slideProgresses}
+            selectedSlideId={selectedSlideId}
+            isGenerating={false}
+            onSlideSelect={handleSlideSelect}
+            onSlideFullscreen={handleSlideFullscreen}
+            showStats={!isMobile}
+            compact={isMobile}
+          />
+        </Box>
+
+        {/* Controls */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 2,
+          pt: 2, 
+          borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+        }}>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowLeft size={18} />}
+            onClick={onBack}
+            sx={{ minWidth: 120 }}
+          >
+            {t('createLesson.step3.back')}
+          </Button>
+
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={restartGeneration}
+              sx={{ minWidth: 140 }}
+            >
+              {t('createLesson.step3.regenerate')}
+            </Button>
+            
+            <Button
+              variant="contained"
+              onClick={handleSaveLesson}
+              disabled={!currentLesson}
+              sx={{ minWidth: 120 }}
+            >
+              {t('createLesson.step3.saveLesson')}
+            </Button>
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+
+  // Показуємо відповідний стан
+  if (!generatedLesson && !isGenerating && !hasError) {
+    return renderIdleState();
+  }
+
+  if (isCompleted && currentLesson) {
+    return (
+      <>
+        {renderCompletedState()}
+        
+        {/* Slide Dialog */}
+        <SlideDialog
+          open={slideDialogOpen}
+          currentLesson={currentLesson}
+          currentSlideIndex={slideDialogIndex}
+          onClose={() => setSlideDialogOpen(false)}
+          onNextSlide={() => {
+            const nextIndex = slideDialogIndex < slides.length - 1 ? slideDialogIndex + 1 : 0;
+            setSlideDialogIndex(nextIndex);
+          }}
+          onPrevSlide={() => {
+            const prevIndex = slideDialogIndex > 0 ? slideDialogIndex - 1 : slides.length - 1;
+            setSlideDialogIndex(prevIndex);
+          }}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <Card 
@@ -298,7 +547,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
           <Alert 
             severity={errorMessage?.includes('Demo mode') ? 'warning' : 'error'} 
             sx={{ mb: 4 }} 
-            onClose={() => setHasError(false)}
+            onClose={() => onUpdateGenerationState?.({ hasError: false })}
         >
           <Box>
             <Typography variant="subtitle2" gutterBottom>

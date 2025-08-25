@@ -1,36 +1,42 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React from 'react';
 import { Box, Container } from '@mui/material';
 import StepProgress from './steps/StepProgress';
 import Step1BasicInfo from './steps/Step1BasicInfo';
 import Step2PlanGeneration from './steps/Step2PlanGeneration';
 import Step3SlideGeneration from './steps/Step3SlideGeneration';
-import { useUnsavedChangesContext } from '@/providers/UnsavedChangesProvider';
-import { TemplateData, GeneratedPlan } from '@/types/templates';
+import { useLessonCreation } from '@/providers/LessonCreationProvider';
 import { SimpleLesson } from '@/types/chat';
 
 const TemplateGenerationPage: React.FC = () => {
-  const { setHasUnsavedChanges } = useUnsavedChangesContext();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [templateData, setTemplateData] = useState<TemplateData>({
-    ageGroup: '',
-    topic: '',
-    slideCount: 4,
-    additionalInfo: ''
-  });
-  const [generatedPlan, setGeneratedPlan] = useState<string | null>(null);
-  const [generatedLesson, setGeneratedLesson] = useState<SimpleLesson | null>(null);
+  const { 
+    state, 
+    setCurrentStep, 
+    updateTemplateData, 
+    setGeneratedPlan, 
+    setGeneratedLesson, 
+    setError,
+    clearGeneratedPlan,
+    clearGeneratedLesson,
+    updateSlideGenerationState,
+    clearSlideGenerationState,
+    markStepCompleted,
+    canNavigateToStep
+  } = useLessonCreation();
 
   const handleNext = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
+    // Mark current step as completed before moving to next
+    markStepCompleted(state.currentStep);
+    
+    if (state.currentStep < 3) {
+      setCurrentStep((state.currentStep + 1) as 1 | 2 | 3);
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+    if (state.currentStep > 1) {
+      setCurrentStep((state.currentStep - 1) as 1 | 2 | 3);
     }
   };
 
@@ -44,26 +50,15 @@ const TemplateGenerationPage: React.FC = () => {
   };
 
   const handleGenerationError = (error: string) => {
+    setError(error);
     console.error('❌ Generation error:', error);
-    // Можна додати toast notification або інший UI feedback
   };
 
-  // Determine if there are unsaved changes
-  const hasUnsavedChanges = useMemo(() => {
-    // No unsaved changes if lesson is already saved
-    if (generatedLesson) return false;
-    
-    // Has changes if user has filled any data or generated plan
-    const hasFormData = Boolean(templateData.ageGroup || templateData.topic || templateData.additionalInfo);
-    const hasPlan = generatedPlan !== null;
-    
-    return hasFormData || hasPlan;
-  }, [templateData, generatedPlan, generatedLesson]);
-
-  // Update global unsaved changes state
-  useEffect(() => {
-    setHasUnsavedChanges(hasUnsavedChanges);
-  }, [hasUnsavedChanges, setHasUnsavedChanges]);
+  const handleStepClick = (step: 1 | 2 | 3) => {
+    if (canNavigateToStep(step)) {
+      setCurrentStep(step);
+    }
+  };
 
   return (
     <Box sx={{ 
@@ -73,35 +68,50 @@ const TemplateGenerationPage: React.FC = () => {
     }}>
       <Container maxWidth="lg">
         <Box sx={{ mb: 4 }}>
-          <StepProgress currentStep={currentStep} />
+          <StepProgress 
+            currentStep={state.currentStep}
+            completedSteps={state.completedSteps}
+            onStepClick={handleStepClick}
+            canNavigateToStep={canNavigateToStep}
+          />
         </Box>
 
-        {currentStep === 1 && (
+        {state.currentStep === 1 && (
           <Step1BasicInfo
-            data={templateData}
-            onChange={setTemplateData}
+            data={state.templateData}
+            onChange={updateTemplateData}
             onNext={handleNext}
           />
         )}
 
-        {currentStep === 2 && (
+        {state.currentStep === 2 && (
           <Step2PlanGeneration
-            data={templateData}
-            generatedPlan={generatedPlan}
+            data={state.templateData}
+            generatedPlan={state.generatedPlan}
             onPlanGenerated={handlePlanGenerated}
             onNext={handleNext}
             onBack={handleBack}
+            onClearPlan={clearGeneratedPlan}
+            hasSlides={Boolean(
+              state.generatedLesson || 
+              state.slideGenerationState.slides.length > 0
+            )}
           />
         )}
 
-        {currentStep === 3 && generatedPlan && (
+        {state.currentStep === 3 && state.generatedPlan && (
           <Step3SlideGeneration
-            templateData={templateData}
-            generatedPlan={generatedPlan}
+            templateData={state.templateData}
+            generatedPlan={state.generatedPlan}
+            generatedLesson={state.generatedLesson}
+            slideGenerationState={state.slideGenerationState}
             onBack={handleBack}
             onNext={handleNext}
             onLessonSaved={handleLessonSaved}
             onError={handleGenerationError}
+            onClearLesson={clearGeneratedLesson}
+            onUpdateGenerationState={updateSlideGenerationState}
+            onClearGenerationState={clearSlideGenerationState}
           />
         )}
       </Container>

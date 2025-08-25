@@ -289,6 +289,13 @@
       "planReview": "Plan Review",
       "generation": "Generation"
     },
+    "stepper": {
+      "tooltip": {
+        "clickToNavigate": "Click to navigate",
+        "step2Disabled": "Complete step 1 first",
+        "step3Disabled": "Generate plan first"
+      }
+    },
     "step2": {
       "title": "Lesson Plan Review",
       "ageGroup": "Age Group",
@@ -297,6 +304,11 @@
       "back": "Back",
       "next": "Generate Slides",
       "regenerate": "Regenerate Plan",
+      "generatePlan": "Generate Lesson Plan",
+      "idle": {
+        "title": "Ready to Generate Plan",
+        "description": "Click the button below to generate a personalized lesson plan based on your requirements."
+      },
       "generating": {
         "title": "Generating Lesson Plan",
         "description": "Our AI is creating a personalized lesson plan based on your requirements. This may take a few moments.",
@@ -315,6 +327,19 @@
     "step3": {
       "title": "Generate Slides",
       "description": "Creating slides for your lesson...",
+      "slides": "slides",
+      "back": "Back",
+      "generateSlides": "Generate Slides",
+      "regenerate": "Regenerate Slides",
+      "saveLesson": "Save Lesson",
+      "idle": {
+        "title": "Ready to Generate Slides",
+        "description": "Click the button below to generate interactive slides based on your lesson plan."
+      },
+      "completed": {
+        "title": "Slides Generated Successfully!",
+        "description": "Your lesson slides are ready. You can regenerate them or save the lesson."
+      },
       "status": {
         "generating": "Generating slides...",
         "completed": "Generation complete!",
@@ -326,12 +351,27 @@
         "estimatedTime": "Estimated time remaining",
         "overallProgress": "Overall progress"
       },
-      "controls": {
+            "controls": {
         "pause": "Pause",
-        "resume": "Resume", 
+        "resume": "Resume",
         "stop": "Stop",
         "restart": "Restart",
         "saveLesson": "Save Lesson"
+      }
+    },
+    "regeneration": {
+      "plan": {
+        "title": "Regenerate Lesson Plan",
+        "description": "Are you sure you want to regenerate the lesson plan?",
+        "slidesWarning": "Warning: All generated slides will be permanently deleted!",
+        "consequences": "This action will create a completely new lesson plan and cannot be undone.",
+        "confirm": "Regenerate Plan"
+      },
+      "slides": {
+        "title": "Regenerate Slides",
+        "description": "Are you sure you want to regenerate all slides?",
+        "consequences": "This action will recreate all slides and cannot be undone.",
+        "confirm": "Regenerate Slides"
       }
     },
     "ageGroup": {

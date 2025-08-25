@@ -3,11 +3,14 @@
 import React from 'react';
 import Layout from '@/components/layout/Layout';
 import TemplateGenerationPage from '@/components/templates/TemplateGenerationPage';
+import { LessonCreationProvider } from '@/providers/LessonCreationProvider';
 
 const CreateLessonPage: React.FC = () => {
   return (
     <Layout>
-      <TemplateGenerationPage />
+      <LessonCreationProvider>
+        <TemplateGenerationPage />
+      </LessonCreationProvider>
     </Layout>
   );
 };

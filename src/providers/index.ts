@@ -6,3 +6,4 @@ export { SlideStoreProvider } from './SlideStoreProvider';
 export { ValidationProvider } from './ValidationProvider';
 export { UnsavedChangesProvider, useUnsavedChangesContext } from './UnsavedChangesProvider';
 export { default as MUIThemeProvider } from './theme-provider';
+export { LessonCreationProvider, useLessonCreation } from './LessonCreationProvider';

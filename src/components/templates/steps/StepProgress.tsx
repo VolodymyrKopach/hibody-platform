@@ -1,24 +1,41 @@
 import React from "react";
-import { Box, Stepper, Step, StepLabel, Typography } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { Box, Stepper, Step, StepLabel, StepButton, Typography } from "@mui/material";
+import { useTheme, alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
+import { LessonCreationStep } from "@/types/templates";
 
 interface StepProgressProps {
   currentStep: number;
+  onStepClick?: (step: LessonCreationStep) => void;
+  canNavigateToStep?: (step: LessonCreationStep) => boolean;
+  completedSteps?: Set<LessonCreationStep>;
 }
 
-const StepProgress: React.FC<StepProgressProps> = ({ currentStep }) => {
+const StepProgress: React.FC<StepProgressProps> = ({ 
+  currentStep, 
+  onStepClick, 
+  canNavigateToStep, 
+  completedSteps 
+}) => {
   const theme = useTheme();
   const { t } = useTranslation("common");
 
   const steps = React.useMemo(
     () => [
-      { label: t("createLesson.steps.basicInfo") },
-      { label: t("createLesson.steps.planReview") },
-      { label: t("createLesson.steps.generation") },
+      { id: 1 as LessonCreationStep, label: t("createLesson.steps.basicInfo") },
+      { id: 2 as LessonCreationStep, label: t("createLesson.steps.planReview") },
+      { id: 3 as LessonCreationStep, label: t("createLesson.steps.generation") },
     ],
     [t],
   );
+
+  const handleStepClick = (step: LessonCreationStep, event: React.MouseEvent) => {
+    if (canNavigateToStep?.(step) && onStepClick) {
+      onStepClick(step);
+      // Remove focus after click to prevent stuck hover effect
+      (event.target as HTMLElement).blur();
+    }
+  };
 
   return (
     <Box
@@ -52,41 +69,136 @@ const StepProgress: React.FC<StepProgressProps> = ({ currentStep }) => {
           },
         }}
       >
-        {steps.map((step, index) => (
-          <Step key={step.label}>
-            <StepLabel
-              sx={{
-                "& .MuiStepLabel-iconContainer": {
-                  "& .MuiSvgIcon-root": {
-                    fontSize: "1.5rem",
-                    color:
-                      currentStep > index
-                        ? theme.palette.primary.main
-                        : theme.palette.grey[400],
-                    "&.Mui-active": {
-                      color: theme.palette.primary.main,
+        {steps.map((step, index) => {
+          const stepNumber = (index + 1) as LessonCreationStep;
+          const canNavigate = canNavigateToStep?.(stepNumber) ?? true;
+          const isActive = currentStep === stepNumber;
+          // Step is completed only if it's in completedSteps AND can navigate to it
+          const isCompleted = (completedSteps?.has(stepNumber) || false) && canNavigate;
+          const isClickable = canNavigate && onStepClick;
+
+          return (
+            <Step key={step.label} completed={isCompleted}>
+              {isClickable ? (
+                <StepButton
+                    onClick={(event) => handleStepClick(stepNumber, event)}
+                    sx={{
+                      cursor: 'pointer',
+                      borderRadius: 2,
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                        '& .MuiStepLabel-iconContainer': {
+                          transform: 'scale(1.1)',
+                        },
+                        '& .MuiTypography-root': {
+                          transform: 'translateY(-1px)',
+                        }
+                      },
+                      '&:focus': {
+                        outline: 'none',
+                        transform: 'none',
+                        '& .MuiStepLabel-iconContainer': {
+                          transform: 'none',
+                        },
+                        '& .MuiTypography-root': {
+                          transform: 'none',
+                        }
+                      },
+                      '&:active': {
+                        transform: 'none',
+                        '& .MuiStepLabel-iconContainer': {
+                          transform: 'none',
+                        },
+                        '& .MuiTypography-root': {
+                          transform: 'none',
+                        }
+                      },
+                    "& .MuiStepLabel-iconContainer": {
+                      transition: 'transform 0.2s ease',
+                      "& .MuiSvgIcon-root": {
+                        fontSize: "1.5rem",
+                        transition: 'all 0.2s ease',
+                        color: !canNavigate
+                          ? `${theme.palette.grey[400]} !important`
+                          : isCompleted || isActive
+                            ? `${theme.palette.primary.main} !important`
+                            : `${theme.palette.text.secondary} !important`,
+                        "&.Mui-active": {
+                          color: isActive ? `${theme.palette.primary.main} !important` : 'inherit',
+                        },
+                        "&.Mui-completed": {
+                          color: isCompleted && canNavigate ? `${theme.palette.primary.main} !important` : 'inherit',
+                        },
+                      },
                     },
-                    "&.Mui-completed": {
-                      color: theme.palette.primary.main,
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    color={
+                      !canNavigate
+                        ? "text.disabled"
+                        : isCompleted || isActive 
+                          ? "primary" 
+                          : "text.primary"
+                    }
+                    sx={{
+                      fontWeight: isCompleted || isActive ? 600 : 400,
+                      mt: 0.5,
+                      fontSize: "0.875rem",
+                      transition: 'transform 0.2s ease',
+                    }}
+                  >
+                    {step.label}
+                  </Typography>
+                  </StepButton>
+              ) : (
+                <StepLabel
+                  sx={{
+                    "& .MuiStepLabel-iconContainer": {
+                      transition: 'transform 0.2s ease',
+                      "& .MuiSvgIcon-root": {
+                        fontSize: "1.5rem",
+                        transition: 'all 0.2s ease',
+                        color: !canNavigate
+                          ? `${theme.palette.grey[400]} !important`
+                          : isCompleted || isActive
+                            ? `${theme.palette.primary.main} !important`
+                            : `${theme.palette.grey[400]} !important`,
+                        "&.Mui-active": {
+                          color: isActive ? `${theme.palette.primary.main} !important` : 'inherit',
+                        },
+                        "&.Mui-completed": {
+                          color: isCompleted && canNavigate ? `${theme.palette.primary.main} !important` : 'inherit',
+                        },
+                      },
                     },
-                  },
-                },
-              }}
-            >
-              <Typography
-                variant="subtitle2"
-                color={currentStep > index ? "primary" : "text.secondary"}
-                sx={{
-                  fontWeight: currentStep > index ? 600 : 400,
-                  mt: 0.5,
-                  fontSize: "0.875rem",
-                }}
-              >
-                {step.label}
-              </Typography>
-            </StepLabel>
-          </Step>
-        ))}
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    color={
+                      !canNavigate
+                        ? "text.disabled"
+                        : isCompleted || isActive 
+                          ? "primary" 
+                          : "text.secondary"
+                    }
+                    sx={{
+                      fontWeight: isCompleted || isActive ? 600 : 400,
+                      mt: 0.5,
+                      fontSize: "0.875rem",
+                      transition: 'transform 0.2s ease',
+                    }}
+                  >
+                    {step.label}
+                  </Typography>
+                </StepLabel>
+              )}
+            </Step>
+          );
+        })}
       </Stepper>
     </Box>
   );
