@@ -125,8 +125,8 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
         console.error('❌ [Step3] Failed to initialize services:', error);
         
         const errorMsg = error instanceof Error && error.message.includes('GEMINI_API_KEY')
-          ? 'Demo mode: GEMINI_API_KEY is required for slide generation. Please add your API key to environment variables.'
-          : 'Failed to initialize generation services';
+          ? t('createLesson.step3.errors.demoMode')
+          : t('createLesson.step3.errors.initializationFailed');
           
         onUpdateGenerationState?.({
           hasError: true,
@@ -208,9 +208,9 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
 
     onSlideError: useCallback((error: string, slideNumber: number) => {
       console.error(`❌ [Step3] Slide ${slideNumber} failed:`, error);
-      const errorMsg = `Failed to generate slide ${slideNumber}: ${error}`;
+      const errorMsg = t('createLesson.step3.errors.slideGenerationFailed', { slideNumber, error });
       onUpdateGenerationState?.({ errorMessage: errorMsg });
-    }, [onUpdateGenerationState]),
+    }, [onUpdateGenerationState, t]),
 
     onComplete: useCallback((lesson: SimpleLesson, stats: GenerationStats) => {
       console.log('🎉 [Step3] Generation completed!', stats);
@@ -258,7 +258,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
       
     } catch (error) {
       console.error('❌ [Step3] Failed to start generation:', error);
-      const message = error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : t('createLesson.step3.errors.unknown');
       onUpdateGenerationState?.({
         hasError: true,
         isGenerating: false,
@@ -266,7 +266,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
       });
       onError?.(message);
     }
-  }, [adapter, generatedPlan, templateData, generationCallbacks, onError, onUpdateGenerationState]);
+  }, [adapter, generatedPlan, templateData, generationCallbacks, onError, onUpdateGenerationState, t]);
 
   // Автоматичне відновлення генерації при поверненні на крок 3
   useEffect(() => {
@@ -551,14 +551,14 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
         >
           <Box>
             <Typography variant="subtitle2" gutterBottom>
-              {errorMessage?.includes('Demo mode') ? 'Demo Mode' : 'Error'}
+              {errorMessage?.includes('Demo mode') ? t('createLesson.step3.errors.demoModeTitle') : t('createLesson.step3.errors.errorTitle')}
             </Typography>
             <Typography variant="body2">
-              {errorMessage || 'An error occurred during generation'}
+              {errorMessage || t('createLesson.step3.errors.genericError')}
             </Typography>
             {errorMessage?.includes('Demo mode') && (
               <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
-                To test slide generation, add your GEMINI_API_KEY to the .env.local file.
+                {t('createLesson.step3.errors.demoModeHint')}
               </Typography>
               )}
             </Box>
@@ -589,7 +589,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
             onClick={onBack}
             sx={{ minWidth: 120 }}
           >
-            Назад
+            {t('createLesson.step3.back')}
           </Button>
           
           <Button
@@ -598,7 +598,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
             disabled={!isCompleted || !currentLesson}
             sx={{ minWidth: 120 }}
           >
-            Зберегти
+            {t('createLesson.step3.saveLesson')}
           </Button>
         </Box>
       </CardContent>
