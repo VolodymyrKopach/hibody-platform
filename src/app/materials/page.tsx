@@ -512,7 +512,7 @@ const MyMaterials = () => {
   };
 
   const handleCreateLesson = () => {
-    router.push('/chat');
+    router.push('/create-lesson');
     handleFabMenuClose();
   };
 

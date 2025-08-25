@@ -40,11 +40,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
   const pathname = usePathname();
 
   const menuItems = [
-    {
-      label: t('navigation.aiChat'),
-      icon: MessageSquare,
-      href: '/chat'
-    },
+    // Temporarily hidden - AssistantChat tab
+    // {
+    //   label: t('navigation.aiChat'),
+    //   icon: MessageSquare,
+    //   href: '/chat'
+    // },
     {
       label: t('navigation.createLesson'),
       icon: BookOpen,

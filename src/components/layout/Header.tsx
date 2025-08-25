@@ -104,7 +104,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const handleCreateClick = async () => {
-    await navigateWithConfirmation('/chat');
+    await navigateWithConfirmation('/create-lesson');
   };
 
   const handleLanguageChange = (languageCode: string) => {
