@@ -121,7 +121,7 @@ const TemplateSlideCard: React.FC<TemplateSlideCardProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       sx={{
         width: '100%',
-        minHeight: compact ? '120px' : '160px',
+        minHeight: compact ? '160px' : '200px',
         height: 'auto',
         flexShrink: 0,
         border: `2px solid ${alpha(theme.palette.grey[400], 0.4)}`,
@@ -172,7 +172,7 @@ const TemplateSlideCard: React.FC<TemplateSlideCardProps> = ({
       <Box sx={{ 
         position: 'relative',
         width: '100%',
-        aspectRatio: compact ? '2.5/1' : '2/1',
+        aspectRatio: '16/9',
         overflow: 'hidden',
         backgroundColor: alpha(theme.palette.grey[100], 0.5),
         display: 'flex',
@@ -383,26 +383,32 @@ const TemplateSlideCard: React.FC<TemplateSlideCardProps> = ({
 
       {/* Slide Info */}
       <Box sx={{ 
-        p: compact ? 1 : 1.5, 
-        pt: compact ? 0.5 : 1 
+        p: compact ? 1.5 : 2, 
+        pt: compact ? 1 : 1.5,
+        pb: compact ? 1.5 : 2,
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: compact ? '48px' : '56px',
+        borderTop: `1px solid ${alpha(theme.palette.divider, 0.08)}`
       }}>
         <Typography 
-          variant={compact ? "caption" : "subtitle2"} 
+          variant={compact ? "body2" : "subtitle2"} 
           sx={{ 
             fontWeight: 600,
-            fontSize: compact ? '0.75rem' : '0.875rem',
-            lineHeight: 1.2,
-            mb: 0.5,
+            fontSize: compact ? '0.8rem' : '0.9rem',
+            lineHeight: 1.3,
+            color: theme.palette.text.primary,
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            width: '100%',
+            textAlign: 'left'
           }}
         >
           {slide.title}
         </Typography>
-
-
       </Box>
     </Paper>
   );
