@@ -12,11 +12,11 @@ export const AGE_2_3_TEMPLATE = `<!DOCTYPE html>
 <title>🎈 AI Template Library for 2-3 Years</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Comic Sans MS',cursive;background:linear-gradient(135deg,#FFE66D 0%,#4ECDC4 50%,#FF6B6B 100%);min-height:100vh;overflow-x:hidden;overflow-y:auto;position:relative}
-.template-section{margin:40px 0;padding:40px;background:rgba(255,255,255,0.1);border-radius:30px;border:3px dashed rgba(255,255,255,0.5)}
+body{font-family:'Comic Sans MS',cursive;background:linear-gradient(135deg,#FFE66D 0%,#4ECDC4 50%,#FF6B6B 100%);min-height:100vh;overflow-x:hidden;overflow-y:auto;position:relative;scroll-behavior:smooth}
+.template-section{margin:40px 0;padding:40px;background:rgba(255,255,255,0.1);border-radius:30px;border:3px dashed rgba(255,255,255,0.5);overflow-y:auto;overflow-x:hidden;max-height:90vh}
 .template-title{font-size:36px;color:#FFFFFF;text-align:center;margin-bottom:30px;text-shadow:3px 3px 6px rgba(0,0,0,0.3);background:rgba(0,0,0,0.2);padding:15px;border-radius:15px}
-.layout-fullscreen{width:100%;max-width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;box-sizing:border-box}
-.layout-top-bottom{display:flex;flex-direction:column;min-height:100vh;padding:40px;box-sizing:border-box}
+.layout-fullscreen{width:100%;max-width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;box-sizing:border-box;overflow-y:auto;overflow-x:hidden}
+.layout-top-bottom{display:flex;flex-direction:column;min-height:100vh;padding:40px;box-sizing:border-box;overflow-y:auto;overflow-x:hidden}
 .layout-top-bottom .top-section{flex:1;display:flex;align-items:center;justify-content:center}
 .layout-top-bottom .bottom-section{flex:1;display:flex;align-items:center;justify-content:center}
 .slide-title-main{font-size:72px;color:#FFFFFF;text-shadow:4px 4px 8px rgba(0,0,0,0.4);text-align:center;margin:40px 0;font-weight:bold;animation:title-bounce 2s infinite}
@@ -66,7 +66,7 @@ body{font-family:'Comic Sans MS',cursive;background:linear-gradient(135deg,#FFE6
 .image-placeholder{font-size:14px;color:#666;text-align:center;padding:10px;font-family:'Comic Sans MS',cursive;line-height:1.2;max-width:90%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:3px dashed rgba(255,255,255,0.3);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;margin:0 auto;position:relative;overflow:hidden;box-sizing:border-box}
 img{max-width:100%;height:auto;display:block}
 .image-container{max-width:100%;margin:15px auto;display:flex;justify-content:center;align-items:center;box-sizing:border-box}
-.s{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;width:100%;max-width:100%;box-sizing:border-box;overflow-x:hidden}
+.s{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;width:100%;max-width:100%;box-sizing:border-box;overflow-x:hidden;overflow-y:auto}
 .h-img{width:380px;height:280px;border-radius:30px;border:8px solid rgba(255,255,255,0.9);box-shadow:0 20px 40px rgba(0,0,0,0.2);cursor:pointer;transition:all 0.3s;margin:20px auto;overflow:hidden;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);display:flex;align-items:center;justify-content:center;position:relative;max-width:calc(100% - 40px);box-sizing:border-box}
 .h-img img{width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit}
 @keyframes image-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
@@ -86,8 +86,8 @@ img{max-width:100%;height:auto;display:block}
 .floating-decoration:nth-child(5){top:50%;left:2%;animation-delay:3s}
 .floating-decoration:nth-child(6){top:50%;right:2%;animation-delay:5s}
 .button-row{display:flex;justify-content:center;align-items:center;gap:40px;margin:40px 0;flex-wrap:wrap}
-.content-center{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px;width:100%;max-width:100%;box-sizing:border-box;overflow-x:hidden}
-.two-column{display:flex;align-items:center;justify-content:space-between;max-width:1000px;margin:0 auto;gap:60px;padding:40px;width:100%;box-sizing:border-box}
+.content-center{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px;width:100%;max-width:100%;box-sizing:border-box;overflow-x:hidden;overflow-y:auto}
+.two-column{display:flex;align-items:center;justify-content:space-between;max-width:1000px;margin:0 auto;gap:60px;padding:40px;width:100%;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;max-height:90vh}
 .two-column .left-side,.two-column .right-side{flex:1;text-align:center;max-width:50%;box-sizing:border-box}
 @keyframes title-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
 @keyframes text-glow{0%,100%{text-shadow:3px 3px 6px rgba(0,0,0,0.3)}50%{text-shadow:3px 3px 20px rgba(255,255,255,0.8)}}
@@ -103,8 +103,14 @@ img{max-width:100%;height:auto;display:block}
 @keyframes wave-expand{0%{transform:translate(-50%,-50%) scale(0.8);opacity:1}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
 @keyframes decoration-float{0%,100%{transform:translateY(0px) rotate(0deg)}33%{transform:translateY(-20px) rotate(8deg)}66%{transform:translateY(-10px) rotate(-5deg)}}
 @keyframes ripple-effect{to{transform:scale(4);opacity:0}}
-@media (max-width:768px){.slide-title-main{font-size:56px}.slide-title-secondary{font-size:40px}.instruction-text{font-size:44px}.giant-button{width:280px;height:280px;font-size:120px}.large-button{width:180px;height:180px;font-size:80px}.main-visual-circle{width:260px;height:260px;font-size:120px}.touch-shape{width:160px;height:160px;font-size:60px}.animal-friend{width:140px;height:140px;font-size:70px}.button-row{gap:25px}.two-column{flex-direction:column;gap:40px}.hero-image{width:320px;height:240px}.story-image{width:240px;height:180px}.activity-image{width:160px;height:160px}.mini-image{width:100px;height:100px}.audio-toggle{width:70px;height:70px;font-size:35px}.audio-status{font-size:14px}}
-@media (max-width:480px){.slide-title-main{font-size:44px}.slide-title-secondary{font-size:36px}.instruction-text{font-size:36px}.simple-text{font-size:32px}.giant-button{width:220px;height:220px;font-size:100px}.large-button{width:140px;height:140px;font-size:60px}.main-visual-circle{width:200px;height:200px;font-size:100px}.progress-visual{width:300px}.template-section{padding:20px;margin:20px 0}.floating-decoration{font-size:40px}.hero-image{width:280px;height:210px}.story-image{width:200px;height:150px}.activity-image{width:140px;height:140px}.mini-image{width:80px;height:80px}.audio-toggle{width:60px;height:60px;font-size:30px;top:15px;right:15px}.audio-status{font-size:12px;top:85px;right:15px}}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track{background:rgba(255,255,255,0.2);border-radius:10px}
+::-webkit-scrollbar-thumb{background:linear-gradient(135deg,#FF6B6B 0%,#4ECDC4 100%);border-radius:10px;border:2px solid rgba(255,255,255,0.3)}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(135deg,#FF5252 0%,#26C6DA 100%)}
+::-webkit-scrollbar-corner{background:rgba(255,255,255,0.2)}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,107,107,0.8) rgba(255,255,255,0.2)}
+@media (max-width:768px){.slide-title-main{font-size:56px}.slide-title-secondary{font-size:40px}.instruction-text{font-size:44px}.giant-button{width:280px;height:280px;font-size:120px}.large-button{width:180px;height:180px;font-size:80px}.main-visual-circle{width:260px;height:260px;font-size:120px}.touch-shape{width:160px;height:160px;font-size:60px}.animal-friend{width:140px;height:140px;font-size:70px}.button-row{gap:25px}.two-column{flex-direction:column;gap:40px;max-height:none;overflow-y:visible}.hero-image{width:320px;height:240px}.story-image{width:240px;height:180px}.activity-image{width:160px;height:160px}.mini-image{width:100px;height:100px}.audio-toggle{width:70px;height:70px;font-size:35px}.audio-status{font-size:14px}.template-section{max-height:none;overflow-y:visible}}
+@media (max-width:480px){.slide-title-main{font-size:44px}.slide-title-secondary{font-size:36px}.instruction-text{font-size:36px}.simple-text{font-size:32px}.giant-button{width:220px;height:220px;font-size:100px}.large-button{width:140px;height:140px;font-size:60px}.main-visual-circle{width:200px;height:200px;font-size:100px}.progress-visual{width:300px}.template-section{padding:20px;margin:20px 0;max-height:none;overflow-y:visible}.floating-decoration{font-size:40px}.hero-image{width:280px;height:210px}.story-image{width:200px;height:150px}.activity-image{width:140px;height:140px}.mini-image{width:80px;height:80px}.audio-toggle{width:60px;height:60px;font-size:30px;top:15px;right:15px}.audio-status{font-size:12px;top:85px;right:15px}.two-column{max-height:none;overflow-y:visible}}
 </style>
 </head>
 <body>
