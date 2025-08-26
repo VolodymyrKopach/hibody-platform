@@ -452,7 +452,7 @@
     },
     "topic": {
       "title": "📚 Topic",
-      "description": "What do you want to tell about?",
+      "description": "What do you want to talk about?",
       "placeholder": "Enter your lesson topic...",
       "popularFor": "Popular topics for age",
       "popular": "Popular topics:"
