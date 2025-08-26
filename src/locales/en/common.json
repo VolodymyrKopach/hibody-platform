@@ -18,6 +18,7 @@
   },
   "buttons": {
     "save": "Save",
+    "saving": "Saving...",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
@@ -360,6 +361,14 @@
         "errorTitle": "Generation Error",
         "genericError": "An error occurred during slide generation",
         "demoModeHint": "Some features may be limited in demo mode"
+      },
+      "saveSuccess": {
+        "title": "Lesson saved successfully!",
+        "description": "Your lesson is now available in the materials library."
+      },
+      "saveError": {
+        "title": "Save Error",
+        "description": "Failed to save the lesson. Please try again."
       },
       "slideCard": {
         "waiting": "Waiting...",

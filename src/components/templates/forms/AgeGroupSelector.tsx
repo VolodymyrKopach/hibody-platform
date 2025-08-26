@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Typography, Card, CardContent, Grid } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
+import { AGE_GROUPS } from "@/constants";
 
 interface AgeGroupSelectorProps {
   value: string;
@@ -16,36 +17,20 @@ const AgeGroupSelector: React.FC<AgeGroupSelectorProps> = ({
   const { t } = useTranslation("common");
 
   const ageGroups = React.useMemo(
-    () => [
-      {
-        id: "2-3",
-        label: t("createLesson.ageGroup.2-3"),
-        emoji: "👶",
-        color: "#FF6B9D",
-        description: t("createLesson.ageGroup.earlyChildhood"),
-      },
-      {
-        id: "4-6",
-        label: t("createLesson.ageGroup.4-6"),
-        emoji: "🧒",
-        color: "#4ECDC4",
-        description: t("createLesson.ageGroup.preschool"),
-      },
-      {
-        id: "7-8",
-        label: t("createLesson.ageGroup.7-8"),
-        emoji: "🎒",
-        color: "#45B7D1",
-        description: t("createLesson.ageGroup.primarySchool"),
-      },
-      {
-        id: "9-10",
-        label: t("createLesson.ageGroup.9-10"),
-        emoji: "🎓",
-        color: "#96CEB4",
-        description: t("createLesson.ageGroup.middleSchool"),
-      },
-    ],
+    () => AGE_GROUPS.map(group => {
+      // Map description to correct translation key
+      const descriptionKey = group.description === 'Early Childhood' ? 'earlyChildhood' :
+                            group.description === 'Preschool' ? 'preschool' :
+                            group.description === 'Primary School' ? 'primarySchool' :
+                            group.description === 'Middle School' ? 'middleSchool' :
+                            'preschool';
+      
+      return {
+        ...group,
+        label: t(`createLesson.ageGroup.${group.id}`),
+        description: t(`createLesson.ageGroup.${descriptionKey}`),
+      };
+    }),
     [t],
   );
 

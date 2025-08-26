@@ -22,15 +22,17 @@ import {
 
 // Імпорти наших компонентів
 import TemplateSlideGrid from '../slides/TemplateSlideGrid';
+import SimplifiedSaveLessonDialog from '@/components/dialogs/SimplifiedSaveLessonDialog';
 
 // Імпорти сервісів та хуків
 import { TemplateAPIAdapter, TemplateGenerationCallbacks } from '@/services/templates/TemplateAPIAdapter';
 import { SlideStore } from '@/stores/SlideStore';
 import { SlideDialog } from '@/components/slides/SlideDialog';
+import { getLocalThumbnailStorage } from '@/services/slides/LocalThumbnailService';
 
 // Типи
 import { TemplateData } from '@/types/templates';
-import { SimpleSlide, SimpleLesson, SlideGenerationProgress } from '@/types/chat';
+import { SimpleSlide, SimpleLesson, SlideGenerationProgress, LessonSaveData } from '@/types/chat';
 import { GenerationStats } from '@/services/templates/TemplateAPIAdapter';
 
 export interface Step3SlideGenerationProps {
@@ -81,9 +83,21 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   const [adapter, setAdapter] = useState<TemplateAPIAdapter | null>(null);
   const [slideStore, setSlideStore] = useState<SlideStore | null>(null);
   
+  // Сервіс для роботи з превью (використовуємо глобальний екземпляр)
+  const thumbnailStorage = useMemo(() => getLocalThumbnailStorage(), []);
+  
   // Локальний стан (тільки для UI та сервісів)
   const [isPaused, setIsPaused] = useState(false);
   const [generationStats, setGenerationStats] = useState<GenerationStats | null>(null);
+  
+  // Стан збереження уроку
+  const [isSavingLesson, setIsSavingLesson] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  
+  // Стан діалогу збереження (спрощений підхід)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [lessonSaveData, setLessonSaveData] = useState<LessonSaveData | null>(null);
   
   // Використовуємо глобальний стан генерації
   const {
@@ -100,6 +114,62 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   const [selectedSlideId, setSelectedSlideId] = useState<string>('');
   const [slideDialogOpen, setSlideDialogOpen] = useState(false);
   const [slideDialogIndex, setSlideDialogIndex] = useState(0);
+
+  // Функція для підготовки даних для збереження
+  const prepareLessonSaveData = useCallback((): LessonSaveData | null => {
+    if (!currentLesson || !slides || slides.length === 0) {
+      return null;
+    }
+
+    // Отримуємо всі превью з LocalThumbnailStorage
+    const allPreviews = thumbnailStorage.getAll();
+    console.log('🗂️ [PREPARE_SAVE_DATA] LocalThumbnailStorage contents:', {
+      totalPreviews: Object.keys(allPreviews).length,
+      previewIds: Object.keys(allPreviews)
+    });
+
+    // Збираємо превью для слайдів
+    const slidePreviews: Record<string, string> = {};
+    
+    slides.forEach(slide => {
+      // Спочатку перевіряємо LocalThumbnailStorage
+      if (allPreviews[slide.id]) {
+        slidePreviews[slide.id] = allPreviews[slide.id];
+        console.log(`✅ [PREPARE_SAVE_DATA] Found preview in LocalThumbnailStorage for slide ${slide.id}: ${slide.title}`);
+      } 
+      // Потім перевіряємо previewUrl або thumbnailUrl
+      else if (slide.previewUrl) {
+        slidePreviews[slide.id] = slide.previewUrl;
+        console.log(`💾 [PREPARE_SAVE_DATA] Using previewUrl for slide ${slide.id}: ${slide.title}`);
+      } else if (slide.thumbnailUrl) {
+        slidePreviews[slide.id] = slide.thumbnailUrl;
+        console.log(`💾 [PREPARE_SAVE_DATA] Using thumbnailUrl for slide ${slide.id}: ${slide.title}`);
+      } else {
+        console.log(`❌ [PREPARE_SAVE_DATA] No preview available for slide ${slide.id}: ${slide.title}`);
+      }
+    });
+
+    console.log('📈 [PREPARE_SAVE_DATA] Collected previews:', {
+      totalSlides: slides.length,
+      previewsFound: Object.keys(slidePreviews).length,
+      coverage: `${Object.keys(slidePreviews).length}/${slides.length}`
+    });
+
+    // Створюємо об'єкт з усіма даними для збереження
+    const saveData: LessonSaveData = {
+      title: currentLesson.title || `${templateData.topic} - ${templateData.ageGroup}`,
+      description: currentLesson.description || `Interactive lesson about ${templateData.topic} designed for ${templateData.ageGroup}`,
+      subject: templateData.topic,
+      ageGroup: templateData.ageGroup,
+      duration: currentLesson.duration || 45,
+      slides: slides,
+      slidePreviews: slidePreviews,
+      selectedPreviewId: null,
+      previewUrl: null
+    };
+
+    return saveData;
+  }, [currentLesson, slides, templateData, thumbnailStorage]);
 
   // Ініціалізація адаптера та store
   useEffect(() => {
@@ -195,6 +265,8 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
 
     return unsubscribe;
   }, [slideStore, selectedSlideId, onUpdateGenerationState]);
+
+  // Видалено старий useEffect для оновлення превью - тепер це робиться в prepareLessonSaveData
 
   // Callbacks для генерації
   const generationCallbacks: TemplateGenerationCallbacks = {
@@ -325,12 +397,42 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     setSlideDialogOpen(true);
   }, []);
 
-  const handleSaveLesson = useCallback(() => {
-    if (currentLesson) {
-      onLessonSaved?.(currentLesson);
-      console.log('✅ [Step3] Lesson saved successfully!');
+  // === ФУНКЦІЇ ДІАЛОГУ ЗБЕРЕЖЕННЯ (СПРОЩЕНИЙ ПІДХІД) ===
+
+  const openSaveDialog = useCallback(() => {
+    // Підготовуємо всі дані для збереження
+    const saveData = prepareLessonSaveData();
+    
+    if (!saveData) {
+      return;
     }
-  }, [currentLesson, onLessonSaved]);
+
+    setLessonSaveData(saveData);
+    setSaveDialogOpen(true);
+  }, [prepareLessonSaveData]);
+
+  const closeSaveDialog = useCallback(() => {
+    setSaveDialogOpen(false);
+    setLessonSaveData(null);
+  }, []);
+
+  const handleSaveLesson = useCallback(() => {
+    openSaveDialog();
+  }, [openSaveDialog]);
+
+  const handleSaveSuccess = useCallback((savedLesson: any) => {
+    setSaveSuccess(true);
+    onLessonSaved?.(savedLesson);
+
+    setTimeout(() => {
+      setSaveSuccess(false);
+    }, 3000);
+  }, [onLessonSaved]);
+
+  const handleSaveError = useCallback((error: string) => {
+    setSaveError(error);
+    onError?.(error);
+  }, [onError]);
 
   // Розрахунок прогресу
   const overallProgress = useMemo(() => {
@@ -490,10 +592,10 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
             <Button
               variant="contained"
               onClick={handleSaveLesson}
-              disabled={!currentLesson}
+              disabled={!currentLesson || isSavingLesson}
               sx={{ minWidth: 120 }}
             >
-              {t('createLesson.step3.saveLesson')}
+              {isSavingLesson ? t('common:buttons.saving') : t('createLesson.step3.saveLesson')}
             </Button>
           </Box>
         </Box>
@@ -526,6 +628,17 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
             setSlideDialogIndex(prevIndex);
           }}
         />
+
+        {/* Simplified Save Lesson Dialog */}
+        <SimplifiedSaveLessonDialog
+          open={saveDialogOpen}
+          lessonData={lessonSaveData}
+          onClose={closeSaveDialog}
+          onSuccess={handleSaveSuccess}
+          onError={handleSaveError}
+        />
+
+
       </>
     );
   }
@@ -565,6 +678,38 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
           </Alert>
         )}
 
+        {/* Save Success Alert */}
+        {saveSuccess && (
+          <Alert 
+            severity="success" 
+            sx={{ mb: 4 }}
+            onClose={() => setSaveSuccess(false)}
+          >
+            <Typography variant="subtitle2" gutterBottom>
+              {t('createLesson.step3.saveSuccess.title')}
+            </Typography>
+            <Typography variant="body2">
+              {t('createLesson.step3.saveSuccess.description')}
+            </Typography>
+          </Alert>
+        )}
+
+        {/* Save Error Alert */}
+        {saveError && (
+          <Alert 
+            severity="error" 
+            sx={{ mb: 4 }}
+            onClose={() => setSaveError(null)}
+          >
+            <Typography variant="subtitle2" gutterBottom>
+              {t('createLesson.step3.saveError.title')}
+            </Typography>
+            <Typography variant="body2">
+              {saveError}
+            </Typography>
+          </Alert>
+        )}
+
         {/* Main Content */}
         <Box sx={{ mb: 4 }}>
           <TemplateSlideGrid
@@ -595,10 +740,10 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
           <Button
             variant="contained"
             onClick={handleSaveLesson}
-            disabled={!isCompleted || !currentLesson}
+            disabled={!isCompleted || !currentLesson || isSavingLesson}
             sx={{ minWidth: 120 }}
           >
-            {t('createLesson.step3.saveLesson')}
+            {isSavingLesson ? t('common:buttons.saving') : t('createLesson.step3.saveLesson')}
           </Button>
         </Box>
       </CardContent>
@@ -621,6 +766,16 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
         }}
       />
     )}
+
+    {/* Simplified Save Lesson Dialog */}
+    <SimplifiedSaveLessonDialog
+      open={saveDialogOpen}
+      lessonData={lessonSaveData}
+      onClose={closeSaveDialog}
+      onSuccess={handleSaveSuccess}
+      onError={handleSaveError}
+    />
+
 
 
     </>

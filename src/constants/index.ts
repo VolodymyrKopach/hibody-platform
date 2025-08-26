@@ -8,3 +8,10 @@ export {
   AGE_TEMPLATE_DESCRIPTIONS,
   AGE_CONFIGURATIONS
 } from './ageComponentTemplates';
+
+export {
+  AGE_GROUPS,
+  mapAgeGroupToSelectValue,
+  mapSelectValueToAgeGroup,
+  getAgeGroupSelectOptions
+} from './ageGroups';

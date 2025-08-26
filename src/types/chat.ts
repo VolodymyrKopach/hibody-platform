@@ -66,6 +66,24 @@ export interface SaveLessonDialogData {
   previewUrl: string | null;
 }
 
+// Новий інтерфейс для передачі всіх даних до діалогу збереження
+export interface LessonSaveData {
+  // Метадані уроку
+  title: string;
+  description: string;
+  subject: string;
+  ageGroup: string;
+  duration: number;
+  
+  // Слайди та превью
+  slides: SimpleSlide[];
+  slidePreviews: Record<string, string>; // slideId -> base64 preview
+  
+  // Опціональні дані
+  selectedPreviewId?: string | null;
+  previewUrl?: string | null;
+}
+
 // === НОВІ ТИПИ ДЛЯ МАСОВОЇ ГЕНЕРАЦІЇ СЛАЙДІВ ===
 
 export interface SlideDescription {
