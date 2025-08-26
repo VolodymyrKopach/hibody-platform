@@ -80,7 +80,6 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({ slides }) => {
 
   const currentSlide = slides[currentSlideIndex];
   const typeConfig = LessonPlanJSONProcessor.getSlideTypeConfig(currentSlide.type);
-  const progress = ((currentSlideIndex + 1) / slides.length) * 100;
 
   const handlePrevSlide = () => {
     setCurrentSlideIndex(prev => prev > 0 ? prev - 1 : slides.length - 1);
@@ -587,41 +586,7 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({ slides }) => {
           )}
         </CardContent>
 
-        {/* Progress Indicator */}
-        {slides.length > 1 && (
-          <Box sx={{ 
-            px: 4, 
-            pb: 3,
-            pt: 0
-          }}>
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: theme.palette.grey[200],
-                '& .MuiLinearProgress-bar': {
-                  borderRadius: 2,
-                  backgroundColor: theme.palette.primary.main
-                }
-              }}
-            />
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'center',
-              mt: 1
-            }}>
-              <Typography 
-                variant="caption" 
-                color="text.secondary"
-                sx={{ fontSize: '0.75rem' }}
-              >
-                Slide {currentSlideIndex + 1} of {slides.length}
-              </Typography>
-            </Box>
-          </Box>
-        )}
+
       </Card>
 
     </Box>
