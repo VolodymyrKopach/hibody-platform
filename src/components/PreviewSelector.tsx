@@ -10,7 +10,7 @@ import {
   Card,
   IconButton
 } from '@mui/material';
-import { Check, ImageIcon, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ImageIcon, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { generateFallbackPreview } from '@/utils/slidePreview';
 
 interface SlideData {
@@ -173,149 +173,117 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
   }, [goToPrevSlide, goToNextSlide, memoizedSlides.length]);
 
   return (
-    <Box sx={{ mt: 2 }}>
-      <Typography variant="h6" sx={{ 
-        fontWeight: 600, 
-        mb: 3,
-        color: 'text.primary',
-        fontSize: '1.1rem',
-        display: 'flex',
+    <Box>
+      {/* Header with title and navigation */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
         alignItems: 'center',
-        gap: 1
+        mb: 2
       }}>
-        🖼️ Select preview for lesson
-      </Typography>
-
-      {/* Preview slider */}
-      <Card sx={{ 
-        borderRadius: '16px',
-        overflow: 'hidden',
-        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
-        border: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`
-      }}>
-        <Box sx={{ 
-          width: '100%',
-          aspectRatio: '4/3',  // Set proportions for preview
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          bgcolor: alpha(theme.palette.grey[100], 0.5)
+        <Typography variant="subtitle2" sx={{ 
+          fontWeight: 500, 
+          color: 'text.secondary' 
         }}>
-          {/* Previous slide button */}
-          {memoizedSlides.length > 1 && (
+          Choose Cover Image
+        </Typography>
+        
+        {/* Navigation buttons */}
+        {memoizedSlides.length > 1 && (
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <IconButton
               onClick={goToPrevSlide}
               disabled={disabled}
+              size="small"
               sx={{
-                position: 'absolute',
-                left: 16,
-                backgroundColor: alpha(theme.palette.background.paper, 0.9),
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
                 color: theme.palette.primary.main,
-                width: 48,
-                height: 48,
+                width: 36,
+                height: 36,
                 '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                  backgroundColor: alpha(theme.palette.primary.main, 0.2),
                 },
                 '&:disabled': {
                   opacity: 0.5
-                },
-                zIndex: 2,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                }
               }}
             >
-              <ChevronLeft size={24} />
+              <ChevronLeft size={20} />
             </IconButton>
-          )}
-
-          {/* Preview content */}
-          {currentPreview?.url ? (
-            <img
-              src={currentPreview.url}
-              alt={`Slide preview ${currentSlideIndex + 1}`}
-              style={{
-                maxWidth: '80%',
-                maxHeight: '90%',
-                objectFit: 'contain',
-                borderRadius: '8px'
-              }}
-            />
-          ) : currentPreview?.loading ? (
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center',
-              gap: 2,
-              color: 'text.secondary'
-            }}>
-              <CircularProgress size={48} />
-              <Typography variant="body1">
-                Generating preview...
-              </Typography>
-            </Box>
-          ) : (
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center',
-              gap: 2,
-              color: 'text.secondary'
-            }}>
-              <AlertCircle size={48} />
-              <Typography variant="body1">
-                Preview generation error
-              </Typography>
-            </Box>
-          )}
-
-          {/* Next slide button */}
-          {memoizedSlides.length > 1 && (
             <IconButton
               onClick={goToNextSlide}
               disabled={disabled}
+              size="small"
               sx={{
-                position: 'absolute',
-                right: 16,
-                backgroundColor: alpha(theme.palette.background.paper, 0.9),
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
                 color: theme.palette.primary.main,
-                width: 48,
-                height: 48,
+                width: 36,
+                height: 36,
                 '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                  backgroundColor: alpha(theme.palette.primary.main, 0.2),
                 },
                 '&:disabled': {
                   opacity: 0.5
-                },
-                zIndex: 2,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                }
               }}
             >
-              <ChevronRight size={24} />
+              <ChevronRight size={20} />
             </IconButton>
-          )}
-
-          {/* Select current slide */}
-          <Box sx={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            background: theme.palette.primary.main,
-            color: 'white',
-            borderRadius: '20px',
-            px: 2,
-            py: 0.5,
-            fontSize: '0.8rem',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.5,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-          }}>
-            <Check size={16} />
-            Selected
           </Box>
-        </Box>
-      </Card>
+        )}
+      </Box>
+
+      {/* Preview image - compact without padding */}
+      <Box sx={{ 
+        width: '100%',
+        aspectRatio: '16/9',
+        borderRadius: 2,
+        overflow: 'hidden',
+        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+        backgroundColor: alpha(theme.palette.grey[100], 0.5),
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {/* Preview content */}
+        {currentPreview?.url ? (
+          <img
+            src={currentPreview.url}
+            alt={`Slide preview ${currentSlideIndex + 1}`}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+          />
+        ) : currentPreview?.loading ? (
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            gap: 1,
+            color: 'text.secondary'
+          }}>
+            <CircularProgress size={32} />
+            <Typography variant="body2">
+              Generating...
+            </Typography>
+          </Box>
+        ) : (
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            gap: 1,
+            color: 'text.secondary'
+          }}>
+            <AlertCircle size={32} />
+            <Typography variant="body2">
+              Error
+            </Typography>
+          </Box>
+        )}
+      </Box>
 
       {/* Navigation dots */}
       {memoizedSlides.length > 1 && (

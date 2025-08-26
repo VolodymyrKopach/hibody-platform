@@ -4,14 +4,13 @@ import {
   Box,
   Typography,
   Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   Button,
   MenuItem,
   LinearProgress,
-  Alert
+  Alert,
+  Stack,
+  Slide
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { LessonSaveData, SaveLessonDialogData } from '@/types/chat';
@@ -174,59 +173,52 @@ const SimplifiedSaveLessonDialog: React.FC<SimplifiedSaveLessonDialogProps> = ({
       onClose={handleClose}
       maxWidth="md"
       fullWidth
+      TransitionComponent={Slide}
+      TransitionProps={{ direction: 'up' }}
       PaperProps={{
         sx: { 
-          borderRadius: '16px',
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(250,250,250,0.95) 100%)',
-          backdropFilter: 'blur(10px)'
+          borderRadius: '20px',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%)',
+          backdropFilter: 'blur(20px)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: '90vh'
         }
       }}
     >
-      <DialogTitle sx={{ 
-        pb: 2, 
-        pt: 3,
-        px: 3,
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 2,
-        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.secondary.main, 0.08)} 100%)`,
-        borderRadius: '16px 16px 0 0',
-        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+      {/* Custom Header */}
+      <Box sx={{ 
+        p: 4,
+        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        flexShrink: 0
       }}>
-        <Box sx={{ 
-          p: 2, 
-          borderRadius: '16px', 
-          backgroundColor: alpha(theme.palette.primary.main, 0.1),
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '1.5rem',
-          minWidth: 56,
-          minHeight: 56
+        <Typography variant="h5" sx={{ 
+          fontWeight: 600, 
+          color: 'text.primary',
+          mb: 0.5,
+          fontSize: '1.25rem'
         }}>
-          💾
-        </Box>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" sx={{ 
-            fontWeight: 700, 
-            color: 'text.primary',
-            mb: 0.5,
-            fontSize: '1.3rem'
-          }}>
-            {t('lessons:saveDialog.title')}
-          </Typography>
-          <Typography variant="body2" sx={{ 
-            color: 'text.secondary',
-            fontSize: '0.875rem',
-            lineHeight: 1.4
-          }}>
-            {t('lessons:saveDialog.subtitle')} ({lessonData.slides.length} {t('common:slides')})
-          </Typography>
-        </Box>
-      </DialogTitle>
+          {t('lessons:saveDialog.title')}
+        </Typography>
+        <Typography variant="body2" sx={{ 
+          color: 'text.secondary',
+          fontSize: '0.875rem'
+        }}>
+          {t('lessons:saveDialog.subtitle')} • {lessonData.slides.length} {t('common:slides')}
+        </Typography>
+      </Box>
 
-      <DialogContent sx={{ pt: 4, pb: 3, px: 3 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
+      {/* Custom Content */}
+      <Box sx={{ 
+        p: 4,
+        overflow: 'auto',
+        flex: 1,
+        minHeight: 0 // Важливо для правильної роботи flex overflow
+      }}>
+        <Stack spacing={4}>
           {/* Error Alert */}
           {saveError && (
             <Alert severity="error" sx={{ borderRadius: 2 }}>
@@ -249,18 +241,10 @@ const SimplifiedSaveLessonDialog: React.FC<SimplifiedSaveLessonDialogProps> = ({
             disabled={isSaving}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: 3,
-                backgroundColor: alpha(theme.palette.primary.main, 0.02),
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                },
+                borderRadius: 2,
                 '&.Mui-focused': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.06),
+                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
                 }
-              },
-              '& .MuiInputLabel-root': {
-                fontSize: '1rem',
-                fontWeight: 500
               }
             }}
             placeholder={t('lessons:saveDialog.namePlaceholder')}
@@ -279,24 +263,14 @@ const SimplifiedSaveLessonDialog: React.FC<SimplifiedSaveLessonDialogProps> = ({
             disabled={isSaving}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: 3,
-                backgroundColor: alpha(theme.palette.primary.main, 0.02),
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                },
+                borderRadius: 2,
                 '&.Mui-focused': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.06),
+                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
                 }
-              },
-              '& .MuiInputLabel-root': {
-                fontSize: '1rem',
-                fontWeight: 500
               }
             }}
             placeholder={t('lessons:saveDialog.descriptionPlaceholder')}
           />
-
-          {/* Subject field removed - no longer needed */}
 
           {/* Age Group */}
           <TextField
@@ -309,18 +283,10 @@ const SimplifiedSaveLessonDialog: React.FC<SimplifiedSaveLessonDialogProps> = ({
             disabled={isSaving}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: 3,
-                backgroundColor: alpha(theme.palette.primary.main, 0.02),
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                },
+                borderRadius: 2,
                 '&.Mui-focused': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.06),
+                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
                 }
-              },
-              '& .MuiInputLabel-root': {
-                fontSize: '1rem',
-                fontWeight: 500
               }
             }}
           >
@@ -347,64 +313,50 @@ const SimplifiedSaveLessonDialog: React.FC<SimplifiedSaveLessonDialogProps> = ({
               cachedPreviews={lessonData.slidePreviews}
             />
           )}
-        </Box>
-      </DialogContent>
+        </Stack>
+      </Box>
 
-      <DialogActions sx={{ 
-        p: 3, 
-        pt: 2, 
-        gap: 2,
+      {/* Custom Actions */}
+      <Box sx={{ 
+        p: 4, 
         borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        backgroundColor: alpha(theme.palette.grey[50], 0.5)
+        display: 'flex',
+        justifyContent: 'flex-end',
+        gap: 2,
+        flexShrink: 0
       }}>
         <Button 
           onClick={handleClose} 
           disabled={isSaving}
           sx={{ 
             textTransform: 'none',
-            borderRadius: 3,
+            borderRadius: 2,
             px: 4,
             py: 1.5,
             fontSize: '1rem',
-            fontWeight: 500,
-            color: theme.palette.text.secondary,
-            '&:hover': {
-              backgroundColor: alpha(theme.palette.grey[400], 0.1),
-              color: theme.palette.text.primary
-            }
+            fontWeight: 500
           }}
         >
           {t('common:buttons.cancel')}
         </Button>
+        
         <Button 
           onClick={handleSave}
           variant="contained"
           disabled={!dialogData.title.trim() || isSaving}
-          startIcon={isSaving ? <LinearProgress /> : null}
           sx={{ 
             textTransform: 'none',
-            borderRadius: 3,
+            borderRadius: 2,
             px: 4,
             py: 1.5,
             fontSize: '1rem',
             fontWeight: 600,
-            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            '&:hover': {
-              background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${alpha(theme.palette.primary.dark, 0.8)} 100%)`,
-              boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
-              transform: 'translateY(-1px)'
-            },
-            '&:disabled': {
-              background: theme.palette.grey[300],
-              color: theme.palette.grey[500],
-              boxShadow: 'none'
-            }
+            minWidth: 140
           }}
         >
           {isSaving ? t('lessons:saveDialog.saving') : t('lessons:saveDialog.save')}
         </Button>
-      </DialogActions>
+      </Box>
     </Dialog>
   );
 };
