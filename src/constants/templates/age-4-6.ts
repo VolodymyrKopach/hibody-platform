@@ -51,15 +51,15 @@ body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;backg
 </style>
 </head>
 <body>
-<div class="audio-toggle" onclick="toggleAudio()" role="button" tabindex="0" aria-label="Toggle audio on/off"></div>
-<div class="audio-status" id="audioStatus">Audio: ON</div>
+<div class="audio-toggle muted" onclick="toggleAudio()" role="button" tabindex="0" aria-label="Toggle audio on/off"></div>
+<div class="audio-status" id="audioStatus">Audio: OFF</div>
 <div class="layout-fullscreen">
 <div class="slide-title-main">Learn Together!</div>
 <div class="giant-button" onclick="handleGiantButton(this,'success','Great choice!')" role="button" tabindex="0" aria-label="Learning star - click to start">🌟</div>
 <div class="instruction-text">Touch the star!</div>
 </div>
 <script>
-let audioEnabled=true;
+let audioEnabled=false;
 function toggleAudio(){audioEnabled=!audioEnabled;const toggleButton=document.querySelector('.audio-toggle');const statusIndicator=document.getElementById('audioStatus');if(audioEnabled){toggleButton.classList.remove('muted');statusIndicator.textContent='Audio: ON'}else{toggleButton.classList.add('muted');statusIndicator.textContent='Audio: OFF'}statusIndicator.classList.add('show');setTimeout(()=>{statusIndicator.classList.remove('show')},2000)}
 function handleGiantButton(element,soundType,text){element.style.transform='scale(0.95)';setTimeout(()=>element.style.transform='',100)}
 </script>

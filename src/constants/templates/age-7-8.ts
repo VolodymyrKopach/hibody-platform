@@ -53,8 +53,8 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-g
 </style>
 </head>
 <body>
-<div class="audio-toggle" onclick="toggleAudio()" role="button" tabindex="0" aria-label="Toggle audio on/off"></div>
-<div class="audio-status" id="audioStatus">Audio: ON</div>
+<div class="audio-toggle muted" onclick="toggleAudio()" role="button" tabindex="0" aria-label="Toggle audio on/off"></div>
+<div class="audio-status" id="audioStatus">Audio: OFF</div>
 <div class="slide-container">
 <h1 class="slide-main-title">Math: Addition and Subtraction</h1>
 <h2 class="section-heading">📚 What You'll Learn</h2>
@@ -63,7 +63,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-g
 </div>
 </div>
 <script>
-let audioEnabled=true;
+let audioEnabled=false;
 function toggleAudio(){audioEnabled=!audioEnabled;const toggleButton=document.querySelector('.audio-toggle');const statusIndicator=document.getElementById('audioStatus');if(audioEnabled){toggleButton.classList.remove('muted');statusIndicator.textContent='Audio: ON'}else{toggleButton.classList.add('muted');statusIndicator.textContent='Audio: OFF'}statusIndicator.classList.add('show');setTimeout(()=>{statusIndicator.classList.remove('show')},2000)}
 function handleImageClick(element,imageType){const originalTransform=element.style.transform;element.style.transform='scale(0.95)';setTimeout(()=>element.style.transform=originalTransform,150)}
 </script>

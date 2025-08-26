@@ -81,8 +81,8 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-g
 </style>
 </head>
 <body>
-<div class="audio-toggle" onclick="toggleAudio()" role="button" tabindex="0" aria-label="Toggle audio on/off"></div>
-<div class="audio-status" id="audioStatus">Audio: ON</div>
+<div class="audio-toggle muted" onclick="toggleAudio()" role="button" tabindex="0" aria-label="Toggle audio on/off"></div>
+<div class="audio-status" id="audioStatus">Audio: OFF</div>
 <div class="s">
 <h1 class="main-heading">📚 Math: Fractions and Percentages</h1>
 <h2 class="section-heading">🎯 Learning Objectives</h2>
@@ -91,7 +91,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-g
 </div>
 </div>
 <script>
-let audioEnabled=true;
+let audioEnabled=false;
 function toggleAudio(){const audioToggle=document.querySelector('.audio-toggle');const audioStatus=document.getElementById('audioStatus');const isMuted=audioToggle.classList.contains('muted');if(isMuted){audioToggle.classList.remove('muted');audioStatus.textContent='Audio: ON';audioStatus.style.color='#4CAF50'}else{audioToggle.classList.add('muted');audioStatus.textContent='Audio: OFF';audioStatus.style.color='#f44336'}audioStatus.classList.add('show');setTimeout(()=>{audioStatus.classList.remove('show')},2000);audioToggle.style.transform='scale(0.9)';setTimeout(()=>audioToggle.style.transform='',100);console.log('Audio',!isMuted?'enabled':'disabled')}
 function handleImageClick(element,imageType){const originalTransform=element.style.transform;element.style.transform='scale(0.95)';setTimeout(()=>element.style.transform=originalTransform,150)}
 </script>
