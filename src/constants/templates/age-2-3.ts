@@ -1,0 +1,138 @@
+/**
+ * === Age Template 2-3 Years ===
+ * HTML template for toddlers (2-3 years old)
+ * Features: Large buttons, bright colors, animations, sound effects
+ */
+
+export const AGE_2_3_TEMPLATE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎈 AI Template Library for 2-3 Years</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Comic Sans MS',cursive;background:linear-gradient(135deg,#FFE66D 0%,#4ECDC4 50%,#FF6B6B 100%);min-height:100vh;overflow-x:hidden;overflow-y:auto;position:relative}
+.template-section{margin:40px 0;padding:40px;background:rgba(255,255,255,0.1);border-radius:30px;border:3px dashed rgba(255,255,255,0.5)}
+.template-title{font-size:36px;color:#FFFFFF;text-align:center;margin-bottom:30px;text-shadow:3px 3px 6px rgba(0,0,0,0.3);background:rgba(0,0,0,0.2);padding:15px;border-radius:15px}
+.layout-fullscreen{width:100%;max-width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;box-sizing:border-box}
+.layout-top-bottom{display:flex;flex-direction:column;min-height:100vh;padding:40px;box-sizing:border-box}
+.layout-top-bottom .top-section{flex:1;display:flex;align-items:center;justify-content:center}
+.layout-top-bottom .bottom-section{flex:1;display:flex;align-items:center;justify-content:center}
+.slide-title-main{font-size:72px;color:#FFFFFF;text-shadow:4px 4px 8px rgba(0,0,0,0.4);text-align:center;margin:40px 0;font-weight:bold;animation:title-bounce 2s infinite}
+.slide-title-secondary{font-size:48px;color:#FFFFFF;text-shadow:3px 3px 6px rgba(0,0,0,0.3);text-align:center;margin:30px 0;font-weight:bold}
+.instruction-text{font-size:52px;color:#FFFFFF;text-shadow:3px 3px 6px rgba(0,0,0,0.3);text-align:center;margin:40px 0;font-weight:bold;animation:text-glow 3s infinite}
+.simple-text{font-size:40px;color:#FFFFFF;text-shadow:2px 2px 4px rgba(0,0,0,0.3);text-align:center;margin:20px 0}
+.giant-button{width:350px;height:350px;border-radius:50%;border:10px solid rgba(255,255,255,0.8);cursor:pointer;font-size:140px;color:white;font-weight:bold;transition:all 0.4s cubic-bezier(0.68,-0.55,0.265,1.55);position:relative;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.3);background:linear-gradient(135deg,#FF6B6B 0%,#FA709A 100%);animation:giant-pulse 3s infinite;display:flex;align-items:center;justify-content:center;outline:none}
+.giant-button:hover{transform:scale(1.2) rotate(8deg);box-shadow:0 35px 70px rgba(0,0,0,0.4)}
+.large-button{width:220px;height:220px;border-radius:50%;border:8px solid rgba(255,255,255,0.8);cursor:pointer;font-size:100px;color:white;font-weight:bold;transition:all 0.3s;position:relative;box-shadow:0 20px 40px rgba(0,0,0,0.3);margin:20px;display:flex;align-items:center;justify-content:center;outline:none}
+.large-button.play{background:linear-gradient(135deg,#4ECDC4 0%,#44A08D 100%);animation:button-float 2.5s infinite}
+.large-button.music{background:linear-gradient(135deg,#FFE66D 0%,#FFA500 100%);animation:button-float 2.5s infinite 0.5s}
+.large-button.paint{background:linear-gradient(135deg,#9B59B6 0%,#8E44AD 100%);animation:button-float 2.5s infinite 1s}
+.large-button:hover{transform:scale(1.15) rotate(10deg);box-shadow:0 30px 60px rgba(0,0,0,0.4)}
+.touch-shape{width:200px;height:200px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;font-size:80px;margin:25px;box-shadow:0 15px 30px rgba(0,0,0,0.2);border:6px solid rgba(255,255,255,0.9)}
+.touch-shape.circle{border-radius:50%;background:linear-gradient(135deg,#FF9A9E 0%,#FECFEF 100%)}
+.touch-shape.square{border-radius:30px;background:linear-gradient(135deg,#A8EDEA 0%,#FED6E3 100%)}
+.touch-shape.triangle{border-radius:30px;background:linear-gradient(135deg,#FFE66D 0%,#FF9A9E 100%);clip-path:polygon(50% 10%,10% 90%,90% 90%);-webkit-clip-path:polygon(50% 10%,10% 90%,90% 90%)}
+.touch-shape:hover{transform:scale(1.3) rotate(15deg)}
+.animal-friend{width:180px;height:180px;border-radius:50%;cursor:pointer;transition:all 0.4s;display:flex;align-items:center;justify-content:center;font-size:90px;margin:20px;position:relative;box-shadow:0 15px 30px rgba(0,0,0,0.2);border:6px solid rgba(255,255,255,0.9);animation:animal-bounce 3s infinite}
+.animal-friend.cat{background:linear-gradient(135deg,#FA709A 0%,#FEE140 100%)}
+.animal-friend.dog{background:linear-gradient(135deg,#4FACFE 0%,#00F2FE 100%);animation-delay:0.5s}
+.animal-friend.bear{background:linear-gradient(135deg,#8B4513 0%,#D2691E 100%);animation-delay:1s}
+.animal-friend:hover{transform:scale(1.4) rotate(20deg)}
+.main-visual-circle{width:320px;height:320px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:150px;cursor:pointer;transition:all 0.4s;box-shadow:0 25px 50px rgba(0,0,0,0.3);border:12px solid rgba(255,255,255,0.9);background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);animation:visual-rotate 8s linear infinite}
+.main-visual-circle:hover{transform:scale(1.15)}
+.progress-visual{width:400px;height:60px;background:rgba(255,255,255,0.3);border-radius:30px;margin:40px auto;overflow:hidden;position:relative;border:4px solid rgba(255,255,255,0.8)}
+.progress-fill{height:100%;background:linear-gradient(90deg,#FF6B6B 0%,#4ECDC4 50%,#FFE66D 100%);border-radius:30px;width:75%;position:relative;animation:progress-grow 3s infinite}
+.progress-fill::after{content:'⭐';position:absolute;right:-20px;top:50%;transform:translateY(-50%);font-size:50px;animation:star-sparkle 1s infinite}
+.reward-star{width:120px;height:120px;background:linear-gradient(135deg,#FFD700 0%,#FFA500 100%);clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);cursor:pointer;transition:all 0.3s;margin:15px;animation:star-twinkle 2s infinite;box-shadow:0 10px 20px rgba(255,215,0,0.4)}
+.reward-star:hover{transform:scale(1.5) rotate(72deg)}
+.celebration-burst{position:relative;width:150px;height:150px;background:linear-gradient(135deg,#FF6B6B 0%,#4ECDC4 100%);border-radius:50%;cursor:pointer;animation:celebration-spin 2s linear infinite;display:flex;align-items:center;justify-content:center;font-size:70px;box-shadow:0 15px 30px rgba(0,0,0,0.3);border:6px solid rgba(255,255,255,0.9)}
+.sound-button{width:180px;height:180px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:6px solid rgba(255,255,255,0.9);border-radius:50%;cursor:pointer;position:relative;animation:sound-pulse 2s infinite;box-shadow:0 15px 30px rgba(102,126,234,0.3);font-size:80px;color:white;display:flex;align-items:center;justify-content:center;outline:none}
+.sound-button::before{content:'🔊';font-size:80px}
+.sound-wave{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:220px;height:220px;border:4px solid rgba(102,126,234,0.3);border-radius:50%;animation:wave-expand 2s infinite}
+.hero-image{width:400px;height:300px;border-radius:30px;border:8px solid rgba(255,255,255,0.9);box-shadow:0 20px 40px rgba(0,0,0,0.2);cursor:pointer;transition:all 0.3s;margin:20px auto;overflow:hidden;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);display:flex;align-items:center;justify-content:center;position:relative;max-width:calc(100% - 40px);box-sizing:border-box}
+.hero-image:hover{transform:scale(1.05);box-shadow:0 25px 50px rgba(0,0,0,0.3)}
+.hero-image img{width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit}
+.story-image{width:280px;height:210px;border-radius:25px;border:6px solid rgba(255,255,255,0.9);box-shadow:0 15px 30px rgba(0,0,0,0.2);cursor:pointer;transition:all 0.3s;margin:15px;overflow:hidden;background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);display:flex;align-items:center;justify-content:center;position:relative;max-width:calc(100% - 30px);box-sizing:border-box}
+.story-image:hover{transform:scale(1.08) rotate(2deg)}
+.story-image img{width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit}
+.activity-image{width:200px;height:200px;border-radius:50%;border:6px solid rgba(255,255,255,0.9);box-shadow:0 15px 30px rgba(0,0,0,0.2);cursor:pointer;transition:all 0.3s;margin:15px;overflow:hidden;background:linear-gradient(135deg,#f3e8ff 0%,#ddd6fe 100%);display:flex;align-items:center;justify-content:center;position:relative;animation:image-float 3s infinite;max-width:calc(100% - 30px);box-sizing:border-box}
+.activity-image:hover{transform:scale(1.15) rotate(10deg)}
+.activity-image img{width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit}
+.mini-image{width:120px;height:120px;border-radius:20px;border:4px solid rgba(255,255,255,0.9);box-shadow:0 10px 20px rgba(0,0,0,0.2);cursor:pointer;transition:all 0.3s;margin:10px;overflow:hidden;background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);display:flex;align-items:center;justify-content:center;position:relative;max-width:calc(100% - 20px);box-sizing:border-box}
+.mini-image:hover{transform:scale(1.2)}
+.mini-image img{width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit}
+.image-placeholder{font-size:14px;color:#666;text-align:center;padding:10px;font-family:'Comic Sans MS',cursive;line-height:1.2;max-width:90%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:3px dashed rgba(255,255,255,0.3);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;margin:0 auto;position:relative;overflow:hidden;box-sizing:border-box}
+img{max-width:100%;height:auto;display:block}
+.image-container{max-width:100%;margin:15px auto;display:flex;justify-content:center;align-items:center;box-sizing:border-box}
+.s{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;width:100%;max-width:100%;box-sizing:border-box;overflow-x:hidden}
+.h-img{width:380px;height:280px;border-radius:30px;border:8px solid rgba(255,255,255,0.9);box-shadow:0 20px 40px rgba(0,0,0,0.2);cursor:pointer;transition:all 0.3s;margin:20px auto;overflow:hidden;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);display:flex;align-items:center;justify-content:center;position:relative;max-width:calc(100% - 40px);box-sizing:border-box}
+.h-img img{width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit}
+@keyframes image-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.audio-toggle{position:fixed;top:20px;right:20px;width:80px;height:80px;border-radius:50%;border:4px solid rgba(255,255,255,0.9);background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:40px;color:white;transition:all 0.3s;z-index:1000;box-shadow:0 10px 20px rgba(0,0,0,0.3);outline:none}
+.audio-toggle:hover{transform:scale(1.1);box-shadow:0 15px 30px rgba(0,0,0,0.4)}
+.audio-toggle.muted{background:linear-gradient(135deg,#e74c3c 0%,#c0392b 100%);animation:muted-pulse 2s infinite}
+.audio-toggle::before{content:'🔊'}
+.audio-toggle.muted::before{content:'🔇'}
+@keyframes muted-pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+.audio-status{position:fixed;top:110px;right:20px;background:rgba(0,0,0,0.8);color:white;padding:10px 15px;border-radius:20px;font-size:16px;font-family:'Comic Sans MS',cursive;z-index:1000;opacity:0;transform:translateY(-10px);transition:all 0.3s;pointer-events:none}
+.audio-status.show{opacity:1;transform:translateY(0)}
+.floating-decoration{position:fixed;font-size:50px;animation:decoration-float 6s infinite;pointer-events:none;text-shadow:2px 2px 4px rgba(0,0,0,0.2);z-index:-1;user-select:none}
+.floating-decoration:nth-child(1){top:5%;left:5%;animation-delay:0s}
+.floating-decoration:nth-child(2){top:10%;right:5%;animation-delay:2s}
+.floating-decoration:nth-child(3){bottom:10%;left:8%;animation-delay:4s}
+.floating-decoration:nth-child(4){bottom:5%;right:8%;animation-delay:1s}
+.floating-decoration:nth-child(5){top:50%;left:2%;animation-delay:3s}
+.floating-decoration:nth-child(6){top:50%;right:2%;animation-delay:5s}
+.button-row{display:flex;justify-content:center;align-items:center;gap:40px;margin:40px 0;flex-wrap:wrap}
+.content-center{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px;width:100%;max-width:100%;box-sizing:border-box;overflow-x:hidden}
+.two-column{display:flex;align-items:center;justify-content:space-between;max-width:1000px;margin:0 auto;gap:60px;padding:40px;width:100%;box-sizing:border-box}
+.two-column .left-side,.two-column .right-side{flex:1;text-align:center;max-width:50%;box-sizing:border-box}
+@keyframes title-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+@keyframes text-glow{0%,100%{text-shadow:3px 3px 6px rgba(0,0,0,0.3)}50%{text-shadow:3px 3px 20px rgba(255,255,255,0.8)}}
+@keyframes giant-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes button-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+@keyframes animal-bounce{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(3deg)}}
+@keyframes visual-rotate{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes progress-grow{0%{width:0%}100%{width:75%}}
+@keyframes star-sparkle{0%,100%{transform:translateY(-50%) scale(1)}50%{transform:translateY(-50%) scale(1.3)}}
+@keyframes star-twinkle{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(1.2)}}
+@keyframes celebration-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes sound-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+@keyframes wave-expand{0%{transform:translate(-50%,-50%) scale(0.8);opacity:1}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
+@keyframes decoration-float{0%,100%{transform:translateY(0px) rotate(0deg)}33%{transform:translateY(-20px) rotate(8deg)}66%{transform:translateY(-10px) rotate(-5deg)}}
+@keyframes ripple-effect{to{transform:scale(4);opacity:0}}
+@media (max-width:768px){.slide-title-main{font-size:56px}.slide-title-secondary{font-size:40px}.instruction-text{font-size:44px}.giant-button{width:280px;height:280px;font-size:120px}.large-button{width:180px;height:180px;font-size:80px}.main-visual-circle{width:260px;height:260px;font-size:120px}.touch-shape{width:160px;height:160px;font-size:60px}.animal-friend{width:140px;height:140px;font-size:70px}.button-row{gap:25px}.two-column{flex-direction:column;gap:40px}.hero-image{width:320px;height:240px}.story-image{width:240px;height:180px}.activity-image{width:160px;height:160px}.mini-image{width:100px;height:100px}.audio-toggle{width:70px;height:70px;font-size:35px}.audio-status{font-size:14px}}
+@media (max-width:480px){.slide-title-main{font-size:44px}.slide-title-secondary{font-size:36px}.instruction-text{font-size:36px}.simple-text{font-size:32px}.giant-button{width:220px;height:220px;font-size:100px}.large-button{width:140px;height:140px;font-size:60px}.main-visual-circle{width:200px;height:200px;font-size:100px}.progress-visual{width:300px}.template-section{padding:20px;margin:20px 0}.floating-decoration{font-size:40px}.hero-image{width:280px;height:210px}.story-image{width:200px;height:150px}.activity-image{width:140px;height:140px}.mini-image{width:80px;height:80px}.audio-toggle{width:60px;height:60px;font-size:30px;top:15px;right:15px}.audio-status{font-size:12px;top:85px;right:15px}}
+</style>
+</head>
+<body>
+<div class="audio-toggle" onclick="toggleAudio()" role="button" tabindex="0" aria-label="Toggle audio on/off"></div>
+<div class="audio-status" id="audioStatus">Audio: ON</div>
+<div class="layout-fullscreen">
+<div class="slide-title-main">HELLO!</div>
+<div class="giant-button" onclick="handleGiantButton(this,'success','Hello there!')" role="button" tabindex="0" aria-label="Hello star - click to greet">🌟</div>
+<div class="instruction-text">Touch the star!</div>
+</div>
+<script>
+let audioContext,speechSynthesis=window.speechSynthesis;let audioEnabled=true;function initAudio(){if(!audioContext){try{audioContext=new(window.AudioContext||window.webkitAudioContext)()}catch(e){console.warn('Web Audio API not supported')}}return audioContext}function playTone(frequency,duration,volume=0.1){if(!audioEnabled)return;const ctx=initAudio();if(!ctx)return;const oscillator=ctx.createOscillator();const gainNode=ctx.createGain();oscillator.connect(gainNode);gainNode.connect(ctx.destination);oscillator.frequency.value=frequency;oscillator.type='sine';gainNode.gain.setValueAtTime(0,ctx.currentTime);gainNode.gain.linearRampToValueAtTime(volume,ctx.currentTime+0.01);gainNode.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+duration);oscillator.start(ctx.currentTime);oscillator.stop(ctx.currentTime+duration)}function speak(text,options={}){if(!audioEnabled)return;if(!speechSynthesis){console.warn('Speech synthesis not supported');return}try{speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.rate=0.7;utterance.pitch=1.3;utterance.volume=0.8;utterance.lang='en-US';Object.assign(utterance,options);utterance.onerror=function(event){console.warn('Speech synthesis error:',event.error)};speechSynthesis.speak(utterance)}catch(error){console.warn('Speech synthesis failed:',error)}}const soundEffects={button:()=>{playTone(440,0.2,0.15);setTimeout(()=>speak("Button pressed!"),200)},success:()=>{playTone(523,0.15);setTimeout(()=>playTone(659,0.15),150);setTimeout(()=>playTone(784,0.15),300);setTimeout(()=>speak("Great job!"),500)},animal:(type)=>{const sounds={cat:()=>{playTone(800,0.2);setTimeout(()=>speak("Meow!"),300)},dog:()=>{playTone(300,0.3);setTimeout(()=>speak("Woof!"),400)},bear:()=>{playTone(220,0.5);setTimeout(()=>speak("Roar!"),500)}};if(sounds[type])sounds[type]()},play:()=>{playTone(440,0.2);setTimeout(()=>playTone(554,0.2),200);setTimeout(()=>speak("Let's play!"),400)},music:()=>{playTone(523,0.15);setTimeout(()=>playTone(659,0.15),150);setTimeout(()=>playTone(784,0.15),300);setTimeout(()=>speak("Music time!"),500)}};function toggleAudio(){audioEnabled=!audioEnabled;const toggleButton=document.querySelector('.audio-toggle');const statusIndicator=document.getElementById('audioStatus');if(audioEnabled){toggleButton.classList.remove('muted');statusIndicator.textContent='Audio: ON';statusIndicator.style.color='#4CAF50'}else{toggleButton.classList.add('muted');statusIndicator.textContent='Audio: OFF';statusIndicator.style.color='#f44336';if(speechSynthesis){speechSynthesis.cancel()}}statusIndicator.classList.add('show');setTimeout(()=>{statusIndicator.classList.remove('show')},2000);toggleButton.style.transform='scale(0.9)';setTimeout(()=>toggleButton.style.transform='',100);console.log('Audio',audioEnabled?'enabled':'disabled')}function handleGiantButton(element,soundType,text){element.style.transform='scale(0.95)';setTimeout(()=>element.style.transform='',100);if(soundEffects[soundType]){soundEffects[soundType]()}setTimeout(()=>speak(text),300);createRippleEffect(element)}function handleShape(element,shapeType){element.style.transform='scale(0.9) rotate(15deg)';setTimeout(()=>element.style.transform='',200);playTone(600+(shapeType==='circle'?100:shapeType==='square'?200:300),0.3);setTimeout(()=>speak(\`\${shapeType.charAt(0).toUpperCase()+shapeType.slice(1)}!\`),300);createRippleEffect(element)}function handleImageClick(element,imageType){const originalTransform=element.style.transform;element.style.transform='scale(0.95)';setTimeout(()=>element.style.transform=originalTransform,150);const sounds={hero:()=>{playTone(523,0.4);setTimeout(()=>speak("Beautiful picture!"),400)},story:()=>{playTone(659,0.3);setTimeout(()=>speak("What a nice story!"),300)},activity:()=>{playTone(784,0.2);setTimeout(()=>speak("Let's learn!"),250)},mini:()=>{playTone(880,0.2);setTimeout(()=>speak("So pretty!"),200)}};if(sounds[imageType]){sounds[imageType]()}createRippleEffect(element)}function createRippleEffect(element){const ripple=document.createElement('div');ripple.style.cssText=\`position:absolute;border-radius:50%;background:rgba(255,255,255,0.7);transform:scale(0);animation:ripple-effect 0.6s linear;pointer-events:none;\`;const rect=element.getBoundingClientRect();const size=Math.max(rect.width,rect.height);ripple.style.width=ripple.style.height=size+'px';ripple.style.left='50%';ripple.style.top='50%';ripple.style.marginLeft=-(size/2)+'px';ripple.style.marginTop=-(size/2)+'px';element.style.position='relative';element.appendChild(ripple);setTimeout(()=>ripple.remove(),600)}document.addEventListener('DOMContentLoaded',function(){const statusIndicator=document.getElementById('audioStatus');if(statusIndicator){statusIndicator.style.color='#4CAF50'}setTimeout(()=>{speak("Welcome! Touch the colorful buttons! Press M to toggle audio.",{rate:0.8,pitch:1.2})},1000);console.log('🎈 AI Template Library for 2-3 years loaded!');console.log('🔊 Press M key to toggle audio on/off')});document.addEventListener('touchstart',function(e){if(audioContext&&audioContext.state==='suspended'){audioContext.resume()}});document.addEventListener('keydown',function(e){if(e.key==='m'||e.key==='M'){e.preventDefault();toggleAudio();return}if(e.target.getAttribute('role')==='button'){if(e.key==='Enter'||e.key===' '){e.preventDefault();e.target.click()}}});document.addEventListener('focusin',function(e){if(e.target.getAttribute('role')==='button'){e.target.style.outline='4px solid #FFD700';e.target.style.outlineOffset='4px'}});document.addEventListener('focusout',function(e){if(e.target.getAttribute('role')==='button'){e.target.style.outline='none'}});
+</script>
+</body>
+</html>`;
+
+/**
+ * Template description for 2-3 years age group
+ */
+export const AGE_2_3_DESCRIPTION = 'Visual components for toddlers 2-3 years: large buttons, animations, sound effects, bright colors';
+
+/**
+ * Configuration for 2-3 years age group
+ */
+export const AGE_2_3_CONFIG = {
+  padding: 40,
+  borderRadius: 30,
+  fontSize: 72,
+  buttonSize: 350,
+  colors: ['#FFE66D', '#4ECDC4', '#FF6B6B']
+};

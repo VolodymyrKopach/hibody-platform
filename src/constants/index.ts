@@ -3,11 +3,17 @@
  * Central export point for all application constants
  */
 
+// Age component templates (now modular)
 export {
   AGE_COMPONENT_TEMPLATES,
   AGE_TEMPLATE_DESCRIPTIONS,
-  AGE_CONFIGURATIONS
-} from './ageComponentTemplates';
+  AGE_CONFIGURATIONS,
+  getTemplateByAge,
+  getTemplateDescription,
+  getTemplateConfig,
+  getAvailableAgeGroups,
+  hasTemplate
+} from './templates/index';
 
 export {
   AGE_GROUPS,
