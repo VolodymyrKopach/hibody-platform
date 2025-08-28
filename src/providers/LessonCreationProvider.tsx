@@ -5,9 +5,12 @@ import {
   LessonCreationContextValue, 
   LessonCreationState, 
   TemplateData, 
-  LessonCreationStep 
+  LessonCreationStep,
+  PlanComment,
+  PlanEditingState
 } from '@/types/templates';
 import { SimpleLesson } from '@/types/chat';
+import { planEditingService } from '@/services/templates/PlanEditingService';
 
 const LessonCreationContext = createContext<LessonCreationContextValue | null>(null);
 
@@ -28,6 +31,15 @@ const initialSlideGenerationState = {
   slideProgresses: []
 };
 
+const initialPlanEditingState: PlanEditingState = {
+  isEditingMode: false,
+  selectedSection: null,
+  pendingComments: [],
+  isProcessingComments: false,
+  lastEditTimestamp: null,
+  editHistory: []
+};
+
 const initialState: LessonCreationState = {
   currentStep: 1,
   completedSteps: new Set([1]), // Step 1 is always accessible
@@ -36,6 +48,7 @@ const initialState: LessonCreationState = {
   generatedLesson: null,
   isLoading: false,
   error: null,
+  planEditingState: initialPlanEditingState,
   slideGenerationState: initialSlideGenerationState
 };
 
@@ -58,6 +71,13 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
   }, []);
 
   const setGeneratedPlan = useCallback((plan: string) => {
+    console.log('🔄 PROVIDER: Setting generated plan', {
+      planType: typeof plan,
+      planLength: plan?.length || 0,
+      isString: typeof plan === 'string',
+      planPreview: typeof plan === 'string' ? plan.substring(0, 100) + '...' : plan
+    });
+    
     setState(prev => ({ 
       ...prev, 
       generatedPlan: plan,
@@ -155,6 +175,182 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
     setState(initialState);
   }, []);
 
+  // === Plan Editing Methods ===
+
+  const enterEditMode = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      planEditingState: {
+        ...prev.planEditingState,
+        isEditingMode: true
+      }
+    }));
+  }, []);
+
+  const exitEditMode = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      planEditingState: {
+        ...prev.planEditingState,
+        isEditingMode: false,
+        selectedSection: null
+      }
+    }));
+  }, []);
+
+  const addComment = useCallback((comment: Omit<PlanComment, 'id' | 'timestamp'>) => {
+    const newComment = planEditingService.createComment(
+      comment.sectionType,
+      comment.comment,
+      comment.sectionId,
+      comment.priority
+    );
+
+    setState(prev => ({
+      ...prev,
+      planEditingState: {
+        ...prev.planEditingState,
+        pendingComments: [...prev.planEditingState.pendingComments, newComment]
+      }
+    }));
+  }, []);
+
+  const removeComment = useCallback((commentId: string) => {
+    setState(prev => ({
+      ...prev,
+      planEditingState: {
+        ...prev.planEditingState,
+        pendingComments: prev.planEditingState.pendingComments.filter(c => c.id !== commentId)
+      }
+    }));
+  }, []);
+
+  const updateComment = useCallback((commentId: string, updates: Partial<PlanComment>) => {
+    setState(prev => ({
+      ...prev,
+      planEditingState: {
+        ...prev.planEditingState,
+        pendingComments: prev.planEditingState.pendingComments.map(comment =>
+          comment.id === commentId ? { ...comment, ...updates } : comment
+        )
+      }
+    }));
+  }, []);
+
+  const clearAllComments = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      planEditingState: {
+        ...prev.planEditingState,
+        pendingComments: []
+      }
+    }));
+  }, []);
+
+  const processComments = useCallback(async () => {
+    const { generatedPlan, planEditingState, templateData } = state;
+    
+    console.log('🔄 PROVIDER: Processing comments', {
+      hasGeneratedPlan: !!generatedPlan,
+      planType: typeof generatedPlan,
+      planLength: generatedPlan?.length || 0,
+      commentsCount: planEditingState.pendingComments.length
+    });
+    
+    // Validate plan (can be string or object)
+    if (!generatedPlan) {
+      console.error('❌ PROVIDER: Cannot process comments - no plan available');
+      return;
+    }
+    
+    if (planEditingState.pendingComments.length === 0) {
+      console.warn('⚠️ PROVIDER: No comments to process');
+      return;
+    }
+
+    setState(prev => ({
+      ...prev,
+      planEditingState: {
+        ...prev.planEditingState,
+        isProcessingComments: true
+      }
+    }));
+
+    try {
+      const editedPlan = await planEditingService.processComments(
+        generatedPlan, // Pass plan directly (string or object)
+        planEditingState.pendingComments,
+        {
+          ageGroup: templateData.ageGroup,
+          topic: templateData.topic,
+          slideCount: templateData.slideCount
+        }
+      );
+
+      // Service now returns object directly, no conversion needed
+      console.log('✅ PROVIDER: Received edited plan', {
+        editedPlanType: typeof editedPlan,
+        isObject: typeof editedPlan === 'object'
+      });
+
+      // Create history entry
+      const historyEntry = {
+        id: `edit_${Date.now()}`,
+        timestamp: new Date(),
+        originalPlan: generatedPlan,
+        editedPlan,
+        appliedComments: [...planEditingState.pendingComments],
+        success: true
+      };
+
+      setState(prev => ({
+        ...prev,
+        generatedPlan: editedPlan, // Use edited plan directly
+        planEditingState: {
+          ...initialPlanEditingState,
+          editHistory: [...prev.planEditingState.editHistory, historyEntry],
+          lastEditTimestamp: new Date()
+        }
+      }));
+
+    } catch (error) {
+      console.error('❌ PROVIDER: Error processing comments:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process comments';
+      
+      // Create failed history entry
+      const historyEntry = {
+        id: `edit_${Date.now()}`,
+        timestamp: new Date(),
+        originalPlan: generatedPlan,
+        editedPlan: generatedPlan, // Keep original on failure
+        appliedComments: [...planEditingState.pendingComments],
+        success: false,
+        error: errorMessage
+      };
+
+      setState(prev => ({
+        ...prev,
+        error: errorMessage,
+        planEditingState: {
+          ...prev.planEditingState,
+          isProcessingComments: false,
+          editHistory: [...prev.planEditingState.editHistory, historyEntry]
+        }
+      }));
+    }
+  }, [state]);
+
+  const updatePlanEditingState = useCallback((newState: Partial<PlanEditingState>) => {
+    setState(prev => ({
+      ...prev,
+      planEditingState: {
+        ...prev.planEditingState,
+        ...newState
+      }
+    }));
+  }, []);
+
   const contextValue: LessonCreationContextValue = {
     state,
     setCurrentStep,
@@ -166,8 +362,19 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
     clearGeneratedPlan,
     clearGeneratedLesson,
     resetState,
+    // Plan editing methods
+    enterEditMode,
+    exitEditMode,
+    addComment,
+    removeComment,
+    updateComment,
+    clearAllComments,
+    processComments,
+    updatePlanEditingState,
+    // Slide generation state management
     updateSlideGenerationState,
     clearSlideGenerationState,
+    // Step completion management
     markStepCompleted,
     canNavigateToStep
   };

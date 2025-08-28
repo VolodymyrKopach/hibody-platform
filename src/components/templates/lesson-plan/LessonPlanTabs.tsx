@@ -12,7 +12,7 @@ import {
   Inventory as MaterialsIcon,
   Lightbulb as TipsIcon
 } from '@mui/icons-material';
-import { ParsedLessonPlan } from '@/types/templates';
+import { ParsedLessonPlan, PlanComment } from '@/types/templates';
 import LessonObjectives from './LessonObjectives';
 import SlideNavigation from './SlideNavigation';
 import GameElements from './GameElements';
@@ -21,6 +21,9 @@ import TeacherRecommendations from './TeacherRecommendations';
 
 interface LessonPlanTabsProps {
   parsedPlan: ParsedLessonPlan;
+  isEditingMode?: boolean;
+  onAddComment?: (comment: Omit<PlanComment, 'id' | 'timestamp'>) => void;
+  pendingComments?: PlanComment[];
 }
 
 interface TabData {
@@ -31,7 +34,12 @@ interface TabData {
   component: React.ReactElement;
 }
 
-const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({ parsedPlan }) => {
+const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({ 
+  parsedPlan, 
+  isEditingMode = false,
+  onAddComment,
+  pendingComments = []
+}) => {
   const theme = useTheme();
 
   // Prepare tab data
@@ -41,35 +49,70 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({ parsedPlan }) => {
       label: 'Objectives',
       icon: <ObjectivesIcon />,
       count: parsedPlan.objectives.length,
-      component: <LessonObjectives objectives={parsedPlan.objectives} />
+      component: (
+        <LessonObjectives 
+          objectives={parsedPlan.objectives}
+          isEditingMode={isEditingMode}
+          onAddComment={onAddComment}
+          pendingComments={pendingComments}
+        />
+      )
     },
     {
       id: 'slides',
       label: 'Slides',
       icon: <SlidesIcon />,
       count: parsedPlan.slides.length,
-      component: <SlideNavigation slides={parsedPlan.slides} />
+      component: (
+        <SlideNavigation 
+          slides={parsedPlan.slides}
+          isEditingMode={isEditingMode}
+          onAddComment={onAddComment}
+          pendingComments={pendingComments}
+        />
+      )
     },
     {
       id: 'games',
       label: 'Games',
       icon: <GameIcon />,
       count: parsedPlan.gameElements.length,
-      component: <GameElements gameElements={parsedPlan.gameElements} />
+      component: (
+        <GameElements 
+          gameElements={parsedPlan.gameElements}
+          isEditingMode={isEditingMode}
+          onAddComment={onAddComment}
+          pendingComments={pendingComments}
+        />
+      )
     },
     {
       id: 'materials',
       label: 'Materials',
       icon: <MaterialsIcon />,
       count: parsedPlan.materials.length,
-      component: <MaterialsList materials={parsedPlan.materials} />
+      component: (
+        <MaterialsList 
+          materials={parsedPlan.materials}
+          isEditingMode={isEditingMode}
+          onAddComment={onAddComment}
+          pendingComments={pendingComments}
+        />
+      )
     },
     {
       id: 'tips',
       label: 'Tips',
       icon: <TipsIcon />,
       count: parsedPlan.recommendations.length,
-      component: <TeacherRecommendations recommendations={parsedPlan.recommendations} />
+      component: (
+        <TeacherRecommendations 
+          recommendations={parsedPlan.recommendations}
+          isEditingMode={isEditingMode}
+          onAddComment={onAddComment}
+          pendingComments={pendingComments}
+        />
+      )
     }
   ].filter(tab => tab.count > 0); // Only show tabs with content
 

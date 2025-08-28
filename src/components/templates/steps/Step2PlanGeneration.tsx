@@ -9,21 +9,28 @@ import {
   Alert,
   Divider,
   Chip,
-  Stack
+  Stack,
+  Fade,
+  Collapse
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import { 
   AutoStories as PlanIcon,
   ArrowForward as NextIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon
 } from '@mui/icons-material';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/markdown';
 import { StructuredLessonPlan } from '@/components/templates/lesson-plan';
 import { RegenerationConfirmDialog } from '@/components/dialogs';
+import { CommentPanel, CommentDialog } from '@/components/templates/plan-editing';
 import { lessonPlanService, LessonPlanServiceError } from '@/services/templates/LessonPlanService';
-import { TemplateData, GenerationState } from '@/types/templates';
+import { TemplateData, GenerationState, PlanComment } from '@/types/templates';
+import { useLessonCreation } from '@/providers/LessonCreationProvider';
 
 interface Step2Props {
   data: TemplateData;
@@ -47,10 +54,22 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
   const theme = useTheme();
   const { t, i18n } = useTranslation('common');
   
+  // Get editing state and methods from provider
+  const {
+    state: { planEditingState },
+    enterEditMode,
+    exitEditMode,
+    addComment,
+    removeComment,
+    clearAllComments,
+    processComments
+  } = useLessonCreation();
+  
   const [generationState, setGenerationState] = useState<GenerationState>('idle');
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
+  const [showCommentDialog, setShowCommentDialog] = useState(false);
   const hasInitialized = useRef(false);
 
   const handleGeneratePlan = useCallback(async () => {
@@ -74,6 +93,13 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
       }
 
       const plan = await lessonPlanService.generateLessonPlan(request);
+      
+      console.log('🔄 STEP2: Plan generated from API', {
+        planType: typeof plan,
+        planLength: plan?.length || 0,
+        isString: typeof plan === 'string',
+        planPreview: typeof plan === 'string' ? plan.substring(0, 100) + '...' : plan
+      });
       
       setProgress(100);
       setGenerationState('success');
@@ -139,9 +165,46 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
     setGenerationState('idle');
     setError(null);
     hasInitialized.current = false;
+    // Exit edit mode if active
+    if (planEditingState.isEditingMode) {
+      exitEditMode();
+    }
     // handleGeneratePlan will be called automatically after plan is cleared
     setTimeout(() => handleGeneratePlan(), 100);
   };
+
+  // Handle entering edit mode
+  const handleEnterEditMode = useCallback(() => {
+    enterEditMode();
+  }, [enterEditMode]);
+
+  // Handle exiting edit mode
+  const handleExitEditMode = useCallback(() => {
+    exitEditMode();
+  }, [exitEditMode]);
+
+  // Handle adding comment
+  const handleAddComment = useCallback((comment: Omit<PlanComment, 'id' | 'timestamp'>) => {
+    addComment(comment);
+  }, [addComment]);
+
+  // Handle processing comments
+  const handleProcessComments = useCallback(async () => {
+    console.log('🔄 STEP2: Processing comments', {
+      hasGeneratedPlan: !!generatedPlan,
+      planLength: generatedPlan?.length || 0,
+      commentsCount: planEditingState.pendingComments.length
+    });
+    
+    try {
+      await processComments();
+      // Plan will be updated automatically through provider
+      exitEditMode();
+    } catch (error) {
+      console.error('Error processing comments:', error);
+      setError(error instanceof Error ? error.message : 'Failed to process comments');
+    }
+  }, [processComments, exitEditMode, generatedPlan, planEditingState.pendingComments]);
 
   const renderGeneratingState = () => (
     <Card elevation={2} sx={{ borderRadius: 3 }}>
@@ -236,70 +299,138 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
   );
 
   const renderSuccessState = () => (
-    <Card elevation={2} sx={{ borderRadius: 3 }}>
-      <CardContent sx={{ p: 6 }}>
+    <>
+      <Card elevation={2} sx={{ borderRadius: 3 }}>
+        <CardContent sx={{ p: 6 }}>
+          {/* Edit Mode Toggle */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+            {!planEditingState.isEditingMode ? (
+              <Button
+                variant="outlined"
+                startIcon={<EditIcon />}
+                onClick={handleEnterEditMode}
+                sx={{ 
+                  borderColor: theme.palette.primary.main,
+                  color: theme.palette.primary.main,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.main + '10'
+                  }
+                }}
+              >
+                Edit Plan
+              </Button>
+            ) : (
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="contained"
+                  startIcon={<MessageSquare size={16} />}
+                  onClick={() => setShowCommentDialog(true)}
+                  disabled={planEditingState.isProcessingComments}
+                >
+                  Add Comment
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<CancelIcon />}
+                  onClick={handleExitEditMode}
+                  disabled={planEditingState.isProcessingComments}
+                >
+                  Exit Edit Mode
+                </Button>
+              </Stack>
+            )}
+          </Box>
 
+          {/* Plan Content */}
+          {generatedPlan && (
+            <StructuredLessonPlan 
+              markdown={generatedPlan}
+              isEditingMode={planEditingState.isEditingMode}
+              onAddComment={handleAddComment}
+              pendingComments={planEditingState.pendingComments}
+            />
+          )}
 
-        {/* Plan Content */}
-        {generatedPlan && (
-          <StructuredLessonPlan markdown={generatedPlan} />
-        )}
+          <Divider sx={{ my: 4 }} />
 
-        <Divider sx={{ my: 4 }} />
-
-        {/* Action Buttons */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 2
-        }}>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowLeft size={18} />}
-            onClick={onBack}
-            sx={{ minWidth: 120 }}
-          >
-            {t('createLesson.step2.back')}
-          </Button>
-
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          {/* Action Buttons */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 2
+          }}>
             <Button
               variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleRetry}
-              sx={{ minWidth: 140 }}
+              startIcon={<ArrowLeft size={18} />}
+              onClick={onBack}
+              sx={{ minWidth: 120 }}
+              disabled={planEditingState.isProcessingComments}
             >
-              {t('createLesson.step2.regenerate')}
+              {t('createLesson.step2.back')}
             </Button>
-            
-            <Button
-              variant="contained"
-              size="large"
-              endIcon={<NextIcon />}
-              onClick={onNext}
-              sx={{ 
-                minWidth: 160,
-                fontWeight: 600,
-                px: 4,
-                py: 1.5,
-                fontSize: '1rem',
-                borderRadius: 2,
-                boxShadow: theme.shadows[4],
-                '&:hover': {
-                  boxShadow: theme.shadows[8],
-                  transform: 'translateY(-2px)'
-                },
-                transition: 'all 0.3s ease'
-              }}
-            >
-              {t('createLesson.step2.next')}
-            </Button>
+
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={handleRetry}
+                sx={{ minWidth: 140 }}
+                disabled={planEditingState.isProcessingComments}
+              >
+                {t('createLesson.step2.regenerate')}
+              </Button>
+              
+              <Button
+                variant="contained"
+                size="large"
+                endIcon={<NextIcon />}
+                onClick={onNext}
+                disabled={planEditingState.isProcessingComments}
+                sx={{ 
+                  minWidth: 160,
+                  fontWeight: 600,
+                  px: 4,
+                  py: 1.5,
+                  fontSize: '1rem',
+                  borderRadius: 2,
+                  boxShadow: theme.shadows[4],
+                  '&:hover': {
+                    boxShadow: theme.shadows[8],
+                    transform: 'translateY(-2px)'
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {t('createLesson.step2.next')}
+              </Button>
+            </Box>
           </Box>
+        </CardContent>
+      </Card>
+
+      {/* Comment Panel */}
+      <Fade in={planEditingState.pendingComments.length > 0}>
+        <Box>
+          <CommentPanel
+            comments={planEditingState.pendingComments}
+            isProcessing={planEditingState.isProcessingComments}
+            onProcessComments={handleProcessComments}
+            onRemoveComment={removeComment}
+            onClearAllComments={clearAllComments}
+          />
         </Box>
-      </CardContent>
-    </Card>
+      </Fade>
+
+      {/* Comment Dialog */}
+      <CommentDialog
+        open={showCommentDialog}
+        onClose={() => setShowCommentDialog(false)}
+        onSubmit={handleAddComment}
+        title="Add Comment to Plan"
+      />
+    </>
   );
 
   const renderIdleState = () => (

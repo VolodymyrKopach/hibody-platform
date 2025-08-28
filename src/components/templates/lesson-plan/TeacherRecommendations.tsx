@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -8,28 +8,76 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Avatar
+  Avatar,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
   Lightbulb as LightbulbIcon,
-  TipsAndUpdates as TipIcon
+  TipsAndUpdates as TipIcon,
+  Comment as CommentIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
+import { PlanComment } from '@/types/templates';
+import { CommentDialog } from '../plan-editing';
 
 interface TeacherRecommendationsProps {
   recommendations: string[];
+  isEditingMode?: boolean;
+  onAddComment?: (comment: Omit<PlanComment, 'id' | 'timestamp'>) => void;
+  pendingComments?: PlanComment[];
 }
 
-const TeacherRecommendations: React.FC<TeacherRecommendationsProps> = ({ recommendations }) => {
+const TeacherRecommendations: React.FC<TeacherRecommendationsProps> = ({ 
+  recommendations, 
+  isEditingMode = false,
+  onAddComment,
+  pendingComments = []
+}) => {
   const theme = useTheme();
+  const [showCommentDialog, setShowCommentDialog] = useState(false);
 
   if (recommendations.length === 0) {
     return null;
   }
 
+  const recommendationComments = pendingComments.filter(
+    comment => comment.sectionType === 'recommendation'
+  );
+  const hasComments = recommendationComments.length > 0;
+
+  const handleSubmitComment = (comment: Omit<PlanComment, 'id' | 'timestamp'>) => {
+    if (onAddComment) {
+      onAddComment({
+        ...comment,
+        sectionType: 'recommendation'
+      });
+    }
+    setShowCommentDialog(false);
+  };
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {recommendations.map((recommendation, index) => (
+    <>
+      {isEditingMode && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <Tooltip title={hasComments ? `Edit tips (${recommendationComments.length} comments)` : 'Add comment to tips'}>
+            <IconButton
+              onClick={() => setShowCommentDialog(true)}
+              size="small"
+              sx={{
+                color: hasComments ? theme.palette.primary.main : theme.palette.action.active,
+                '&:hover': { color: theme.palette.primary.main }
+              }}
+            >
+              {hasComments ? <EditIcon /> : <CommentIcon />}
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )}
+
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {recommendations.map((recommendation, index) => (
         <Box
           key={index}
           sx={{
@@ -60,7 +108,16 @@ const TeacherRecommendations: React.FC<TeacherRecommendationsProps> = ({ recomme
           </Typography>
         </Box>
       ))}
-    </Box>
+      </Box>
+
+      <CommentDialog
+        open={showCommentDialog}
+        onClose={() => setShowCommentDialog(false)}
+        onSubmit={handleSubmitComment}
+        initialSection="recommendation"
+        title="Comment on Teacher Tips"
+      />
+    </>
   );
 };
 

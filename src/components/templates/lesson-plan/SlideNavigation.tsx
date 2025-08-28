@@ -13,9 +13,11 @@ import { useTheme } from '@mui/material/styles';
 import {
   ArrowBackIos as PrevIcon,
   ArrowForwardIos as NextIcon,
-  PlayArrow as PlayIcon
+  PlayArrow as PlayIcon,
+  Comment as CommentIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
-import { ParsedSlide } from '@/types/templates';
+import { ParsedSlide, PlanComment } from '@/types/templates';
 import { LessonPlanJSONProcessor } from '@/utils/lessonPlanJSONProcessor';
 import {
   GreetingSection,
@@ -24,6 +26,7 @@ import {
   ActivitiesSection,
   TeacherGuidanceSection
 } from './slide-sections';
+import { SlideCommentButton } from '../plan-editing';
 
 // Extended slide interface to include structure
 interface ExtendedSlide extends ParsedSlide {
@@ -62,9 +65,17 @@ interface ExtendedSlide extends ParsedSlide {
 
 interface SlideNavigationProps {
   slides: (ParsedSlide & { structure?: ExtendedSlide['structure'] })[];
+  isEditingMode?: boolean;
+  onAddComment?: (comment: Omit<PlanComment, 'id' | 'timestamp'>) => void;
+  pendingComments?: PlanComment[];
 }
 
-const SlideNavigation: React.FC<SlideNavigationProps> = ({ slides }) => {
+const SlideNavigation: React.FC<SlideNavigationProps> = ({ 
+  slides, 
+  isEditingMode = false,
+  onAddComment,
+  pendingComments = []
+}) => {
   const theme = useTheme();
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   
@@ -89,6 +100,26 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({ slides }) => {
     setCurrentSlideIndex(prev => prev < slides.length - 1 ? prev + 1 : 0);
   };
 
+  // Handle adding comment for current slide
+  const handleAddSlideComment = () => {
+    if (onAddComment) {
+      onAddComment({
+        sectionType: 'slide',
+        sectionId: (currentSlideIndex + 1).toString(),
+        comment: '', // Will be filled in dialog
+        priority: 'medium',
+        status: 'pending'
+      });
+    }
+  };
+
+  // Check if current slide has pending comments
+  const slideComments = pendingComments.filter(
+    comment => comment.sectionType === 'slide' && 
+    comment.sectionId === (currentSlideIndex + 1).toString()
+  );
+  const hasSlideComments = slideComments.length > 0;
+
   return (
     <Box sx={{ width: '100%' }}>
       {/* Current Slide Card with Embedded Navigation */}
@@ -108,35 +139,55 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({ slides }) => {
           background: `linear-gradient(135deg, ${theme.palette.primary.main}08, ${theme.palette.background.paper})`,
           position: 'relative'
         }}>
-          {/* Navigation Controls - Top Right */}
-          {slides.length > 1 && (
-            <Box sx={{ 
-              position: 'absolute',
-              top: 16,
-              right: 16,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(8px)',
-              borderRadius: 2,
-              p: 1,
-              boxShadow: theme.shadows[1]
-            }}>
-              <IconButton 
-                onClick={handlePrevSlide}
+          {/* Controls - Top Right */}
+          <Box sx={{ 
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}>
+            {/* Comment Button */}
+            {isEditingMode && (
+              <SlideCommentButton
+                slideNumber={currentSlideIndex + 1}
+                isEditingMode={isEditingMode}
+                hasComments={hasSlideComments}
+                commentCount={slideComments.length}
+                onAddComment={onAddComment!}
+                variant="fab"
                 size="small"
-                sx={{
-                  width: 32,
-                  height: 32,
-                  '&:hover': {
-                    backgroundColor: theme.palette.primary.light,
-                    color: theme.palette.primary.contrastText
-                  }
-                }}
-              >
-                <PrevIcon fontSize="small" />
-              </IconButton>
+              />
+            )}
+
+            {/* Navigation Controls */}
+            {slides.length > 1 && (
+              <Box sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(8px)',
+                borderRadius: 2,
+                p: 1,
+                boxShadow: theme.shadows[1],
+                ml: isEditingMode ? 1 : 0
+              }}>
+                <IconButton 
+                  onClick={handlePrevSlide}
+                  size="small"
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.light,
+                      color: theme.palette.primary.contrastText
+                    }
+                  }}
+                >
+                  <PrevIcon fontSize="small" />
+                </IconButton>
 
               <Typography 
                 variant="caption" 
@@ -167,6 +218,7 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({ slides }) => {
               </IconButton>
             </Box>
           )}
+          </Box>
 
           {/* Slide Number Badge */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
@@ -369,7 +421,7 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({ slides }) => {
                                 sx={{ 
                                   fontSize: '0.875rem',
                                   lineHeight: 1.5,
-                                  mb: index < currentSlide.structure.mainContent.keyPoints.length - 1 ? 0.5 : 0,
+                                  mb: index < (currentSlide.structure?.mainContent?.keyPoints?.length || 0) - 1 ? 0.5 : 0,
                                   '&:before': { content: '"• "', color: theme.palette.success.main }
                                 }}
                               >

@@ -1,24 +1,74 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
-  Typography
+  Typography,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import {
+  Comment as CommentIcon,
+  Edit as EditIcon
+} from '@mui/icons-material';
+import { PlanComment } from '@/types/templates';
+import { CommentDialog } from '../plan-editing';
 
 interface MaterialsListProps {
   materials: string[];
+  isEditingMode?: boolean;
+  onAddComment?: (comment: Omit<PlanComment, 'id' | 'timestamp'>) => void;
+  pendingComments?: PlanComment[];
 }
 
-const MaterialsList: React.FC<MaterialsListProps> = ({ materials }) => {
+const MaterialsList: React.FC<MaterialsListProps> = ({ 
+  materials, 
+  isEditingMode = false,
+  onAddComment,
+  pendingComments = []
+}) => {
   const theme = useTheme();
+  const [showCommentDialog, setShowCommentDialog] = useState(false);
 
   if (materials.length === 0) {
     return null;
   }
 
+  const materialComments = pendingComments.filter(
+    comment => comment.sectionType === 'material'
+  );
+  const hasComments = materialComments.length > 0;
+
+  const handleSubmitComment = (comment: Omit<PlanComment, 'id' | 'timestamp'>) => {
+    if (onAddComment) {
+      onAddComment({
+        ...comment,
+        sectionType: 'material'
+      });
+    }
+    setShowCommentDialog(false);
+  };
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {materials.map((material, index) => (
+    <>
+      {isEditingMode && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <Tooltip title={hasComments ? `Edit materials (${materialComments.length} comments)` : 'Add comment to materials'}>
+            <IconButton
+              onClick={() => setShowCommentDialog(true)}
+              size="small"
+              sx={{
+                color: hasComments ? theme.palette.primary.main : theme.palette.action.active,
+                '&:hover': { color: theme.palette.primary.main }
+              }}
+            >
+              {hasComments ? <EditIcon /> : <CommentIcon />}
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )}
+
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {materials.map((material, index) => (
         <Box
           key={index}
           sx={{
@@ -43,7 +93,16 @@ const MaterialsList: React.FC<MaterialsListProps> = ({ materials }) => {
           </Typography>
         </Box>
       ))}
-    </Box>
+      </Box>
+
+      <CommentDialog
+        open={showCommentDialog}
+        onClose={() => setShowCommentDialog(false)}
+        onSubmit={handleSubmitComment}
+        initialSection="material"
+        title="Comment on Materials"
+      />
+    </>
   );
 };
 

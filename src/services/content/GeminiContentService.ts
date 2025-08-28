@@ -69,6 +69,58 @@ export class GeminiContentService {
     }
   }
 
+  /**
+   * Generic content generation method with configurable options
+   */
+  async generateContent(
+    prompt: string,
+    options: {
+      temperature?: number;
+      maxTokens?: number;
+      model?: string;
+    } = {}
+  ): Promise<string> {
+    const {
+      temperature = 0.7,
+      maxTokens = 8000,
+      model = 'gemini-2.5-flash'
+    } = options;
+
+    console.log('🎯 Generic content generation:', {
+      model,
+      temperature,
+      maxTokens,
+      promptLength: prompt.length
+    });
+
+    try {
+      const response = await this.client.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          thinkingConfig: {
+            thinkingBudget: 0, // Disable thinking for faster generation
+          },
+          temperature,
+          maxOutputTokens: maxTokens
+        }
+      });
+
+      const content = response.text;
+
+      if (!content) {
+        throw new Error('No content in Gemini response');
+      }
+
+      console.log(`✅ Content generated successfully: ${content.length} characters`);
+      return content;
+
+    } catch (error) {
+      console.error('Gemini generic content generation error:', error);
+      throw error;
+    }
+  }
+
   async generateLessonPlanJSON(
     topic: string, 
     age: string, 

@@ -382,6 +382,84 @@ export namespace TemplateGenerationTypes {
   };
 }
 
+// === Plan Editing System Types ===
+
+export type CommentSectionType = 'slide' | 'objective' | 'material' | 'game' | 'recommendation' | 'general';
+
+export interface PlanComment {
+  id: string;
+  sectionType: CommentSectionType;
+  sectionId?: string; // ID слайду, об'єктиву тощо
+  comment: string;
+  timestamp: Date;
+  status: 'pending' | 'processing' | 'applied' | 'rejected';
+  priority?: 'low' | 'medium' | 'high';
+}
+
+export interface PlanEditingState {
+  isEditingMode: boolean;
+  selectedSection: string | null;
+  pendingComments: PlanComment[];
+  isProcessingComments: boolean;
+  lastEditTimestamp: Date | null;
+  editHistory: PlanEditHistoryEntry[];
+}
+
+export interface PlanEditHistoryEntry {
+  id: string;
+  timestamp: Date;
+  originalPlan: string;
+  editedPlan: string;
+  appliedComments: PlanComment[];
+  success: boolean;
+  error?: string;
+}
+
+export interface PlanEditRequest {
+  originalPlan: string;
+  comments: Array<{
+    section: CommentSectionType;
+    sectionId?: string;
+    instruction: string;
+    priority?: 'low' | 'medium' | 'high';
+  }>;
+  language: 'uk' | 'en';
+  preserveStructure: boolean;
+  metadata?: {
+    ageGroup: string;
+    topic: string;
+    slideCount: number;
+  };
+}
+
+export interface PlanEditResponse {
+  success: boolean;
+  editedPlan?: string;
+  appliedChanges?: Array<{
+    sectionType: CommentSectionType;
+    sectionId?: string;
+    changeDescription: string;
+    success: boolean;
+  }>;
+  error?: {
+    message: string;
+    code: string;
+    failedComments?: string[];
+  };
+  metadata?: {
+    processingTime: number;
+    changesCount: number;
+    preservedStructure: boolean;
+  };
+}
+
+export interface CommentValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  suggestions: string[];
+}
+
 // === MVP Lesson Creation Global State Types ===
 
 export type LessonCreationStep = 1 | 2 | 3;
@@ -394,6 +472,8 @@ export interface LessonCreationState {
   generatedLesson: import('@/types/chat').SimpleLesson | null;
   isLoading: boolean;
   error: string | null;
+  // Plan editing state
+  planEditingState: PlanEditingState;
   // Generation state persistence
   slideGenerationState: {
     isGenerating: boolean;
@@ -417,6 +497,15 @@ export interface LessonCreationContextValue {
   clearGeneratedPlan: () => void;
   clearGeneratedLesson: () => void;
   resetState: () => void;
+  // Plan editing methods
+  enterEditMode: () => void;
+  exitEditMode: () => void;
+  addComment: (comment: Omit<PlanComment, 'id' | 'timestamp'>) => void;
+  removeComment: (commentId: string) => void;
+  updateComment: (commentId: string, updates: Partial<PlanComment>) => void;
+  clearAllComments: () => void;
+  processComments: () => Promise<void>;
+  updatePlanEditingState: (state: Partial<PlanEditingState>) => void;
   // Slide generation state management
   updateSlideGenerationState: (state: Partial<LessonCreationState['slideGenerationState']>) => void;
   clearSlideGenerationState: () => void;

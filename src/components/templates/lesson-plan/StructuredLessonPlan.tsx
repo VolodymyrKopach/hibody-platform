@@ -9,7 +9,7 @@ import {
   CardContent
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { ParsedLessonPlan } from '@/types/templates';
+import { ParsedLessonPlan, PlanComment } from '@/types/templates';
 import { LessonPlanParser } from '@/utils/lessonPlanParser';
 import { LessonPlanJSONProcessor } from '@/utils/lessonPlanJSONProcessor';
 import LessonPlanHeader from './LessonPlanHeader';
@@ -17,9 +17,17 @@ import LessonPlanTabs from './LessonPlanTabs';
 
 interface StructuredLessonPlanProps {
   markdown: string | any; // Can be markdown string or JSON object
+  isEditingMode?: boolean;
+  onAddComment?: (comment: Omit<PlanComment, 'id' | 'timestamp'>) => void;
+  pendingComments?: PlanComment[];
 }
 
-const StructuredLessonPlan: React.FC<StructuredLessonPlanProps> = ({ markdown }) => {
+const StructuredLessonPlan: React.FC<StructuredLessonPlanProps> = ({ 
+  markdown, 
+  isEditingMode = false,
+  onAddComment,
+  pendingComments = []
+}) => {
   const theme = useTheme();
   
   // Parse content to structured data (handle both JSON object and markdown string)
@@ -94,7 +102,12 @@ const StructuredLessonPlan: React.FC<StructuredLessonPlanProps> = ({ markdown })
 
 
       {/* Tabbed Content */}
-      <LessonPlanTabs parsedPlan={parsedPlan} />
+      <LessonPlanTabs 
+        parsedPlan={parsedPlan} 
+        isEditingMode={isEditingMode}
+        onAddComment={onAddComment}
+        pendingComments={pendingComments}
+      />
     </Box>
   );
 };
