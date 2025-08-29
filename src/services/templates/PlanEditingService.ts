@@ -2,8 +2,10 @@ import {
   PlanComment, 
   PlanEditRequest, 
   PlanEditResponse, 
+  PlanEditResponseWithChanges,
   CommentValidationResult,
-  CommentSectionType 
+  CommentSectionType,
+  PlanChanges
 } from '@/types/templates';
 
 /**
@@ -30,7 +32,7 @@ export class PlanEditingService {
       topic: string;
       slideCount: number;
     }
-  ): Promise<any> { // Return object instead of string
+  ): Promise<{ editedPlan: any; planChanges?: PlanChanges }> { // Return object with changes
     try {
       console.log('🎯 PLAN EDITING SERVICE: Starting plan editing', {
         commentsCount: comments.length,
@@ -96,7 +98,7 @@ export class PlanEditingService {
         body: JSON.stringify(request),
       });
 
-      const data: PlanEditResponse = await response.json();
+      const data: PlanEditResponseWithChanges = await response.json();
 
       if (!response.ok) {
         console.error('❌ PLAN EDITING SERVICE: API error', {
@@ -122,7 +124,8 @@ export class PlanEditingService {
 
       console.log('✅ PLAN EDITING SERVICE: Plan edited successfully', {
         changesCount: data.metadata?.changesCount || 0,
-        processingTime: data.metadata?.processingTime || 0
+        processingTime: data.metadata?.processingTime || 0,
+        hasChanges: !!data.changes
       });
 
       // Parse response to object
@@ -148,7 +151,10 @@ export class PlanEditingService {
         }
       }
 
-      return editedPlan;
+      return {
+        editedPlan,
+        planChanges: data.changes
+      };
 
     } catch (error) {
       console.error('❌ PLAN EDITING SERVICE: Error editing plan:', error);

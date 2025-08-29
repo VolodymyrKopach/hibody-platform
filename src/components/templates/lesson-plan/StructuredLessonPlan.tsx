@@ -9,7 +9,7 @@ import {
   CardContent
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { ParsedLessonPlan, PlanComment } from '@/types/templates';
+import { ParsedLessonPlan, PlanComment, PlanChanges } from '@/types/templates';
 import { LessonPlanParser } from '@/utils/lessonPlanParser';
 import { LessonPlanJSONProcessor } from '@/utils/lessonPlanJSONProcessor';
 import LessonPlanHeader from './LessonPlanHeader';
@@ -22,6 +22,14 @@ interface StructuredLessonPlanProps {
   pendingComments?: PlanComment[];
   onEnterEditMode?: () => void;
   onExitEditMode?: () => void;
+  // New props for CommentPanel integration
+  planChanges?: PlanChanges | null;
+  showCommentResults?: boolean;
+  onProcessComments?: () => void;
+  onRemoveComment?: (commentId: string) => void;
+  onClearAllComments?: () => void;
+  onAddMoreComments?: () => void;
+  isProcessingComments?: boolean;
 }
 
 const StructuredLessonPlan: React.FC<StructuredLessonPlanProps> = ({ 
@@ -30,7 +38,14 @@ const StructuredLessonPlan: React.FC<StructuredLessonPlanProps> = ({
   onAddComment,
   pendingComments = [],
   onEnterEditMode,
-  onExitEditMode
+  onExitEditMode,
+  planChanges,
+  showCommentResults = false,
+  onProcessComments,
+  onRemoveComment,
+  onClearAllComments,
+  onAddMoreComments,
+  isProcessingComments = false
 }) => {
   const theme = useTheme();
   
@@ -113,6 +128,13 @@ const StructuredLessonPlan: React.FC<StructuredLessonPlanProps> = ({
         pendingComments={pendingComments}
         onEnterEditMode={onEnterEditMode}
         onExitEditMode={onExitEditMode}
+        planChanges={planChanges}
+        showCommentResults={showCommentResults}
+        onProcessComments={onProcessComments}
+        onRemoveComment={onRemoveComment}
+        onClearAllComments={onClearAllComments}
+        onAddMoreComments={onAddMoreComments}
+        isProcessingComments={isProcessingComments}
       />
     </Box>
   );

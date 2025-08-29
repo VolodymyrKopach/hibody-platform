@@ -4,7 +4,10 @@ import { createClient } from '@/lib/supabase/server';
 import { 
   PlanEditRequest, 
   PlanEditResponse, 
-  CommentSectionType 
+  PlanEditResponseWithChanges,
+  CommentSectionType,
+  PlanChanges,
+  PlanChangeItem
 } from '@/types/templates';
 import { 
   validateAndSanitizeEditRequest, 
@@ -38,6 +41,81 @@ function getClientIP(request: NextRequest): string {
   }
   
   return 'unknown';
+}
+
+// Build AI prompt for generating changes description
+function buildChangesAnalysisPrompt(originalPlan: string, editedPlan: string, comments: PlanEditRequest['comments'], language: 'uk' | 'en'): string {
+  const isUkrainian = language === 'uk';
+  
+  const systemPrompt = isUkrainian ? `
+Ти експерт з аналізу змін у планах уроків. Твоє завдання - проаналізувати оригінальний та відредагований план і створити структурований опис внесених змін.
+
+ВАЖЛИВІ ПРАВИЛА:
+1. Порівняй оригінальний та відредагований план
+2. Визнач які саме зміни були внесені в кожній секції
+3. Створи короткий (1-2 речення) та детальний опис для кожної зміни
+4. Класифікуй зміни за типами: modified, added, removed, restructured
+5. Відповідай ТІЛЬКИ валідним JSON без додаткових пояснень
+
+ФОРМАТ ВІДПОВІДІ (JSON):
+{
+  "summary": {
+    "totalChanges": число_змін,
+    "sectionsModified": кількість_секцій
+  },
+  "changes": [
+    {
+      "section": "назва_секції",
+      "sectionType": "objectives|activities|materials|assessment|homework|slides|games|recommendations|general",
+      "shortDescription": "Короткий опис зміни (1-2 речення)",
+      "detailedDescription": "Детальний опис зміни з конкретними прикладами",
+      "changeType": "modified|added|removed|restructured"
+    }
+  ]
+}` : `
+You are an expert in analyzing lesson plan changes. Your task is to analyze the original and edited plan and create a structured description of the changes made.
+
+IMPORTANT RULES:
+1. Compare the original and edited plan
+2. Identify exactly what changes were made in each section
+3. Create short (1-2 sentences) and detailed descriptions for each change
+4. Classify changes by type: modified, added, removed, restructured
+5. Respond with ONLY valid JSON without additional explanations
+
+RESPONSE FORMAT (JSON):
+{
+  "summary": {
+    "totalChanges": number_of_changes,
+    "sectionsModified": number_of_sections
+  },
+  "changes": [
+    {
+      "section": "section_name",
+      "sectionType": "objectives|activities|materials|assessment|homework|slides|games|recommendations|general",
+      "shortDescription": "Short change description (1-2 sentences)",
+      "detailedDescription": "Detailed change description with specific examples",
+      "changeType": "modified|added|removed|restructured"
+    }
+  ]
+}`;
+
+  const commentsContext = isUkrainian ?
+    `КОМЕНТАРІ КОРИСТУВАЧА (для контексту):
+${comments.map((comment, index) => `${index + 1}. ${comment.section}: ${comment.instruction}`).join('\n')}` :
+    `USER COMMENTS (for context):
+${comments.map((comment, index) => `${index + 1}. ${comment.section}: ${comment.instruction}`).join('\n')}`;
+
+  return `${systemPrompt}
+
+${commentsContext}
+
+ОРИГІНАЛЬНИЙ ПЛАН:
+${originalPlan}
+
+ВІДРЕДАГОВАНИЙ ПЛАН:
+${editedPlan}
+
+JSON ВІДПОВІДЬ:`;
 }
 
 // Build AI prompt for plan editing
@@ -220,7 +298,52 @@ export async function POST(request: NextRequest) {
         processingTime: Date.now() - startTime
       });
 
-      // Analyze applied changes (basic detection)
+      // Generate structured changes description using AI
+      let planChanges: PlanChanges | undefined;
+      
+      try {
+        console.log(`🔍 PLAN EDIT API: Analyzing changes [${requestId}]`);
+        
+        const changesPrompt = buildChangesAnalysisPrompt(
+          body.originalPlan, 
+          response, 
+          body.comments, 
+          body.language
+        );
+        
+        const changesResponse = await contentService.generateContent(changesPrompt, {
+          temperature: 0.1, // Very low temperature for consistent JSON
+          maxTokens: 2000,
+          model: 'gemini-2.5-flash'
+        });
+
+        if (changesResponse && changesResponse.trim()) {
+          try {
+            // Clean the response to ensure it's valid JSON
+            const cleanedResponse = changesResponse.trim()
+              .replace(/^```json\s*/, '')
+              .replace(/\s*```$/, '')
+              .replace(/^```\s*/, '')
+              .replace(/\s*```$/, '');
+            
+            planChanges = JSON.parse(cleanedResponse) as PlanChanges;
+            
+            console.log(`✅ PLAN EDIT API: Changes analyzed successfully [${requestId}]`, {
+              totalChanges: planChanges.summary.totalChanges,
+              sectionsModified: planChanges.summary.sectionsModified
+            });
+          } catch (parseError) {
+            console.warn(`⚠️ PLAN EDIT API: Failed to parse changes JSON [${requestId}]:`, parseError);
+            // Fall back to basic changes detection
+            planChanges = undefined;
+          }
+        }
+      } catch (changesError) {
+        console.warn(`⚠️ PLAN EDIT API: Failed to analyze changes [${requestId}]:`, changesError);
+        // Continue without changes analysis
+      }
+
+      // Analyze applied changes (basic detection for backward compatibility)
       const appliedChanges = body.comments.map(comment => ({
         sectionType: comment.section,
         sectionId: comment.sectionId,
@@ -228,10 +351,11 @@ export async function POST(request: NextRequest) {
         success: true
       }));
 
-      const editResponse: PlanEditResponse = {
+      const editResponse: PlanEditResponseWithChanges = {
         success: true,
         editedPlan: response,
         appliedChanges,
+        changes: planChanges,
         metadata: {
           processingTime: Date.now() - startTime,
           changesCount: body.comments.length,

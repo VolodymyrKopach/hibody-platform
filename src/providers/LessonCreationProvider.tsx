@@ -7,7 +7,8 @@ import {
   TemplateData, 
   LessonCreationStep,
   PlanComment,
-  PlanEditingState
+  PlanEditingState,
+  PlanChanges
 } from '@/types/templates';
 import { SimpleLesson } from '@/types/chat';
 import { planEditingService } from '@/services/templates/PlanEditingService';
@@ -49,6 +50,7 @@ const initialState: LessonCreationState = {
   isLoading: false,
   error: null,
   planEditingState: initialPlanEditingState,
+  planChanges: null,
   slideGenerationState: initialSlideGenerationState
 };
 
@@ -277,7 +279,7 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
     }));
 
     try {
-      const editedPlan = await planEditingService.processComments(
+      const result = await planEditingService.processComments(
         generatedPlan, // Pass plan directly (string or object)
         planEditingState.pendingComments,
         {
@@ -287,10 +289,14 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
         }
       );
 
+      const { editedPlan, planChanges } = result;
+
       // Service now returns object directly, no conversion needed
       console.log('✅ PROVIDER: Received edited plan', {
         editedPlanType: typeof editedPlan,
-        isObject: typeof editedPlan === 'object'
+        isObject: typeof editedPlan === 'object',
+        hasChanges: !!planChanges,
+        changesCount: planChanges?.summary.totalChanges || 0
       });
 
       // Create history entry
@@ -306,6 +312,7 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
       setState(prev => ({
         ...prev,
         generatedPlan: editedPlan, // Use edited plan directly
+        planChanges, // Store plan changes
         planEditingState: {
           ...initialPlanEditingState,
           editHistory: [...prev.planEditingState.editHistory, historyEntry],
@@ -351,6 +358,22 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
     }));
   }, []);
 
+  // === Plan Changes Methods ===
+
+  const setPlanChanges = useCallback((changes: PlanChanges | null) => {
+    setState(prev => ({
+      ...prev,
+      planChanges: changes
+    }));
+  }, []);
+
+  const clearPlanChanges = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      planChanges: null
+    }));
+  }, []);
+
   const contextValue: LessonCreationContextValue = {
     state,
     setCurrentStep,
@@ -376,7 +399,10 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
     clearSlideGenerationState,
     // Step completion management
     markStepCompleted,
-    canNavigateToStep
+    canNavigateToStep,
+    // Plan changes management
+    setPlanChanges,
+    clearPlanChanges
   };
 
   return (

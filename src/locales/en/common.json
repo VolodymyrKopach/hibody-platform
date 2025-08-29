@@ -528,5 +528,54 @@
         "physics": "Physics"
       }
     }
+  },
+  "planChanges": {
+    "title": "Applied Changes",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "snackbarSuccess": "Applied {{count}} changes to the plan",
+    "noChanges": "No changes were applied",
+    "sectionsModified": "Sections modified: {{count}}",
+    "totalChanges": "Total changes: {{count}}",
+    "summaryView": "Summary View",
+    "detailedView": "Detailed View",
+    "changesApplied": "changes applied",
+    "sectionsUpdated": "sections updated",
+    "changeTypes": {
+      "modified": "Modified",
+      "added": "Added",
+      "removed": "Removed",
+      "restructured": "Restructured"
+    },
+    "sectionTypes": {
+      "objectives": "Lesson Objectives",
+      "activities": "Activities",
+      "materials": "Materials",
+      "assessment": "Assessment",
+      "homework": "Homework",
+      "slides": "Slides",
+      "games": "Games",
+      "recommendations": "Recommendations",
+      "general": "General"
+    },
+    "fields": {
+      "slideNumber": "slide",
+      "title": "title",
+      "goal": "objective",
+      "content": "content",
+      "description": "description",
+      "materials": "materials",
+      "activities": "activities"
+    }
+  },
+  "editMode": {
+    "comments": "Editing Comments"
+  },
+  "common": {
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+  "buttons": {
+    "edit": "Edit"
   }
 }

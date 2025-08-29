@@ -474,6 +474,8 @@ export interface LessonCreationState {
   error: string | null;
   // Plan editing state
   planEditingState: PlanEditingState;
+  // Plan changes feedback
+  planChanges: PlanChanges | null;
   // Generation state persistence
   slideGenerationState: {
     isGenerating: boolean;
@@ -512,4 +514,29 @@ export interface LessonCreationContextValue {
   // Step completion management
   markStepCompleted: (step: LessonCreationStep) => void;
   canNavigateToStep: (step: LessonCreationStep) => boolean;
+  // Plan changes management
+  setPlanChanges: (changes: PlanChanges | null) => void;
+  clearPlanChanges: () => void;
+}
+
+// === Plan Changes Feedback System Types ===
+
+export interface PlanChanges {
+  summary: {
+    totalChanges: number;
+    sectionsModified: number;
+  };
+  changes: PlanChangeItem[];
+}
+
+export interface PlanChangeItem {
+  section: string;
+  sectionType: 'objectives' | 'activities' | 'materials' | 'assessment' | 'homework' | 'slides' | 'games' | 'recommendations' | 'general';
+  shortDescription: string;
+  detailedDescription: string;
+  changeType: 'modified' | 'added' | 'removed' | 'restructured';
+}
+
+export interface PlanEditResponseWithChanges extends PlanEditResponse {
+  changes?: PlanChanges;
 }

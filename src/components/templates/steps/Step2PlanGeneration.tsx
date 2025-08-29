@@ -10,10 +10,10 @@ import {
   Divider,
   Chip,
   Stack,
-  Fade,
   Collapse,
   Fab,
-  Tooltip
+  Tooltip,
+  Snackbar
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
@@ -30,7 +30,8 @@ import { ArrowLeft } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/markdown';
 import { StructuredLessonPlan } from '@/components/templates/lesson-plan';
 import { RegenerationConfirmDialog } from '@/components/dialogs';
-import { CommentPanel, CommentDialog } from '@/components/templates/plan-editing';
+import { CommentDialog } from '@/components/templates/plan-editing';
+// Updated to include planChanges prop
 import { StandardCommentButton } from '@/components/ui';
 import { lessonPlanService, LessonPlanServiceError } from '@/services/templates/LessonPlanService';
 import { TemplateData, GenerationState, PlanComment } from '@/types/templates';
@@ -60,7 +61,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
   
   // Get editing state and methods from provider
   const {
-    state: { planEditingState },
+    state,
     enterEditMode,
     exitEditMode,
     addComment,
@@ -69,11 +70,15 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
     processComments
   } = useLessonCreation();
   
+  const { planEditingState } = state;
+  
   const [generationState, setGenerationState] = useState<GenerationState>('idle');
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
   const [showCommentDialog, setShowCommentDialog] = useState(false);
+  const [showSuccessSnackbar, setShowSuccessSnackbar] = useState(false);
+  const [showCommentResults, setShowCommentResults] = useState(false);
   const hasInitialized = useRef(false);
 
   const handleGeneratePlan = useCallback(async () => {
@@ -97,13 +102,6 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
       }
 
       const plan = await lessonPlanService.generateLessonPlan(request);
-      
-      console.log('🔄 STEP2: Plan generated from API', {
-        planType: typeof plan,
-        planLength: plan?.length || 0,
-        isString: typeof plan === 'string',
-        planPreview: typeof plan === 'string' ? plan.substring(0, 100) + '...' : plan
-      });
       
       setProgress(100);
       setGenerationState('success');
@@ -168,6 +166,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
     onClearPlan(); // Clear the existing plan and slides
     setGenerationState('idle');
     setError(null);
+    setShowCommentResults(false); // Reset comment results view
     hasInitialized.current = false;
     // Exit edit mode if active
     if (planEditingState.isEditingMode) {
@@ -194,21 +193,25 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
 
   // Handle processing comments
   const handleProcessComments = useCallback(async () => {
-    console.log('🔄 STEP2: Processing comments', {
-      hasGeneratedPlan: !!generatedPlan,
-      planLength: generatedPlan?.length || 0,
-      commentsCount: planEditingState.pendingComments.length
-    });
-    
     try {
       await processComments();
       // Plan will be updated automatically through provider
       exitEditMode();
+      
+      // Встановлюємо showCommentResults в true після успішної обробки
+      setShowCommentResults(true);
+      setShowSuccessSnackbar(true);
     } catch (error) {
       console.error('Error processing comments:', error);
       setError(error instanceof Error ? error.message : 'Failed to process comments');
     }
   }, [processComments, exitEditMode, generatedPlan, planEditingState.pendingComments]);
+
+  // Handle adding more comments (return to editing mode)
+  const handleAddMoreComments = useCallback(() => {
+    // CommentPanel тепер сам керує відображенням, просто входимо в режим редагування
+    enterEditMode();
+  }, [enterEditMode]);
 
   const renderGeneratingState = () => (
     <Card elevation={2} sx={{ borderRadius: 3 }}>
@@ -304,21 +307,28 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
 
   const renderSuccessState = () => (
     <>
-      <Card elevation={2} sx={{ borderRadius: 3, position: 'relative' }}>
-        <CardContent sx={{ p: 6 }}>
+        <Card elevation={2} sx={{ borderRadius: 3, position: 'relative' }}>
+          <CardContent sx={{ p: 6 }}>
 
 
-          {/* Plan Content */}
-          {generatedPlan && (
-            <StructuredLessonPlan 
-              markdown={generatedPlan}
-              isEditingMode={planEditingState.isEditingMode}
-              onAddComment={handleAddComment}
-              pendingComments={planEditingState.pendingComments}
-              onEnterEditMode={handleEnterEditMode}
-              onExitEditMode={handleExitEditMode}
-            />
-          )}
+            {/* Plan Content */}
+            {generatedPlan && (
+              <StructuredLessonPlan 
+                markdown={generatedPlan}
+                isEditingMode={planEditingState.isEditingMode}
+                onAddComment={handleAddComment}
+                pendingComments={planEditingState.pendingComments}
+                onEnterEditMode={handleEnterEditMode}
+                onExitEditMode={handleExitEditMode}
+                planChanges={state.planChanges}
+                showCommentResults={showCommentResults}
+                onProcessComments={handleProcessComments}
+                onRemoveComment={removeComment}
+                onClearAllComments={clearAllComments}
+                onAddMoreComments={handleAddMoreComments}
+                isProcessingComments={planEditingState.isProcessingComments}
+              />
+            )}
 
           <Divider sx={{ my: 4 }} />
 
@@ -362,18 +372,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
         </CardContent>
       </Card>
 
-      {/* Comment Panel */}
-      <Fade in={planEditingState.pendingComments.length > 0}>
-        <Box>
-          <CommentPanel
-            comments={planEditingState.pendingComments}
-            isProcessing={planEditingState.isProcessingComments}
-            onProcessComments={handleProcessComments}
-            onRemoveComment={removeComment}
-            onClearAllComments={clearAllComments}
-          />
-        </Box>
-      </Fade>
+
 
       {/* Comment Dialog */}
       <CommentDialog
@@ -460,6 +459,15 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
           type="plan"
           hasSlides={hasSlides}
         />
+        
+        <Snackbar
+          open={showSuccessSnackbar}
+          autoHideDuration={4000}
+          onClose={() => setShowSuccessSnackbar(false)}
+          message={t('planChanges.snackbarSuccess', { 
+            count: state.planChanges?.summary.totalChanges || 0 
+          })}
+        />
       </>
     );
   }
@@ -475,6 +483,15 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
         onConfirm={performRegeneration}
         type="plan"
         hasSlides={hasSlides}
+      />
+      
+      <Snackbar
+        open={showSuccessSnackbar}
+        autoHideDuration={4000}
+        onClose={() => setShowSuccessSnackbar(false)}
+        message={t('planChanges.snackbarSuccess', { 
+          count: state.planChanges?.summary.totalChanges || 0 
+        })}
       />
     </>
   );

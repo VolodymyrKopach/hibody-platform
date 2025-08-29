@@ -510,5 +510,54 @@
         "physics": "Фізика"
       }
     }
+  },
+  "planChanges": {
+    "title": "Внесені зміни",
+    "showDetails": "Показати деталі",
+    "hideDetails": "Приховати деталі",
+    "snackbarSuccess": "Внесено {{count}} змін до плану",
+    "noChanges": "Зміни не були внесені",
+    "sectionsModified": "Змінено розділів: {{count}}",
+    "totalChanges": "Всього змін: {{count}}",
+    "summaryView": "Стислий вигляд",
+    "detailedView": "Детальний вигляд",
+    "changesApplied": "змін застосовано",
+    "sectionsUpdated": "розділів оновлено",
+    "changeTypes": {
+      "modified": "Змінено",
+      "added": "Додано",
+      "removed": "Видалено",
+      "restructured": "Реструктуровано"
+    },
+    "sectionTypes": {
+      "objectives": "Цілі уроку",
+      "activities": "Активності",
+      "materials": "Матеріали",
+      "assessment": "Оцінювання",
+      "homework": "Домашнє завдання",
+      "slides": "Слайди",
+      "games": "Ігри",
+      "recommendations": "Рекомендації",
+      "general": "Загальне"
+    },
+    "fields": {
+      "slideNumber": "слайд",
+      "title": "назва",
+      "goal": "мета",
+      "content": "вміст",
+      "description": "опис",
+      "materials": "матеріали",
+      "activities": "активності"
+    }
+  },
+  "editMode": {
+    "comments": "Коментарі для редагування"
+  },
+  "common": {
+    "expand": "Розгорнути",
+    "collapse": "Згорнути"
+  },
+  "buttons": {
+    "edit": "Редагувати"
   }
 }
