@@ -147,9 +147,13 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
       <DialogTitle sx={{ 
         display: 'flex', 
         alignItems: 'center', 
-        pb: 1,
+        pb: 2,
+        pt: 2,
+        minHeight: 64,
         borderBottom: `1px solid ${theme.palette.divider}`,
-        fontWeight: 600
+        fontWeight: 600,
+        position: 'relative',
+        zIndex: 1
       }}>
         <MessageSquare size={24} color={theme.palette.primary.main} />
         <Box component="span" sx={{ ml: 1 }}>
@@ -165,9 +169,19 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 3 }}>
-        {/* Section Type Selection */}
-        <FormControl fullWidth sx={{ mb: 3 }}>
+      <DialogContent sx={{ 
+        pt: '24px !important', 
+        pb: 2,
+        mt: 0,
+        position: 'relative',
+        '&.MuiDialogContent-root': {
+          paddingTop: '24px !important',
+          marginTop: 0
+        }
+      }}>
+        <Box sx={{ pt: 1 }}>
+          {/* Section Type Selection */}
+          <FormControl fullWidth sx={{ mb: 3 }}>
           <InputLabel>Section Type</InputLabel>
           <Select
             value={sectionType}
@@ -300,9 +314,10 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
             and modify the lesson plan accordingly while preserving the overall structure.
           </Typography>
         </Alert>
+        </Box>
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, pt: 1 }}>
+      <DialogActions sx={{ p: 3, pt: 2 }}>
         <Button onClick={onClose} color="inherit">
           Cancel
         </Button>
