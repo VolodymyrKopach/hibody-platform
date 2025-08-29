@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
-import { Close as CloseIcon, Info as InfoIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
+import { Close as CloseIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { MessageSquare } from 'lucide-react';
 import { CommentSectionType, PlanComment } from '@/types/templates';
 
@@ -403,13 +403,7 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
             </Box>
           )}
 
-        {/* Info */}
-        <Alert severity="info" icon={<InfoIcon />}>
-          <Typography variant="body2">
-            Be specific about what you want to change. The AI will interpret your comment 
-            and modify the lesson plan accordingly while preserving the overall structure.
-          </Typography>
-        </Alert>
+
         </Box>
       </DialogContent>
 
