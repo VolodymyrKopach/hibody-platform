@@ -21,6 +21,7 @@ interface SlideCommentButtonProps {
   onAddComment: (comment: Omit<PlanComment, 'id' | 'timestamp'>) => void;
   variant?: 'icon' | 'fab' | 'inline';
   size?: 'small' | 'medium' | 'large';
+  totalSlides?: number;
 }
 
 const SlideCommentButton: React.FC<SlideCommentButtonProps> = ({
@@ -30,7 +31,8 @@ const SlideCommentButton: React.FC<SlideCommentButtonProps> = ({
   commentCount,
   onAddComment,
   variant = 'icon',
-  size = 'medium'
+  size = 'medium',
+  totalSlides = 0
 }) => {
   const theme = useTheme();
   const [showCommentDialog, setShowCommentDialog] = useState(false);
@@ -83,6 +85,7 @@ const SlideCommentButton: React.FC<SlideCommentButtonProps> = ({
           initialSection="slide"
           initialSectionId={slideNumber.toString()}
           title={`Comment on Slide ${slideNumber}`}
+          totalSlides={totalSlides}
         />
       </>
     );
@@ -106,6 +109,7 @@ const SlideCommentButton: React.FC<SlideCommentButtonProps> = ({
           initialSection="slide"
           initialSectionId={slideNumber.toString()}
           title={`Comment on Slide ${slideNumber}`}
+          totalSlides={totalSlides}
         />
       </>
     );

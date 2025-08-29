@@ -158,6 +158,7 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({
                 onAddComment={onAddComment!}
                 variant="inline"
                 size="small"
+                totalSlides={slides.length}
               />
             )}
 

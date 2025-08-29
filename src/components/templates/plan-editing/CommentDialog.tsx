@@ -14,11 +14,12 @@ import {
   Typography,
   Chip,
   Alert,
-  IconButton
+  IconButton,
+  Collapse
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
-import { Close as CloseIcon, Info as InfoIcon } from '@mui/icons-material';
+import { Close as CloseIcon, Info as InfoIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { MessageSquare } from 'lucide-react';
 import { CommentSectionType, PlanComment } from '@/types/templates';
 
@@ -29,6 +30,7 @@ interface CommentDialogProps {
   initialSection?: CommentSectionType;
   initialSectionId?: string;
   title?: string;
+  totalSlides?: number;
 }
 
 const CommentDialog: React.FC<CommentDialogProps> = ({
@@ -37,7 +39,8 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
   onSubmit,
   initialSection = 'general',
   initialSectionId,
-  title = 'Add Comment'
+  title = 'Add Comment',
+  totalSlides = 0
 }) => {
   const theme = useTheme();
   const { t } = useTranslation('common');
@@ -47,6 +50,7 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
   const [comment, setComment] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [error, setError] = useState<string | null>(null);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   // Reset form when dialog opens/closes
   React.useEffect(() => {
@@ -56,6 +60,7 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
       setComment('');
       setPriority('medium');
       setError(null);
+      setShowAdvancedOptions(false);
     }
   }, [open, initialSection, initialSectionId]);
 
@@ -169,7 +174,7 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ 
+            <DialogContent sx={{ 
         pt: '24px !important', 
         pb: 2,
         mt: 0,
@@ -180,132 +185,223 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
         }
       }}>
         <Box sx={{ pt: 1 }}>
-          {/* Section Type Selection */}
-          <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel>Section Type</InputLabel>
-          <Select
-            value={sectionType}
-            label="Section Type"
-            onChange={(e) => handleSectionTypeChange(e.target.value as CommentSectionType)}
-          >
-            {sectionOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ marginRight: 8 }}>{option.icon}</span>
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {option.label}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {option.description}
-                    </Typography>
-                  </Box>
-                </Box>
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Section ID (for slides) */}
-        {sectionType === 'slide' && (
+          {/* Comment Text - Primary Field */}
           <TextField
             fullWidth
-            label="Slide Number (optional)"
-            value={sectionId}
-            onChange={(e) => setSectionId(e.target.value)}
-            placeholder="e.g., 1, 2, 3..."
-            helperText="Specify which slide to modify (leave empty for general slide comments)"
+            multiline
+            rows={4}
+            label="Your Comment"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Describe what you want to change or improve..."
+            helperText={`${comment.length}/500 characters`}
+            error={!!error}
             sx={{ mb: 3 }}
-            type="number"
-            inputProps={{ min: 1, max: 50 }}
+            autoFocus
           />
-        )}
 
-        {/* Priority Selection */}
-        <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel>Priority</InputLabel>
-          <Select
-            value={priority}
-            label="Priority"
-            onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
-          >
-            {priorityOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Box
-                    sx={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: '50%',
-                      backgroundColor: option.color,
-                      mr: 1
+          {/* Advanced Options - Collapsible */}
+          <Box sx={{ mb: 2 }}>
+            <Box
+              onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                p: 1,
+                borderRadius: 1,
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  backgroundColor: theme.palette.action.hover
+                }
+              }}
+            >
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: 'text.secondary',
+                  fontSize: '0.875rem',
+                  fontWeight: 500
+                }}
+              >
+                Advanced Options
+              </Typography>
+              <IconButton
+                size="small"
+                sx={{
+                  transform: showAdvancedOptions ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }}
+              >
+                <ExpandMoreIcon fontSize="small" />
+              </IconButton>
+            </Box>
+
+            <Collapse in={showAdvancedOptions}>
+              <Box sx={{ pt: 2 }}>
+                {/* Section Type - Chip Selector */}
+                <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                Section Type
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {sectionOptions.map((option) => (
+                  <Chip
+                    key={option.value}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <span>{option.icon}</span>
+                        <span>{option.label}</span>
+                      </Box>
+                    }
+                    variant={sectionType === option.value ? 'filled' : 'outlined'}
+                    color={sectionType === option.value ? 'primary' : 'default'}
+                    onClick={() => handleSectionTypeChange(option.value)}
+                    sx={{ 
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: sectionType === option.value 
+                          ? theme.palette.primary.dark 
+                          : theme.palette.action.hover
+                      }
                     }}
                   />
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {option.label}
+                ))}
+              </Box>
+            </Box>
+
+                            {/* Slide Selector (for slides) */}
+                {sectionType === 'slide' && totalSlides > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                      Select Slide (optional)
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {option.description}
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {/* All slides option */}
+                      <Chip
+                        label="All Slides"
+                        variant={!sectionId ? 'filled' : 'outlined'}
+                        color={!sectionId ? 'primary' : 'default'}
+                        onClick={() => setSectionId('')}
+                        sx={{ 
+                          cursor: 'pointer',
+                          '&:hover': {
+                            backgroundColor: !sectionId 
+                              ? theme.palette.primary.dark 
+                              : theme.palette.action.hover
+                          }
+                        }}
+                      />
+                      
+                      {/* Individual slide options */}
+                      {Array.from({ length: totalSlides }, (_, index) => {
+                        const slideNumber = (index + 1).toString();
+                        const isSelected = sectionId === slideNumber;
+                        
+                        return (
+                          <Chip
+                            key={slideNumber}
+                            label={`Slide ${slideNumber}`}
+                            variant={isSelected ? 'filled' : 'outlined'}
+                            color={isSelected ? 'primary' : 'default'}
+                            onClick={() => setSectionId(slideNumber)}
+                            sx={{ 
+                              cursor: 'pointer',
+                              '&:hover': {
+                                backgroundColor: isSelected 
+                                  ? theme.palette.primary.dark 
+                                  : theme.palette.action.hover
+                              }
+                            }}
+                          />
+                        );
+                      })}
+                    </Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      Choose a specific slide or leave "All Slides" for general slide comments
                     </Typography>
                   </Box>
-                </Box>
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+                )}
 
-        {/* Comment Text */}
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Your Comment"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Describe what you want to change or improve..."
-          helperText={`${comment.length}/500 characters`}
-          error={!!error}
-          sx={{ mb: 2 }}
-        />
+                        {/* Priority - Chip Selector */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                Priority
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {priorityOptions.map((option) => (
+                  <Chip
+                    key={option.value}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box
+                          sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            backgroundColor: option.color
+                          }}
+                        />
+                        <span>{option.label}</span>
+                      </Box>
+                    }
+                    variant={priority === option.value ? 'filled' : 'outlined'}
+                    color={priority === option.value ? 'primary' : 'default'}
+                    onClick={() => setPriority(option.value as 'low' | 'medium' | 'high')}
+                    sx={{ 
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: priority === option.value 
+                          ? theme.palette.primary.dark 
+                          : theme.palette.action.hover
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+            </Box>
+              </Box>
+            </Collapse>
+          </Box>
 
-        {/* Error message */}
+          {/* Error message */}
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
 
-        {/* Preview */}
-        {comment.trim() && (
-          <Box sx={{ 
-            p: 2, 
-            backgroundColor: theme.palette.grey[50], 
-            borderRadius: 2,
-            border: `1px solid ${theme.palette.divider}`,
-            mb: 2
-          }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
-              Preview:
-              <Chip
-                label={selectedSection?.label}
-                size="small"
-                sx={{ ml: 1, mr: 1 }}
-              />
-              <Chip
-                label={selectedPriority?.label}
-                size="small"
-                sx={{
-                  backgroundColor: selectedPriority?.color + '20',
-                  color: selectedPriority?.color
-                }}
-              />
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {comment}
-            </Typography>
-          </Box>
-        )}
+          {/* Preview */}
+          {comment.trim() && (
+            <Box sx={{ 
+              p: 2, 
+              backgroundColor: theme.palette.grey[50], 
+              borderRadius: 2,
+              border: `1px solid ${theme.palette.divider}`,
+              mb: 2
+            }}>
+              <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
+                Preview:
+                <Chip
+                  label={selectedSection?.label}
+                  size="small"
+                  sx={{ ml: 1, mr: 1 }}
+                />
+                <Chip
+                  label={selectedPriority?.label}
+                  size="small"
+                  sx={{
+                    backgroundColor: selectedPriority?.color + '20',
+                    color: selectedPriority?.color
+                  }}
+                />
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {comment}
+              </Typography>
+            </Box>
+          )}
 
         {/* Info */}
         <Alert severity="info" icon={<InfoIcon />}>

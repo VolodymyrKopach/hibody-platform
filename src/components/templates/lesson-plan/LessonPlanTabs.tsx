@@ -28,7 +28,7 @@ import {
 } from '@mui/icons-material';
 import { ParsedLessonPlan, PlanComment, PlanChanges } from '@/types/templates';
 import { StandardCommentButton } from '@/components/ui';
-import { CommentPanel } from '@/components/templates/plan-editing';
+import { CommentPanel, CommentDialog } from '@/components/templates/plan-editing';
 import LessonObjectives from './LessonObjectives';
 import SlideNavigation from './SlideNavigation';
 import GameElements from './GameElements';
@@ -77,6 +77,25 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
 }) => {
   const theme = useTheme();
   const { t } = useTranslation();
+  
+  // State for comment dialog
+  const [showCommentDialog, setShowCommentDialog] = useState(false);
+
+  // Comment dialog handlers
+  const handleOpenCommentDialog = () => {
+    setShowCommentDialog(true);
+  };
+
+  const handleCloseCommentDialog = () => {
+    setShowCommentDialog(false);
+  };
+
+  const handleSubmitComment = (comment: Omit<PlanComment, 'id' | 'timestamp'>) => {
+    if (onAddComment) {
+      onAddComment(comment);
+    }
+    setShowCommentDialog(false);
+  };
 
   // Prepare tab data
   const tabs: TabData[] = [
@@ -256,12 +275,7 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
             {/* Comment Button - Always visible in edit mode */}
             {isEditingMode && onAddComment && (
               <StandardCommentButton
-                onClick={() => onAddComment({
-                  sectionType: 'general',
-                  comment: '',
-                  priority: 'medium',
-                  status: 'pending'
-                })}
+                onClick={handleOpenCommentDialog}
                 tooltip="Add Comment to Plan"
               />
             )}
@@ -443,6 +457,16 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
       }}>
         {tabs[activeTab]?.component}
       </Box>
+
+      {/* Comment Dialog */}
+      <CommentDialog
+        open={showCommentDialog}
+        onClose={handleCloseCommentDialog}
+        onSubmit={handleSubmitComment}
+        initialSection="general"
+        title="Add Comment to Plan"
+        totalSlides={parsedPlan.slides.length}
+      />
     </Box>
   );
 };
