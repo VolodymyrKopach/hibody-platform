@@ -11,7 +11,9 @@ import {
   Chip,
   Stack,
   Fade,
-  Collapse
+  Collapse,
+  Fab,
+  Tooltip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
@@ -21,13 +23,15 @@ import {
   Refresh as RefreshIcon,
   Edit as EditIcon,
   Save as SaveIcon,
-  Cancel as CancelIcon
+  Cancel as CancelIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
-import { ArrowLeft, MessageSquare } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/markdown';
 import { StructuredLessonPlan } from '@/components/templates/lesson-plan';
 import { RegenerationConfirmDialog } from '@/components/dialogs';
 import { CommentPanel, CommentDialog } from '@/components/templates/plan-editing';
+import { StandardCommentButton } from '@/components/ui';
 import { lessonPlanService, LessonPlanServiceError } from '@/services/templates/LessonPlanService';
 import { TemplateData, GenerationState, PlanComment } from '@/types/templates';
 import { useLessonCreation } from '@/providers/LessonCreationProvider';
@@ -300,46 +304,9 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
 
   const renderSuccessState = () => (
     <>
-      <Card elevation={2} sx={{ borderRadius: 3 }}>
+      <Card elevation={2} sx={{ borderRadius: 3, position: 'relative' }}>
         <CardContent sx={{ p: 6 }}>
-          {/* Edit Mode Toggle */}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
-            {!planEditingState.isEditingMode ? (
-              <Button
-                variant="outlined"
-                startIcon={<EditIcon />}
-                onClick={handleEnterEditMode}
-                sx={{ 
-                  borderColor: theme.palette.primary.main,
-                  color: theme.palette.primary.main,
-                  '&:hover': {
-                    backgroundColor: theme.palette.primary.main + '10'
-                  }
-                }}
-              >
-                Edit Plan
-              </Button>
-            ) : (
-              <Stack direction="row" spacing={1}>
-                <Button
-                  variant="contained"
-                  startIcon={<MessageSquare size={16} />}
-                  onClick={() => setShowCommentDialog(true)}
-                  disabled={planEditingState.isProcessingComments}
-                >
-                  Add Comment
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<CancelIcon />}
-                  onClick={handleExitEditMode}
-                  disabled={planEditingState.isProcessingComments}
-                >
-                  Exit Edit Mode
-                </Button>
-              </Stack>
-            )}
-          </Box>
+
 
           {/* Plan Content */}
           {generatedPlan && (
@@ -348,6 +315,8 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
               isEditingMode={planEditingState.isEditingMode}
               onAddComment={handleAddComment}
               pendingComments={planEditingState.pendingComments}
+              onEnterEditMode={handleEnterEditMode}
+              onExitEditMode={handleExitEditMode}
             />
           )}
 
@@ -365,7 +334,6 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
               variant="outlined"
               startIcon={<ArrowLeft size={18} />}
               onClick={onBack}
-              sx={{ minWidth: 120 }}
               disabled={planEditingState.isProcessingComments}
             >
               {t('createLesson.step2.back')}
@@ -376,7 +344,6 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
                 variant="outlined"
                 startIcon={<RefreshIcon />}
                 onClick={handleRetry}
-                sx={{ minWidth: 140 }}
                 disabled={planEditingState.isProcessingComments}
               >
                 {t('createLesson.step2.regenerate')}
@@ -384,24 +351,9 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
               
               <Button
                 variant="contained"
-                size="large"
                 endIcon={<NextIcon />}
                 onClick={onNext}
                 disabled={planEditingState.isProcessingComments}
-                sx={{ 
-                  minWidth: 160,
-                  fontWeight: 600,
-                  px: 4,
-                  py: 1.5,
-                  fontSize: '1rem',
-                  borderRadius: 2,
-                  boxShadow: theme.shadows[4],
-                  '&:hover': {
-                    boxShadow: theme.shadows[8],
-                    transform: 'translateY(-2px)'
-                  },
-                  transition: 'all 0.3s ease'
-                }}
               >
                 {t('createLesson.step2.next')}
               </Button>
@@ -473,23 +425,8 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
           
           <Button
             variant="contained"
-            size="large"
             startIcon={<PlanIcon />}
             onClick={handleGeneratePlan}
-            sx={{ 
-              minWidth: 200,
-              fontWeight: 600,
-              px: 4,
-              py: 1.5,
-              fontSize: '1rem',
-              borderRadius: 2,
-              boxShadow: theme.shadows[4],
-              '&:hover': {
-                boxShadow: theme.shadows[8],
-                transform: 'translateY(-2px)'
-              },
-              transition: 'all 0.3s ease'
-            }}
           >
             {t('createLesson.step2.generatePlan')}
           </Button>

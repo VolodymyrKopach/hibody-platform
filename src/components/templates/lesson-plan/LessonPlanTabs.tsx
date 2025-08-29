@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Badge
+  Badge,
+  Tooltip,
+  Fab
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
@@ -10,9 +12,12 @@ import {
   SlideshowOutlined as SlidesIcon,
   SportsEsports as GameIcon,
   Inventory as MaterialsIcon,
-  Lightbulb as TipsIcon
+  Lightbulb as TipsIcon,
+  Edit as EditIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { ParsedLessonPlan, PlanComment } from '@/types/templates';
+import { StandardCommentButton } from '@/components/ui';
 import LessonObjectives from './LessonObjectives';
 import SlideNavigation from './SlideNavigation';
 import GameElements from './GameElements';
@@ -24,6 +29,8 @@ interface LessonPlanTabsProps {
   isEditingMode?: boolean;
   onAddComment?: (comment: Omit<PlanComment, 'id' | 'timestamp'>) => void;
   pendingComments?: PlanComment[];
+  onEnterEditMode?: () => void;
+  onExitEditMode?: () => void;
 }
 
 interface TabData {
@@ -38,7 +45,9 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
   parsedPlan, 
   isEditingMode = false,
   onAddComment,
-  pendingComments = []
+  pendingComments = [],
+  onEnterEditMode,
+  onExitEditMode
 }) => {
   const theme = useTheme();
 
@@ -135,66 +144,119 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
         <Box sx={{ 
           display: 'flex',
           gap: 1,
-          p: 1,
+          py: 1,
+          pl: 1,
+          pr: 2,
           backgroundColor: theme.palette.grey[100],
           borderRadius: 2,
-          flexWrap: 'wrap'
+          alignItems: 'center',
+          justifyContent: 'space-between'
         }}>
-          {tabs.map((tab, index) => (
-            <Box
-              key={tab.id}
-              onClick={() => setActiveTab(index)}
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 0.5,
-                p: 2,
-                minWidth: 80,
-                borderRadius: 2,
-                cursor: 'pointer',
-                backgroundColor: activeTab === index ? theme.palette.primary.main : 'transparent',
-                color: activeTab === index ? 'white' : theme.palette.text.secondary,
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  backgroundColor: activeTab === index ? theme.palette.primary.dark : theme.palette.grey[200],
-                  transform: 'translateY(-1px)'
-                }
-              }}
-            >
-              <Badge 
-                badgeContent={tab.count} 
-                color={activeTab === index ? 'secondary' : 'primary'}
+          {/* Tabs */}
+          <Box sx={{ 
+            display: 'flex',
+            gap: 1,
+            flexWrap: 'wrap',
+            flex: 1
+          }}>
+            {tabs.map((tab, index) => (
+              <Box
+                key={tab.id}
+                onClick={() => setActiveTab(index)}
                 sx={{
-                  '& .MuiBadge-badge': {
-                    fontSize: '0.75rem',
-                    height: 16,
-                    minWidth: 16,
-                    backgroundColor: activeTab === index ? theme.palette.secondary.main : theme.palette.primary.main
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  p: 2,
+                  minWidth: 80,
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  backgroundColor: activeTab === index ? theme.palette.primary.main : 'transparent',
+                  color: activeTab === index ? 'white' : theme.palette.text.secondary,
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    backgroundColor: activeTab === index ? theme.palette.primary.dark : theme.palette.grey[200],
+                    transform: 'translateY(-1px)'
                   }
                 }}
               >
-                <Box sx={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  fontSize: '1.5rem'
-                }}>
-                  {tab.icon}
-                </Box>
-              </Badge>
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  textAlign: 'center',
-                  lineHeight: 1.2
+                <Badge 
+                  badgeContent={tab.count} 
+                  color={activeTab === index ? 'secondary' : 'primary'}
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      fontSize: '0.75rem',
+                      height: 16,
+                      minWidth: 16,
+                      backgroundColor: activeTab === index ? theme.palette.secondary.main : theme.palette.primary.main
+                    }
+                  }}
+                >
+                  <Box sx={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: '1.5rem'
+                  }}>
+                    {tab.icon}
+                  </Box>
+                </Badge>
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    fontWeight: 600,
+                    fontSize: '0.75rem',
+                    textAlign: 'center',
+                    lineHeight: 1.2
+                  }}
+                >
+                  {tab.label}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+
+          {/* Edit Mode Controls */}
+          <Box sx={{ 
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}>
+            {/* Comment Button - Always visible in edit mode */}
+            {isEditingMode && onAddComment && (
+              <StandardCommentButton
+                onClick={() => onAddComment({
+                  sectionType: 'general',
+                  comment: '',
+                  priority: 'medium',
+                  status: 'pending'
+                })}
+                tooltip="Add Comment to Plan"
+              />
+            )}
+
+            {/* Edit Mode Toggle */}
+            <Tooltip 
+              title={isEditingMode ? 'Exit Edit Mode' : 'Edit Plan'}
+              placement="left"
+            >
+              <Fab
+                size="small"
+                color={isEditingMode ? 'secondary' : 'primary'}
+                onClick={isEditingMode ? onExitEditMode : onEnterEditMode}
+                sx={{
+                  boxShadow: theme.shadows[4],
+                  '&:hover': {
+                    boxShadow: theme.shadows[8],
+                    transform: 'scale(1.05)'
+                  },
+                  transition: 'all 0.3s ease'
                 }}
               >
-                {tab.label}
-              </Typography>
-            </Box>
-          ))}
+                {isEditingMode ? <CloseIcon /> : <EditIcon />}
+              </Fab>
+            </Tooltip>
+          </Box>
         </Box>
       </Box>
 

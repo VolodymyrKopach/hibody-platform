@@ -2,16 +2,15 @@ import React, { useState } from 'react';
 import {
   IconButton,
   Tooltip,
-  Badge,
-  Fab
+  Badge
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
   Comment as CommentIcon,
   Edit as EditIcon
 } from '@mui/icons-material';
-import { MessageSquare } from 'lucide-react';
 import { PlanComment } from '@/types/templates';
+import { StandardCommentButton } from '@/components/ui';
 import CommentDialog from './CommentDialog';
 
 interface SlideCommentButtonProps {
@@ -20,7 +19,7 @@ interface SlideCommentButtonProps {
   hasComments: boolean;
   commentCount: number;
   onAddComment: (comment: Omit<PlanComment, 'id' | 'timestamp'>) => void;
-  variant?: 'icon' | 'fab';
+  variant?: 'icon' | 'fab' | 'inline';
   size?: 'small' | 'medium' | 'large';
 }
 
@@ -67,29 +66,38 @@ const SlideCommentButton: React.FC<SlideCommentButtonProps> = ({
   if (variant === 'fab') {
     return (
       <>
-        <Tooltip title={tooltipTitle}>
-          <Badge badgeContent={commentCount} color="primary">
-            <Fab
-              size={size}
-              color={buttonColor}
+        <Badge badgeContent={commentCount} color="primary">
+          <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 2 }}>
+            <StandardCommentButton
               onClick={handleOpenDialog}
-              sx={{
-                position: 'absolute',
-                top: 16,
-                right: 16,
-                zIndex: 2,
-                boxShadow: theme.shadows[4],
-                '&:hover': {
-                  boxShadow: theme.shadows[8],
-                  transform: 'scale(1.05)'
-                },
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {hasComments ? <EditIcon /> : <MessageSquare size={20} />}
-            </Fab>
-          </Badge>
-        </Tooltip>
+              tooltip={tooltipTitle}
+              size={size}
+            />
+          </div>
+        </Badge>
+
+        <CommentDialog
+          open={showCommentDialog}
+          onClose={handleCloseDialog}
+          onSubmit={handleSubmitComment}
+          initialSection="slide"
+          initialSectionId={slideNumber.toString()}
+          title={`Comment on Slide ${slideNumber}`}
+        />
+      </>
+    );
+  }
+
+  if (variant === 'inline') {
+    return (
+      <>
+        <Badge badgeContent={commentCount} color="primary">
+          <StandardCommentButton
+            onClick={handleOpenDialog}
+            tooltip={tooltipTitle}
+            size={size}
+          />
+        </Badge>
 
         <CommentDialog
           open={showCommentDialog}

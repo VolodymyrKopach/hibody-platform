@@ -148,7 +148,7 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({
             alignItems: 'center',
             gap: 1
           }}>
-            {/* Comment Button */}
+            {/* Comment Button - Always in navigation area when editing */}
             {isEditingMode && (
               <SlideCommentButton
                 slideNumber={currentSlideIndex + 1}
@@ -156,7 +156,7 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({
                 hasComments={hasSlideComments}
                 commentCount={slideComments.length}
                 onAddComment={onAddComment!}
-                variant="fab"
+                variant="inline"
                 size="small"
               />
             )}
@@ -171,8 +171,7 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({
                 backdropFilter: 'blur(8px)',
                 borderRadius: 2,
                 p: 1,
-                boxShadow: theme.shadows[1],
-                ml: isEditingMode ? 1 : 0
+                boxShadow: theme.shadows[1]
               }}>
                 <IconButton 
                   onClick={handlePrevSlide}
@@ -189,35 +188,35 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({
                   <PrevIcon fontSize="small" />
                 </IconButton>
 
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  px: 1,
-                  fontWeight: 600,
-                  color: theme.palette.text.primary,
-                  minWidth: 40,
-                  textAlign: 'center'
-                }}
-              >
-                {currentSlideIndex + 1}/{slides.length}
-              </Typography>
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    px: 1,
+                    fontWeight: 600,
+                    color: theme.palette.text.primary,
+                    minWidth: 40,
+                    textAlign: 'center'
+                  }}
+                >
+                  {currentSlideIndex + 1}/{slides.length}
+                </Typography>
 
-              <IconButton 
-                onClick={handleNextSlide}
-                size="small"
-                sx={{
-                  width: 32,
-                  height: 32,
-                  '&:hover': {
-                    backgroundColor: theme.palette.primary.light,
-                    color: theme.palette.primary.contrastText
-                  }
-                }}
-              >
-                <NextIcon fontSize="small" />
-              </IconButton>
-            </Box>
-          )}
+                <IconButton 
+                  onClick={handleNextSlide}
+                  size="small"
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.light,
+                      color: theme.palette.primary.contrastText
+                    }
+                  }}
+                >
+                  <NextIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            )}
           </Box>
 
           {/* Slide Number Badge */}

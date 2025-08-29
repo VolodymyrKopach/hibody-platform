@@ -9,19 +9,16 @@ import {
   ListItemIcon,
   ListItemText,
   Avatar,
-  IconButton,
-  Tooltip,
   Fade
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
   CheckCircle as CheckIcon,
-  EmojiObjects as ObjectiveIcon,
-  Comment as CommentIcon,
-  Edit as EditIcon
+  EmojiObjects as ObjectiveIcon
 } from '@mui/icons-material';
 import { PlanComment } from '@/types/templates';
 import { CommentDialog } from '../plan-editing';
+import { StandardCommentButton } from '@/components/ui';
 
 interface LessonObjectivesProps {
   objectives: string[];
@@ -76,23 +73,10 @@ const LessonObjectives: React.FC<LessonObjectivesProps> = ({
             mb: 2,
             position: 'relative'
           }}>
-            <Tooltip title={hasComments ? `Edit objectives (${objectiveComments.length} comments)` : 'Add comment to objectives'}>
-              <IconButton
-                onClick={handleAddComment}
-                size="small"
-                sx={{
-                  color: hasComments ? theme.palette.primary.main : theme.palette.action.active,
-                  backgroundColor: hasComments ? theme.palette.primary.main + '10' : 'transparent',
-                  '&:hover': {
-                    backgroundColor: theme.palette.primary.main + '20',
-                    color: theme.palette.primary.main
-                  },
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {hasComments ? <EditIcon /> : <CommentIcon />}
-              </IconButton>
-            </Tooltip>
+            <StandardCommentButton
+              onClick={handleAddComment}
+              tooltip={hasComments ? `Edit objectives (${objectiveComments.length} comments)` : 'Add comment to objectives'}
+            />
           </Box>
         )}
 

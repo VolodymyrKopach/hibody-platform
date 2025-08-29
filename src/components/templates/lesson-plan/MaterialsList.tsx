@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Typography,
-  IconButton,
-  Tooltip
+  Typography
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import {
-  Comment as CommentIcon,
-  Edit as EditIcon
-} from '@mui/icons-material';
 import { PlanComment } from '@/types/templates';
 import { CommentDialog } from '../plan-editing';
+import { StandardCommentButton } from '@/components/ui';
 
 interface MaterialsListProps {
   materials: string[];
@@ -52,18 +47,10 @@ const MaterialsList: React.FC<MaterialsListProps> = ({
     <>
       {isEditingMode && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-          <Tooltip title={hasComments ? `Edit materials (${materialComments.length} comments)` : 'Add comment to materials'}>
-            <IconButton
-              onClick={() => setShowCommentDialog(true)}
-              size="small"
-              sx={{
-                color: hasComments ? theme.palette.primary.main : theme.palette.action.active,
-                '&:hover': { color: theme.palette.primary.main }
-              }}
-            >
-              {hasComments ? <EditIcon /> : <CommentIcon />}
-            </IconButton>
-          </Tooltip>
+          <StandardCommentButton
+            onClick={() => setShowCommentDialog(true)}
+            tooltip={hasComments ? `Edit materials (${materialComments.length} comments)` : 'Add comment to materials'}
+          />
         </Box>
       )}
 

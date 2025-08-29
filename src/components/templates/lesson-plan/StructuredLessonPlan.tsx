@@ -20,13 +20,17 @@ interface StructuredLessonPlanProps {
   isEditingMode?: boolean;
   onAddComment?: (comment: Omit<PlanComment, 'id' | 'timestamp'>) => void;
   pendingComments?: PlanComment[];
+  onEnterEditMode?: () => void;
+  onExitEditMode?: () => void;
 }
 
 const StructuredLessonPlan: React.FC<StructuredLessonPlanProps> = ({ 
   markdown, 
   isEditingMode = false,
   onAddComment,
-  pendingComments = []
+  pendingComments = [],
+  onEnterEditMode,
+  onExitEditMode
 }) => {
   const theme = useTheme();
   
@@ -107,6 +111,8 @@ const StructuredLessonPlan: React.FC<StructuredLessonPlanProps> = ({
         isEditingMode={isEditingMode}
         onAddComment={onAddComment}
         pendingComments={pendingComments}
+        onEnterEditMode={onEnterEditMode}
+        onExitEditMode={onExitEditMode}
       />
     </Box>
   );

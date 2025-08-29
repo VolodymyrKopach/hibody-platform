@@ -8,19 +8,16 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Avatar,
-  IconButton,
-  Tooltip
+  Avatar
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
   Lightbulb as LightbulbIcon,
-  TipsAndUpdates as TipIcon,
-  Comment as CommentIcon,
-  Edit as EditIcon
+  TipsAndUpdates as TipIcon
 } from '@mui/icons-material';
 import { PlanComment } from '@/types/templates';
 import { CommentDialog } from '../plan-editing';
+import { StandardCommentButton } from '@/components/ui';
 
 interface TeacherRecommendationsProps {
   recommendations: string[];
@@ -61,18 +58,10 @@ const TeacherRecommendations: React.FC<TeacherRecommendationsProps> = ({
     <>
       {isEditingMode && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-          <Tooltip title={hasComments ? `Edit tips (${recommendationComments.length} comments)` : 'Add comment to tips'}>
-            <IconButton
-              onClick={() => setShowCommentDialog(true)}
-              size="small"
-              sx={{
-                color: hasComments ? theme.palette.primary.main : theme.palette.action.active,
-                '&:hover': { color: theme.palette.primary.main }
-              }}
-            >
-              {hasComments ? <EditIcon /> : <CommentIcon />}
-            </IconButton>
-          </Tooltip>
+          <StandardCommentButton
+            onClick={() => setShowCommentDialog(true)}
+            tooltip={hasComments ? `Edit tips (${recommendationComments.length} comments)` : 'Add comment to tips'}
+          />
         </Box>
       )}
 
