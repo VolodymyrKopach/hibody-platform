@@ -61,6 +61,7 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
   showStats = true,
   compact = false
 }) => {
+  // Removed excessive logging that causes re-renders
   const theme = useTheme();
   const { t } = useTranslation('common');
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -70,82 +71,117 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
   const [slidePreviews, setSlidePreviews] = useState<Record<string, string>>({});
   const thumbnailService = getLocalThumbnailStorage();
 
-  // Автоматично завантажуємо превью для слайдів
+  // Мемоізований ключ для відслідковування змін слайдів
+  const slidesUpdateKey = useMemo(() => {
+    return slides.map(s => `${s.id}_${s.updatedAt || s.status}`).join('|');
+  }, [slides]);
+
+  // Завантаження превью при зміні слайдів
   useEffect(() => {
     const loadPreviews = async () => {
-      console.log(`🔍 [TemplateSlideGrid] Loading previews for ${slides.length} slides`);
-      
-
-      
       for (const slide of slides) {
-        console.log(`🔍 [TemplateSlideGrid] Checking slide ${slide.id}:`, {
-          title: slide.title,
-          hasHtmlContent: !!slide.htmlContent,
-          hasPreviewInState: !!slidePreviews[slide.id],
-          htmlContentLength: slide.htmlContent?.length || 0
-        });
+        if (!slide.htmlContent) continue;
         
-        if (slide.htmlContent && !slidePreviews[slide.id]) {
-          // Перевіряємо, чи є превью в LocalThumbnailService
-          const existingPreview = thumbnailService.get(slide.id);
-          console.log(`🔍 [TemplateSlideGrid] LocalThumbnailService check for ${slide.id}:`, {
-            hasExistingPreview: !!existingPreview,
-            previewLength: existingPreview?.length || 0
-          });
+        const existingPreview = thumbnailService.get(slide.id);
+        
+        // Завантажуємо превью якщо:
+        // 1. Немає в стані
+        // 2. Слайд має updatedAt (був відредагований) 
+        const shouldLoadPreview = !slidePreviews[slide.id] || 
+          (slide.updatedAt && existingPreview);
+        
+        if (existingPreview && shouldLoadPreview) {
+          setSlidePreviews(prev => ({
+            ...prev,
+            [slide.id]: existingPreview
+          }));
+        } else if (slide.updatedAt && !existingPreview) {
+          // Якщо слайд оновлено, але превью ще немає - генеруємо
           
-          if (existingPreview) {
-            console.log(`✅ [TemplateSlideGrid] Loading existing preview for slide ${slide.id}`);
-            setSlidePreviews(prev => ({
-              ...prev,
-              [slide.id]: existingPreview
-            }));
-          } else {
-            console.log(`⚠️ [TemplateSlideGrid] No existing preview found for slide ${slide.id}, will wait for generation`);
-          }
+          thumbnailService.generateThumbnail(slide.id, slide.htmlContent, {
+            quality: 0.85,
+            background: '#ffffff',
+            compress: true,
+            fast: true
+          }).then(() => {
+            const newPreview = thumbnailService.get(slide.id);
+            if (newPreview) {
+              setSlidePreviews(prev => ({
+                ...prev,
+                [slide.id]: newPreview
+              }));
+            }
+          }).catch(() => {
+            // Silent error handling for preview generation
+          });
         }
       }
     };
 
     loadPreviews();
-  }, [slides, slidePreviews, thumbnailService]);
+  }, [slidesUpdateKey, thumbnailService]); // Fixed dependencies - no more infinite loops!
 
-  // Реактивне оновлення превью (перевіряємо кожні 2 секунди)
+  // One-time delayed check for new previews (replaces constant interval)
   useEffect(() => {
     if (slides.length === 0) return;
 
-    const interval = setInterval(() => {
-      let hasNewPreviews = false;
-      const newPreviews: Record<string, string> = {};
-
+    // Check for newly generated previews after a delay
+    const timeoutId = setTimeout(() => {
       for (const slide of slides) {
-        if (slide.htmlContent && !slidePreviews[slide.id]) {
-          const existingPreview = thumbnailService.get(slide.id);
-          if (existingPreview) {
-            console.log(`🔄 [TemplateSlideGrid] Found new preview for slide ${slide.id} during reactive check`);
-            newPreviews[slide.id] = existingPreview;
-            hasNewPreviews = true;
-          }
+        if (!slide.htmlContent) continue;
+        
+        const existingPreview = thumbnailService.get(slide.id);
+        
+        // Load any new previews that appeared
+        if (existingPreview && !slidePreviews[slide.id]) {
+          setSlidePreviews(prev => ({
+            ...prev,
+            [slide.id]: existingPreview
+          }));
         }
       }
+    }, 2000); // Check once after 2 seconds
 
-      if (hasNewPreviews) {
+    return () => clearTimeout(timeoutId);
+  }, [slidesUpdateKey]); // Only when slides actually change
+
+  // Слухаємо події примусового оновлення превью
+  useEffect(() => {
+    const handleForcePreviewRefresh = (event: CustomEvent) => {
+      const { slideId } = event.detail;
+      const newPreview = thumbnailService.get(slideId);
+      if (newPreview) {
         setSlidePreviews(prev => ({
           ...prev,
-          ...newPreviews
+          [slideId]: newPreview
         }));
       }
-    }, 2000);
+    };
 
-      return () => clearInterval(interval);
-  }, [slides, slidePreviews, thumbnailService]);
+    const handleThumbnailRegenerated = (event: CustomEvent) => {
+      const { slideId } = event.detail;
+      const newPreview = thumbnailService.get(slideId);
+      if (newPreview) {
+        setSlidePreviews(prev => ({
+          ...prev,
+          [slideId]: newPreview
+        }));
+      }
+    };
+
+    window.addEventListener('forcePreviewRefresh', handleForcePreviewRefresh as EventListener);
+    window.addEventListener('thumbnailRegenerated', handleThumbnailRegenerated as EventListener);
+    
+    return () => {
+      window.removeEventListener('forcePreviewRefresh', handleForcePreviewRefresh as EventListener);
+      window.removeEventListener('thumbnailRegenerated', handleThumbnailRegenerated as EventListener);
+    };
+  }, [thumbnailService]);
 
   // Функція для ручної генерації превью
   const generateMissingPreviews = async () => {
-    console.log('🔧 [TemplateSlideGrid] Manually generating missing previews');
-    
     for (const slide of slides) {
       if (slide.htmlContent && !slidePreviews[slide.id] && !thumbnailService.get(slide.id)) {
-        console.log(`🎨 [TemplateSlideGrid] Manually generating preview for slide ${slide.id}`);
         try {
           await thumbnailService.generateThumbnail(slide.id, slide.htmlContent);
           const newPreview = thumbnailService.get(slide.id);
@@ -154,10 +190,9 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
               ...prev,
               [slide.id]: newPreview
             }));
-            console.log(`✅ [TemplateSlideGrid] Manual preview generation successful for slide ${slide.id}`);
           }
         } catch (error) {
-          console.error(`❌ [TemplateSlideGrid] Manual preview generation failed for slide ${slide.id}:`, error);
+          // Silent error handling for preview generation
         }
       }
     }
@@ -173,7 +208,6 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
       );
       
       if (slidesWithoutPreviews.length > 0) {
-        console.log(`🔧 [TemplateSlideGrid] Auto-generating ${slidesWithoutPreviews.length} missing previews after delay`);
         generateMissingPreviews();
       }
     }, 5000);
@@ -192,7 +226,7 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
   const stats = useMemo(() => {
     const completedSlides = slides.filter(slide => slide.status === 'completed').length;
     const generatingSlides = slides.filter(slide => slide.status === 'generating').length;
-    const errorSlides = slides.filter(slide => slide.status === 'draft' && !isGenerating).length;
+    const errorSlides = slides.filter(slide => (slide.status === 'draft' && !isGenerating)).length;
     const pendingSlides = totalSlides - slides.length;
     
     const overallProgress = totalSlides > 0 ? (completedSlides / totalSlides) * 100 : 0;
@@ -233,7 +267,7 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
     if (slide.status === 'generating') return 'generating';
     
     // Якщо генерація активна і слайд ще не завершений, показуємо 'generating'
-    if (isGenerating && (slide.isPlaceholder || slide.status !== 'completed')) {
+    if (isGenerating && slide.isPlaceholder) {
       return 'generating';
     }
     
@@ -297,15 +331,15 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
                   index={index}
                   generationStatus={getSlideGenerationStatus(slide, index)}
                   generationProgress={getSlideProgress(slide, index)}
-                  estimatedTime={30} // Можна зробити динамічним
-                  isSelected={selectedSlideId === slide.id}
+
+
                   previewUrl={slidePreviews[slide.id] || slide.previewUrl || slide.thumbnailUrl}
                   onSelect={onSlideSelect}
-                  onPreview={onSlidePreview}
+
                   onOpenFullscreen={onSlideFullscreen}
                   compact={compact}
                   showProgress={isGenerating}
-                  showEstimatedTime={isGenerating}
+
                 />
                 
                 {/* Comment Button */}

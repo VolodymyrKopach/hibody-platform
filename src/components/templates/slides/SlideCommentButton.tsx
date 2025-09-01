@@ -103,13 +103,14 @@ const SlideCommentButton: React.FC<SlideCommentButtonProps> = ({
       return;
     }
 
-    onAddComment({
+    const commentData = {
       slideId,
       comment: comment.trim(),
       priority,
       sectionType
-    });
+    };
 
+    onAddComment(commentData);
     setDialogOpen(false);
   }, [validateForm, onAddComment, slideId, comment, priority, sectionType]);
 

@@ -54,6 +54,8 @@ const FloatingSlideCommentPanel: React.FC<FloatingSlideCommentPanelProps> = ({
   const { t } = useTranslation('common');
   const [expandedSlides, setExpandedSlides] = useState<Set<string>>(new Set());
 
+
+
   // Групуємо коментарі по слайдах
   const commentsBySlide = comments.reduce((acc, comment) => {
     if (!acc[comment.slideId]) {

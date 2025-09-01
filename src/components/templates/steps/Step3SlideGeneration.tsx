@@ -138,11 +138,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
 
     // Отримуємо всі превью з LocalThumbnailStorage
     const allPreviews = thumbnailStorage.getAll();
-    console.log('🗂️ [PREPARE_SAVE_DATA] LocalThumbnailStorage contents:', {
-      totalPreviews: Object.keys(allPreviews).length,
-      previewIds: Object.keys(allPreviews)
-    });
-
+    
     // Збираємо превью для слайдів
     const slidePreviews: Record<string, string> = {};
     
@@ -150,24 +146,13 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
       // Спочатку перевіряємо LocalThumbnailStorage
       if (allPreviews[slide.id]) {
         slidePreviews[slide.id] = allPreviews[slide.id];
-        console.log(`✅ [PREPARE_SAVE_DATA] Found preview in LocalThumbnailStorage for slide ${slide.id}: ${slide.title}`);
       } 
       // Потім перевіряємо previewUrl або thumbnailUrl
       else if (slide.previewUrl) {
         slidePreviews[slide.id] = slide.previewUrl;
-        console.log(`💾 [PREPARE_SAVE_DATA] Using previewUrl for slide ${slide.id}: ${slide.title}`);
       } else if (slide.thumbnailUrl) {
         slidePreviews[slide.id] = slide.thumbnailUrl;
-        console.log(`💾 [PREPARE_SAVE_DATA] Using thumbnailUrl for slide ${slide.id}: ${slide.title}`);
-      } else {
-        console.log(`❌ [PREPARE_SAVE_DATA] No preview available for slide ${slide.id}: ${slide.title}`);
       }
-    });
-
-    console.log('📈 [PREPARE_SAVE_DATA] Collected previews:', {
-      totalSlides: slides.length,
-      previewsFound: Object.keys(slidePreviews).length,
-      coverage: `${Object.keys(slidePreviews).length}/${slides.length}`
     });
 
     // Створюємо об'єкт з усіма даними для збереження
@@ -190,8 +175,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   useEffect(() => {
     const initializeServices = () => {
       try {
-        // API ключ перевіряється на сервері, тут просто логуємо
-        console.log('🔑 [Step3] Using API-based generation - server will handle authentication');
+        // API ключ перевіряється на сервері
 
         // Створюємо новий SlideStore для template flow
         const store = new SlideStore({
@@ -205,9 +189,8 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
         setSlideStore(store);
         setAdapter(generationAdapter);
 
-        console.log('✅ [Step3] Services initialized successfully');
+
       } catch (error) {
-        console.error('❌ [Step3] Failed to initialize services:', error);
         
         const errorMsg = error instanceof Error && error.message.includes('GEMINI_API_KEY')
           ? t('createLesson.step3.errors.demoMode')
@@ -242,7 +225,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
         hasError: false,
         errorMessage: ''
       });
-      console.log('📚 [Step3] Existing lesson loaded:', generatedLesson.title);
+
     } else if (!generatedLesson && !isGenerating && !isCompleted && !hasError) {
       // Уроку немає і генерація не йде, скидаємо до початкового стану
       onUpdateGenerationState?.({
@@ -264,11 +247,11 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     if (!slideStore) return;
 
     const unsubscribe = slideStore.subscribe((state) => {
-      // Оновлюємо глобальний стан генерації
+      // ТІЛЬКИ оновлюємо стан генерації, НЕ слайди (щоб не перезаписати відредаговані)
       onUpdateGenerationState?.({
-        slides: state.slides || [],
         currentLesson: state.currentLesson,
         isGenerating: state.isGenerating || false
+        // НЕ оновлюємо slides тут - це робить LessonCreationProvider
       });
       
       // Автоматично вибираємо перший слайд
@@ -281,12 +264,53 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     return unsubscribe;
   }, [slideStore, selectedSlideId, onUpdateGenerationState]);
 
+  // Слухаємо події редагування слайдів та синхронізуємо SlideStore
+  useEffect(() => {
+    const handleSlideEdited = (event: CustomEvent) => {
+      const { slideId, editedSlide, updatedSlides } = event.detail;
+      
+      if (slideStore) {
+        // Оновлюємо відредагований слайд в SlideStore
+        slideStore.actions.updateSlide(slideId, editedSlide);
+
+        // Примусово тригеримо оновлення превью через невелику затримку
+        setTimeout(() => {
+          // Тригеримо подію для TemplateSlideGrid
+          window.dispatchEvent(new CustomEvent('forcePreviewRefresh', {
+            detail: { slideId, editedSlide }
+          }));
+        }, 500);
+      }
+    };
+
+    const handleSlideEditError = (event: CustomEvent) => {
+      const { slideId, slideTitle, error, isRetryable } = event.detail;
+      
+
+
+      // Show error message to user
+      const errorMessage = isRetryable 
+        ? `AI service is temporarily overloaded. Please try again in a few minutes.`
+        : `Failed to edit slide "${slideTitle}": ${error}`;
+        
+      onError?.(errorMessage);
+    };
+
+    window.addEventListener('slideEdited', handleSlideEdited as EventListener);
+    window.addEventListener('slideEditError', handleSlideEditError as EventListener);
+    
+    return () => {
+      window.removeEventListener('slideEdited', handleSlideEdited as EventListener);
+      window.removeEventListener('slideEditError', handleSlideEditError as EventListener);
+    };
+  }, [slideStore, onError]);
+
   // Видалено старий useEffect для оновлення превью - тепер це робиться в prepareLessonSaveData
 
   // Callbacks для генерації
   const generationCallbacks: TemplateGenerationCallbacks = {
     onSlideReady: useCallback((slide: SimpleSlide, lesson: SimpleLesson) => {
-      console.log(`🎨 [Step3] Slide ready: ${slide.title}`);
+
     }, []),
 
     onProgressUpdate: useCallback((progress: SlideGenerationProgress[]) => {
@@ -294,13 +318,13 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     }, [onUpdateGenerationState]),
 
     onSlideError: useCallback((error: string, slideNumber: number) => {
-      console.error(`❌ [Step3] Slide ${slideNumber} failed:`, error);
+
       const errorMsg = t('createLesson.step3.errors.slideGenerationFailed', { slideNumber, error });
       onUpdateGenerationState?.({ errorMessage: errorMsg });
     }, [onUpdateGenerationState, t]),
 
     onComplete: useCallback((lesson: SimpleLesson, stats: GenerationStats) => {
-      console.log('🎉 [Step3] Generation completed!', stats);
+
       onUpdateGenerationState?.({
         isCompleted: true,
         isGenerating: false,
@@ -313,7 +337,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     }, [onUpdateGenerationState, onLessonSaved]),
 
     onError: useCallback((error: string) => {
-      console.error('❌ [Step3] Generation failed:', error);
+
       onUpdateGenerationState?.({
         hasError: true,
         isGenerating: false,
@@ -335,7 +359,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
         isCompleted: false
       });
       
-      console.log('🚀 [Step3] Starting slide generation...');
+
       
       await adapter.startTemplateGeneration(
         generatedPlan,
@@ -344,7 +368,6 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
       );
       
     } catch (error) {
-      console.error('❌ [Step3] Failed to start generation:', error);
       const message = error instanceof Error ? error.message : t('createLesson.step3.errors.unknown');
       onUpdateGenerationState?.({
         hasError: true,
@@ -359,7 +382,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   useEffect(() => {
     if (adapter && isGenerating && !currentLesson && !hasError) {
       // Якщо генерація була в процесі, але адаптер не активний, відновлюємо генерацію
-      console.log('🔄 [Step3] Resuming generation after navigation...');
+
       startGeneration();
     }
   }, [adapter, isGenerating, currentLesson, hasError, startGeneration]);
@@ -367,13 +390,13 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   const pauseGeneration = useCallback(() => {
     setIsPaused(true);
     // TODO: Implement actual pause logic in adapter
-    console.log('⏸️ [Step3] Generation paused');
+
   }, []);
 
   const resumeGeneration = useCallback(() => {
     setIsPaused(false);
     // TODO: Implement actual resume logic in adapter
-    console.log('▶️ [Step3] Generation resumed');
+
   }, []);
 
   const stopGeneration = useCallback(() => {
@@ -384,7 +407,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
       isGenerating: false
     });
     setIsPaused(false);
-    console.log('🛑 [Step3] Generation stopped');
+
   }, [adapter, onUpdateGenerationState]);
 
   const restartGeneration = useCallback(() => {

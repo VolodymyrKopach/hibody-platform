@@ -83,7 +83,7 @@ export function extractImagePrompts(htmlContent: string): ImagePromptComment[] {
     });
   }
   
-  console.log(`🔍 Found ${prompts.length} image prompts in HTML`);
+  console.log(`🔍 Found ${prompts.length} image prompts in HTML (${prompts.length > 0 ? prompts.map(p => p.prompt.substring(0, 30) + '...').join(', ') : 'none'})`);
   return prompts;
 }
 

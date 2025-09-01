@@ -15,6 +15,7 @@ import {
 } from '@/types/templates';
 import { SimpleLesson } from '@/types/chat';
 import { planEditingService } from '@/services/templates/PlanEditingService';
+import { getLocalThumbnailStorage } from '@/services/slides/LocalThumbnailService';
 
 const LessonCreationContext = createContext<LessonCreationContextValue | null>(null);
 
@@ -86,13 +87,6 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
   }, []);
 
   const setGeneratedPlan = useCallback((plan: string) => {
-    console.log('🔄 PROVIDER: Setting generated plan', {
-      planType: typeof plan,
-      planLength: plan?.length || 0,
-      isString: typeof plan === 'string',
-      planPreview: typeof plan === 'string' ? plan.substring(0, 100) + '...' : plan
-    });
-    
     setState(prev => ({ 
       ...prev, 
       generatedPlan: plan,
@@ -143,7 +137,7 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
       };
       
       // Add step 3 to completed steps if slides are generated or generation is in progress
-      if (newState.isGenerating || newState.slides?.length > 0 || newState.currentLesson) {
+      if (newState.isGenerating || (newState.slides && newState.slides.length > 0) || newState.currentLesson) {
         updatedState.completedSteps = new Set([...prev.completedSteps, 3]);
       }
       
@@ -265,21 +259,8 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
   const processComments = useCallback(async () => {
     const { generatedPlan, planEditingState, templateData } = state;
     
-    console.log('🔄 PROVIDER: Processing comments', {
-      hasGeneratedPlan: !!generatedPlan,
-      planType: typeof generatedPlan,
-      planLength: generatedPlan?.length || 0,
-      commentsCount: planEditingState.pendingComments.length
-    });
-    
     // Validate plan (can be string or object)
-    if (!generatedPlan) {
-      console.error('❌ PROVIDER: Cannot process comments - no plan available');
-      return;
-    }
-    
-    if (planEditingState.pendingComments.length === 0) {
-      console.warn('⚠️ PROVIDER: No comments to process');
+    if (!generatedPlan || planEditingState.pendingComments.length === 0) {
       return;
     }
 
@@ -305,12 +286,6 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
       const { editedPlan, planChanges } = result;
 
       // Service now returns object directly, no conversion needed
-      console.log('✅ PROVIDER: Received edited plan', {
-        editedPlanType: typeof editedPlan,
-        isObject: typeof editedPlan === 'object',
-        hasChanges: !!planChanges,
-        changesCount: planChanges?.summary.totalChanges || 0
-      });
 
       // Create history entry
       const historyEntry = {
@@ -325,7 +300,7 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
       setState(prev => ({
         ...prev,
         generatedPlan: editedPlan, // Use edited plan directly
-        planChanges, // Store plan changes
+        planChanges: planChanges || null, // Store plan changes
         planEditingState: {
           ...initialPlanEditingState,
           editHistory: [...prev.planEditingState.editHistory, historyEntry],
@@ -334,7 +309,6 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
       }));
 
     } catch (error) {
-      console.error('❌ PROVIDER: Error processing comments:', error);
       
       const errorMessage = error instanceof Error ? error.message : 'Failed to process comments';
       
@@ -417,23 +391,31 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
       timestamp: new Date()
     };
 
-    setState(prev => ({
-      ...prev,
-      slideEditingState: {
-        ...prev.slideEditingState,
-        pendingComments: [...prev.slideEditingState.pendingComments, newComment]
-      }
-    }));
+    setState(prev => {
+      const newPendingComments = [...prev.slideEditingState.pendingComments, newComment];
+      
+      return {
+        ...prev,
+        slideEditingState: {
+          ...prev.slideEditingState,
+          pendingComments: newPendingComments
+        }
+      };
+    });
   }, []);
 
   const removeSlideComment = useCallback((commentId: string) => {
-    setState(prev => ({
-      ...prev,
-      slideEditingState: {
-        ...prev.slideEditingState,
-        pendingComments: prev.slideEditingState.pendingComments.filter(c => c.id !== commentId)
-      }
-    }));
+    setState(prev => {
+      const filteredComments = prev.slideEditingState.pendingComments.filter(c => c.id !== commentId);
+      
+      return {
+        ...prev,
+        slideEditingState: {
+          ...prev.slideEditingState,
+          pendingComments: filteredComments
+        }
+      };
+    });
   }, []);
 
   const clearAllSlideComments = useCallback(() => {
@@ -450,7 +432,6 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
     const { slideEditingState, slideGenerationState } = state;
     
     if (slideEditingState.pendingComments.length === 0) {
-      console.warn('No slide comments to process');
       return;
     }
 
@@ -472,6 +453,8 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
       progress: 0
     }));
 
+
+
     setState(prev => ({
       ...prev,
       slideEditingState: {
@@ -488,9 +471,12 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
         const slideComments = commentsBySlide[slideId];
         const slide = slideGenerationState.slides.find(s => s.id === slideId);
         
-        if (!slide) continue;
+        if (!slide) {
+          continue;
+        }
 
         // Оновлюємо статус на "processing"
+
         setState(prev => ({
           ...prev,
           slideEditingState: {
@@ -505,18 +491,24 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
 
         try {
           // Викликаємо API для редагування слайду
+          const apiPayload = {
+            slide,
+            comments: slideComments,
+            context: {
+              ageGroup: state.templateData.ageGroup,
+              topic: state.templateData.topic
+            }
+          };
+
+
+
           const response = await fetch('/api/slides/edit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              slide,
-              comments: slideComments,
-              context: {
-                ageGroup: state.templateData.ageGroup,
-                topic: state.templateData.topic
-              }
-            })
+            body: JSON.stringify(apiPayload)
           });
+
+
 
           const result = await response.json();
           
@@ -525,32 +517,91 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
           }
 
           const { editedSlide, slideChanges } = result;
+          
+
+
+          // Регенеруємо превью для оновленого слайду
+          if (editedSlide.htmlContent) {
+            try {
+              const thumbnailStorage = getLocalThumbnailStorage();
+              
+              // Видаляємо старе превью з кешу
+              thumbnailStorage.delete(slideId);
+              
+              // Генеруємо нове превью асинхронно
+              thumbnailStorage.generateThumbnail(slideId, editedSlide.htmlContent, {
+                quality: 0.85,
+                background: '#ffffff',
+                compress: true,
+                embedFonts: false,
+                fast: true
+              }).then(() => {
+                // Тригеримо подію для оновлення превью в UI
+                window.dispatchEvent(new CustomEvent('thumbnailRegenerated', {
+                  detail: { slideId, editedSlide }
+                }));
+              }).catch(() => {
+                // Silent error handling for thumbnail regeneration
+              });
+              
+            } catch (thumbnailError) {
+              // Silent error handling for thumbnail start
+            }
+          }
 
           // Оновлюємо слайд та прогрес
-          setState(prev => ({
-            ...prev,
-            slideGenerationState: {
-              ...prev.slideGenerationState,
-              slides: prev.slideGenerationState.slides.map(s =>
-                s.id === slideId ? editedSlide : s
-              )
-            },
-            slideEditingState: {
-              ...prev.slideEditingState,
-              editingProgress: prev.slideEditingState.editingProgress.map(p =>
-                p.slideId === slideId 
-                  ? { ...p, status: 'completed', progress: 100 }
-                  : p
-              ),
-              slideChanges: {
-                ...prev.slideEditingState.slideChanges,
-                [slideId]: slideChanges
+
+          setState(prev => {
+            const updatedSlides = prev.slideGenerationState.slides.map(s =>
+              s.id === slideId ? editedSlide : s
+            );
+
+
+
+            // Тригеримо подію для синхронізації з SlideStore
+            window.dispatchEvent(new CustomEvent('slideEdited', {
+              detail: {
+                slideId,
+                editedSlide,
+                updatedSlides
               }
-            }
-          }));
+            }));
+
+            return {
+              ...prev,
+              slideGenerationState: {
+                ...prev.slideGenerationState,
+                slides: updatedSlides,
+                // Додаємо timestamp для форсування оновлення
+                lastEditTimestamp: new Date().toISOString()
+              },
+              slideEditingState: {
+                ...prev.slideEditingState,
+                editingProgress: prev.slideEditingState.editingProgress.map(p =>
+                  p.slideId === slideId 
+                    ? { ...p, status: 'completed', progress: 100 }
+                    : p
+                ),
+                slideChanges: {
+                  ...prev.slideEditingState.slideChanges,
+                  [slideId]: slideChanges
+                }
+              }
+            };
+          });
 
         } catch (error) {
-          console.error(`Failed to edit slide ${slideId}:`, error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          
+          // Показуємо помилку користувачу через snackbar
+          window.dispatchEvent(new CustomEvent('slideEditError', {
+            detail: {
+              slideId,
+              slideTitle: slide?.title,
+              error: errorMessage,
+              isRetryable: errorMessage.includes('overloaded') || errorMessage.includes('503')
+            }
+          }));
           
           // Оновлюємо статус на "error"
           setState(prev => ({
@@ -559,7 +610,7 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
               ...prev.slideEditingState,
               editingProgress: prev.slideEditingState.editingProgress.map(p =>
                 p.slideId === slideId 
-                  ? { ...p, status: 'error', progress: 0 }
+                  ? { ...p, status: 'error', progress: 0, currentOperation: 'Error occurred' }
                   : p
               )
             }
@@ -568,6 +619,7 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
       }
 
       // Завершуємо процес
+
       setState(prev => ({
         ...prev,
         slideEditingState: {
@@ -578,13 +630,15 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
         }
       }));
 
+      // UI will update automatically when state changes - no forced refresh needed
+
       // Викликаємо callback після завершення
       if (typeof onComplete === 'function') {
         onComplete();
       }
 
     } catch (error) {
-      console.error('Error processing slide comments:', error);
+      
       setState(prev => ({
         ...prev,
         slideEditingState: {
