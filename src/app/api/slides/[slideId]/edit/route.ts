@@ -6,8 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { GeminiSimpleEditService } from '@/services/content/GeminiSimpleEditService';
+import { GeminiSlideEditingService } from '@/services/slides/GeminiSlideEditingService';
 import { getThumbnailUpdateService } from '@/services/slides/ThumbnailUpdateService';
+import { createClient } from '@/lib/supabase/server';
 
 // === SOLID: ISP - Request interface ===
 interface SlideEditRequest {
@@ -66,17 +67,37 @@ export async function POST(
       } as SlideEditResponse, { status: 400 });
     }
 
-    // Initialize editing service
-    const editService = new GeminiSimpleEditService();
+    // Initialize editing service with Supabase client
+    const supabase = await createClient();
+    const editService = new GeminiSlideEditingService(supabase);
+    
+    // Create a simple slide object for the service
+    const simpleSlide = {
+      id: slideId,
+      title: `Slide ${slideId}`,
+      content: instruction, // Use instruction as content description
+      htmlContent: slideContent,
+      type: 'content' as const
+    };
+    
+    // Create a comment object
+    const comment = {
+      id: `comment_${Date.now()}`,
+      slideId: slideId,
+      comment: instruction,
+      priority: 'medium' as const,
+      sectionType: 'general' as const,
+      timestamp: new Date().toISOString()
+    };
     
     // Edit the slide with minimal context (only this slide's content)
-    console.log(`🤖 [SLIDE EDIT API] Starting Gemini edit for slide ${slideId}`);
-    const editedContent = await editService.editSlide(
-      slideContent,
-      instruction,
-      topic,
-      age
-    );
+    console.log(`🤖 [SLIDE EDIT API] Starting optimized Gemini edit for slide ${slideId}`);
+    const result = await editService.editSlide(simpleSlide, [comment], {
+      ageGroup: age || '6-8',
+      topic: topic || 'lesson'
+    });
+    
+    const editedContent = result.editedSlide.htmlContent;
 
     console.log(`✅ [SLIDE EDIT API] Edit completed for slide ${slideId}`);
     console.log(`📏 [SLIDE EDIT API] Result length: ${editedContent.length} chars`);

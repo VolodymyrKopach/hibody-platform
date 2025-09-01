@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { BatchSlideEditingService } from '@/services/chat/services/BatchSlideEditingService';
-import { BatchEditParams } from '@/services/chat/interfaces/IChatServices';
+import { OptimizedBatchEditService } from '@/services/slides/OptimizedBatchEditService';
+import { BatchEditPlan } from '@/types/chat';
 
-// Initialize batch editing service
-const batchEditingService = new BatchSlideEditingService();
+// Note: Using OptimizedBatchEditService instead of deprecated BatchSlideEditingService
 
 // POST /api/slides/batch-edit - Start batch editing operation
+// NOTE: This API is deprecated - use OptimizedBatchEditService directly in frontend
 export async function POST(request: NextRequest) {
   try {
+    console.warn('⚠️ /api/slides/batch-edit is deprecated - use OptimizedBatchEditService directly');
+    
     const body = await request.json();
     
     // Validate required fields

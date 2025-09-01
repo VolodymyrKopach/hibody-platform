@@ -20,7 +20,7 @@ export class ErrorObserver {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY is required for ErrorObserver');
     }
-    this.genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
+    this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   }
 
   /**
@@ -78,13 +78,12 @@ export class ErrorObserver {
     const prompt = this.buildErrorTransformPrompt(errorResponse, context);
     
     // Use the cheapest model
-    const model = this.genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash-lite-preview-06-17" 
+    const response = await this.genAI.models.generateContent({
+      model: "gemini-2.5-flash-lite-preview-06-17",
+      contents: prompt
     });
     
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const friendlyMessage = response.text();
+    const friendlyMessage = response.text || '';
 
     return friendlyMessage.trim();
   }

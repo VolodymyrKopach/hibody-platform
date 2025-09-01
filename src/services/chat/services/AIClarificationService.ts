@@ -25,7 +25,7 @@ export class AIClarificationService {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY is required for AIClarificationService');
     }
-    this.genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
+    this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   }
 
   async generateClarification(
@@ -34,11 +34,12 @@ export class AIClarificationService {
   ): Promise<string> {
     try {
       const prompt = this.buildClarificationPrompt(scenario, context);
-      const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+      const response = await this.genAI.models.generateContent({
+        model: "gemini-2.5-flash-lite-preview-06-17",
+        contents: prompt
+      });
       
-      const result = await model.generateContent(prompt);
-      const response = result.response;
-      const clarification = response.text();
+      const clarification = response.text || '';
 
       return clarification.trim();
     } catch (error) {

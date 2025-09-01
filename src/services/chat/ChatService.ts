@@ -5,7 +5,7 @@ import { IIntentDetectionService } from '../intent/IIntentDetectionService';
 import { IntentDetectionServiceFactory } from '../intent/IntentDetectionServiceFactory';
 import { IIntentHandler } from './handlers/IIntentHandler';
 import { GeminiContentService } from '@/services/content/GeminiContentService';
-import { GeminiSimpleEditService } from '@/services/content/GeminiSimpleEditService';
+// Note: GeminiSimpleEditService removed - functionality moved to GeminiSlideEditingService
 import { FallbackHandler } from './handlers/FallbackHandler';
 
 import { EnhancedCreateLessonHandler } from './handlers/EnhancedCreateLessonHandler';
@@ -60,12 +60,12 @@ export class ChatService {
     }
 
     const contentService = new GeminiContentService();
-    const simpleEditService = new GeminiSimpleEditService();
+    // Note: simpleEditService removed - functionality moved to GeminiSlideEditingService
 
     // === SOLID: Dependency Injection ===
     this.intentDetectionService = IntentDetectionServiceFactory.create();
     this.slideGenerationService = new SlideGenerationService();
-    this.slideEditingService = new SlideEditingService(simpleEditService);
+    this.slideEditingService = new SlideEditingService(); // Updated to not require simple edit service
     this.batchSlideEditingService = new BatchSlideEditingService();
     this.lessonManagementService = new LessonManagementService();
     this.slideAnalysisService = new SlideAnalysisService();

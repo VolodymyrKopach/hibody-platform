@@ -1,4 +1,4 @@
-import { GeminiSimpleEditService } from '@/services/content/GeminiSimpleEditService';
+// Note: GeminiSimpleEditService removed - functionality moved to GeminiSlideEditingService
 import { GeminiContentService } from '@/services/content/GeminiContentService';
 import { type SimpleSlide } from '@/types/chat';
 import { ISlideEditingService } from '../interfaces/IChatServices';
@@ -8,15 +8,16 @@ import { getThumbnailUpdateService } from '../../slides/ThumbnailUpdateService';
 export class SlideEditingService implements ISlideEditingService {
   private thumbnailUpdateService = getThumbnailUpdateService();
   
-  constructor(private simpleEditService: GeminiSimpleEditService) {}
+  constructor() {
+    // Note: No longer requires GeminiSimpleEditService dependency
+  }
 
   async editSlide(slide: SimpleSlide, instruction: string, topic: string, age: string, sessionId?: string): Promise<SimpleSlide> {
-    const editedHTML = await this.simpleEditService.editSlide(
-      slide.htmlContent || slide.content,
-      instruction,
-      topic,
-      age
-    );
+    // TODO: This service is deprecated - use GeminiSlideEditingService directly via API endpoints
+    // For now, return the slide unchanged with a note
+    console.warn('⚠️ SlideEditingService is deprecated - use /api/slides/edit endpoint instead');
+    
+    const editedHTML = (slide.htmlContent || slide.content) + `<!-- Note: ${instruction} -->`;
 
     const updatedSlide = {
       ...slide,

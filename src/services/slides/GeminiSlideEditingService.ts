@@ -2,6 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { SimpleSlide } from '@/types/chat';
 import { SlideComment } from '@/types/templates';
 import { processSlideWithTempImages } from '@/utils/slideImageProcessor';
+import { minifyForAI, calculateTokenSavings } from '@/utils/htmlMinifier';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface SlideEditingResult {
@@ -130,7 +131,7 @@ ${commentsText}
 **CONTEXT:** Age: ${context.ageGroup}, Topic: ${context.topic}
 
 **CURRENT HTML (EDIT THIS COMPLETELY):**
-${slide.htmlContent || 'No HTML content'}
+${this.minifyHtmlForPrompt(slide.htmlContent || 'No HTML content')}
 
 **TASK:** Apply the user feedback and return the complete edited slide.
 
@@ -496,5 +497,29 @@ Generate pure JSON now:`;
         slideChanges: updatedSlideChanges
       };
     }
+  }
+
+  /**
+   * Minify HTML for prompt to reduce token usage
+   */
+  private minifyHtmlForPrompt(html: string): string {
+    if (!html || html === 'No HTML content') {
+      return html;
+    }
+
+    // Calculate savings before minification
+    const originalLength = html.length;
+    const minifiedHtml = minifyForAI(html);
+    const savings = calculateTokenSavings(html, minifiedHtml);
+
+    console.log('📏 [GEMINI_SLIDE_EDITING] HTML Minification Stats:', {
+      originalLength: savings.originalLength,
+      minifiedLength: savings.minifiedLength,
+      savedCharacters: savings.savedCharacters,
+      savedPercentage: `${savings.savedPercentage}%`,
+      estimatedTokenSavings: savings.estimatedTokenSavings
+    });
+
+    return minifiedHtml;
   }
 }
