@@ -3,6 +3,7 @@ import { SimpleSlide } from '@/types/chat';
 import { SlideComment } from '@/types/templates';
 import { processSlideWithTempImages } from '@/utils/slideImageProcessor';
 import { minifyForAI, calculateTokenSavings } from '@/utils/htmlMinifier';
+import { safeEditWithImageProtection } from '@/utils/imageUrlProtection';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface SlideEditingResult {
@@ -55,14 +56,14 @@ export class GeminiSlideEditingService {
   }
 
   /**
-   * Edit a slide based on user comments using Gemini AI
+   * Edit a slide based on user comments using Gemini AI with image URL protection
    */
   async editSlide(
     slide: SimpleSlide,
     comments: SlideComment[],
     context: SlideEditingContext
   ): Promise<SlideEditingResult> {
-    console.log('🤖 [GEMINI_SLIDE_EDITING] Starting AI slide editing', {
+    console.log('🤖 [GEMINI_SLIDE_EDITING] Starting AI slide editing with image URL protection', {
       slideId: slide.id,
       slideTitle: slide.title,
       commentsCount: comments.length,
@@ -70,39 +71,68 @@ export class GeminiSlideEditingService {
       htmlContentLength: slide.htmlContent?.length || 0
     });
 
-    // Build comprehensive prompt for slide editing
-    const prompt = this.buildEditingPrompt(slide, comments, context);
-    
-    console.log('📝 [GEMINI_SLIDE_EDITING] Generated prompt', {
-      promptLength: prompt.length,
+    // Use safe editing with image URL protection
+    const { result, finalHtml, stats } = await safeEditWithImageProtection(
+      slide.htmlContent || '',
+      async (protectedHtml: string, protectionStats: { protectedImages: number }) => {
+        // Create slide with protected HTML for AI processing
+        const protectedSlide = { ...slide, htmlContent: protectedHtml };
+        
+        // Build comprehensive prompt for slide editing
+        const prompt = this.buildEditingPrompt(protectedSlide, comments, context);
+        
+        console.log('📝 [GEMINI_SLIDE_EDITING] Generated prompt with protected URLs', {
+          promptLength: prompt.length,
+          slideId: slide.id,
+          protectedHtmlLength: protectedHtml.length,
+          protectedImages: protectionStats.protectedImages
+        });
+
+        // Call Gemini AI with maximum token limit
+        const response = await this.callGeminiAPI(prompt);
+        
+        console.log('🎯 [GEMINI_SLIDE_EDITING] Received AI response', {
+          responseLength: response.length,
+          slideId: slide.id,
+          endsWithHtml: response.includes('</html>'),
+          endsWithClosingBrace: response.trim().endsWith('}'),
+          lastChars: response.slice(-200)
+        });
+
+        // Parse and validate response
+        return this.parseEditingResponse(response, protectedSlide, comments);
+      },
+      (editResult: SlideEditingResult) => editResult.editedSlide.htmlContent || ''
+    );
+
+    console.log('🛡️ [GEMINI_SLIDE_EDITING] Image URL protection completed', {
       slideId: slide.id,
-      htmlContentLength: slide.htmlContent?.length || 0
+      protectedImages: stats.protectedImages,
+      validationPassed: stats.validationPassed,
+      remainingIds: stats.remainingIds,
+      brokenUrls: stats.brokenUrls
     });
 
-    // Call Gemini AI with maximum token limit
-    const response = await this.callGeminiAPI(prompt);
+    // Update the result with the final HTML (URLs restored)
+    const finalResult: SlideEditingResult = {
+      ...result,
+      editedSlide: {
+        ...result.editedSlide,
+        htmlContent: finalHtml
+      }
+    };
     
-    console.log('🎯 [GEMINI_SLIDE_EDITING] Received AI response', {
-      responseLength: response.length,
+    console.log('✅ [GEMINI_SLIDE_EDITING] Successfully processed slide editing with URL protection', {
       slideId: slide.id,
-      endsWithHtml: response.includes('</html>'),
-      endsWithClosingBrace: response.trim().endsWith('}'),
-      lastChars: response.slice(-200)
-    });
-
-    // Parse and validate response
-    const result = this.parseEditingResponse(response, slide, comments);
-    
-    console.log('✅ [GEMINI_SLIDE_EDITING] Successfully processed slide editing', {
-      slideId: slide.id,
-      changesApplied: result.slideChanges.changes.length,
-      affectedSections: result.slideChanges.summary.affectedSections,
-      finalHtmlLength: result.editedSlide.htmlContent?.length || 0,
-      htmlComplete: result.editedSlide.htmlContent?.includes('</html>') || false
+      changesApplied: finalResult.slideChanges.changes.length,
+      affectedSections: finalResult.slideChanges.summary.affectedSections,
+      finalHtmlLength: finalHtml.length,
+      htmlComplete: finalHtml.includes('</html>'),
+      urlProtectionStats: stats
     });
 
     // Process image prompts in the edited slide
-    const processedResult = await this.processImagePrompts(result, slide.id);
+    const processedResult = await this.processImagePrompts(finalResult, slide.id);
     
     return processedResult;
   }
