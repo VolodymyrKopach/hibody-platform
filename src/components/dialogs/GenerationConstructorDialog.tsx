@@ -215,7 +215,7 @@ const GenerationConstructorDialog: React.FC<GenerationConstructorDialogProps> = 
           <Box sx={{ px: 3, py: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
               <Typography variant="caption" color="text.secondary">
-                Filling Progress: {constructor.progress}%
+                Filling Progress: {Math.round(constructor.progress)}%
               </Typography>
               <Box sx={{ flex: 1 }}>
                 <LinearProgress 

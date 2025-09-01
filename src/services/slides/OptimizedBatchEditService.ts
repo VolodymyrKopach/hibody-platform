@@ -1,6 +1,6 @@
 /**
  * === SOLID: SRP - Optimized Batch Edit Service ===
- * 
+ *
  * Client-side service for efficient batch slide editing
  * Uses individual slide endpoints for cost optimization
  */
@@ -60,7 +60,7 @@ export class OptimizedBatchEditService {
   }
 
   /**
-   * Execute batch edit plan with progress tracking
+   * Execute batch edit plan with progress tracking (always parallel)
    */
   async executeBatchEdit(
     batchPlan: BatchEditPlan,
@@ -69,14 +69,13 @@ export class OptimizedBatchEditService {
       topic?: string;
       age?: string;
       onProgress?: ProgressCallback;
-      parallel?: boolean; // Default: false (sequential for better progress tracking)
     } = {}
   ): Promise<BatchEditProgress> {
-    const { topic = 'lesson', age = '6-8 years', onProgress, parallel = false } = options;
-    
+    const { topic = 'lesson', age = '6-8 years', onProgress } = options;
+
     this.onProgressUpdate = onProgress;
     const slideEntries = Object.entries(batchPlan);
-    
+
     // Initialize progress
     this.progress = {
       completed: 0,
@@ -88,24 +87,20 @@ export class OptimizedBatchEditService {
     };
 
     console.log(`🚀 [BATCH EDIT] Starting batch edit with ${slideEntries.length} slides`);
-    console.log(`⚙️ [BATCH EDIT] Mode: ${parallel ? 'parallel' : 'sequential'}`);
+    console.log(`⚙️ [BATCH EDIT] Mode: parallel (always)`);
     console.log(`🆔 [BATCH EDIT] Batch ID: ${this.batchId}`);
 
     this.updateProgress();
 
     try {
-      if (parallel) {
-        await this.executeParallel(slideEntries, slides, topic, age);
-      } else {
-        await this.executeSequential(slideEntries, slides, topic, age);
-      }
+      await this.executeParallel(slideEntries, slides, topic, age);
 
       this.progress.isCompleted = true;
       this.progress.estimatedTimeRemaining = 0;
       this.updateProgress();
 
       console.log(`🎉 [BATCH EDIT] Batch completed: ${this.progress.results.length} success, ${this.progress.errors.length} errors`);
-      
+
       return this.progress;
 
     } catch (error) {
@@ -115,46 +110,7 @@ export class OptimizedBatchEditService {
   }
 
   /**
-   * Execute slides sequentially for better progress tracking
-   */
-  private async executeSequential(
-    slideEntries: [string, string][],
-    slides: SimpleSlide[],
-    topic: string,
-    age: string
-  ): Promise<void> {
-    for (let i = 0; i < slideEntries.length; i++) {
-      const [slideKey, instruction] = slideEntries[i];
-      
-      // Extract slide number from key (e.g., "slide-1" -> 1)
-      const slideNumber = this.extractSlideNumber(slideKey);
-      const slide = slides[slideNumber - 1]; // Convert to 0-based index
-
-      if (!slide) {
-        this.addError(slideKey, `Slide not found at position ${slideNumber}`, instruction, 0);
-        continue;
-      }
-
-      // Update current slide info
-      this.progress.currentSlide = slide.id;
-      this.progress.currentInstruction = instruction;
-      this.progress.estimatedTimeRemaining = (slideEntries.length - i) * 30;
-      this.updateProgress();
-
-      try {
-        const result = await this.editSingleSlide(slide, instruction, topic, age, slideNumber);
-        this.addResult(result);
-      } catch (error) {
-        this.addError(slideKey, error instanceof Error ? error.message : 'Unknown error', instruction, 0);
-      }
-
-      this.progress.completed = i + 1;
-      this.updateProgress();
-    }
-  }
-
-  /**
-   * Execute slides in parallel for faster completion
+   * Execute all slides in parallel
    */
   private async executeParallel(
     slideEntries: [string, string][],
@@ -179,7 +135,7 @@ export class OptimizedBatchEditService {
         this.addError(slideKey, error instanceof Error ? error.message : 'Unknown error', instruction, 0);
       }
 
-      this.progress.completed++;
+      // Thread-safe progress update
       this.updateProgress();
     });
 
@@ -197,7 +153,7 @@ export class OptimizedBatchEditService {
     slideIndex: number
   ): Promise<SlideEditResult> {
     const startTime = Date.now();
-    
+
     console.log(`🔧 [BATCH EDIT] Editing slide ${slide.id} (${slideIndex}): "${instruction}"`);
 
     try {
@@ -237,7 +193,7 @@ export class OptimizedBatchEditService {
     } catch (error) {
       const editingTime = Date.now() - startTime;
       console.error(`❌ [BATCH EDIT] Failed to edit slide ${slide.id}:`, error);
-      
+
       throw error; // Re-throw to be caught by caller
     }
   }
@@ -265,6 +221,9 @@ export class OptimizedBatchEditService {
    * Update progress and notify callback
    */
   private updateProgress(): void {
+    // Calculate completed based on actual results and errors (thread-safe)
+    this.progress.completed = this.progress.results.length + this.progress.errors.length;
+
     if (this.onProgressUpdate) {
       this.onProgressUpdate({ ...this.progress });
     }

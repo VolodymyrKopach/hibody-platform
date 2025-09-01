@@ -93,13 +93,8 @@ const FloatingSlideCommentPanel: React.FC<FloatingSlideCommentPanelProps> = ({
       case 'error':
         return <ErrorIcon color="error" fontSize="small" />;
       case 'processing':
-        return <ProcessingIcon color="primary" fontSize="small" sx={{ 
-          animation: 'spin 1s linear infinite',
-          '@keyframes spin': {
-            '0%': { transform: 'rotate(0deg)' },
-            '100%': { transform: 'rotate(360deg)' }
-          }
-        }} />;
+        // Прибираємо спінер, показуємо тільки статичну іконку
+        return <ProcessingIcon color="primary" fontSize="small" />;
       default:
         return null;
     }
@@ -208,7 +203,7 @@ const FloatingSlideCommentPanel: React.FC<FloatingSlideCommentPanelProps> = ({
                       {getSlideTitle(progress.slideId)}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                      {progress.progress}%
+                      {Math.round(progress.progress)}%
                     </Typography>
                   </Box>
                   

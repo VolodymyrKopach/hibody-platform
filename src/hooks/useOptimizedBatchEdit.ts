@@ -34,7 +34,6 @@ export interface UseOptimizedBatchEditReturn {
 export interface BatchEditOptions {
   topic?: string;
   age?: string;
-  parallel?: boolean;
   onProgress?: (progress: BatchEditProgress) => void;
   onComplete?: (results: SlideEditResult[]) => void;
   onError?: (errors: any[]) => void;
@@ -61,7 +60,6 @@ export const useOptimizedBatchEdit = (): UseOptimizedBatchEditReturn => {
     const {
       topic = 'lesson',
       age = '6-8 years',
-      parallel = false,
       onProgress,
       onComplete,
       onError
@@ -78,14 +76,13 @@ export const useOptimizedBatchEdit = (): UseOptimizedBatchEditReturn => {
       // Create new service instance
       serviceRef.current = new OptimizedBatchEditService();
       
-      // Execute batch edit with progress tracking
+      // Execute batch edit with progress tracking (always parallel)
       const finalProgress = await serviceRef.current.executeBatchEdit(
         batchPlan,
         slides,
         {
           topic,
           age,
-          parallel,
           onProgress: (progressUpdate) => {
             setProgress(progressUpdate);
             onProgress?.(progressUpdate);
