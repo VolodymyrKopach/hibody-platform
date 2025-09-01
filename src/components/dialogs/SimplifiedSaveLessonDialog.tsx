@@ -337,7 +337,7 @@ const SimplifiedSaveLessonDialog: React.FC<SimplifiedSaveLessonDialogProps> = ({
             fontWeight: 500
           }}
         >
-          {t('common:buttons.cancel')}
+          {t('cancel')}
         </Button>
         
         <Button 
