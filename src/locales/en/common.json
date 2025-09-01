@@ -607,7 +607,9 @@
       "clearAll": "Clear All",
       "startEditing": "Start Editing ({{count}})",
       "processing": "Editing slides...",
-      "noComments": "No comments yet"
+      "processingSubtitle": "AI is processing your comments and updating slides",
+      "noComments": "No comments yet",
+      "comments": "comments"
     },
     "results": {
       "title": "Slide Editing Results",

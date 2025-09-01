@@ -4,8 +4,7 @@ export { default as TemplateSlideGrid } from './TemplateSlideGrid';
 export { default as GenerationPreviewArea } from './GenerationPreviewArea';
 export { default as GenerationControls } from './GenerationControls';
 export { default as SlideCommentButton } from './SlideCommentButton';
-export { default as FloatingSlideCommentPanel } from './FloatingSlideCommentPanel';
-export { default as SlideEditResultsDialog } from './SlideEditResultsDialog';
+export { default as SlideEditingExpandablePanel } from './SlideEditingExpandablePanel';
 
 // Re-export types for convenience
 export type { TemplateSlideCardProps } from './TemplateSlideCard';

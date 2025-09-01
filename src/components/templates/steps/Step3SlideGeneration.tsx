@@ -22,8 +22,7 @@ import {
 
 // Імпорти наших компонентів
 import TemplateSlideGrid from '../slides/TemplateSlideGrid';
-import FloatingSlideCommentPanel from '../slides/FloatingSlideCommentPanel';
-import SlideEditResultsDialog from '../slides/SlideEditResultsDialog';
+import SlideEditingExpandablePanel from '../slides/SlideEditingExpandablePanel';
 import SimplifiedSaveLessonDialog from '@/components/dialogs/SimplifiedSaveLessonDialog';
 
 // Імпорти сервісів та хуків
@@ -91,6 +90,35 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     processSlideComments
   } = useLessonCreation();
 
+  // Обгортаємо addSlideComment щоб ховати результати при додаванні коментарів
+  const handleAddSlideComment = useCallback((comment: Parameters<typeof addSlideComment>[0]) => {
+    addSlideComment(comment);
+    // Ховаємо результати коли додається новий коментар
+    setShowEditingResults(false);
+  }, [addSlideComment]);
+
+  // Обгортаємо removeSlideComment щоб показувати результати при видаленні коментарів
+  const handleRemoveSlideComment = useCallback((commentId: string) => {
+    removeSlideComment(commentId);
+    // Показуємо результати знову якщо є результати і немає коментарів
+    if (slideEditingState.slideChanges && Object.keys(slideEditingState.slideChanges).length > 0) {
+      // Перевіряємо чи залишилися коментарі після видалення
+      const remainingComments = slideEditingState.pendingComments.filter(c => c.id !== commentId);
+      if (remainingComments.length === 0) {
+        setShowEditingResults(true);
+      }
+    }
+  }, [removeSlideComment, slideEditingState.slideChanges, slideEditingState.pendingComments]);
+
+  // Обгортаємо clearAllSlideComments щоб показувати результати при очищенні всіх коментарів
+  const handleClearAllSlideComments = useCallback(() => {
+    clearAllSlideComments();
+    // Показуємо результати знову якщо є результати
+    if (slideEditingState.slideChanges && Object.keys(slideEditingState.slideChanges).length > 0) {
+      setShowEditingResults(true);
+    }
+  }, [clearAllSlideComments, slideEditingState.slideChanges]);
+
   // Стан компонента
   const [adapter, setAdapter] = useState<TemplateAPIAdapter | null>(null);
   const [slideStore, setSlideStore] = useState<SlideStore | null>(null);
@@ -111,8 +139,8 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [lessonSaveData, setLessonSaveData] = useState<LessonSaveData | null>(null);
   
-  // Стан діалогу результатів редагування
-  const [resultsDialogOpen, setResultsDialogOpen] = useState(false);
+  // Стан для закриття результатів редагування
+  const [showEditingResults, setShowEditingResults] = useState(true);
   
   // Використовуємо глобальний стан генерації
   const {
@@ -472,16 +500,25 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     onError?.(error);
   }, [onError]);
 
-  // Обробник відкриття діалогу результатів
+  // Обробник відкриття результатів редагування
   const handleShowResults = useCallback(() => {
-    setResultsDialogOpen(true);
+    setShowEditingResults(true);
   }, []);
 
-  // Обробник додавання ще коментарів
-  const handleAddMoreComments = useCallback(() => {
-    setResultsDialogOpen(false);
-    // Можна додати логіку для повернення в режим коментування
+  // Обробник закриття результатів
+  const handleCloseResults = useCallback(() => {
+    setShowEditingResults(false);
   }, []);
+
+  // Автоматично показуємо результати коли з'являються нові зміни
+  useEffect(() => {
+    if (slideEditingState.slideChanges && Object.keys(slideEditingState.slideChanges).length > 0) {
+      // Показуємо результати тільки якщо немає pending коментарів
+      if (slideEditingState.pendingComments.length === 0) {
+        setShowEditingResults(true);
+      }
+    }
+  }, [slideEditingState.slideChanges, slideEditingState.pendingComments.length]);
 
   // Розрахунок прогресу
   const overallProgress = useMemo(() => {
@@ -584,14 +621,18 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
       }}
     >
       <CardContent sx={{ p: 6 }}>
-        <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-            {t('createLesson.step3.completed.title')}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {t('createLesson.step3.completed.description')}
-          </Typography>
-        </Box>
+        {/* Slide Editing Panel */}
+        <SlideEditingExpandablePanel
+          slides={slides}
+          comments={slideEditingState.pendingComments}
+          editingProgress={slideEditingState.editingProgress}
+          isProcessingComments={slideEditingState.isProcessingComments}
+          slideChanges={showEditingResults ? slideEditingState.slideChanges : null}
+          onRemoveComment={handleRemoveSlideComment}
+          onClearAllComments={handleClearAllSlideComments}
+          onStartEditing={() => processSlideComments(handleShowResults)}
+          onCloseResults={handleCloseResults}
+        />
 
         {/* Slide Grid */}
         <Box sx={{ mb: 4 }}>
@@ -608,7 +649,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
             compact={isMobile}
             showCommentButtons={true}
             slideComments={slideEditingState.pendingComments}
-            onAddSlideComment={addSlideComment}
+            onAddSlideComment={handleAddSlideComment}
           />
         </Box>
 
@@ -689,30 +730,6 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
           onSuccess={handleSaveSuccess}
           onError={handleSaveError}
         />
-
-        {/* Floating Comment Panel */}
-        {(slideEditingState.pendingComments.length > 0 || slideEditingState.isProcessingComments) && (
-          <FloatingSlideCommentPanel
-            slides={slides}
-            comments={slideEditingState.pendingComments}
-            editingProgress={slideEditingState.editingProgress}
-            isProcessingComments={slideEditingState.isProcessingComments}
-            onRemoveComment={removeSlideComment}
-            onClearAllComments={clearAllSlideComments}
-            onStartEditing={processSlideComments}
-          />
-        )}
-
-        {/* Slide Edit Results Dialog */}
-        {slideEditingState.slideChanges && Object.keys(slideEditingState.slideChanges).length > 0 && (
-          <SlideEditResultsDialog
-            open={resultsDialogOpen}
-            onClose={() => setResultsDialogOpen(false)}
-            slideChanges={slideEditingState.slideChanges}
-            slides={slides}
-            onAddMoreComments={handleAddMoreComments}
-          />
-        )}
       </>
     );
   }
@@ -784,6 +801,19 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
           </Alert>
         )}
 
+        {/* Slide Editing Panel */}
+        <SlideEditingExpandablePanel
+          slides={slides}
+          comments={slideEditingState.pendingComments}
+          editingProgress={slideEditingState.editingProgress}
+          isProcessingComments={slideEditingState.isProcessingComments}
+          slideChanges={showEditingResults ? slideEditingState.slideChanges : null}
+          onRemoveComment={handleRemoveSlideComment}
+          onClearAllComments={handleClearAllSlideComments}
+          onStartEditing={() => processSlideComments(handleShowResults)}
+          onCloseResults={handleCloseResults}
+        />
+
         {/* Main Content */}
         <Box sx={{ mb: 4 }}>
           <TemplateSlideGrid
@@ -799,7 +829,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
             compact={isMobile}
             showCommentButtons={isCompleted && !isGenerating}
             slideComments={slideEditingState.pendingComments}
-            onAddSlideComment={addSlideComment}
+            onAddSlideComment={handleAddSlideComment}
           />
         </Box>
 
@@ -852,30 +882,6 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
       onSuccess={handleSaveSuccess}
       onError={handleSaveError}
     />
-
-    {/* Floating Comment Panel */}
-    {(slideEditingState.pendingComments.length > 0 || slideEditingState.isProcessingComments) && (
-      <FloatingSlideCommentPanel
-        slides={slides}
-        comments={slideEditingState.pendingComments}
-        editingProgress={slideEditingState.editingProgress}
-        isProcessingComments={slideEditingState.isProcessingComments}
-        onRemoveComment={removeSlideComment}
-        onClearAllComments={clearAllSlideComments}
-        onStartEditing={() => processSlideComments(handleShowResults)}
-      />
-    )}
-
-    {/* Slide Edit Results Dialog */}
-    {slideEditingState.slideChanges && Object.keys(slideEditingState.slideChanges).length > 0 && (
-      <SlideEditResultsDialog
-        open={resultsDialogOpen}
-        onClose={() => setResultsDialogOpen(false)}
-        slideChanges={slideEditingState.slideChanges}
-        slides={slides}
-        onAddMoreComments={handleAddMoreComments}
-      />
-    )}
 
     </>
   );
