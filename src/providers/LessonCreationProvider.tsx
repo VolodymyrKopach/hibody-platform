@@ -584,11 +584,18 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
               }
             }));
 
+            // Оновлюємо currentLesson з новими слайдами
+            const updatedLesson = prev.slideGenerationState.currentLesson ? {
+              ...prev.slideGenerationState.currentLesson,
+              slides: updatedSlides
+            } : null;
+
             return {
               ...prev,
               slideGenerationState: {
                 ...prev.slideGenerationState,
                 slides: updatedSlides,
+                currentLesson: updatedLesson,
                 // Додаємо timestamp для форсування оновлення
                 lastEditTimestamp: new Date().toISOString()
               },
