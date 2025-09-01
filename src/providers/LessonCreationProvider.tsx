@@ -8,7 +8,10 @@ import {
   LessonCreationStep,
   PlanComment,
   PlanEditingState,
-  PlanChanges
+  PlanChanges,
+  SlideComment,
+  SlideEditingState,
+  SlideEditingProgress
 } from '@/types/templates';
 import { SimpleLesson } from '@/types/chat';
 import { planEditingService } from '@/services/templates/PlanEditingService';
@@ -41,6 +44,15 @@ const initialPlanEditingState: PlanEditingState = {
   editHistory: []
 };
 
+const initialSlideEditingState: SlideEditingState = {
+  isEditingMode: false,
+  selectedSlideId: null,
+  pendingComments: [],
+  isProcessingComments: false,
+  editingProgress: [],
+  slideChanges: null
+};
+
 const initialState: LessonCreationState = {
   currentStep: 1,
   completedSteps: new Set([1]), // Step 1 is always accessible
@@ -51,6 +63,7 @@ const initialState: LessonCreationState = {
   error: null,
   planEditingState: initialPlanEditingState,
   planChanges: null,
+  slideEditingState: initialSlideEditingState,
   slideGenerationState: initialSlideGenerationState
 };
 
@@ -374,6 +387,224 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
     }));
   }, []);
 
+  // === Slide Editing Methods ===
+
+  const enterSlideEditMode = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      slideEditingState: {
+        ...prev.slideEditingState,
+        isEditingMode: true
+      }
+    }));
+  }, []);
+
+  const exitSlideEditMode = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      slideEditingState: {
+        ...prev.slideEditingState,
+        isEditingMode: false,
+        selectedSlideId: null
+      }
+    }));
+  }, []);
+
+  const addSlideComment = useCallback((comment: Omit<SlideComment, 'id' | 'timestamp'>) => {
+    const newComment: SlideComment = {
+      ...comment,
+      id: `slide_comment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date()
+    };
+
+    setState(prev => ({
+      ...prev,
+      slideEditingState: {
+        ...prev.slideEditingState,
+        pendingComments: [...prev.slideEditingState.pendingComments, newComment]
+      }
+    }));
+  }, []);
+
+  const removeSlideComment = useCallback((commentId: string) => {
+    setState(prev => ({
+      ...prev,
+      slideEditingState: {
+        ...prev.slideEditingState,
+        pendingComments: prev.slideEditingState.pendingComments.filter(c => c.id !== commentId)
+      }
+    }));
+  }, []);
+
+  const clearAllSlideComments = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      slideEditingState: {
+        ...prev.slideEditingState,
+        pendingComments: []
+      }
+    }));
+  }, []);
+
+  const processSlideComments = useCallback(async (onComplete?: () => void) => {
+    const { slideEditingState, slideGenerationState } = state;
+    
+    if (slideEditingState.pendingComments.length === 0) {
+      console.warn('No slide comments to process');
+      return;
+    }
+
+    // Групуємо коментарі по слайдах
+    const commentsBySlide = slideEditingState.pendingComments.reduce((acc, comment) => {
+      if (!acc[comment.slideId]) {
+        acc[comment.slideId] = [];
+      }
+      acc[comment.slideId].push(comment);
+      return acc;
+    }, {} as Record<string, SlideComment[]>);
+
+    const slidesToEdit = Object.keys(commentsBySlide);
+    
+    // Ініціалізуємо прогрес
+    const initialProgress: SlideEditingProgress[] = slidesToEdit.map(slideId => ({
+      slideId,
+      status: 'pending',
+      progress: 0
+    }));
+
+    setState(prev => ({
+      ...prev,
+      slideEditingState: {
+        ...prev.slideEditingState,
+        isProcessingComments: true,
+        editingProgress: initialProgress
+      }
+    }));
+
+    try {
+      // Обробляємо слайди послідовно
+      for (let i = 0; i < slidesToEdit.length; i++) {
+        const slideId = slidesToEdit[i];
+        const slideComments = commentsBySlide[slideId];
+        const slide = slideGenerationState.slides.find(s => s.id === slideId);
+        
+        if (!slide) continue;
+
+        // Оновлюємо статус на "processing"
+        setState(prev => ({
+          ...prev,
+          slideEditingState: {
+            ...prev.slideEditingState,
+            editingProgress: prev.slideEditingState.editingProgress.map(p =>
+              p.slideId === slideId 
+                ? { ...p, status: 'processing', currentOperation: 'Analyzing comments...' }
+                : p
+            )
+          }
+        }));
+
+        try {
+          // Викликаємо API для редагування слайду
+          const response = await fetch('/api/slides/edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slide,
+              comments: slideComments,
+              context: {
+                ageGroup: state.templateData.ageGroup,
+                topic: state.templateData.topic
+              }
+            })
+          });
+
+          const result = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(result.error || 'Failed to edit slide');
+          }
+
+          const { editedSlide, slideChanges } = result;
+
+          // Оновлюємо слайд та прогрес
+          setState(prev => ({
+            ...prev,
+            slideGenerationState: {
+              ...prev.slideGenerationState,
+              slides: prev.slideGenerationState.slides.map(s =>
+                s.id === slideId ? editedSlide : s
+              )
+            },
+            slideEditingState: {
+              ...prev.slideEditingState,
+              editingProgress: prev.slideEditingState.editingProgress.map(p =>
+                p.slideId === slideId 
+                  ? { ...p, status: 'completed', progress: 100 }
+                  : p
+              ),
+              slideChanges: {
+                ...prev.slideEditingState.slideChanges,
+                [slideId]: slideChanges
+              }
+            }
+          }));
+
+        } catch (error) {
+          console.error(`Failed to edit slide ${slideId}:`, error);
+          
+          // Оновлюємо статус на "error"
+          setState(prev => ({
+            ...prev,
+            slideEditingState: {
+              ...prev.slideEditingState,
+              editingProgress: prev.slideEditingState.editingProgress.map(p =>
+                p.slideId === slideId 
+                  ? { ...p, status: 'error', progress: 0 }
+                  : p
+              )
+            }
+          }));
+        }
+      }
+
+      // Завершуємо процес
+      setState(prev => ({
+        ...prev,
+        slideEditingState: {
+          ...prev.slideEditingState,
+          isProcessingComments: false,
+          pendingComments: [], // Очищаємо коментарі після обробки
+          isEditingMode: false
+        }
+      }));
+
+      // Викликаємо callback після завершення
+      if (typeof onComplete === 'function') {
+        onComplete();
+      }
+
+    } catch (error) {
+      console.error('Error processing slide comments:', error);
+      setState(prev => ({
+        ...prev,
+        slideEditingState: {
+          ...prev.slideEditingState,
+          isProcessingComments: false
+        }
+      }));
+    }
+  }, [state]);
+
+  const updateSlideEditingState = useCallback((newState: Partial<SlideEditingState>) => {
+    setState(prev => ({
+      ...prev,
+      slideEditingState: {
+        ...prev.slideEditingState,
+        ...newState
+      }
+    }));
+  }, []);
+
   const contextValue: LessonCreationContextValue = {
     state,
     setCurrentStep,
@@ -394,6 +625,14 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
     clearAllComments,
     processComments,
     updatePlanEditingState,
+    // Slide editing methods
+    enterSlideEditMode,
+    exitSlideEditMode,
+    addSlideComment,
+    removeSlideComment,
+    clearAllSlideComments,
+    processSlideComments,
+    updateSlideEditingState,
     // Slide generation state management
     updateSlideGenerationState,
     clearSlideGenerationState,

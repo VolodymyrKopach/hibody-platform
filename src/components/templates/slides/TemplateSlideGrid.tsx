@@ -12,7 +12,9 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import TemplateSlideCard from './TemplateSlideCard';
+import SlideCommentButton from './SlideCommentButton';
 import { SimpleSlide, SlideGenerationProgress } from '@/types/chat';
+import { SlideComment } from '@/types/templates';
 import { getLocalThumbnailStorage } from '@/services/slides/LocalThumbnailService';
 
 export interface TemplateSlideGridProps {
@@ -33,6 +35,11 @@ export interface TemplateSlideGridProps {
   onSlidePreview?: (slideIndex: number) => void;
   onSlideFullscreen?: (slideIndex: number) => void;
   
+  // Коментарі до слайдів
+  showCommentButtons?: boolean;
+  slideComments?: SlideComment[];
+  onAddSlideComment?: (comment: Omit<SlideComment, 'id' | 'timestamp'>) => void;
+  
   // Опції відображення
   showStats?: boolean;
   compact?: boolean;
@@ -48,6 +55,9 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
   onSlideSelect,
   onSlidePreview,
   onSlideFullscreen,
+  showCommentButtons = false,
+  slideComments = [],
+  onAddSlideComment,
   showStats = true,
   compact = false
 }) => {
@@ -238,6 +248,11 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
     return Math.max(progressFromMap, progressFromArray);
   };
 
+  // Отримання кількості коментарів для слайду
+  const getCommentCount = (slideId: string) => {
+    return slideComments.filter(comment => comment.slideId === slideId).length;
+  };
+
   return (
     <Box sx={{ width: '100%', height: '100%' }}>
 
@@ -276,21 +291,34 @@ const TemplateSlideGrid: React.FC<TemplateSlideGridProps> = ({
               }}
               key={slide.id}
             >
-              <TemplateSlideCard
-                slide={slide}
-                index={index}
-                generationStatus={getSlideGenerationStatus(slide, index)}
-                generationProgress={getSlideProgress(slide, index)}
-                estimatedTime={30} // Можна зробити динамічним
-                isSelected={selectedSlideId === slide.id}
-                previewUrl={slidePreviews[slide.id] || slide.previewUrl || slide.thumbnailUrl}
-                onSelect={onSlideSelect}
-                onPreview={onSlidePreview}
-                onOpenFullscreen={onSlideFullscreen}
-                compact={compact}
-                showProgress={isGenerating}
-                showEstimatedTime={isGenerating}
-              />
+              <Box sx={{ position: 'relative' }} className="slide-card">
+                <TemplateSlideCard
+                  slide={slide}
+                  index={index}
+                  generationStatus={getSlideGenerationStatus(slide, index)}
+                  generationProgress={getSlideProgress(slide, index)}
+                  estimatedTime={30} // Можна зробити динамічним
+                  isSelected={selectedSlideId === slide.id}
+                  previewUrl={slidePreviews[slide.id] || slide.previewUrl || slide.thumbnailUrl}
+                  onSelect={onSlideSelect}
+                  onPreview={onSlidePreview}
+                  onOpenFullscreen={onSlideFullscreen}
+                  compact={compact}
+                  showProgress={isGenerating}
+                  showEstimatedTime={isGenerating}
+                />
+                
+                {/* Comment Button */}
+                {showCommentButtons && onAddSlideComment && !slide.isPlaceholder && slide.status === 'completed' && (
+                  <SlideCommentButton
+                    slideId={slide.id}
+                    slideTitle={slide.title}
+                    commentCount={getCommentCount(slide.id)}
+                    onAddComment={onAddSlideComment}
+                    disabled={isGenerating}
+                  />
+                )}
+              </Box>
             </Grid>
           ))}
         </Grid>

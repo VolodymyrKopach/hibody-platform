@@ -577,5 +577,46 @@
   },
   "buttons": {
     "edit": "Edit"
+  },
+  "slideEditing": {
+    "addComment": {
+      "title": "Add Comment to Slide",
+      "section": "Section",
+      "commentLabel": "Your comment",
+      "commentPlaceholder": "e.g., Make the title bigger, add more colors, simplify the text...",
+      "priority": "Priority",
+      "submit": "Add Comment",
+      "advancedOptions": "Advanced Options",
+      "cancel": "Cancel"
+    },
+    "sections": {
+      "general": "General",
+      "title": "Title",
+      "content": "Content",
+      "styling": "Styling",
+      "interactions": "Interactions"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "panel": {
+      "title": "Slide Comments",
+      "subtitle": "{{slideCount}} slides • {{commentCount}} comments",
+      "clearAll": "Clear All",
+      "startEditing": "Start Editing ({{count}})",
+      "processing": "Editing slides...",
+      "noComments": "No comments yet"
+    },
+    "results": {
+      "title": "Slide Editing Results",
+      "subtitle": "{{slideCount}} slides • {{changeCount}} changes",
+      "successTitle": "Slides Successfully Updated!",
+      "successDescription": "{{changeCount}} changes were applied to {{slideCount}} slides",
+      "changes": "changes",
+      "addMoreComments": "Add More Comments",
+      "close": "Close"
+    }
   }
 }

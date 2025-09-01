@@ -476,6 +476,8 @@ export interface LessonCreationState {
   planEditingState: PlanEditingState;
   // Plan changes feedback
   planChanges: PlanChanges | null;
+  // Slide editing state
+  slideEditingState: SlideEditingState;
   // Generation state persistence
   slideGenerationState: {
     isGenerating: boolean;
@@ -508,6 +510,14 @@ export interface LessonCreationContextValue {
   clearAllComments: () => void;
   processComments: () => Promise<void>;
   updatePlanEditingState: (state: Partial<PlanEditingState>) => void;
+  // Slide editing methods
+  enterSlideEditMode: () => void;
+  exitSlideEditMode: () => void;
+  addSlideComment: (comment: Omit<SlideComment, 'id' | 'timestamp'>) => void;
+  removeSlideComment: (commentId: string) => void;
+  clearAllSlideComments: () => void;
+  processSlideComments: (onComplete?: () => void) => Promise<void>;
+  updateSlideEditingState: (state: Partial<SlideEditingState>) => void;
   // Slide generation state management
   updateSlideGenerationState: (state: Partial<LessonCreationState['slideGenerationState']>) => void;
   clearSlideGenerationState: () => void;
@@ -539,4 +549,63 @@ export interface PlanChangeItem {
 
 export interface PlanEditResponseWithChanges extends PlanEditResponse {
   changes?: PlanChanges;
+}
+
+// === Slide Editing System Types ===
+
+export interface SlideComment {
+  id: string;
+  slideId: string;
+  comment: string;
+  priority: 'low' | 'medium' | 'high';
+  timestamp: Date;
+  sectionType: 'title' | 'content' | 'styling' | 'interactions' | 'general';
+}
+
+export interface SlideEditingState {
+  isEditingMode: boolean;
+  selectedSlideId: string | null;
+  pendingComments: SlideComment[];
+  isProcessingComments: boolean;
+  editingProgress: SlideEditingProgress[];
+  slideChanges: Record<string, SlideChanges> | null;
+}
+
+export interface SlideEditingProgress {
+  slideId: string;
+  status: 'pending' | 'processing' | 'completed' | 'error';
+  progress: number;
+  currentOperation?: string;
+}
+
+export interface SlideChanges {
+  slideId: string;
+  changes: Array<{
+    section: string;
+    shortDescription: string;
+    detailedDescription: string;
+  }>;
+  summary: {
+    totalChanges: number;
+    affectedSections: string[];
+  };
+}
+
+export interface SlideEditRequest {
+  slide: import('@/types/chat').SimpleSlide;
+  comments: SlideComment[];
+  context: {
+    ageGroup: string;
+    topic: string;
+  };
+}
+
+export interface SlideEditResponse {
+  success: boolean;
+  editedSlide?: import('@/types/chat').SimpleSlide;
+  slideChanges?: SlideChanges;
+  error?: {
+    message: string;
+    code: string;
+  };
 }

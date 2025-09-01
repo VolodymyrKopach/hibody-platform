@@ -559,5 +559,46 @@
   },
   "buttons": {
     "edit": "Редагувати"
+  },
+  "slideEditing": {
+    "addComment": {
+      "title": "Додати коментар до слайду",
+      "section": "Секція",
+      "commentLabel": "Ваш коментар",
+      "commentPlaceholder": "наприклад, Зробити заголовок більшим, додати більше кольорів, спростити текст...",
+      "priority": "Пріоритет",
+      "submit": "Додати коментар",
+      "advancedOptions": "Додаткові налаштування",
+      "cancel": "Скасувати"
+    },
+    "sections": {
+      "general": "Загальне",
+      "title": "Заголовок",
+      "content": "Контент",
+      "styling": "Стилізація",
+      "interactions": "Інтерактивність"
+    },
+    "priority": {
+      "low": "Низький",
+      "medium": "Середній",
+      "high": "Високий"
+    },
+    "panel": {
+      "title": "Коментарі до слайдів",
+      "subtitle": "{{slideCount}} слайдів • {{commentCount}} коментарів",
+      "clearAll": "Очистити все",
+      "startEditing": "Почати редагування ({{count}})",
+      "processing": "Редагування слайдів...",
+      "noComments": "Поки немає коментарів"
+    },
+    "results": {
+      "title": "Результати редагування слайдів",
+      "subtitle": "{{slideCount}} слайдів • {{changeCount}} змін",
+      "successTitle": "Слайди успішно оновлено!",
+      "successDescription": "{{changeCount}} змін було застосовано до {{slideCount}} слайдів",
+      "changes": "змін",
+      "addMoreComments": "Додати ще коментарі",
+      "close": "Закрити"
+    }
   }
 }
