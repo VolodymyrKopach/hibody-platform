@@ -161,11 +161,11 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
           textAlign: 'center',
         }}
       >
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <CheckCircle 
             size={64} 
             color={theme.palette.success.main}
-            style={{ marginBottom: '16px' }}
+            style={{ marginBottom: '16px', display: 'block' }}
           />
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
             {t('auth:resetPassword.success')}
@@ -191,8 +191,8 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
         borderRadius: '20px',
       }}
     >
-      <Box sx={{ textAlign: 'center', mb: 3 }}>
-        <Key size={48} color={theme.palette.primary.main} style={{ marginBottom: '16px' }} />
+      <Box sx={{ textAlign: 'center', mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Key size={48} color={theme.palette.primary.main} style={{ marginBottom: '16px', display: 'block' }} />
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
           {t('auth:resetPassword.title')}
         </Typography>

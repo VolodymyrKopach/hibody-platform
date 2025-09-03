@@ -53,8 +53,8 @@ function ForgotPasswordPageContent() {
           }}
         >
           {/* Logo */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Box sx={{ mx: 'auto', mb: 2 }}>
+          <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Box sx={{ mx: 'auto', mb: 2, display: 'flex', justifyContent: 'center' }}>
               <Logo variant="auth" />
             </Box>
             <Typography

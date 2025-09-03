@@ -90,11 +90,11 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
           textAlign: 'center',
         }}
       >
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <CheckCircle 
             size={64} 
             color={theme.palette.success.main}
-            style={{ marginBottom: '16px' }}
+            style={{ marginBottom: '16px', display: 'block' }}
           />
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
             {t('auth:forgotPassword.success')}
@@ -131,8 +131,8 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
         borderRadius: '20px',
       }}
     >
-      <Box sx={{ textAlign: 'center', mb: 3 }}>
-        <Send size={48} color={theme.palette.primary.main} style={{ marginBottom: '16px' }} />
+      <Box sx={{ textAlign: 'center', mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Send size={48} color={theme.palette.primary.main} style={{ marginBottom: '16px', display: 'block' }} />
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
           {t('auth:forgotPassword.title')}
         </Typography>

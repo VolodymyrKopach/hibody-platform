@@ -159,7 +159,9 @@ function ResetPasswordPageContent() {
             textAlign: 'center',
           }}
         >
-          <AlertTriangle size={48} color="#f44336" style={{ marginBottom: '16px' }} />
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+            <AlertTriangle size={48} color="#f44336" style={{ marginBottom: '16px', display: 'block' }} />
+          </Box>
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
             Invalid link
           </Typography>
@@ -212,8 +214,8 @@ function ResetPasswordPageContent() {
           }}
         >
           {/* Logo */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Box sx={{ mx: 'auto', mb: 2 }}>
+          <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Box sx={{ mx: 'auto', mb: 2, display: 'flex', justifyContent: 'center' }}>
               <Logo variant="auth" />
             </Box>
             <Typography

@@ -25,6 +25,7 @@ const Logo: React.FC<LogoProps> = ({ size, variant = 'header' }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        margin: '0 auto', // Ensure the logo container is centered
         boxShadow: variant === 'header' 
           ? '0 2px 8px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)'
           : '0 4px 20px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08)',
@@ -39,6 +40,7 @@ const Logo: React.FC<LogoProps> = ({ size, variant = 'header' }) => {
           objectFit: 'contain',
           borderRadius,
           padding: '3px',
+          display: 'block', // Ensure proper image display
         }}
       />
     </Box>
