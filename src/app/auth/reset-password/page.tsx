@@ -27,12 +27,14 @@ function ResetPasswordPageContent() {
       const refreshToken = searchParams?.get('refresh_token')
       const tokenType = searchParams?.get('token_type')
       const type = searchParams?.get('type')
+      const legacyToken = searchParams?.get('token') // For old Supabase format
       
       console.log('Reset password URL params:', {
         accessToken: accessToken ? accessToken.substring(0, 10) + '...' : 'null',
         refreshToken: refreshToken ? refreshToken.substring(0, 10) + '...' : 'null',
         tokenType,
         type,
+        legacyToken: legacyToken ? legacyToken.substring(0, 10) + '...' : 'null',
         allParams: Object.fromEntries(searchParams?.entries() || [])
       })
 
@@ -67,6 +69,37 @@ function ResetPasswordPageContent() {
         }
       }
 
+      // Handle legacy token format (old Supabase links)
+      if (legacyToken && type === 'recovery') {
+        try {
+          console.log('Processing legacy token format')
+          // For legacy tokens, we need to verify them with Supabase
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: legacyToken,
+            type: 'recovery'
+          })
+          
+          if (error) {
+            console.error('Legacy token verification failed:', error)
+            setError('Invalid or expired reset link. Please request a new one.')
+            setLoading(false)
+            return
+          }
+          
+          if (data.user) {
+            console.log('Legacy token verified successfully for user:', data.user.email)
+            setToken(legacyToken)
+            setLoading(false)
+            return
+          }
+        } catch (err) {
+          console.error('Legacy token processing error:', err)
+          setError('Error processing reset link. Please try again.')
+          setLoading(false)
+          return
+        }
+      }
+
       // Check if user is already authenticated
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -84,12 +117,14 @@ function ResetPasswordPageContent() {
 
       // If no tokens or session
       if (!accessToken && !refreshToken) {
+        console.log('No tokens found in URL, checking if user is already authenticated')
         setError('Missing password reset tokens. Please try the link from email again.')
         setLoading(false)
         return
       }
 
-      setError('Failed to set session for password reset')
+      console.log('Failed to set session for password reset')
+      setError('Failed to set session for password reset. Please try the link from email again.')
       setLoading(false)
     }
 

@@ -36,6 +36,8 @@ export async function POST(request: NextRequest) {
     const host = request.headers.get('host') || 'localhost:3000'
     const baseUrl = `${protocol}://${host}`
 
+    console.log('Password reset redirect URL:', `${baseUrl}/auth/reset-password`)
+
     // Send password reset request via Supabase
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${baseUrl}/auth/reset-password`,

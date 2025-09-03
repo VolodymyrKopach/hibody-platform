@@ -64,6 +64,26 @@ export async function updateSession(request: NextRequest) {
       console.log(`✅ Middleware: Auth check for ${request.nextUrl.pathname}: ${user ? `User ${user.email}` : 'No user'}`)
     }
 
+    // Спеціальна обробка для reset-password з токенами
+    if (request.nextUrl.pathname === '/auth/reset-password') {
+      const hasNewTokens = request.nextUrl.searchParams.has('access_token') && 
+                          request.nextUrl.searchParams.has('refresh_token') &&
+                          request.nextUrl.searchParams.get('type') === 'recovery'
+      
+      const hasLegacyToken = request.nextUrl.searchParams.has('token') &&
+                            request.nextUrl.searchParams.get('type') === 'recovery'
+      
+      if (hasNewTokens) {
+        console.log(`🔑 Middleware: Password reset with new tokens detected, allowing access`)
+        return supabaseResponse
+      }
+      
+      if (hasLegacyToken) {
+        console.log(`🔑 Middleware: Password reset with legacy token detected, allowing access`)
+        return supabaseResponse
+      }
+    }
+
     // Якщо користувач не авторизований і намагається потрапити на захищену сторінку
     if (!user && !isPublicRoute) {
       console.log(`🔄 Middleware: Redirecting unauthorized user from ${request.nextUrl.pathname} to login`)

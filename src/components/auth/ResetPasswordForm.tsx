@@ -113,26 +113,31 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onSuccess 
     setError('');
 
     try {
+      console.log('Attempting to update user password...');
+      
       // Update user password
       const { error } = await supabase.auth.updateUser({
         password: formData.password
       });
 
       if (error) {
+        console.error('Supabase updateUser error:', error);
         throw error;
       }
 
+      console.log('Password updated successfully');
       setSuccess(true);
       
       // Redirect user after 2 seconds
       setTimeout(() => {
-        router.push('/auth/login');
+        console.log('Redirecting to login page');
+        router.push('/auth/login?message=password-reset-success');
         onSuccess();
       }, 2000);
 
     } catch (err: any) {
       console.error('Reset password error:', err);
-      setError('Server connection error');
+      setError(err.message || 'Error updating password. Please try again.');
     } finally {
       setLoading(false);
     }
