@@ -1,6 +1,6 @@
 import { User } from '@supabase/supabase-js'
 
-// Розширений профіль користувача
+// Extended user profile
 export interface UserProfile {
   id: string
   email: string
@@ -12,11 +12,12 @@ export interface UserProfile {
   updated_at: string
 }
 
-// Контекст аутентифікації
+// Authentication context
 export interface AuthContextType {
   user: User | null
   profile: UserProfile | null
   loading: boolean
+  sessionSynced: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
@@ -24,7 +25,7 @@ export interface AuthContextType {
   refreshSession: () => Promise<boolean>
 }
 
-// Форми аутентифікації
+// Authentication forms
 export interface LoginFormData {
   email: string
   password: string
@@ -37,7 +38,7 @@ export interface RegisterFormData {
   fullName: string
 }
 
-// Ліміти підписки
+// Subscription limits
 export interface SubscriptionLimits {
   maxLessons: number
   maxSlidesPerLesson: number
@@ -48,7 +49,7 @@ export interface SubscriptionLimits {
   canCreatePublicLessons: boolean
 }
 
-// Мапа лімітів за типом підписки
+// Limits map by subscription type
 export const SUBSCRIPTION_LIMITS: Record<UserProfile['subscription_type'], SubscriptionLimits> = {
   free: {
     maxLessons: 5,

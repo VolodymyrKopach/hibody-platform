@@ -13,6 +13,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [initialized, setInitialized] = useState(false)
+  const [sessionSynced, setSessionSynced] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -20,7 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true
     let initializationComplete = false
 
-    // Функція для безпечного завершення ініціалізації
+    // Safe initialization completion function
     const completeInitialization = () => {
       if (mounted && !initializationComplete) {
         initializationComplete = true
@@ -29,12 +30,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Функція для ініціалізації авторизації
+    // Authentication initialization function
     const initializeAuth = async () => {
       try {
 
         
-        // Отримуємо сесію з таймаутом
+        // Get session with timeout
         const sessionPromise = supabase.auth.getSession()
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Session timeout')), 3000)
@@ -52,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted && !initializationComplete) {
           if (session?.user) {
             setUser(session.user)
-            // Завантажуємо профіль асинхронно без блокування
+            // Load profile asynchronously without blocking
             fetchUserProfile(session.user.id).catch(() => {})
           } else {
             setUser(null)
@@ -68,18 +69,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Скорочений таймаут для запобігання вічному loading
+    // Shortened timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
       if (mounted && !initializationComplete) {
 
         completeInitialization()
       }
-    }, 1000) // Зменшуємо до 1 секунди для швидшого редиректу
+    }, 1000) // Reduced to 1 second for faster redirect
 
-    // Запускаємо ініціалізацію
+    // Start initialization
     initializeAuth()
 
-    // Підписуємося на зміни аутентифікації
+    // Subscribe to authentication changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: any, session: any) => {
 
@@ -87,13 +88,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           const newUser = session?.user ?? null
           
-          // Оновлюємо користувача тільки якщо він змінився
+          // Update user only if changed
           setUser(prevUser => {
             const userChanged = prevUser?.id !== newUser?.id
             
             if (userChanged) {
               if (newUser) {
-                // Завантажуємо профіль асинхронно тільки для нового користувача
+                // Load profile asynchronously only for new user
                 fetchUserProfile(newUser.id).catch(() => {})
               } else {
                 setProfile(null)
@@ -103,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return newUser
           })
           
-          // Якщо ініціалізація ще не завершена, завершуємо її
+          // If initialization not complete, complete it
           if (!initializationComplete) {
             completeInitialization()
           }
@@ -137,7 +138,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Функція для оновлення сесії (для ручного використання)
+  // Check session synchronization with server
+  const checkSessionSync = useCallback(async () => {
+    if (!user) {
+      setSessionSynced(false)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/auth/check', {
+        method: 'GET',
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.authenticated && data.user.id === user.id) {
+          setSessionSynced(true)
+          return
+        }
+      }
+      
+      // Retry after 500ms, but not more than 6 times (3 seconds total)
+      setTimeout(() => {
+        if (user) {
+          checkSessionSync()
+        }
+      }, 500)
+    } catch (error) {
+      console.error('Session sync check failed:', error)
+      // Fallback - assume synced after 3 seconds
+      setTimeout(() => {
+        setSessionSynced(true)
+      }, 3000)
+    }
+  }, [user])
+
+  // Manual session refresh function
   const refreshSession = useCallback(async () => {
     try {
 
@@ -153,6 +190,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return false
     }
   }, [])
+
+  // Check session sync after initialization
+  useEffect(() => {
+    if (initialized && user && !sessionSynced) {
+      checkSessionSync()
+    } else if (!user) {
+      setSessionSynced(false)
+    }
+  }, [initialized, user, sessionSynced, checkSessionSync])
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -179,7 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       })
 
-      // Якщо реєстрація успішна, створюємо профіль користувача
+      // If registration successful, create user profile
       if (data.user && !error) {
         const { error: profileError } = await supabase
           .from('user_profiles')
@@ -213,11 +259,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error
       }
       
-      // Очищаємо локальний стан
+      // Clear local state
       setUser(null)
       setProfile(null)
       
-      // Перенаправляємо на сторінку логіну
+      // Redirect to login page
       router.push('/auth/login')
       
     } catch (error) {
@@ -250,7 +296,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value: AuthContextType = {
     user,
     profile,
-    loading,
+    loading: loading || Boolean(user && !sessionSynced), // Show loading while session is not synced
+    sessionSynced,
     signIn,
     signUp,
     signOut,
@@ -258,8 +305,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshSession,
   }
 
-  // RouteGuard тепер обробляє loading screens та редиректи
-  // AuthProvider просто надає контекст авторизації
+  // RouteGuard handles loading screens and redirects
+  // AuthProvider provides authentication context
   return (
     <AuthContext.Provider value={value}>
       {/* SessionManager removed - using Supabase's built-in autoRefreshToken instead */}

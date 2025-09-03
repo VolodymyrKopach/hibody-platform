@@ -71,7 +71,7 @@ export interface UseSupabaseLessonsReturn {
 }
 
 export const useSupabaseLessons = (): UseSupabaseLessonsReturn => {
-  const { user } = useAuth();
+  const { user, sessionSynced } = useAuth();
   const [lessonService] = useState(() => new LessonService());
   const [slideService] = useState(() => new SlideService());
   
@@ -182,67 +182,38 @@ export const useSupabaseLessons = (): UseSupabaseLessonsReturn => {
     }
   }, [lessonService]);
 
-  // Основна функція завантаження уроків користувача
+  // Main function to load user lessons
   const loadUserLessons = useCallback(async (): Promise<void> => {
-    console.log('🔄 HOOK: loadUserLessons called');
-    console.log('👤 User:', user ? { id: user.id, email: user.email } : 'Not authenticated');
-    
     if (!user) {
-      console.log('❌ No user found, clearing lessons');
       setLessons([]);
       setLoading(false);
       return;
     }
     
-    console.log('⏳ Starting lessons fetch...');
     setLoading(true);
     setError(null);
     
     try {
-      console.log('📡 Making API call to /api/lessons');
       const response = await fetch('/api/lessons', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
-      console.log('📨 API Response status:', response.status);
       
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('❌ API Error:', errorData);
         throw new Error(errorData.error?.message || 'Failed to fetch lessons');
       }
 
       const data = await response.json();
-      console.log('📋 API Response data:', data);
-      console.log('📊 Lessons received:', data.lessons?.length || 0);
-      
-      // Детальне логування кожного уроку
-      if (data.lessons && Array.isArray(data.lessons)) {
-        data.lessons.forEach((lesson: any, index: number) => {
-          console.log(`📖 Lesson ${index + 1}:`, {
-            id: lesson.id,
-            title: lesson.title,
-            thumbnail_url: lesson.thumbnail_url,
-            has_thumbnail: !!lesson.thumbnail_url,
-            slides_count: lesson.slides?.length || 0,
-            status: lesson.status,
-            created_at: lesson.created_at
-          });
-        });
-      }
-      
       setLessons(data.lessons || []);
-      console.log('✅ Lessons state updated successfully');
     } catch (err) {
-      console.error('💥 Error fetching lessons:', err);
+      console.error('Error fetching lessons:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to load lessons';
       setError(errorMessage);
     } finally {
       setLoading(false);
-      console.log('🏁 loadUserLessons completed');
     }
   }, [user]);
 
@@ -348,11 +319,13 @@ export const useSupabaseLessons = (): UseSupabaseLessonsReturn => {
     let mounted = true;
     
     const initializeLessons = async () => {
-      if (user && mounted) {
+      if (user && sessionSynced && mounted) {
         await loadUserLessons();
       } else if (!user && mounted) {
         setLessons([]);
         setLoading(false);
+      } else if (user && !sessionSynced && mounted) {
+        setLoading(true);
       }
     };
 
@@ -361,7 +334,7 @@ export const useSupabaseLessons = (): UseSupabaseLessonsReturn => {
     return () => {
       mounted = false;
     };
-  }, [user?.id]); // Залежність тільки від user.id, а не від всього user об'єкта
+  }, [user?.id, sessionSynced]); // Add sessionSynced to dependencies
 
   return {
     lessons,
