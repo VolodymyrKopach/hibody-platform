@@ -557,9 +557,6 @@
     "expand": "Розгорнути",
     "collapse": "Згорнути"
   },
-  "buttons": {
-    "edit": "Редагувати"
-  },
   "slideEditing": {
     "addComment": {
       "title": "Додати коментар до слайду",

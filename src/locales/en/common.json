@@ -575,9 +575,6 @@
     "expand": "Expand",
     "collapse": "Collapse"
   },
-  "buttons": {
-    "edit": "Edit"
-  },
   "slideEditing": {
     "addComment": {
       "title": "Add Comment to Slide",
