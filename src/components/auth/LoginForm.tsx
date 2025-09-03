@@ -24,9 +24,10 @@ import { LoginFormData } from '@/types/auth'
 interface LoginFormProps {
   onSwitchToRegister?: () => void
   onSuccess?: () => void
+  onEmailNotVerified?: (email: string) => void
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess, onEmailNotVerified }) => {
   const { t } = useTranslation('auth')
   const theme = useTheme()
   const router = useRouter()
@@ -61,6 +62,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) 
       
       if (error) {
         console.error('Sign in error:', error)
+        
+        // Check if error is related to email not being verified
+        if (error.message.includes('Email not confirmed') || 
+            error.message.includes('email not verified') ||
+            error.message.includes('not verified') ||
+            error.message.includes('confirm your email') ||
+            error.message.includes('email confirmation')) {
+          // Notify parent component to show email verification banner
+          onEmailNotVerified?.(formData.email)
+          return
+        }
+        
         setError(error.message)
       } else {
         console.log('Sign in successful')

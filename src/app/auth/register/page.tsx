@@ -20,10 +20,6 @@ export default function RegisterPage() {
     }
   }, [user, loading, router])
 
-  const handleSuccess = () => {
-    router.push('/')
-  }
-
   const handleSwitchToLogin = () => {
     router.push('/auth/login')
   }
@@ -110,7 +106,6 @@ export default function RegisterPage() {
             {/* Register Form */}
             <RegisterForm
               onSwitchToLogin={handleSwitchToLogin}
-              onSuccess={handleSuccess}
             />
           </Box>
         </Container>

@@ -94,13 +94,20 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess 
       if (result.error) {
         setError(result.error.message)
       } else {
-        // Successful registration - redirect the user
-        const redirectTo = searchParams?.get('redirectTo')
-        if (redirectTo && redirectTo !== '/auth/login' && redirectTo !== '/auth/register') {
-          router.push(redirectTo)
-        } else {
-          router.push('/')
+        // Successful registration - redirect to login with email verification flag
+        const params = new URLSearchParams()
+        params.set('emailVerification', 'true')
+        params.set('email', formData.email)
+        
+        // Preserve existing redirectTo parameter if it exists
+        const existingRedirectTo = searchParams?.get('redirectTo')
+        if (existingRedirectTo) {
+          params.set('redirectTo', existingRedirectTo)
         }
+        
+        // Use window.location.href to avoid router interference
+        const finalUrl = `/auth/login?${params.toString()}`
+        window.location.href = finalUrl
         onSuccess?.()
       }
     } catch (err) {
