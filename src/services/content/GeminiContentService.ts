@@ -505,13 +505,25 @@ Use these EXACT standardized sizes based on image type and context:
 - Buttons with hover effects
 - Click animations
 - Interaction possibilities (drag&drop, click, hover)
-- Sound effects (when possible)
+- Sound effects using Web Audio API or built-in audio toggle system
 
 **RESPONSE STRUCTURE:**
 Provide only the ready HTML code without any explanations. The code must be completely self-contained and ready for immediate use.
 
+**AUDIO IMPLEMENTATION:**
+- DO NOT use external audio URLs (soundjay.com, freesound.org, etc.)
+- Use Web Audio API for sound generation with this pattern:
+  - Create playSound function that checks audioEnabled first
+  - Use AudioContext to generate tones with different frequencies
+  - Wrap in try-catch for browser compatibility
+  - Example frequencies: success (523.25), click (440), error (220)
+- Include audio toggle system from templates (audioEnabled variable, toggleAudio function)
+- Always wrap audio calls with audioEnabled check
+- Use different frequencies for different sounds (success: 523.25, click: 440, error: 220)
+
 **ATTENTION:** 
 - DO NOT use external libraries (jQuery, Bootstrap, etc.)
+- DO NOT use external audio files or URLs
 - All styles - inline or in <style> section
 - All JavaScript - in <script> section
 - Ready for immediate display in browser`;
@@ -567,9 +579,11 @@ Provide only the ready HTML code without any explanations. The code must be comp
 - Helps create emotional connection and engagement
 
 **🎵 SOUND AND MUSIC ELEMENTS:**
-- Buttons that play sounds, music, or spoken words
+- Buttons that play sounds using Web Audio API (NO external URLs)
 - Audio controls so children (or teachers) can turn sound on/off
 - Everything responds with audio feedback when touched
+- Use playSound() function with different frequencies for different actions
+- Always check audioEnabled before playing sounds
 - Supports learning through hearing and sound recognition
 
 **🏆 REWARD AND CELEBRATION COMPONENTS:**
@@ -621,9 +635,11 @@ Provide only the ready HTML code without any explanations. The code must be comp
 - Supports early math skills and number familiarity
 
 **🎵 SOUND AND MUSIC INTERACTIONS:**
-- Animal sound buttons that make realistic animal noises
+- Animal sound buttons using Web Audio API (NO external URLs)
 - Musical elements for rhythm and audio learning
 - Audio controls so sounds can be turned on or off
+- Use playSound() function with appropriate frequencies
+- Always check audioEnabled before playing sounds
 - Supports language development and listening skills
 
 **🏆 ACHIEVEMENT AND MOTIVATION ELEMENTS:**
@@ -714,9 +730,11 @@ Provide only the ready HTML code without any explanations. The code must be comp
 **🔊 COMPREHENSIVE AUDIO SUPPORT:**
 - High-quality speech synthesis that reads content aloud for auditory learners
 - Audio feedback for all interactions and activities
-- Educational content narration that supports reading comprehension
+- Educational content narration using Web Audio API (NO external URLs)
 - Audio hints and guidance system for additional learning support
 - User-controlled audio settings so students can customize their experience
+- Use playSound() function with appropriate frequencies for different feedback types
+- Always check audioEnabled before playing sounds
 
 **TEACHING APPROACH FOR 7-8 YEARS:**
 - Complex, multi-step learning activities that challenge students appropriately
