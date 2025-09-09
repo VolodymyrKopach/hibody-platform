@@ -167,9 +167,10 @@ export class ComponentMappingService {
         {
           className: 'primary-visual',
           description: 'Main visual element with rotation animation',
-          usage: 'Use for the central focus element that draws attention',
+          usage: 'Use for the central focus element that draws attention. Can include custom text as second parameter',
           examples: [
-            '<div class="primary-visual">🌟</div>'
+            '<div class="primary-visual" onclick="handlePrimaryVisual(this,\'Amazing!\')">🌟</div>',
+            '<div class="primary-visual" onclick="handlePrimaryVisual(this)">🌟</div>'
           ]
         }
       ],
@@ -749,6 +750,7 @@ export class ComponentMappingService {
       instructions += `- handleImageClick(this,'action','CustomText') - for images with custom speech\n`;
       instructions += `- handleInteractiveShape(this,'circle','CustomText') - for shapes with custom speech\n`;
       instructions += `- handleGiantButton(this,'success','CustomText') - for buttons with custom speech\n`;
+      instructions += `- handlePrimaryVisual(this,'CustomText') - for primary visual elements with custom speech\n`;
       instructions += `- soundEffects.success(), soundEffects.interactive('variant1'), etc. - for direct sound effects\n`;
       instructions += `- If no custom text provided, default text will be used\n`;
       instructions += `- NEVER combine with manual speak() calls: onclick="handler(); speak('text')" is WRONG\n`;
