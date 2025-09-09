@@ -228,8 +228,8 @@ export class ComponentMappingService {
         },
         {
           className: 'reward-element',
-          description: 'Star-shaped reward element',
-          usage: 'Use to celebrate success and completion. Add onclick for interactive rewards',
+          description: 'Star-shaped reward element (CSS star shape, NO IMAGES needed)',
+          usage: 'Use to celebrate success and completion. Already styled as golden star. Add onclick for interactive rewards',
           examples: [
             '<div class="reward-element" onclick="soundEffects.success()"></div>',
             '<div class="reward-element"></div>'
@@ -237,11 +237,12 @@ export class ComponentMappingService {
         },
         {
           className: 'celebration-element',
-          description: 'Spinning celebration element',
-          usage: 'Use for celebration animations and positive feedback. Add onclick for interactive celebrations',
+          description: 'Spinning celebration element with emoji or text (NO IMAGES)',
+          usage: 'Use for celebration animations and positive feedback. Contains emoji or text, NOT images. Add onclick for interactive celebrations',
           examples: [
             '<div class="celebration-element" onclick="soundEffects.success()">🎉</div>',
-            '<div class="celebration-element">🎉</div>'
+            '<div class="celebration-element" onclick="soundEffects.success()">🌟</div>',
+            '<div class="celebration-element">Yay!</div>'
           ]
         },
         {
@@ -255,12 +256,13 @@ export class ComponentMappingService {
         },
         {
           className: 'background-decoration',
-          description: 'Floating background decorations',
-          usage: 'Use for ambient visual elements that enhance the atmosphere',
+          description: 'Floating background decorations with emoji (NO IMAGES)',
+          usage: 'Use for ambient visual elements that enhance the atmosphere. Contains emoji only, NOT images',
           examples: [
             '<div class="background-decoration">✨</div>',
             '<div class="background-decoration">🧸</div>',
-            '<div class="background-decoration">🎈</div>'
+            '<div class="background-decoration">🎈</div>',
+            '<div class="background-decoration">🌟</div>'
           ]
         },
         {
@@ -721,6 +723,12 @@ export class ComponentMappingService {
     instructions += `8. Special components like progress-container, reward-element, celebration-element add engagement\n`;
     instructions += `9. Background decorations make slides more visually appealing\n`;
     instructions += `10. Use template-section for organized content grouping\n`;
+    instructions += `\n**🖼️ IMAGE USAGE RULES:**\n`;
+    instructions += `- ONLY these components can contain images: hero-image, content-image, action-image, mini-image, h-img, giant-button, large-button\n`;
+    instructions += `- DO NOT put images inside: celebration-element, reward-element, background-decoration, interactive-element, interactive-shape\n`;
+    instructions += `- celebration-element should contain emoji or text: <div class="celebration-element">🎉</div>\n`;
+    instructions += `- reward-element is already star-shaped, no image needed: <div class="reward-element"></div>\n`;
+    instructions += `- background-decoration should contain emoji: <div class="background-decoration">✨</div>\n`;
     
     // Add age-specific text guidelines
     if (ageGroup === '2-3') {

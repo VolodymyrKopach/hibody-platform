@@ -525,6 +525,14 @@ Provide only the ready HTML code without any explanations. The code must be comp
 - Always wrap audio calls with audioEnabled check
 - Use different frequencies for different sounds (success: 523.25, click: 440, error: 220)
 
+**CRITICAL AUDIO RULES:**
+- DO NOT add manual speak() calls to onclick handlers
+- The template functions (handleImageClick, handleGiantButton, etc.) already include appropriate audio
+- NEVER combine manual speak() with template functions like: onclick="handleImageClick(this,'activity'); speak('Car!')"
+- Use ONLY the template functions: onclick="handleImageClick(this,'activity')" 
+- If you need custom text, pass it as parameter to the function, not as separate speak() call
+- Template functions already handle all audio timing and prevent conflicts
+
 **ATTENTION:** 
 - DO NOT use external libraries (jQuery, Bootstrap, etc.)
 - DO NOT use external audio files or URLs
