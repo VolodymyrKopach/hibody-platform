@@ -2,6 +2,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { processSlideWithTempImages, type ProcessedSlideDataWithTemp } from '@/utils/slideImageProcessor';
 import { ageComponentTemplatesService } from '@/services/templates/AgeComponentTemplatesService';
+import { componentMappingService } from './ComponentMappingService';
 import { AgeGroup } from '@/types/generation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -239,6 +240,8 @@ ${this.generateSlideStructure(slideCount)}
 - [Recommendation 1]
 - [Recommendation 2]
 
+${componentMappingService.generateAIInstructions(this.mapAgeToAgeGroup(age))}
+
 ${this.getAgeSpecificComponentGuidance(age)}
 
 **LESSON PLAN CONTENT INTEGRATION:**
@@ -249,6 +252,7 @@ ${this.getAgeSpecificComponentGuidance(age)}
 - Plan for progressive difficulty and complexity across slides
 - Ensure teaching methods align with educational goals and developmental stage
 - Write content descriptions that educators can directly implement without technical jargon
+${this.getAgeSpecificPlanningGuidance(age)}
 
 IMPORTANT:
 - STRICTLY follow the structure "### Slide X: [Title]"
@@ -400,7 +404,7 @@ Use the following component examples as reference for creating appropriate visua
 
 ${ageTemplate}
 
-${this.getAgeSpecificComponentGuidance(age)}
+${componentMappingService.generateAIInstructions(this.mapAgeToAgeGroup(age))}
 
 **TEMPLATE USAGE INSTRUCTIONS:**
 - Study the styles and components from the example above
@@ -608,7 +612,8 @@ Provide only the ready HTML code without any explanations. The code must be comp
 - Only one main activity per slide to maintain focus
 - Everything should be large and easy for small fingers to touch
 - Immediate positive feedback for every interaction
-- Simple, clear language with maximum 3 words at a time
+- VERY SIMPLE language: maximum 1-2 words at a time (like "Touch!", "Good!", "Yay!")
+- Use emojis instead of complex text when possible
 - Bright, happy colors that attract and hold attention
 - Audio support for all learning content`;
 
@@ -830,6 +835,27 @@ Provide only the ready HTML code without any explanations. The code must be comp
 - Focus on components suitable for ${age} year old children
 - Choose 2-4 components that match your slide's learning objectives
 - Maintain appropriate complexity level for this age group`;
+  }
+
+  /**
+   * === SOLID: SRP - Отримання специфічних для віку інструкцій по плануванню ===
+   */
+  private getAgeSpecificPlanningGuidance(age: string): string {
+    const ageGroup = this.mapAgeToAgeGroup(age);
+    
+    if (ageGroup === '2-3') {
+      return `
+**SPECIAL PLANNING RULES FOR AGE 2-3:**
+- When describing slide content, use examples with VERY SIMPLE text: "Mom!", "Dad!", "Touch!", "Look!"
+- Avoid complex phrases in content descriptions like "Here is Mom" - use "Show Mom"
+- Plan activities with single-word instructions: "Point!", "Touch!", "Find!"
+- Content descriptions should mention using emojis: "Add emoji to text: Touch! 👆"
+- Recommend very short attention spans: 2-3 minutes per slide maximum
+- Suggest immediate rewards and positive feedback for every interaction
+- Plan for repetition and simple cause-and-effect activities`;
+    }
+    
+    return ''; // No special guidance for other age groups
   }
 
   async generateEditedPlan(
@@ -1108,7 +1134,7 @@ SLIDE GENERATION RULES:
 - Include age-appropriate interactive elements
 - Adapt all content for ${age} age group
 
-${this.getAgeSpecificComponentGuidance(age)}
+${componentMappingService.generateAIInstructions(this.mapAgeToAgeGroup(age))}
 
 SLIDE STRUCTURE REQUIREMENTS:
 For each slide, provide BOTH "content" (legacy) AND "structure" (new detailed format):
