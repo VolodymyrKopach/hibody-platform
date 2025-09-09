@@ -120,8 +120,9 @@ export class ComponentMappingService {
         {
           className: 'action-image',
           description: 'Interactive circular image (200x200px)',
-          usage: 'Use for clickable images that trigger actions',
+          usage: 'Use for clickable images that trigger actions. Can include custom text as third parameter',
           examples: [
+            '<div class="action-image" onclick="handleImageClick(this,\'action\',\'Car!\')"><!-- IMAGE_PROMPT: "description" WIDTH: 400 HEIGHT: 400 --></div>',
             '<div class="action-image" onclick="handleImageClick(this,\'action\')"><!-- IMAGE_PROMPT: "description" WIDTH: 400 HEIGHT: 400 --></div>'
           ]
         },
@@ -132,27 +133,35 @@ export class ComponentMappingService {
           examples: [
             '<div class="mini-image"><!-- IMAGE_PROMPT: "description" WIDTH: 256 HEIGHT: 256 --></div>'
           ]
+        },
+        {
+          className: 'h-img',
+          description: 'Alternative hero image container (380x280px)',
+          usage: 'Use as alternative to hero-image for main slide visuals',
+          examples: [
+            '<div class="h-img"><!-- IMAGE_PROMPT: "description" WIDTH: 640 HEIGHT: 480 --></div>'
+          ]
         }
       ],
       interactive: [
         {
           className: 'interactive-element',
           description: 'Interactive circular elements with variants',
-          usage: 'Use for clickable learning elements that provide feedback',
+          usage: 'Use for clickable learning elements that provide feedback. Add onclick handlers for interactivity',
           examples: [
-            '<div class="interactive-element variant-1">🐱</div>',
-            '<div class="interactive-element variant-2">🐶</div>',
-            '<div class="interactive-element variant-3">🐻</div>'
+            '<div class="interactive-element variant-1" onclick="soundEffects.interactive(\'variant1\')">🐱</div>',
+            '<div class="interactive-element variant-2" onclick="soundEffects.interactive(\'variant2\')">🐶</div>',
+            '<div class="interactive-element variant-3" onclick="soundEffects.interactive(\'variant3\')">🐻</div>'
           ]
         },
         {
           className: 'interactive-shape',
           description: 'Interactive geometric shapes',
-          usage: 'Use for shape recognition and basic learning activities',
+          usage: 'Use for shape recognition and basic learning activities. Can include custom text as third parameter',
           examples: [
-            '<div class="interactive-shape circle" onclick="handleInteractiveShape(this,\'circle\')">⭕</div>',
-            '<div class="interactive-shape square">⬜</div>',
-            '<div class="interactive-shape triangle">🔺</div>'
+            '<div class="interactive-shape circle" onclick="handleInteractiveShape(this,\'circle\',\'Round!\')">⭕</div>',
+            '<div class="interactive-shape square" onclick="handleInteractiveShape(this,\'square\')">⬜</div>',
+            '<div class="interactive-shape triangle" onclick="handleInteractiveShape(this,\'triangle\',\'Point!\')">🔺</div>'
           ]
         },
         {
@@ -198,6 +207,14 @@ export class ComponentMappingService {
           examples: [
             '<div class="simple-text">Good!</div>'
           ]
+        },
+        {
+          className: 'template-title',
+          description: 'Section title with background and shadow (36px font)',
+          usage: 'Use for section headers within template-section containers',
+          examples: [
+            '<div class="template-title">Play Time!</div>'
+          ]
         }
       ],
       special: [
@@ -212,24 +229,27 @@ export class ComponentMappingService {
         {
           className: 'reward-element',
           description: 'Star-shaped reward element',
-          usage: 'Use to celebrate success and completion',
+          usage: 'Use to celebrate success and completion. Add onclick for interactive rewards',
           examples: [
+            '<div class="reward-element" onclick="soundEffects.success()"></div>',
             '<div class="reward-element"></div>'
           ]
         },
         {
           className: 'celebration-element',
           description: 'Spinning celebration element',
-          usage: 'Use for celebration animations and positive feedback',
+          usage: 'Use for celebration animations and positive feedback. Add onclick for interactive celebrations',
           examples: [
+            '<div class="celebration-element" onclick="soundEffects.success()">🎉</div>',
             '<div class="celebration-element">🎉</div>'
           ]
         },
         {
           className: 'audio-control',
           description: 'Audio control button with sound waves',
-          usage: 'Use for audio-related interactions',
+          usage: 'Use for audio-related interactions and sound activities',
           examples: [
+            '<div class="audio-control" onclick="soundEffects.music()"><div class="audio-wave"></div></div>',
             '<div class="audio-control"></div>'
           ]
         },
@@ -238,7 +258,33 @@ export class ComponentMappingService {
           description: 'Floating background decorations',
           usage: 'Use for ambient visual elements that enhance the atmosphere',
           examples: [
-            '<div class="background-decoration">✨</div>'
+            '<div class="background-decoration">✨</div>',
+            '<div class="background-decoration">🧸</div>',
+            '<div class="background-decoration">🎈</div>'
+          ]
+        },
+        {
+          className: 'button-row',
+          description: 'Horizontal row layout for multiple buttons',
+          usage: 'Use to arrange multiple buttons or interactive elements horizontally',
+          examples: [
+            '<div class="button-row"><!-- multiple buttons here --></div>'
+          ]
+        },
+        {
+          className: 'template-section',
+          description: 'Sectioned container with dashed border and background',
+          usage: 'Use to group related content in visually distinct sections',
+          examples: [
+            '<div class="template-section"><div class="template-title">Section Title</div><!-- content --></div>'
+          ]
+        },
+        {
+          className: 's',
+          description: 'Full-height section layout container',
+          usage: 'Use as alternative to layout-fullscreen for section-based layouts',
+          examples: [
+            '<div class="s"><!-- section content --></div>'
           ]
         }
       ]
@@ -670,6 +716,11 @@ export class ComponentMappingService {
     instructions += `3. Combine components appropriately for the age group\n`;
     instructions += `4. Always include proper onclick handlers where shown\n`;
     instructions += `5. Use IMAGE_PROMPT comments for all images as specified\n`;
+    instructions += `6. VARIETY IS KEY: Use different components from all categories (layouts, buttons, images, interactive, text, special)\n`;
+    instructions += `7. Don't always use the same components - explore the full range available\n`;
+    instructions += `8. Special components like progress-container, reward-element, celebration-element add engagement\n`;
+    instructions += `9. Background decorations make slides more visually appealing\n`;
+    instructions += `10. Use template-section for organized content grouping\n`;
     
     // Add age-specific text guidelines
     if (ageGroup === '2-3') {
@@ -686,6 +737,14 @@ export class ComponentMappingService {
       instructions += `- Images will be perfectly centered and cropped to fit the circular button\n`;
       instructions += `- Always include onclick handlers for interactive buttons with images\n`;
       instructions += `- Example: <div class="large-button variant-2" onclick="handleGiantButton(this,'success','Hug!')"><div class="image-container"><img src="..." alt="child hugging parent" width="400" height="400"></div></div>\n`;
+      instructions += `\n**🔊 CUSTOM AUDIO TEXT FOR ALL HANDLERS:**\n`;
+      instructions += `- handleImageClick(this,'action','CustomText') - for images with custom speech\n`;
+      instructions += `- handleInteractiveShape(this,'circle','CustomText') - for shapes with custom speech\n`;
+      instructions += `- handleGiantButton(this,'success','CustomText') - for buttons with custom speech\n`;
+      instructions += `- soundEffects.success(), soundEffects.interactive('variant1'), etc. - for direct sound effects\n`;
+      instructions += `- If no custom text provided, default text will be used\n`;
+      instructions += `- NEVER combine with manual speak() calls: onclick="handler(); speak('text')" is WRONG\n`;
+      instructions += `- Use ONLY the template handlers - they handle all audio timing correctly\n`;
     }
 
     return instructions;
