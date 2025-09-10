@@ -138,7 +138,8 @@
     "subjectLabel": "🎯 Предмет/Жанр",
     "ageGroupLabel": "👥 Вікова група",
     "save": "Зберегти презентацію",
-    "saving": "Збереження..."
+    "saving": "Збереження...",
+    "successMessage": "🎉 Чудово! Ваш урок збережено в Мої матеріали"
   },
   "dialogs": {
     "saveLesson": {

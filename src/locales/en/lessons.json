@@ -132,7 +132,8 @@
     "subjectLabel": "🎯 Subject/Genre",
     "ageGroupLabel": "👥 Age Group",
     "save": "Save Presentation",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "successMessage": "🎉 Great! Your lesson has been saved to My Materials"
   },
   "dialogs": {
     "saveLesson": {

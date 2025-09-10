@@ -10,14 +10,16 @@ import {
   CardContent,
   Chip,
   LinearProgress,
-  Button
+  Button,
+  Snackbar
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { 
   Slideshow as SlidesIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  School as SchoolIcon
 } from '@mui/icons-material';
 
 // Імпорти наших компонентів
@@ -78,7 +80,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   onClearGenerationState
 }) => {
   const theme = useTheme();
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'lessons']);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Отримуємо методи для роботи з коментарями до слайдів
@@ -134,6 +136,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   const [isSavingLesson, setIsSavingLesson] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showSuccessSnackbar, setShowSuccessSnackbar] = useState(false);
   
   // Стан діалогу збереження (спрощений підхід)
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -488,6 +491,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
 
   const handleSaveSuccess = useCallback((savedLesson: any) => {
     setSaveSuccess(true);
+    setShowSuccessSnackbar(true);
     onLessonSaved?.(savedLesson);
 
     setTimeout(() => {
@@ -499,6 +503,10 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     setSaveError(error);
     onError?.(error);
   }, [onError]);
+
+  const handleCloseSuccessSnackbar = useCallback(() => {
+    setShowSuccessSnackbar(false);
+  }, []);
 
   // Обробник відкриття результатів редагування
   const handleShowResults = useCallback(() => {
@@ -730,6 +738,51 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
           onSuccess={handleSaveSuccess}
           onError={handleSaveError}
         />
+
+        {/* Success Snackbar */}
+        <Snackbar
+          open={showSuccessSnackbar}
+          autoHideDuration={8000}
+          onClose={handleCloseSuccessSnackbar}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          sx={{ mt: 2, mr: 2 }}
+        >
+          <Alert 
+            onClose={handleCloseSuccessSnackbar} 
+            severity="success"
+            icon={false}
+            sx={{ 
+              minWidth: '350px',
+              borderRadius: '12px',
+              boxShadow: '0 8px 32px rgba(76, 175, 80, 0.3)',
+              background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              '& .MuiAlert-icon': {
+                color: 'white',
+              },
+              '& .MuiAlert-action': {
+                color: 'white',
+              },
+              '& .MuiAlert-action .MuiIconButton-root': {
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                },
+              },
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ 
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}>
+              <SchoolIcon sx={{ fontSize: '1.2rem' }} />
+              {t('lessons:saveDialog.successMessage')}
+            </Typography>
+          </Alert>
+        </Snackbar>
       </>
     );
   }
@@ -882,6 +935,51 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
       onSuccess={handleSaveSuccess}
       onError={handleSaveError}
     />
+
+    {/* Success Snackbar */}
+    <Snackbar
+      open={showSuccessSnackbar}
+      autoHideDuration={8000}
+      onClose={handleCloseSuccessSnackbar}
+      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      sx={{ mt: 2, mr: 2 }}
+    >
+      <Alert 
+        onClose={handleCloseSuccessSnackbar} 
+        severity="success"
+        icon={false}
+        sx={{ 
+          minWidth: '350px',
+          borderRadius: '12px',
+          boxShadow: '0 8px 32px rgba(76, 175, 80, 0.3)',
+          background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+          color: 'white',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          '& .MuiAlert-icon': {
+            color: 'white',
+          },
+          '& .MuiAlert-action': {
+            color: 'white',
+          },
+          '& .MuiAlert-action .MuiIconButton-root': {
+            color: 'white',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            },
+          },
+        }}
+      >
+        <Typography variant="subtitle1" sx={{ 
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <SchoolIcon sx={{ fontSize: '1.2rem' }} />
+          {t('lessons:saveDialog.successMessage')}
+        </Typography>
+      </Alert>
+    </Snackbar>
 
     </>
   );
