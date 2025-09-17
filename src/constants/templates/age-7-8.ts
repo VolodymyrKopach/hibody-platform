@@ -24,7 +24,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-g
 .audio-toggle.muted::before{content:'🔇'}
 .audio-status{position:fixed;top:110px;right:20px;background:rgba(0,0,0,0.8);color:white;padding:10px 15px;border-radius:20px;font-size:16px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;z-index:1000;opacity:0;transform:translateY(-10px);transition:all 0.3s;pointer-events:none}
 .audio-status.show{opacity:1;transform:translateY(0)}
-.layout-fullscreen{width:100%;max-width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;box-sizing:border-box;overflow-y:auto;overflow-x:hidden}
+.layout-fullscreen{width:100%;max-width:900px;height:auto;min-height:calc(100vh - 40px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;margin:20px auto;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;background:rgba(255,255,255,0.95);border-radius:20px;box-shadow:0 15px 35px rgba(0,0,0,0.1);border:2px solid rgba(255,255,255,0.5)}
 .layout-top-bottom{display:flex;flex-direction:column;min-height:100vh;padding:30px;box-sizing:border-box;overflow-y:auto;overflow-x:hidden}
 .layout-top-bottom .top-section{flex:1;display:flex;align-items:center;justify-content:center}
 .layout-top-bottom .bottom-section{flex:1;display:flex;align-items:center;justify-content:center}
