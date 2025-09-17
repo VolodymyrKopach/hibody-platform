@@ -38,8 +38,6 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-g
 .simple-text{font-size:20px;color:#2c3e50;text-align:center;margin:15px 0;line-height:1.5}
 .slide-title-secondary{font-size:28px;color:#2c3e50;text-align:center;margin:20px 0;font-weight:600}
 .instruction-text{font-size:24px;color:#2c3e50;text-align:center;margin:20px 0;font-weight:500;background:rgba(52,152,219,0.1);padding:15px;border-radius:10px}
-.progress-bar{width:100%;height:20px;background:rgba(0,0,0,0.1);border-radius:10px;overflow:hidden;margin:20px 0}
-.progress-fill{height:100%;background:linear-gradient(90deg,#3498db 0%,#2ecc71 100%);border-radius:10px;transition:width 0.3s ease}
 .reward-element{width:80px;height:80px;background:linear-gradient(135deg,#f1c40f 0%,#f39c12 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;margin:10px;box-shadow:0 5px 15px rgba(241,196,15,0.3);cursor:pointer;transition:all 0.3s ease}
 .reward-element:hover{transform:scale(1.1)}
 [class*="round"],[class*="circle"],[class*="reward"],[class*="profile"]{position:relative}

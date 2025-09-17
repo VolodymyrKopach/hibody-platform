@@ -459,14 +459,6 @@ export class ComponentMappingService {
         }
       ],
       special: [
-        {
-          className: 'progress-bar',
-          description: 'Progress bar container',
-          usage: 'Use to show learning progress',
-          examples: [
-            '<div class="progress-bar"><div class="progress-fill"></div></div>'
-          ]
-        }
       ]
     };
   }
@@ -592,14 +584,6 @@ export class ComponentMappingService {
           ]
         },
         {
-          className: 'progress-bar',
-          description: 'Progress indicator',
-          usage: 'Use to show completion progress',
-          examples: [
-            '<div class="progress-bar"><div class="progress-fill" style="width: 75%"><div class="progress-text">75%</div></div></div>'
-          ]
-        },
-        {
           className: 'timeline',
           description: 'Timeline component for sequential content',
           usage: 'Use for showing processes or historical information',
@@ -721,9 +705,10 @@ export class ComponentMappingService {
     instructions += `5. Use IMAGE_PROMPT comments for all images as specified\n`;
     instructions += `6. VARIETY IS KEY: Use different components from all categories (layouts, buttons, images, interactive, text, special)\n`;
     instructions += `7. Don't always use the same components - explore the full range available\n`;
-    instructions += `8. Special components like progress-container, reward-element, celebration-element add engagement\n`;
-    instructions += `9. Background decorations make slides more visually appealing\n`;
+    instructions += `8. Special components like reward-element, celebration-element add engagement\n`;
+    instructions += `9. Background decorations make content more visually appealing\n`;
     instructions += `10. Use template-section for organized content grouping\n`;
+    instructions += `11. Each content piece is self-contained - do not reference other content or navigation\n`;
     instructions += `\n**🖼️ IMAGE USAGE RULES:**\n`;
     instructions += `- ONLY these components can contain images: hero-image, content-image, action-image, mini-image, h-img, giant-button, large-button\n`;
     instructions += `- DO NOT put images inside: celebration-element, reward-element, background-decoration, interactive-element, interactive-shape\n`;

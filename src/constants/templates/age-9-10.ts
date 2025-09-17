@@ -49,9 +49,6 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-g
 .content-table th{background:linear-gradient(135deg,#1F4E79 0%,#2C5F2D 100%);color:white;font-weight:600}
 .content-table tr:hover{background:rgba(31,78,121,0.05)}
 .chart-container{background:rgba(255,255,255,0.95);border-radius:12px;padding:20px;margin:20px 0;box-shadow:0 8px 20px rgba(0,0,0,0.1);border:1px solid rgba(255,255,255,0.7);overflow-y:auto;overflow-x:hidden;max-height:400px}
-.progress-bar{width:100%;height:25px;background:rgba(0,0,0,0.1);border-radius:12px;overflow:hidden;margin:15px 0;position:relative}
-.progress-fill{height:100%;background:linear-gradient(90deg,#1F4E79 0%,#2C5F2D 50%,#97BC62 100%);border-radius:12px;transition:width 0.5s ease;position:relative}
-.progress-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-weight:600;font-size:14px}
 .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin:20px 0}
 .metric-card{background:rgba(255,255,255,0.95);border-radius:10px;padding:20px;text-align:center;box-shadow:0 5px 15px rgba(0,0,0,0.1);border-left:4px solid #1F4E79;transition:all 0.3s ease}
 .metric-card:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,0.15)}

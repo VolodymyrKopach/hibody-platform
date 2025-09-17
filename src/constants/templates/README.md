@@ -30,7 +30,7 @@ templates/
 
 ### 7-8 Years Old 📚
 - **File**: `age-7-8.ts`
-- **Features**: Educational games, tests, progress bars, achievements
+- **Features**: Educational games, tests, achievements
 - **Sizes**: Buttons 200px, font 36px
 - **Colors**: `#667eea`, `#764ba2`, `#f093fb`
 
