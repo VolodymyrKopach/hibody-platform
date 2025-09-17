@@ -536,6 +536,9 @@ Provide only the ready HTML code without any explanations. The code must be comp
 **ATTENTION:** 
 - DO NOT use external libraries (jQuery, Bootstrap, etc.)
 - DO NOT use external audio files or URLs
+- DO NOT use <a href> tags or any navigation links
+- DO NOT create buttons with href attributes
+- Use <div> elements with onclick handlers instead of <a> tags
 - All styles - inline or in <style> section
 - All JavaScript - in <script> section
 - Ready for immediate display in browser`;
@@ -547,6 +550,13 @@ Provide only the ready HTML code without any explanations. The code must be comp
     
     // Remove any remaining markdown formatting
     cleaned = cleaned.replace(/```.*$/gm, '');
+    
+    // Remove href attributes from any elements (security measure)
+    cleaned = cleaned.replace(/\s+href\s*=\s*["'][^"']*["']/gi, '');
+    
+    // Convert <a> tags to <div> elements to prevent navigation
+    cleaned = cleaned.replace(/<a\s+([^>]*?)>/gi, '<div $1 role="button" tabindex="0">');
+    cleaned = cleaned.replace(/<\/a>/gi, '</div>');
     
     // Trim whitespace
     cleaned = cleaned.trim();
