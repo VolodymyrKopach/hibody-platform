@@ -278,11 +278,11 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
     if (!slideStore) return;
 
     const unsubscribe = slideStore.subscribe((state) => {
-      // ТІЛЬКИ оновлюємо стан генерації, НЕ слайди (щоб не перезаписати відредаговані)
+      // Оновлюємо ВСІ дані включно зі слайдами для real-time відображення
       onUpdateGenerationState?.({
         currentLesson: state.currentLesson,
-        isGenerating: state.isGenerating || false
-        // НЕ оновлюємо slides тут - це робить LessonCreationProvider
+        isGenerating: state.isGenerating || false,
+        slides: state.slides || [] // ✅ ДОДАЄМО слайди для real-time оновлення
       });
       
       // Автоматично вибираємо перший слайд
@@ -341,7 +341,9 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   // Callbacks для генерації
   const generationCallbacks: TemplateGenerationCallbacks = {
     onSlideReady: useCallback((slide: SimpleSlide, lesson: SimpleLesson) => {
-
+      console.log(`🎨 [Step3] Slide ready callback: ${slide.title}`);
+      // SlideStore вже оновлено через TemplateAPIAdapter
+      // Тут можна додати додаткову логіку якщо потрібно
     }, []),
 
     onProgressUpdate: useCallback((progress: SlideGenerationProgress[]) => {
