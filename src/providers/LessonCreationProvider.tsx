@@ -487,7 +487,7 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
           }
         }));
 
-        // Симуляція прогресу (0% → 90% за ~18 секунд)
+        // Progress simulation (0% → 90% over ~36 seconds, slowed down by 2x)
         const progressInterval = setInterval(() => {
           setState(prev => ({
             ...prev,
@@ -495,7 +495,7 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
               ...prev.slideEditingState,
               editingProgress: prev.slideEditingState.editingProgress.map(p => {
                 if (p.slideId === slideId && p.status === 'processing' && p.progress < 90) {
-                  const increment = Math.random() * 8 + 2; // 2-10% за раз
+                  const increment = Math.random() * 8 + 2; // 2-10% per step
                   const newProgress = Math.min(90, p.progress + increment);
 
                   let currentOperation = 'Processing...';
@@ -510,7 +510,7 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
               })
             }
           }));
-        }, 1000); // Оновлюємо кожну секунду
+        }, 2000); // Update every 2 seconds (slowed down by 2x)
 
         try {
           // Викликаємо API для редагування слайду

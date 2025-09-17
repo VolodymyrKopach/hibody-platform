@@ -142,7 +142,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
           if (prev >= 90) return prev;
           return prev + Math.random() * 10;
         });
-      }, 1000);
+      }, 2000); // Slowed down by 2x: from 1000ms to 2000ms
     }
     
     return () => {

@@ -538,7 +538,7 @@ export const useChatLogic = () => {
     // Progress randomization utilities
     const getRandomMaxProgress = () => Math.floor(Math.random() * 10) + 70; // 70-79%
     const getRandomStepSize = () => Math.floor(Math.random() * 10) + 10; // 10-19%
-    const getRandomInterval = () => Math.floor(Math.random() * 2000) + 4000; // 4-6 seconds
+    const getRandomInterval = () => Math.floor(Math.random() * 4000) + 8000; // 8-12 seconds (slowed down by 2x)
     const getRandomInitialProgress = () => Math.floor(Math.random() * 10) + 5; // 5-14%
     
     slideDescriptions.forEach(desc => {

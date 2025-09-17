@@ -89,12 +89,12 @@ const TemplateSlideCard: React.FC<TemplateSlideCardProps> = ({
         
         return newProgress;
       });
-    }, 800 + Math.random() * 400); // Рандомний інтервал 800-1200ms
+    }, 1600 + Math.random() * 800); // Random interval 1600-2400ms (slowed down by 2x)
 
     return () => clearInterval(interval);
   }, [isGenerating, isCompleted, isPending, previewUrl]);
 
-  // Встановлюємо 100% коли з'являється превью
+  // Set to 100% when preview appears
   useEffect(() => {
     if (isCompleted && previewUrl && internalProgress < 100) {
       setTimeout(() => {
