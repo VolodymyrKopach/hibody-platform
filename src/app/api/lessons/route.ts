@@ -6,6 +6,44 @@ import { CreateLessonRequest, CreateLessonResponse } from '@/types/api';
 import { Lesson } from '@/types/lesson';
 import { migrateTemporaryImagesFromHtml } from '@/utils/slideImageProcessor';
 
+// Analytics tracking function for server-side
+async function trackLessonEvent(eventType: string, properties: Record<string, any>) {
+  try {
+    // Use PostHog server-side API if available
+    const posthogApiKey = process.env.POSTHOG_API_KEY
+    const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com'
+    
+    // Only track events with real user identification
+    const userId = properties.distinct_id || properties.user_id
+    if (!userId) {
+      console.warn('⚠️ Skipping analytics event - no user identification:', eventType)
+      return
+    }
+    
+    if (posthogApiKey) {
+      await fetch(`${posthogHost}/capture/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          api_key: posthogApiKey,
+          event: eventType,
+          distinct_id: userId,
+          properties: {
+            ...properties,
+            timestamp: new Date().toISOString(),
+            source: 'api_server'
+          }
+        })
+      })
+      
+    }
+  } catch (error) {
+    console.error('❌ Failed to track lesson event:', error)
+  }
+}
+
 // Function to get authenticated user
 async function getAuthenticatedUser(request: NextRequest) {
   const supabase = await createClient();
@@ -110,6 +148,17 @@ export async function GET(request: NextRequest) {
         id: lesson.id,
         title: lesson.title,
         slides_count: lesson.slides?.length || 0
+      });
+
+      // Track lesson view event
+      await trackLessonEvent('lesson_viewed', {
+        distinct_id: user.id,
+        lesson_id: lesson.id,
+        lesson_title: lesson.title,
+        age_group: lesson.age_group,
+        subject: lesson.subject,
+        slides_count: lesson.slides?.length || 0,
+        user_email: user.email
       });
 
       return NextResponse.json({
@@ -499,6 +548,21 @@ export async function POST(request: NextRequest) {
      };
 
     console.log('🎉 LESSONS API: Lesson creation completed successfully');
+    
+    // Track lesson creation event
+    await trackLessonEvent('lesson_created', {
+      distinct_id: user.id,
+      lesson_id: response.lesson.id,
+      lesson_title: response.lesson.title,
+      age_group: response.lesson.targetAge,
+      subject: response.lesson.subject,
+      slides_count: response.lesson.slides?.length || 0,
+      duration_minutes: response.lesson.duration,
+      has_thumbnail: !!finalThumbnailUrl,
+      creation_method: (body.slides?.length || 0) > 0 ? 'with_slides' : 'plan_only',
+      user_email: user.email
+    });
+    
     console.log('📤 LESSONS API: Sending response:', {
       success: response.success,
       message: response.message,

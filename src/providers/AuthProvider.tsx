@@ -5,6 +5,7 @@ import { User } from '@supabase/supabase-js'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { AuthContextType, UserProfile } from '@/types/auth'
+import { useAuthAnalytics } from '@/hooks/useAuthAnalytics'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -16,6 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [sessionSynced, setSessionSynced] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+  const analytics = useAuthAnalytics()
 
   useEffect(() => {
     let mounted = true
@@ -202,10 +204,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
+
+          // Track successful login with real user data
+          if (data.user && !error) {
+            analytics.trackLogin('email', {
+              user_id: data.user.id,
+              user_email: data.user.email,
+              email_domain: data.user.email?.split('@')[1] || 'unknown',
+              last_sign_in: data.user.last_sign_in_at
+            })
+            
+            // Update user identification with real data
+            analytics.identifyUser(data.user.id, {
+              email: data.user.email,
+              last_login: new Date().toISOString(),
+              login_count: (data.user.user_metadata?.login_count || 0) + 1
+            })
+          }
 
       return { error }
     } catch (error) {
@@ -241,6 +260,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (profileError) {
           // Handle profile creation error silently
+        } else {
+                // Track successful signup with real user data
+                analytics.trackSignup('email', {
+                  user_id: data.user.id,
+                  user_email: data.user.email,
+                  has_full_name: !!fullName,
+                  email_domain: data.user.email?.split('@')[1] || 'unknown',
+                  full_name: fullName
+                })
+                
+                // Identify user for future events with real data
+                analytics.identifyUser(data.user.id, {
+                  email: data.user.email,
+                  full_name: fullName,
+                  role: 'teacher',
+                  subscription_type: 'free',
+                  signup_date: new Date().toISOString()
+                })
+                
+                // Track profile creation with real user data
+                analytics.trackProfileCreated(data.user.id, {
+                  user_id: data.user.id,
+                  user_email: data.user.email,
+                  full_name: fullName,
+                  role: 'teacher',
+                  subscription_type: 'free'
+                })
         }
       }
 
@@ -251,11 +297,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    try {
+        try {
+          // Track logout before clearing user data with real user info
+          if (user) {
+            analytics.trackLogout({
+              user_id: user.id,
+              user_email: user.email,
+              session_duration: Date.now() - (user.created_at ? new Date(user.created_at).getTime() : Date.now())
+            })
+          }
+      
       const { error } = await supabase.auth.signOut()
       
       if (error) {
-
         throw error
       }
       
@@ -267,7 +321,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.push('/auth/login')
       
     } catch (error) {
-
       throw error
     }
   }
