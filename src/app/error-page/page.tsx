@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { 
   Box, 
   Typography, 
@@ -19,7 +19,7 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 
-const ErrorTestPage: React.FC = () => {
+const ErrorTestPageContent: React.FC = () => {
   const theme = useTheme();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -278,6 +278,25 @@ const ErrorTestPage: React.FC = () => {
         </Box>
       </Container>
     </Box>
+  );
+};
+
+const ErrorTestPage: React.FC = () => {
+  return (
+    <Suspense fallback={
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography>Loading...</Typography>
+      </Box>
+    }>
+      <ErrorTestPageContent />
+    </Suspense>
   );
 };
 

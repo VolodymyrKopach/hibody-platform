@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import {
@@ -27,7 +27,7 @@ interface LoginFormProps {
   onEmailNotVerified?: (email: string) => void
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess, onEmailNotVerified }) => {
+const LoginFormContent: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess, onEmailNotVerified }) => {
   const { t } = useTranslation('auth')
   const theme = useTheme()
   const router = useRouter()
@@ -252,6 +252,32 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess, on
         </Box>
       </Box>
     </Paper>
+  )
+}
+
+const LoginForm: React.FC<LoginFormProps> = (props) => {
+  return (
+    <Suspense fallback={
+      <Paper
+        elevation={0}
+        sx={{
+          p: 4,
+          maxWidth: 400,
+          width: '100%',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 200,
+        }}
+      >
+        <CircularProgress />
+      </Paper>
+    }>
+      <LoginFormContent {...props} />
+    </Suspense>
   )
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Paper,
@@ -25,7 +25,7 @@ interface RegisterFormProps {
   onSuccess?: () => void
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess }) => {
+const RegisterFormContent: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess }) => {
   const { t } = useTranslation(['auth', 'common'])
   const theme = useTheme()
   const router = useRouter()
@@ -297,6 +297,32 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess 
         </Box>
       </Box>
     </Paper>
+  )
+}
+
+const RegisterForm: React.FC<RegisterFormProps> = (props) => {
+  return (
+    <Suspense fallback={
+      <Paper
+        elevation={0}
+        sx={{
+          p: 4,
+          maxWidth: 400,
+          width: '100%',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 200,
+        }}
+      >
+        <CircularProgress />
+      </Paper>
+    }>
+      <RegisterFormContent {...props} />
+    </Suspense>
   )
 }
 
