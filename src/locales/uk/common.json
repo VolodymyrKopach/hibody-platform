@@ -599,5 +599,81 @@
       "addMoreComments": "Додати ще коментарі",
       "close": "Закрити"
     }
+  },
+  "planEditing": {
+    "addCommentToplan": "Додати коментар до плану",
+    "commentOnGameElements": "Коментар до ігрових елементів",
+    "commentOnMaterials": "Коментар до матеріалів",
+    "commentOnTeacherTips": "Коментар до порад вчителю",
+    "commentOnLearningObjectives": "Коментар до цілей навчання",
+    "yourComment": "Ваш коментар",
+    "commentPlaceholder": "Опишіть, що ви хочете змінити або покращити...",
+    "allSlides": "Всі слайди",
+    "chooseSlideHint": "Оберіть конкретний слайд або залиште \"Всі слайди\" для загальних коментарів до слайдів"
+  },
+  "lessonPlan": {
+    "tabs": {
+      "objectives": "Цілі",
+      "slides": "Слайди",
+      "games": "Ігри", 
+      "materials": "Матеріали",
+      "tips": "Поради"
+    },
+    "sections": {
+      "keyPoints": "Ключові моменти",
+      "visualElements": "Візуальні елементи",
+      "teacherGuidance": "Керівництво для вчителя",
+      "preparation": "Підготовка",
+      "deliveryTips": "Поради щодо проведення",
+      "adaptations": "Адаптації",
+      "troubleshooting": "Вирішення проблем",
+      "interactiveElements": "Інтерактивні елементи",
+      "activities": "Активності",
+      "instructions": "Інструкції:",
+      "expectedOutcome": "Очікуваний результат:",
+      "materials": "Матеріали:",
+      "greeting": "Привітання",
+      "action": "Дія"
+    },
+    "prompts": {
+      "sayIt": "Промовте"
+    },
+    "tooltips": {
+      "editObjectives": "Редагувати цілі",
+      "addCommentToObjectives": "Додати коментар до цілей"
+    },
+    "slideTypes": {
+      "introduction": "Вступ",
+      "activity": "Активність",
+      "educational": "Навчальний",
+      "summary": "Підсумок"
+    },
+    "sectionTitles": {
+      "whatToDo": "Що робити",
+      "teacherNotes": "Нотатки вчителя",
+      "expectedOutcome": "Очікується:",
+      "preparation": "підготовка:",
+      "delivery": "проведення:",
+      "adaptations": "адаптації:",
+      "troubleshooting": "вирішення проблем:"
+    },
+    "interactionTypes": {
+      "touch": "дотик",
+      "sound": "звук",
+      "movement": "рух",
+      "verbal": "мовлення",
+      "visual": "візуальне"
+    },
+    "tones": {
+      "enthusiastic": "ентузіастично",
+      "calm": "спокійно",
+      "encouraging": "підбадьорливо",
+      "playful": "грайливо",
+      "gentle": "ніжно",
+      "energetic": "енергійно",
+      "friendly": "дружньо",
+      "warm": "тепло",
+      "cheerful": "весело"
+    }
   }
 }

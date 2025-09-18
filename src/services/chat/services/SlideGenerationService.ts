@@ -253,6 +253,63 @@ export class SlideGenerationService {
     }
   }
 
+  /**
+   * Generate single slide from description with language support
+   */
+  async generateSlideWithLanguage(
+    description: string,
+    title: string,
+    lessonTopic: string,
+    lessonAge: string,
+    supabaseClient?: any,
+    language: string = 'en'
+  ): Promise<SimpleSlide> {
+    logger.chat.info('Generating single slide with language support', {
+      method: 'generateSlideWithLanguage',
+      title,
+      topic: lessonTopic
+    });
+
+    try {
+      const htmlContent = await this.contentService.generateSlideContent(
+        description,
+        lessonTopic,
+        lessonAge,
+        { 
+          sessionId: `single_${Date.now()}`,
+          useTemporaryStorage: true,
+          supabaseClient,
+          language
+        }
+      );
+
+      // Analyze content to determine properties
+      const interactive = this.detectInteractiveContent(description);
+      const visualElements = this.analyzeVisualElements(description);
+      const estimatedDuration = this.estimateSlideDuration(description, lessonAge);
+
+      const slide: SimpleSlide = {
+        id: `single_slide_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: title || 'Generated Slide',
+        content: description,
+        htmlContent,
+        status: 'completed',
+        estimatedDuration,
+        interactive,
+        visualElements,
+        description,
+        updatedAt: new Date()
+      };
+
+      logger.chat.info('Single slide with language generated successfully');
+      return slide;
+
+    } catch (error) {
+      logger.chat.error('Error generating single slide with language:', error as Error);
+      throw error;
+    }
+  }
+
   // === Private helper methods ===
 
   private generateFallbackHTML(title?: string, description?: string): string {

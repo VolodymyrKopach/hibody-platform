@@ -10,7 +10,8 @@ import { createClient } from '@/lib/supabase/server';
 async function editSlideWithAI(
   slide: SimpleSlide, 
   comments: SlideComment[], 
-  context: { ageGroup: string; topic: string }
+  context: { ageGroup: string; topic: string },
+  language?: string
 ): Promise<{ editedSlide: SimpleSlide; slideChanges: any }> {
 
   // Create server Supabase client for authentication
@@ -23,7 +24,7 @@ async function editSlideWithAI(
   const result = await geminiService.editSlide(slide, comments, {
     ageGroup: context.ageGroup,
     topic: context.topic
-  });
+  }, language || 'en');
 
   return {
     editedSlide: result.editedSlide,
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Обробляємо редагування слайду
-    const result = await editSlideWithAI(body.slide, body.comments, body.context);
+    const result = await editSlideWithAI(body.slide, body.comments, body.context, body.language);
     
     const processingTime = Date.now() - startTime;
     

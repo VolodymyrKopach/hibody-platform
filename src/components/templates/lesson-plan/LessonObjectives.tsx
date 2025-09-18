@@ -12,6 +12,7 @@ import {
   Fade
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import {
   CheckCircle as CheckIcon,
   EmojiObjects as ObjectiveIcon
@@ -34,6 +35,7 @@ const LessonObjectives: React.FC<LessonObjectivesProps> = ({
   pendingComments = []
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation('common');
   const [showCommentDialog, setShowCommentDialog] = useState(false);
 
   if (objectives.length === 0) {
@@ -75,7 +77,7 @@ const LessonObjectives: React.FC<LessonObjectivesProps> = ({
           }}>
             <StandardCommentButton
               onClick={handleAddComment}
-              tooltip={hasComments ? `Edit objectives (${objectiveComments.length} comments)` : 'Add comment to objectives'}
+              tooltip={hasComments ? `${t('lessonPlan.tooltips.editObjectives')} (${objectiveComments.length} comments)` : t('lessonPlan.tooltips.addCommentToObjectives')}
             />
           </Box>
         )}
@@ -127,7 +129,7 @@ const LessonObjectives: React.FC<LessonObjectivesProps> = ({
         onClose={() => setShowCommentDialog(false)}
         onSubmit={handleSubmitComment}
         initialSection="objective"
-        title="Comment on Learning Objectives"
+        title={t('planEditing.commentOnLearningObjectives')}
       />
     </>
   );

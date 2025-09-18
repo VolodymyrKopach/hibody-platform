@@ -8,6 +8,7 @@ import {
   Chip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import {
   TouchApp as TouchIcon,
   VolumeUp as SoundIcon,
@@ -28,6 +29,7 @@ interface InteractionsSectionProps {
 
 const InteractionsSection: React.FC<InteractionsSectionProps> = ({ interactions }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   const getInteractionIcon = (type: string) => {
     switch (type) {
@@ -87,7 +89,7 @@ const InteractionsSection: React.FC<InteractionsSectionProps> = ({ interactions 
             color: theme.palette.text.primary
           }}
         >
-          Interactive Elements
+          {t('lessonPlan.sections.interactiveElements')}
         </Typography>
       </Box>
 
@@ -113,7 +115,7 @@ const InteractionsSection: React.FC<InteractionsSectionProps> = ({ interactions 
               mb: interaction.feedback ? 1 : 0
             }}
           >
-            <strong>Instructions:</strong> {interaction.instruction}
+              <strong>{t('lessonPlan.sections.instructions')}</strong> {interaction.instruction}
           </Typography>
 
           {interaction.feedback && (
@@ -125,7 +127,7 @@ const InteractionsSection: React.FC<InteractionsSectionProps> = ({ interactions 
                 lineHeight: 1.5
               }}
             >
-              <strong>Expected outcome:</strong> {interaction.feedback}
+              <strong>{t('lessonPlan.sections.expectedOutcome')}</strong> {interaction.feedback}
             </Typography>
           )}
         </Box>

@@ -4,6 +4,7 @@ import {
   Typography
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import {
   RecordVoiceOver as WaveIcon
 } from '@mui/icons-material';
@@ -18,6 +19,7 @@ interface GreetingSectionProps {
 
 const GreetingSection: React.FC<GreetingSectionProps> = ({ greeting }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -40,7 +42,7 @@ const GreetingSection: React.FC<GreetingSectionProps> = ({ greeting }) => {
             color: theme.palette.text.primary
           }}
         >
-          Greeting
+          {t('lessonPlan.sections.greeting', 'Greeting')}
         </Typography>
         {greeting.tone && (
           <Typography 
@@ -51,7 +53,7 @@ const GreetingSection: React.FC<GreetingSectionProps> = ({ greeting }) => {
               fontSize: '0.75rem'
             }}
           >
-            ({greeting.tone})
+            ({t(`lessonPlan.tones.${greeting.tone}`, greeting.tone)})
           </Typography>
         )}
       </Box>
@@ -79,7 +81,7 @@ const GreetingSection: React.FC<GreetingSectionProps> = ({ greeting }) => {
             lineHeight: 1.5
           }}
         >
-          <strong>Action:</strong> {greeting.action}
+          <strong>{t('lessonPlan.sections.action', 'Action')}:</strong> {greeting.action}
         </Typography>
       )}
     </Box>

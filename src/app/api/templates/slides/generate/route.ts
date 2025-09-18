@@ -16,6 +16,7 @@ interface TemplateSlideGenerationRequest {
     additionalInfo?: string;
   };
   sessionId?: string;
+  language?: 'uk' | 'en';
 }
 
 interface TemplateSlideGenerationResponse {
@@ -34,7 +35,8 @@ export async function POST(request: NextRequest) {
       description, 
       type, 
       templateData, 
-      sessionId 
+      sessionId,
+      language 
     }: TemplateSlideGenerationRequest = await request.json();
 
     console.log(`🎨 TEMPLATE SLIDE API: Starting slide ${slideNumber} generation...`);
@@ -107,31 +109,19 @@ ${templateData.hasAdditionalInfo && templateData.additionalInfo ? `- Additional 
 Please create educational content appropriate for ${templateData.ageGroup} year olds about ${templateData.topic}.
       `.trim();
 
-      // Generate the slide using existing service
-      const generatedSlide = await slideGenerationService.generateSlide(
+      // Generate the slide using existing service with language support
+      const generatedSlide = await slideGenerationService.generateSlideWithLanguage(
         enhancedDescription,
         title,
         templateData.topic,
         templateData.ageGroup,
-        supabase
+        supabase,
+        language || 'en'
       );
 
-      // Add template-specific metadata
+      // Use generated slide as-is
       const templateSlide: SimpleSlide = {
-        ...generatedSlide,
-        slideNumber,
-        type: type as any,
-        metadata: {
-          ...generatedSlide.metadata,
-          templateGenerated: true,
-          slideType: type,
-          originalSlideNumber: slideNumber,
-          templateData: {
-            topic: templateData.topic,
-            ageGroup: templateData.ageGroup,
-            slideCount: templateData.slideCount
-          }
-        }
+        ...generatedSlide
       };
 
       console.log(`✅ TEMPLATE SLIDE API: Successfully generated slide ${slideNumber}:`, {

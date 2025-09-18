@@ -331,7 +331,7 @@ export interface TemplateControlsConfig {
 }
 
 // Контекст для template генерації
-export interface TemplateGenerationContext {
+export interface TemplateGenerationContextV2 {
   // Дані
   templateData: TemplateData;
   generatedPlan: string;
@@ -598,6 +598,7 @@ export interface SlideEditRequest {
     ageGroup: string;
     topic: string;
   };
+  language?: 'uk' | 'en';
 }
 
 export interface SlideEditResponse {

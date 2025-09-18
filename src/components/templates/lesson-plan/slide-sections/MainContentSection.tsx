@@ -11,6 +11,7 @@ import {
   Chip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import {
   MenuBook as BookIcon,
   FiberManualRecord as BulletIcon,
@@ -27,6 +28,7 @@ interface MainContentSectionProps {
 
 const MainContentSection: React.FC<MainContentSectionProps> = ({ mainContent }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -65,7 +67,7 @@ const MainContentSection: React.FC<MainContentSectionProps> = ({ mainContent }) 
                 fontSize: '0.9rem'
               }}
             >
-              Key Points
+              {t('lessonPlan.sections.keyPoints')}
             </Typography>
           </Box>
           <Box sx={{ pl: 2 }}>
@@ -113,7 +115,7 @@ const MainContentSection: React.FC<MainContentSectionProps> = ({ mainContent }) 
                 fontSize: '0.9rem'
               }}
             >
-              Visual Elements
+              {t('lessonPlan.sections.visualElements')}
             </Typography>
           </Box>
           <Typography 

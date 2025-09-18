@@ -101,7 +101,7 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
   const tabs: TabData[] = [
     {
       id: 'objectives',
-      label: 'Objectives',
+      label: t('lessonPlan.tabs.objectives'),
       icon: <ObjectivesIcon />,
       count: parsedPlan.objectives.length,
       component: (
@@ -115,7 +115,7 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
     },
     {
       id: 'slides',
-      label: 'Slides',
+      label: t('lessonPlan.tabs.slides'),
       icon: <SlidesIcon />,
       count: parsedPlan.slides.length,
       component: (
@@ -129,7 +129,7 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
     },
     {
       id: 'games',
-      label: 'Games',
+      label: t('lessonPlan.tabs.games'),
       icon: <GameIcon />,
       count: parsedPlan.gameElements.length,
       component: (
@@ -143,7 +143,7 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
     },
     {
       id: 'materials',
-      label: 'Materials',
+      label: t('lessonPlan.tabs.materials'),
       icon: <MaterialsIcon />,
       count: parsedPlan.materials.length,
       component: (
@@ -157,7 +157,7 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
     },
     {
       id: 'tips',
-      label: 'Tips',
+      label: t('lessonPlan.tabs.tips'),
       icon: <TipsIcon />,
       count: parsedPlan.recommendations.length,
       component: (
@@ -276,7 +276,7 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
             {isEditingMode && onAddComment && (
               <StandardCommentButton
                 onClick={handleOpenCommentDialog}
-                tooltip="Add Comment to Plan"
+                tooltip={t('planEditing.addCommentToplan')}
               />
             )}
 
@@ -464,7 +464,7 @@ const LessonPlanTabs: React.FC<LessonPlanTabsProps> = ({
         onClose={handleCloseCommentDialog}
         onSubmit={handleSubmitComment}
         initialSection="general"
-        title="Add Comment to Plan"
+        title={t('planEditing.addCommentToplan')}
         totalSlides={parsedPlan.slides.length}
       />
     </Box>

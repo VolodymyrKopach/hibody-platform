@@ -4,6 +4,7 @@ import {
   Typography
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import { PlanComment } from '@/types/templates';
 import { CommentDialog } from '../plan-editing';
 import { StandardCommentButton } from '@/components/ui';
@@ -22,6 +23,7 @@ const MaterialsList: React.FC<MaterialsListProps> = ({
   pendingComments = []
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation('common');
   const [showCommentDialog, setShowCommentDialog] = useState(false);
 
   if (materials.length === 0) {
@@ -87,7 +89,7 @@ const MaterialsList: React.FC<MaterialsListProps> = ({
         onClose={() => setShowCommentDialog(false)}
         onSubmit={handleSubmitComment}
         initialSection="material"
-        title="Comment on Materials"
+        title={t('planEditing.commentOnMaterials')}
       />
     </>
   );

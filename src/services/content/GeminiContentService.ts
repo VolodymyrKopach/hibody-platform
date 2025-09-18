@@ -200,6 +200,9 @@ Based on this conversation history, consider the user's preferences, style, and 
 `;
     }
 
+    // Determine content language for AI generation
+    const contentLanguage = language === 'uk' ? 'Ukrainian' : 'English';
+
     // Always use English prompt
     return `You are an expert in developing educational programs for children. Create a detailed and engaging lesson plan.
 
@@ -209,7 +212,9 @@ INPUT DATA:
 - Topic: ${topic}
 - Children's age: ${age}
 - Number of slides requested: ${slideCount}
-- Language: English
+- Content Language: ${contentLanguage}
+
+IMPORTANT: Generate ALL user-facing content (titles, descriptions, instructions, text for children) in ${contentLanguage}. Keep system content (technical instructions) in English.
 
 MANDATORY LESSON PLAN STRUCTURE:
 
@@ -264,7 +269,15 @@ IMPORTANT:
 - DO NOT include duration or time information in slide titles (e.g. use "Introduction" not "Introduction (5 minutes)")
 - Write content descriptions in natural, educational language that teachers can follow
 - Integrate component recommendations seamlessly into teaching suggestions rather than as technical specifications
-- Focus on pedagogical approaches and student engagement rather than technical implementation details`;
+- Focus on pedagogical approaches and student engagement rather than technical implementation details
+
+CRITICAL TEXT-ONLY RULES:
+- ALL content in the lesson plan MUST contain ONLY PLAIN TEXT
+- NO HTML tags, NO markup, NO code, NO IMAGE_PROMPT comments
+- Use descriptive language about educational activities, not technical specifications
+- Example GOOD: "Children will explore different animal sounds by listening to audio clips and imitating the sounds together"
+- Example BAD: "<div class='animal-sounds'><audio controls>animal.mp3</audio></div>"
+- Remember: Content = Educational Description, NOT HTML Code`;
   }
 
   private generateSlideStructure(slideCount: number): string {
@@ -304,7 +317,7 @@ IMPORTANT:
       structure += `### Slide ${slideNum}: ${slideInfo.title}
 **Type:** ${slideInfo.type}
 **Goal:** ${slideInfo.description}
-**Content:** [Detailed content description integrated with age-appropriate interactive elements and teaching approaches based on the component guidance above]
+**Content:** [PLAIN TEXT ONLY - Detailed educational content description for this slide. Describe what children will learn, how they will interact, and what activities will take place. NO HTML tags, NO markup - only descriptive text about the educational content and teaching approach.]
 
 `;
     }
@@ -316,9 +329,9 @@ IMPORTANT:
     slideDescription: string, 
     topic: string, 
     age: string, 
-    options: { sessionId?: string; useTemporaryStorage?: boolean; supabaseClient?: SupabaseClient } = {}
+    options: { sessionId?: string; useTemporaryStorage?: boolean; supabaseClient?: SupabaseClient; language?: string } = {}
   ): Promise<string> {
-    const prompt = await this.buildSlideContentPrompt(slideDescription, topic, age);
+    const prompt = await this.buildSlideContentPrompt(slideDescription, topic, age, options.language || 'en');
 
     try {
       console.log('🎯 Generating slide HTML with Gemini...');
@@ -376,7 +389,7 @@ IMPORTANT:
     }
   }
 
-  private async buildSlideContentPrompt(slideDescription: string, topic: string, age: string): Promise<string> {
+  private async buildSlideContentPrompt(slideDescription: string, topic: string, age: string, language: string = 'en'): Promise<string> {
     // Get age-specific template components
     let ageTemplate = '';
     try {
@@ -388,6 +401,9 @@ IMPORTANT:
       ageTemplate = '<!-- No age-specific template available -->';
     }
 
+    // Determine content language for AI generation
+    const contentLanguage = language === 'uk' ? 'Ukrainian' : 'English';
+
     return `You are an expert in creating interactive HTML slides for children.
 
 **TASK:** Create a complete HTML slide for children aged ${age} based on the description.
@@ -398,6 +414,14 @@ ${slideDescription}
 **CONTEXT:**
 - Lesson topic: ${topic}
 - Target audience: children aged ${age}
+- Content Language: ${contentLanguage}
+
+**IMPORTANT LANGUAGE GUIDELINES:**
+- Generate ALL user-facing content (titles, instructions, text for children) in ${contentLanguage}
+- Keep system content (image prompts, alt attributes, CSS classes, data attributes) in English
+- Example: data-image-prompt="happy cartoon cow in green meadow" (ENGLISH)
+- Example: alt="cartoon cow" (ENGLISH)
+- Example: <h1>Корівка каже МУ!</h1> (content in ${contentLanguage})
 
 **AGE-SPECIFIC COMPONENT EXAMPLES:**
 Use the following component examples as reference for creating appropriate visual elements:
@@ -1040,6 +1064,9 @@ Based on this conversation history, consider the user's preferences, style, and 
 `;
     }
 
+    // Determine content language for AI generation
+    const contentLanguage = language === 'uk' ? 'Ukrainian' : 'English';
+
     return `You are an expert in developing educational programs for children. Create a detailed and engaging lesson plan in JSON format.
 
 ${contextSection}
@@ -1048,7 +1075,9 @@ INPUT DATA:
 - Topic: ${topic}
 - Children's age: ${age}
 - Number of slides requested: ${slideCount}
-- Language: English
+- Content Language: ${contentLanguage}
+
+IMPORTANT: Generate ALL user-facing content (titles, descriptions, instructions, text for children) in ${contentLanguage}. Keep system content (technical instructions) in English.
 
 REQUIRED JSON STRUCTURE:
 Generate a valid JSON object with the following exact structure:
@@ -1073,7 +1102,7 @@ Generate a valid JSON object with the following exact structure:
       "type": "Introduction|Educational|Activity|Summary",
       "title": "Slide title",
       "goal": "Specific goal for this slide",
-      "content": "Detailed content description (minimum 100 words)",
+      "content": "PLAIN TEXT ONLY - Detailed educational content description for this slide (minimum 100 words). NO HTML tags, NO markup, ONLY descriptive text about what should be taught and how children should interact with the content.",
       "duration": "5-10 minutes",
       "interactiveElements": ["element1", "element2"],
       "teacherNotes": "Additional notes for teacher",
@@ -1086,7 +1115,7 @@ Generate a valid JSON object with the following exact structure:
         "mainContent": {
           "text": "Core information to present",
           "keyPoints": ["Key point 1", "Key point 2"],
-          "visualElements": ["Show image", "Point to object"]
+          "visualElements": ["Description of what visual will be generated", "Description of what teacher should show or point to"]
         },
         "interactions": [
           {
@@ -1200,7 +1229,33 @@ IMPORTANT REQUIREMENTS:
 - EVERY slide must have complete "structure" object with all sections
 - Make interactions age-appropriate and achievable
 - Provide specific, actionable teacher instructions
-- Include realistic timing for all activities`;
+- Include realistic timing for all activities
+
+CRITICAL TEXT-ONLY RULES FOR ALL FIELDS:
+- ALL text fields MUST contain ONLY PLAIN TEXT - NO HTML, NO markup, NO code, NO IMAGE_PROMPT comments
+- This applies to: "content", "text", "keyPoints", "visualElements", "description", "instruction", "feedback", etc.
+- These fields are for DESCRIPTIONS of what should happen, NOT for HTML implementation
+- HTML generation will happen separately in a different process
+
+SPECIFIC FIELD RULES:
+1. "content" field: Educational description of what children will learn and do
+2. "visualElements" field: Text descriptions of what visual elements will be generated (NOT HTML code)
+3. "keyPoints" field: Plain text learning points (NOT HTML formatting)
+4. "text" fields: Plain text content (NOT HTML markup)
+5. "description" fields: Text descriptions of activities (NOT HTML implementation)
+6. "instruction" fields: Plain text teaching instructions (NOT HTML code)
+
+EXAMPLES:
+✅ GOOD visualElements: ["Colorful pictures of farm animals will be shown", "Teacher will point to different animal shapes", "Counting cards with numbers 1-5 will be displayed"]
+❌ BAD visualElements: ["<div class='hero-image'><!-- IMAGE_PROMPT: farm animals --></div>", "<img src='cow.jpg'>", "<!-- IMAGE_PROMPT: cow -->"]
+
+✅ GOOD content: "Children will learn about farm animals by looking at pictures and making animal sounds."
+❌ BAD content: "<div class='hero-image'>Farm animals</div><h1>Welcome to the farm!</h1>"
+
+✅ GOOD keyPoints: ["Animals make different sounds", "Each animal has a unique appearance"]
+❌ BAD keyPoints: ["<strong>Animals make sounds</strong>", "<li>Each animal is unique</li>"]
+
+REMEMBER: ALL FIELDS = EDUCATIONAL DESCRIPTIONS, NOT HTML CODE`;
   }
 
   private buildEditPlanPrompt(
@@ -1255,6 +1310,13 @@ COMMON EDIT TYPES:
 - Change focus/theme: Adjust content to new direction
 - Make shorter/longer: Add or remove content as needed
 - Change difficulty: Adjust complexity for age group
+
+CRITICAL TEXT-ONLY RULES:
+- ALL content in the edited plan MUST contain ONLY PLAIN TEXT
+- NO HTML tags, NO markup, NO code, NO IMAGE_PROMPT comments
+- Use descriptive language about educational activities, not technical specifications
+- Example GOOD: "Show colorful pictures of animals and have children identify them"
+- Example BAD: "<div class='hero-image'><!-- IMAGE_PROMPT: animals --></div>"
 
 RESPONSE FORMAT:
 Return ONLY the updated lesson plan in the same format as the original.

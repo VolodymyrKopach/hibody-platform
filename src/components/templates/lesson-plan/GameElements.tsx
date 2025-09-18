@@ -9,6 +9,7 @@ import {
   Chip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import {
   SportsEsports as GameIcon
 } from '@mui/icons-material';
@@ -30,6 +31,7 @@ const GameElements: React.FC<GameElementsProps> = ({
   pendingComments = []
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation('common');
   const [showCommentDialog, setShowCommentDialog] = useState(false);
 
   if (gameElements.length === 0) {
@@ -95,7 +97,7 @@ const GameElements: React.FC<GameElementsProps> = ({
         onClose={() => setShowCommentDialog(false)}
         onSubmit={handleSubmitComment}
         initialSection="game"
-        title="Comment on Game Elements"
+        title={t('planEditing.commentOnGameElements')}
       />
     </>
   );

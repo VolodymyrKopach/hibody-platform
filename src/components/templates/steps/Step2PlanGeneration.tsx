@@ -379,7 +379,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
         open={showCommentDialog}
         onClose={() => setShowCommentDialog(false)}
         onSubmit={handleAddComment}
-        title="Add Comment to Plan"
+        title={t('planEditing.addCommentToplan')}
       />
     </>
   );

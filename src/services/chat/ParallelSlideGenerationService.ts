@@ -77,7 +77,6 @@ export class ParallelSlideGenerationService {
           title: slideDesc.title,
           content: slideDesc.description,
           htmlContent: slideHTML,
-          type: this.mapSlideTypeToSimple(slideDesc.type),
           status: 'completed'
         };
 

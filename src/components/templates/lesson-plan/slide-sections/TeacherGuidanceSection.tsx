@@ -14,6 +14,7 @@ import {
   Chip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import {
   School as TeacherIcon,
   ExpandMore as ExpandIcon,
@@ -35,6 +36,7 @@ interface TeacherGuidanceSectionProps {
 
 const TeacherGuidanceSection: React.FC<TeacherGuidanceSectionProps> = ({ teacherGuidance }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState<string | false>(false);
 
   const handleChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
@@ -44,7 +46,7 @@ const TeacherGuidanceSection: React.FC<TeacherGuidanceSectionProps> = ({ teacher
   const sections = [
     {
       key: 'preparation',
-      title: 'Preparation',
+      title: t('lessonPlan.sections.preparation'),
       icon: <PrepIcon />,
       emoji: '📋',
       color: theme.palette.info.main,
@@ -52,7 +54,7 @@ const TeacherGuidanceSection: React.FC<TeacherGuidanceSectionProps> = ({ teacher
     },
     {
       key: 'delivery',
-      title: 'Delivery Tips',
+      title: t('lessonPlan.sections.deliveryTips'),
       icon: <DeliveryIcon />,
       emoji: '🎯',
       color: theme.palette.success.main,
@@ -60,7 +62,7 @@ const TeacherGuidanceSection: React.FC<TeacherGuidanceSectionProps> = ({ teacher
     },
     {
       key: 'adaptations',
-      title: 'Adaptations',
+      title: t('lessonPlan.sections.adaptations'),
       icon: <AdaptIcon />,
       emoji: '🔄',
       color: theme.palette.warning.main,
@@ -68,7 +70,7 @@ const TeacherGuidanceSection: React.FC<TeacherGuidanceSectionProps> = ({ teacher
     },
     {
       key: 'troubleshooting',
-      title: 'Troubleshooting',
+      title: t('lessonPlan.sections.troubleshooting'),
       icon: <TroubleshootIcon />,
       emoji: '🔧',
       color: theme.palette.error.main,
@@ -101,7 +103,7 @@ const TeacherGuidanceSection: React.FC<TeacherGuidanceSectionProps> = ({ teacher
             color: theme.palette.text.primary
           }}
         >
-          Teacher Guidance
+          {t('lessonPlan.sections.teacherGuidance')}
         </Typography>
       </Box>
 

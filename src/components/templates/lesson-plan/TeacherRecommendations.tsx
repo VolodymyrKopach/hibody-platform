@@ -11,6 +11,7 @@ import {
   Avatar
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import {
   Lightbulb as LightbulbIcon,
   TipsAndUpdates as TipIcon
@@ -33,6 +34,7 @@ const TeacherRecommendations: React.FC<TeacherRecommendationsProps> = ({
   pendingComments = []
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation('common');
   const [showCommentDialog, setShowCommentDialog] = useState(false);
 
   if (recommendations.length === 0) {
@@ -104,7 +106,7 @@ const TeacherRecommendations: React.FC<TeacherRecommendationsProps> = ({
         onClose={() => setShowCommentDialog(false)}
         onSubmit={handleSubmitComment}
         initialSection="recommendation"
-        title="Comment on Teacher Tips"
+        title={t('planEditing.commentOnTeacherTips')}
       />
     </>
   );

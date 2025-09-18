@@ -23,7 +23,8 @@ export class TemplateAPIAdapter {
   async startTemplateGeneration(
     generatedPlan: string,
     templateData: TemplateData,
-    callbacks?: TemplateGenerationCallbacks
+    callbacks?: TemplateGenerationCallbacks,
+    language?: string
   ): Promise<TemplateGenerationResult> {
     console.log('🌐 [TemplateAPIAdapter] Starting API-based slide generation', {
       templateData,
@@ -51,7 +52,8 @@ export class TemplateAPIAdapter {
         slideDescriptions,
         templateData,
         lesson,
-        callbacks
+        callbacks,
+        language
       );
 
       console.log('✅ [TemplateAPIAdapter] Generation completed successfully', stats);
@@ -116,12 +118,7 @@ export class TemplateAPIAdapter {
       createdAt: now,
       updatedAt: now,
       authorId: 'template-generator',
-      slides: [], // Слайди будуть додаватися під час генерації
-      metadata: {
-        generatedFrom: 'template',
-        originalSlideCount: templateData.slideCount,
-        templateData
-      }
+      slides: [] // Слайди будуть додаватися під час генерації
     };
   }
 
@@ -148,7 +145,8 @@ export class TemplateAPIAdapter {
     slideDescriptions: SlideDescription[],
     templateData: TemplateData,
     lesson: SimpleLesson,
-    callbacks?: TemplateGenerationCallbacks
+    callbacks?: TemplateGenerationCallbacks,
+    language?: string
   ): Promise<GenerationStats> {
     
     const startTime = Date.now();
@@ -176,7 +174,7 @@ export class TemplateAPIAdapter {
         }]);
 
         // Викликаємо API endpoint для генерації слайду
-        const slide = await this.generateSlideViaAPI(slideDesc, templateData, slideNumber);
+        const slide = await this.generateSlideViaAPI(slideDesc, templateData, slideNumber, language);
         
         // Оновлюємо прогрес - завершено
         this.updateSlideProgress(slideNumber, 100);
@@ -301,7 +299,8 @@ export class TemplateAPIAdapter {
   private async generateSlideViaAPI(
     slideDesc: SlideDescription,
     templateData: TemplateData,
-    slideNumber: number
+    slideNumber: number,
+    language?: string
   ): Promise<SimpleSlide> {
     
     const requestBody = {
@@ -313,10 +312,11 @@ export class TemplateAPIAdapter {
         topic: templateData.topic,
         ageGroup: templateData.ageGroup,
         slideCount: templateData.slideCount,
-        hasAdditionalInfo: templateData.hasAdditionalInfo,
+        hasAdditionalInfo: !!templateData.additionalInfo,
         additionalInfo: templateData.additionalInfo
       },
-      sessionId: `template_${Date.now()}`
+      sessionId: `template_${Date.now()}`,
+      language: language || 'en'
     };
 
     console.log(`🌐 [TemplateAPIAdapter] Calling API for slide ${slideNumber}...`);

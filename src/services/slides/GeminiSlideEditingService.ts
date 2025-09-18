@@ -61,7 +61,8 @@ export class GeminiSlideEditingService {
   async editSlide(
     slide: SimpleSlide,
     comments: SlideComment[],
-    context: SlideEditingContext
+    context: SlideEditingContext,
+    language: string = 'en'
   ): Promise<SlideEditingResult> {
     console.log('🤖 [GEMINI_SLIDE_EDITING] Starting AI slide editing with image URL protection', {
       slideId: slide.id,
@@ -79,7 +80,7 @@ export class GeminiSlideEditingService {
         const protectedSlide = { ...slide, htmlContent: protectedHtml };
         
         // Build comprehensive prompt for slide editing
-        const prompt = this.buildEditingPrompt(protectedSlide, comments, context);
+        const prompt = this.buildEditingPrompt(protectedSlide, comments, context, language);
         
         console.log('📝 [GEMINI_SLIDE_EDITING] Generated prompt with protected URLs', {
           promptLength: prompt.length,
@@ -143,11 +144,15 @@ export class GeminiSlideEditingService {
   private buildEditingPrompt(
     slide: SimpleSlide,
     comments: SlideComment[],
-    context: SlideEditingContext
+    context: SlideEditingContext,
+    language: string = 'en'
   ): string {
     const commentsText = comments.map(comment => 
       `• ${comment.sectionType.toUpperCase()} (${comment.priority} priority): ${comment.comment}`
     ).join('\n');
+
+    // Determine content language for AI generation
+    const contentLanguage = language === 'uk' ? 'Ukrainian' : 'English';
 
     return `You are an expert educational content editor. Edit this slide based on user feedback and return the COMPLETE result.
 
@@ -159,6 +164,7 @@ Content: ${slide.content || 'No text content'}
 ${commentsText}
 
 **CONTEXT:** Age: ${context.ageGroup}, Topic: ${context.topic}
+**CONTENT LANGUAGE:** ${contentLanguage}
 
 **CURRENT HTML (EDIT THIS COMPLETELY):**
 ${this.minifyHtmlForPrompt(slide.htmlContent || 'No HTML content')}
@@ -166,11 +172,11 @@ ${this.minifyHtmlForPrompt(slide.htmlContent || 'No HTML content')}
 **TASK:** Apply the user feedback and return the complete edited slide.
 
 **IMPORTANT LANGUAGE GUIDELINES:**
-- User-facing content (titles, instructions, text for children): Can be in any language appropriate for the target audience
-- System content (image prompts, alt attributes, CSS classes, data attributes): MUST be in ENGLISH
+- User-facing content (titles, instructions, text for children): Generate in ${contentLanguage}
+- System content (image prompts, alt attributes, CSS classes, data attributes): Keep in English
 - Example: data-image-prompt="happy cartoon cow in green meadow" (ENGLISH)
 - Example: alt="cartoon cow" (ENGLISH)  
-- Example: <h1>Корівка каже МУ!</h1> (user content can be Ukrainian/other languages)
+- Example: <h1>Корівка каже МУ!</h1> (content in ${contentLanguage})
 
 **IMAGE INTEGRATION:**
 - You can add new images by using IMAGE_PROMPT comments in this EXACT format:

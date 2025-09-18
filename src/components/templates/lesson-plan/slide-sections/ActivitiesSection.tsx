@@ -12,6 +12,7 @@ import {
   ListItemText
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import {
   SportsEsports as ActivityIcon,
   Schedule as TimeIcon,
@@ -32,6 +33,7 @@ interface ActivitiesSectionProps {
 
 const ActivitiesSection: React.FC<ActivitiesSectionProps> = ({ activities }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   if (!activities || activities.length === 0) {
     return null;
@@ -58,7 +60,7 @@ const ActivitiesSection: React.FC<ActivitiesSectionProps> = ({ activities }) => 
             color: theme.palette.text.primary
           }}
         >
-          Activities
+          {t('lessonPlan.sections.activities')}
         </Typography>
       </Box>
 
@@ -110,7 +112,7 @@ const ActivitiesSection: React.FC<ActivitiesSectionProps> = ({ activities }) => 
                 mb: activity.expectedOutcome ? 1 : 0
               }}
             >
-              <strong>Materials:</strong> {activity.materials.join(', ')}
+              <strong>{t('lessonPlan.sections.materials')}</strong> {activity.materials.join(', ')}
             </Typography>
           )}
 
@@ -123,7 +125,7 @@ const ActivitiesSection: React.FC<ActivitiesSectionProps> = ({ activities }) => 
                 lineHeight: 1.5
               }}
             >
-              <strong>Expected outcome:</strong> {activity.expectedOutcome}
+              <strong>{t('lessonPlan.sections.expectedOutcome')}</strong> {activity.expectedOutcome}
             </Typography>
           )}
         </Box>

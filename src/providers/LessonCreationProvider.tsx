@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   LessonCreationContextValue,
   LessonCreationState,
@@ -74,6 +75,7 @@ interface LessonCreationProviderProps {
 
 export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ children }) => {
   const [state, setState] = useState<LessonCreationState>(initialState);
+  const { i18n } = useTranslation();
 
   const setCurrentStep = useCallback((step: LessonCreationStep) => {
     setState(prev => ({ ...prev, currentStep: step, error: null }));
@@ -520,7 +522,8 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
             context: {
               ageGroup: state.templateData.ageGroup,
               topic: state.templateData.topic
-            }
+            },
+            language: i18n.language === 'uk' ? 'uk' : 'en'
           };
 
           const response = await fetch('/api/slides/edit', {

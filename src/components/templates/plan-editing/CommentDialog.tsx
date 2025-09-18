@@ -190,10 +190,10 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
             fullWidth
             multiline
             rows={4}
-            label="Your Comment"
+            label={t('planEditing.yourComment')}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Describe what you want to change or improve..."
+            placeholder={t('planEditing.commentPlaceholder')}
             helperText={`${comment.length}/500 characters`}
             error={!!error}
             sx={{ mb: 3 }}
@@ -280,7 +280,7 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                       {/* All slides option */}
                       <Chip
-                        label="All Slides"
+                        label={t('planEditing.allSlides')}
                         variant={!sectionId ? 'filled' : 'outlined'}
                         color={!sectionId ? 'primary' : 'default'}
                         onClick={() => setSectionId('')}
@@ -319,7 +319,7 @@ const CommentDialog: React.FC<CommentDialogProps> = ({
                       })}
                     </Box>
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      Choose a specific slide or leave "All Slides" for general slide comments
+{t('planEditing.chooseSlideHint')}
                     </Typography>
                   </Box>
                 )}

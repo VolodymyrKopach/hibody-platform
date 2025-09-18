@@ -617,5 +617,81 @@
       "addMoreComments": "Add More Comments",
       "close": "Close"
     }
+  },
+  "planEditing": {
+    "addCommentToplan": "Add Comment to Plan",
+    "commentOnGameElements": "Comment on Game Elements",
+    "commentOnMaterials": "Comment on Materials",
+    "commentOnTeacherTips": "Comment on Teacher Tips",
+    "commentOnLearningObjectives": "Comment on Learning Objectives",
+    "yourComment": "Your Comment",
+    "commentPlaceholder": "Describe what you want to change or improve...",
+    "allSlides": "All Slides",
+    "chooseSlideHint": "Choose a specific slide or leave \"All Slides\" for general slide comments"
+  },
+  "lessonPlan": {
+    "tabs": {
+      "objectives": "Objectives",
+      "slides": "Slides", 
+      "games": "Games",
+      "materials": "Materials",
+      "tips": "Tips"
+    },
+    "sections": {
+      "keyPoints": "Key Points",
+      "visualElements": "Visual Elements",
+      "teacherGuidance": "Teacher Guidance",
+      "preparation": "Preparation",
+      "deliveryTips": "Delivery Tips",
+      "adaptations": "Adaptations",
+      "troubleshooting": "Troubleshooting",
+      "interactiveElements": "Interactive Elements",
+      "activities": "Activities",
+      "instructions": "Instructions:",
+      "expectedOutcome": "Expected outcome:",
+      "materials": "Materials:",
+      "greeting": "Greeting",
+      "action": "Action"
+    },
+    "prompts": {
+      "sayIt": "Say it"
+    },
+    "tooltips": {
+      "editObjectives": "Edit objectives",
+      "addCommentToObjectives": "Add comment to objectives"
+    },
+    "slideTypes": {
+      "introduction": "Introduction",
+      "activity": "Activity",
+      "educational": "Educational",
+      "summary": "Summary"
+    },
+    "sectionTitles": {
+      "whatToDo": "What to Do",
+      "teacherNotes": "Teacher Notes",
+      "expectedOutcome": "Expected:",
+      "preparation": "preparation:",
+      "delivery": "delivery:",
+      "adaptations": "adaptations:",
+      "troubleshooting": "troubleshooting:"
+    },
+    "interactionTypes": {
+      "touch": "touch",
+      "sound": "sound",
+      "movement": "movement",
+      "verbal": "verbal",
+      "visual": "visual"
+    },
+    "tones": {
+      "enthusiastic": "enthusiastic",
+      "calm": "calm",
+      "encouraging": "encouraging",
+      "playful": "playful",
+      "gentle": "gentle",
+      "energetic": "energetic",
+      "friendly": "friendly",
+      "warm": "warm",
+      "cheerful": "cheerful"
+    }
   }
 }

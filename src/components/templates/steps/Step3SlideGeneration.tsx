@@ -80,7 +80,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   onClearGenerationState
 }) => {
   const theme = useTheme();
-  const { t } = useTranslation(['common', 'lessons']);
+  const { t, i18n } = useTranslation(['common', 'lessons']);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Отримуємо методи для роботи з коментарями до слайдів
@@ -397,7 +397,8 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
       await adapter.startTemplateGeneration(
         generatedPlan,
         templateData,
-        generationCallbacks
+        generationCallbacks,
+        i18n.language === 'uk' ? 'uk' : 'en'
       );
       
     } catch (error) {
