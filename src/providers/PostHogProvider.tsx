@@ -16,6 +16,11 @@ function PostHogPageView(): null {
   const searchParams = useSearchParams()
 
   useEffect(() => {
+    // Skip tracking in development to avoid console spam
+    if (process.env.NODE_ENV === 'development') {
+      return
+    }
+    
     // PostHog should be available via instrumentation-client.js
     const posthogInstance = typeof window !== 'undefined' ? window.posthog || posthog : null
     
@@ -31,17 +36,9 @@ function PostHogPageView(): null {
           pathname: pathname,
           search_params: searchParams?.toString() || '',
         })
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log('📄 Page view tracked (instrumentation):', url)
-        }
       } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('⚠️ Failed to track page view:', error)
-        }
+        console.warn('⚠️ Failed to track page view:', error)
       }
-    } else if (process.env.NODE_ENV === 'development' && pathname) {
-      console.log('📄 Page view not tracked: PostHog not available via instrumentation')
     }
   }, [pathname, searchParams])
 
