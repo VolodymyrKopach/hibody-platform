@@ -6,6 +6,7 @@ import {
   LessonCreationContextValue,
   LessonCreationState,
   TemplateData,
+  GeneratedPlanResponse,
   LessonCreationStep,
   PlanComment,
   PlanEditingState,
@@ -88,7 +89,7 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
     }));
   }, []);
 
-  const setGeneratedPlan = useCallback((plan: string) => {
+  const setGeneratedPlan = useCallback((plan: GeneratedPlanResponse) => {
     setState(prev => ({
       ...prev,
       generatedPlan: plan,
@@ -276,7 +277,7 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
 
     try {
       const result = await planEditingService.processComments(
-        generatedPlan, // Pass plan directly (string or object)
+        generatedPlan?.plan, // Pass plan object directly
         planEditingState.pendingComments,
         {
           ageGroup: templateData.ageGroup,
@@ -294,14 +295,20 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
         id: `edit_${Date.now()}`,
         timestamp: new Date(),
         originalPlan: generatedPlan,
-        editedPlan,
+        editedPlan: {
+          success: true,
+          plan: editedPlan
+        },
         appliedComments: [...planEditingState.pendingComments],
         success: true
       };
 
       setState(prev => ({
         ...prev,
-        generatedPlan: editedPlan, // Use edited plan directly
+        generatedPlan: {
+          success: true,
+          plan: editedPlan
+        }, // Store as GeneratedPlanResponse object
         planChanges: planChanges || null, // Store plan changes
         planEditingState: {
           ...initialPlanEditingState,
@@ -654,11 +661,6 @@ export const LessonCreationProvider: React.FC<LessonCreationProviderProps> = ({ 
 
       // Чекаємо завершення всіх паралельних запитів
       const results = await Promise.allSettled(editPromises);
-
-      console.log(`🎉 [PARALLEL EDITING] Completed ${results.length} slide edits:`, {
-        successful: results.filter(r => r.status === 'fulfilled' && r.value.success).length,
-        failed: results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length
-      });
 
       // Завершуємо процес
 

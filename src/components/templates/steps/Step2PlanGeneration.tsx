@@ -34,13 +34,13 @@ import { CommentDialog } from '@/components/templates/plan-editing';
 // Updated to include planChanges prop
 import { StandardCommentButton } from '@/components/ui';
 import { lessonPlanService, LessonPlanServiceError } from '@/services/templates/LessonPlanService';
-import { TemplateData, GenerationState, PlanComment } from '@/types/templates';
+import { TemplateData, GeneratedPlanResponse, GenerationState, PlanComment } from '@/types/templates';
 import { useLessonCreation } from '@/providers/LessonCreationProvider';
 
 interface Step2Props {
   data: TemplateData;
-  generatedPlan: string | null;
-  onPlanGenerated: (plan: string) => void;
+  generatedPlan: GeneratedPlanResponse | null;
+  onPlanGenerated: (plan: GeneratedPlanResponse) => void;
   onNext: () => void;
   onBack: () => void;
   onClearPlan: () => void;
@@ -101,11 +101,12 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
         throw new Error(validation.errors.join(', '));
       }
 
-      const plan = await lessonPlanService.generateLessonPlan(request);
+      const response = await lessonPlanService.generateLessonPlan(request);
+      
       
       setProgress(100);
       setGenerationState('success');
-      onPlanGenerated(plan);
+      onPlanGenerated(response);
 
     } catch (error) {
       console.error('Error generating lesson plan:', error);
@@ -314,7 +315,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
             {/* Plan Content */}
             {generatedPlan && (
               <StructuredLessonPlan 
-                markdown={generatedPlan}
+                markdown={generatedPlan.plan}
                 isEditingMode={planEditingState.isEditingMode}
                 onAddComment={handleAddComment}
                 pendingComments={planEditingState.pendingComments}

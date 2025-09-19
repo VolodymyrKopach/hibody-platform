@@ -34,7 +34,7 @@ import { SlideDialog } from '@/components/slides/SlideDialog';
 import { getLocalThumbnailStorage } from '@/services/slides/LocalThumbnailService';
 
 // Типи
-import { TemplateData } from '@/types/templates';
+import { TemplateData, GeneratedPlanResponse } from '@/types/templates';
 import { SimpleSlide, SimpleLesson, SlideGenerationProgress, LessonSaveData } from '@/types/chat';
 import { GenerationStats } from '@/services/templates/TemplateAPIAdapter';
 import { useLessonCreation } from '@/providers/LessonCreationProvider';
@@ -42,7 +42,7 @@ import { useLessonCreation } from '@/providers/LessonCreationProvider';
 export interface Step3SlideGenerationProps {
   // Дані з попередніх етапів
   templateData: TemplateData;
-  generatedPlan: string;
+  generatedPlan: GeneratedPlanResponse;
   generatedLesson?: SimpleLesson | null;
   slideGenerationState: {
     isGenerating: boolean;
@@ -341,7 +341,6 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
   // Callbacks для генерації
   const generationCallbacks: TemplateGenerationCallbacks = {
     onSlideReady: useCallback((slide: SimpleSlide, lesson: SimpleLesson) => {
-      console.log(`🎨 [Step3] Slide ready callback: ${slide.title}`);
       // SlideStore вже оновлено через TemplateAPIAdapter
       // Тут можна додати додаткову логіку якщо потрібно
     }, []),
@@ -395,7 +394,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
 
       
       await adapter.startTemplateGeneration(
-        generatedPlan,
+        JSON.stringify(generatedPlan, null, 2),
         templateData,
         generationCallbacks,
         i18n.language === 'uk' ? 'uk' : 'en'
@@ -722,6 +721,9 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
           open={slideDialogOpen}
           currentLesson={currentLesson}
           currentSlideIndex={slideDialogIndex}
+          lessonPlan={generatedPlan?.plan 
+            ? JSON.stringify(generatedPlan.plan, null, 2)
+            : ''}
           onClose={() => setSlideDialogOpen(false)}
           onNextSlide={() => {
             const nextIndex = slideDialogIndex < slides.length - 1 ? slideDialogIndex + 1 : 0;
@@ -918,15 +920,9 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
         open={slideDialogOpen}
         currentLesson={currentLesson}
         currentSlideIndex={slideDialogIndex}
-        lessonPlan={(() => {
-          console.log('🔍 Step3SlideGeneration: Passing lessonPlan to SlideDialog:', {
-            hasGeneratedPlan: !!generatedPlan,
-            planLength: generatedPlan?.length || 0,
-            planType: typeof generatedPlan,
-            planPreview: generatedPlan ? generatedPlan.substring(0, 100) + '...' : 'null'
-          });
-          return generatedPlan;
-        })()} // Передаємо план уроку з логуванням
+        lessonPlan={generatedPlan?.plan 
+          ? JSON.stringify(generatedPlan.plan, null, 2)
+          : ''}
         onClose={() => setSlideDialogOpen(false)}
         onNextSlide={() => {
           const nextIndex = slideDialogIndex < slides.length - 1 ? slideDialogIndex + 1 : 0;

@@ -14,6 +14,54 @@ export interface GeneratedPlan {
   rawContent: string; // Full markdown content from AI
 }
 
+export interface GeneratedPlanResponse {
+  success: boolean;
+  plan: {
+    metadata: {
+      title: string;
+      targetAudience: string;
+      duration: string;
+      goal: string;
+    };
+    objectives: Array<{
+      id: string;
+      text: string;
+      category: string;
+    }>;
+    slides: Array<{
+      slideNumber: number;
+      type: string;
+      title: string;
+      goal: string;
+      content: string;
+      duration: string;
+      interactiveElements: string[];
+      teacherNotes: string;
+      structure: any; // Складна структура слайду
+    }>;
+    gameElements: Array<{
+      id: string;
+      name: string;
+      description: string;
+      type: string;
+      duration: string;
+    }>;
+    materials: Array<{
+      id: string;
+      name: string;
+      quantity: string;
+      category: string;
+      description: string;
+    }>;
+    recommendations: Array<{
+      id: string;
+      category: string;
+      text: string;
+      priority: string;
+    }>;
+  };
+}
+
 export interface SlideDescription {
   title: string;
   description: string;
@@ -334,7 +382,7 @@ export interface TemplateControlsConfig {
 export interface TemplateGenerationContextV2 {
   // Дані
   templateData: TemplateData;
-  generatedPlan: string;
+  generatedPlan: GeneratedPlanResponse;
   
   // Стан
   uiState: TemplateGenerationUIState;
@@ -408,8 +456,8 @@ export interface PlanEditingState {
 export interface PlanEditHistoryEntry {
   id: string;
   timestamp: Date;
-  originalPlan: string;
-  editedPlan: string;
+  originalPlan: GeneratedPlanResponse;
+  editedPlan: GeneratedPlanResponse;
   appliedComments: PlanComment[];
   success: boolean;
   error?: string;
@@ -468,7 +516,7 @@ export interface LessonCreationState {
   currentStep: LessonCreationStep;
   completedSteps: Set<LessonCreationStep>;
   templateData: TemplateData;
-  generatedPlan: string | null;
+  generatedPlan: GeneratedPlanResponse | null;
   generatedLesson: import('@/types/chat').SimpleLesson | null;
   isLoading: boolean;
   error: string | null;
@@ -494,7 +542,7 @@ export interface LessonCreationContextValue {
   state: LessonCreationState;
   setCurrentStep: (step: LessonCreationStep) => void;
   updateTemplateData: (data: Partial<TemplateData>) => void;
-  setGeneratedPlan: (plan: string) => void;
+  setGeneratedPlan: (plan: GeneratedPlanResponse) => void;
   setGeneratedLesson: (lesson: import('@/types/chat').SimpleLesson) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;

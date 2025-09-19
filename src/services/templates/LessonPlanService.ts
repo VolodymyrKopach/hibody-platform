@@ -10,15 +10,8 @@ export class LessonPlanService {
   /**
    * Generate a lesson plan based on template data
    */
-  async generateLessonPlan(request: LessonPlanRequest): Promise<string> {
+  async generateLessonPlan(request: LessonPlanRequest): Promise<any> {
     try {
-      console.log('🎯 LESSON PLAN SERVICE: Starting lesson plan generation', {
-        ageGroup: request.ageGroup,
-        topic: request.topic,
-        slideCount: request.slideCount,
-        hasAdditionalInfo: !!request.additionalInfo
-      });
-
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
@@ -51,11 +44,7 @@ export class LessonPlanService {
         );
       }
 
-      console.log('✅ LESSON PLAN SERVICE: Lesson plan generated successfully', {
-        planLength: data.plan.length
-      });
-
-      return data.plan;
+      return data; // Return full response object
 
     } catch (error) {
       console.error('❌ LESSON PLAN SERVICE: Error generating lesson plan:', error);

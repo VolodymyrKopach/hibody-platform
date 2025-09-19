@@ -8,6 +8,7 @@ import Step2PlanGeneration from './steps/Step2PlanGeneration';
 import Step3SlideGeneration from './steps/Step3SlideGeneration';
 import { useLessonCreation } from '@/providers/LessonCreationProvider';
 import { SimpleLesson } from '@/types/chat';
+import { GeneratedPlanResponse } from '@/types/templates';
 
 const TemplateGenerationPage: React.FC = () => {
   const { 
@@ -40,13 +41,12 @@ const TemplateGenerationPage: React.FC = () => {
     }
   };
 
-  const handlePlanGenerated = (plan: string) => {
+  const handlePlanGenerated = (plan: GeneratedPlanResponse) => {
     setGeneratedPlan(plan);
   };
 
   const handleLessonSaved = (lesson: SimpleLesson) => {
     setGeneratedLesson(lesson);
-    console.log('✅ Lesson saved successfully:', lesson.title);
   };
 
   const handleGenerationError = (error: string) => {

@@ -274,17 +274,6 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [slideInfoOpen, setSlideInfoOpen] = useState(false);
 
-  // Логування отримання lessonPlan
-  React.useEffect(() => {
-    console.log('📋 SlideDialog: Received lessonPlan prop:', {
-      hasLessonPlan: !!lessonPlan,
-      planLength: lessonPlan?.length || 0,
-      planType: typeof lessonPlan,
-      planPreview: lessonPlan ? lessonPlan.substring(0, 100) + '...' : 'null',
-      slideIndex: currentSlideIndex,
-      dialogOpen: open
-    });
-  }, [lessonPlan, currentSlideIndex, open]);
 
   // Обробники для sidebar
   const handleToggleSlideInfo = useCallback(() => {
@@ -438,15 +427,7 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
           hasNext={hasNext}
           hasPrev={hasPrev}
           isFullscreen={isFullscreen}
-          showSlideInfo={(() => {
-            const shouldShow = !!lessonPlan;
-            console.log('🔘 SlideDialog: Info button visibility:', {
-              shouldShow,
-              hasLessonPlan: !!lessonPlan,
-              slideTitle: currentSlide.title
-            });
-            return shouldShow;
-          })()}
+          showSlideInfo={!!lessonPlan}
           slideInfoOpen={slideInfoOpen}
           onClose={onClose}
           onNextSlide={onNextSlide}
@@ -460,25 +441,24 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
           width: '100%', 
           height: '100%', 
           pt: '80px', 
-          position: 'relative',
-          display: 'flex'
+          position: 'relative'
         }}>
-          {/* Main slide area */}
+          {/* Main slide area - завжди займає всю ширину */}
           <Box sx={{ 
-            flex: slideInfoOpen ? { xs: '1 1 50%', md: '1 1 60%' } : '1 1 100%',
-            transition: 'flex 0.3s ease',
-            position: 'relative',
-            minWidth: 0 // Дозволяє flex item стискатися
+            width: '100%',
+            height: '100%',
+            position: 'relative'
           }}>
             <SlideContent htmlContent={currentSlide.htmlContent} />
           </Box>
 
-          {/* Inline Sidebar */}
+          {/* Overlay Sidebar - позиціонується абсолютно */}
           <SlideInfoSidebar
             open={slideInfoOpen}
             slideIndex={currentSlideIndex}
             lessonPlan={lessonPlan || null}
             isFullscreen={isFullscreen}
+            onClose={handleToggleSlideInfo}
           />
         </Box>
       </DialogContent>
