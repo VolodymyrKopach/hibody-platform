@@ -918,6 +918,15 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
         open={slideDialogOpen}
         currentLesson={currentLesson}
         currentSlideIndex={slideDialogIndex}
+        lessonPlan={(() => {
+          console.log('🔍 Step3SlideGeneration: Passing lessonPlan to SlideDialog:', {
+            hasGeneratedPlan: !!generatedPlan,
+            planLength: generatedPlan?.length || 0,
+            planType: typeof generatedPlan,
+            planPreview: generatedPlan ? generatedPlan.substring(0, 100) + '...' : 'null'
+          });
+          return generatedPlan;
+        })()} // Передаємо план уроку з логуванням
         onClose={() => setSlideDialogOpen(false)}
         onNextSlide={() => {
           const nextIndex = slideDialogIndex < slides.length - 1 ? slideDialogIndex + 1 : 0;

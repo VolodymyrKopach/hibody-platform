@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -11,14 +11,16 @@ import {
   Chip
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
-import { ChevronLeft, ChevronRight, X, Maximize, Minimize } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Maximize, Minimize, Info } from 'lucide-react';
 import { SimpleLesson } from '@/types/chat';
 import { useTranslation } from 'react-i18next';
+import SlideInfoSidebar from './SlideInfoSidebar';
 
 interface SlideDialogProps {
   open: boolean;
   currentLesson: SimpleLesson | null;
   currentSlideIndex: number;
+  lessonPlan?: string | null; // Додати план уроку
   onClose: () => void;
   onNextSlide: () => void;
   onPrevSlide: () => void;
@@ -60,10 +62,13 @@ const SlideDialogHeader = React.memo(({
   hasNext, 
   hasPrev,
   isFullscreen,
+  showSlideInfo = false,
+  slideInfoOpen = false,
   onClose,
   onNextSlide,
   onPrevSlide,
-  onToggleFullscreen
+  onToggleFullscreen,
+  onShowSlideInfo
 }: {
   title: string;
   currentIndex: number;
@@ -71,13 +76,17 @@ const SlideDialogHeader = React.memo(({
   hasNext: boolean;
   hasPrev: boolean;
   isFullscreen: boolean;
+  showSlideInfo?: boolean;
+  slideInfoOpen?: boolean;
   onClose: () => void;
   onNextSlide: () => void;
   onPrevSlide: () => void;
   onToggleFullscreen: () => void;
+  onShowSlideInfo?: () => void;
 }) => {
   const theme = useTheme();
   const { t } = useTranslation(['slides', 'common']);
+
 
   return (
     <Box
@@ -205,6 +214,29 @@ const SlideDialogHeader = React.memo(({
           </IconButton>
         </Tooltip>
 
+        {/* Кнопка інформації про слайд */}
+        {showSlideInfo && onShowSlideInfo && (
+          <Tooltip title={slideInfoOpen ? "Hide Slide Information" : "Show Slide Information"}>
+            <IconButton
+              onClick={onShowSlideInfo}
+              sx={{
+                backgroundColor: isFullscreen 
+                  ? alpha('#ffffff', slideInfoOpen ? 0.3 : 0.2)
+                  : alpha(theme.palette.info.main, slideInfoOpen ? 0.2 : 0.1),
+                color: isFullscreen ? '#ffffff' : theme.palette.info.main,
+                '&:hover': {
+                  backgroundColor: isFullscreen
+                    ? alpha('#ffffff', 0.3)
+                    : alpha(theme.palette.info.main, 0.2),
+                },
+              }}
+            >
+              <Info size={20} />
+            </IconButton>
+          </Tooltip>
+        )}
+
+
         <Tooltip title={t('slides:navigation.close')}>
           <IconButton
             onClick={onClose}
@@ -234,13 +266,32 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
   open,
   currentLesson,
   currentSlideIndex,
+  lessonPlan,
   onClose,
   onNextSlide,
   onPrevSlide
 }) => {
-  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [slideInfoOpen, setSlideInfoOpen] = useState(false);
 
-  const handleToggleFullscreen = React.useCallback(async () => {
+  // Логування отримання lessonPlan
+  React.useEffect(() => {
+    console.log('📋 SlideDialog: Received lessonPlan prop:', {
+      hasLessonPlan: !!lessonPlan,
+      planLength: lessonPlan?.length || 0,
+      planType: typeof lessonPlan,
+      planPreview: lessonPlan ? lessonPlan.substring(0, 100) + '...' : 'null',
+      slideIndex: currentSlideIndex,
+      dialogOpen: open
+    });
+  }, [lessonPlan, currentSlideIndex, open]);
+
+  // Обробники для sidebar
+  const handleToggleSlideInfo = useCallback(() => {
+    setSlideInfoOpen(prev => !prev);
+  }, []);
+
+  const handleToggleFullscreen = useCallback(async () => {
     try {
       if (!isFullscreen) {
         // Enter browser fullscreen mode
@@ -341,7 +392,9 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
   const hasNext = currentSlideIndex < currentLesson.slides.length - 1;
   const hasPrev = currentSlideIndex > 0;
 
+
   return (
+    <>
     <Dialog
       open={open}
       onClose={onClose}
@@ -385,18 +438,52 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
           hasNext={hasNext}
           hasPrev={hasPrev}
           isFullscreen={isFullscreen}
+          showSlideInfo={(() => {
+            const shouldShow = !!lessonPlan;
+            console.log('🔘 SlideDialog: Info button visibility:', {
+              shouldShow,
+              hasLessonPlan: !!lessonPlan,
+              slideTitle: currentSlide.title
+            });
+            return shouldShow;
+          })()}
+          slideInfoOpen={slideInfoOpen}
           onClose={onClose}
           onNextSlide={onNextSlide}
           onPrevSlide={onPrevSlide}
           onToggleFullscreen={handleToggleFullscreen}
+          onShowSlideInfo={handleToggleSlideInfo}
         />
 
         {/* Slide content */}
-        <Box sx={{ width: '100%', height: '100%', pt: '80px', position: 'relative' }}>
-          <SlideContent htmlContent={currentSlide.htmlContent} />
+        <Box sx={{ 
+          width: '100%', 
+          height: '100%', 
+          pt: '80px', 
+          position: 'relative',
+          display: 'flex'
+        }}>
+          {/* Main slide area */}
+          <Box sx={{ 
+            flex: slideInfoOpen ? { xs: '1 1 50%', md: '1 1 60%' } : '1 1 100%',
+            transition: 'flex 0.3s ease',
+            position: 'relative',
+            minWidth: 0 // Дозволяє flex item стискатися
+          }}>
+            <SlideContent htmlContent={currentSlide.htmlContent} />
+          </Box>
+
+          {/* Inline Sidebar */}
+          <SlideInfoSidebar
+            open={slideInfoOpen}
+            slideIndex={currentSlideIndex}
+            lessonPlan={lessonPlan || null}
+            isFullscreen={isFullscreen}
+          />
         </Box>
       </DialogContent>
     </Dialog>
+  </>
   );
 };
 
