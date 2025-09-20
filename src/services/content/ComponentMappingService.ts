@@ -744,6 +744,91 @@ export class ComponentMappingService {
 
     return instructions;
   }
+
+  /**
+   * Generate pedagogical guidance for lesson plans (text-only, no HTML)
+   */
+  generatePedagogicalGuidance(ageGroup: AgeGroup): string {
+    const components = this.getComponentsForAge(ageGroup);
+    
+    let guidance = `**AVAILABLE INTERACTIVE ELEMENTS FOR ${ageGroup.toUpperCase()} YEARS:**\n\n`;
+    
+    // Convert technical components to pedagogical descriptions
+    if (components.buttons.length > 0) {
+      guidance += `**🔘 INTERACTIVE BUTTONS AND CONTROLS:**\n`;
+      components.buttons.forEach(comp => {
+        const pedagogicalDesc = this.convertToPedagogicalDescription(comp.description, comp.usage);
+        guidance += `- ${pedagogicalDesc}\n`;
+      });
+      guidance += `\n`;
+    }
+
+    if (components.images.length > 0) {
+      guidance += `**🖼️ VISUAL LEARNING ELEMENTS:**\n`;
+      components.images.forEach(comp => {
+        const pedagogicalDesc = this.convertToPedagogicalDescription(comp.description, comp.usage);
+        guidance += `- ${pedagogicalDesc}\n`;
+      });
+      guidance += `\n`;
+    }
+
+    if (components.interactive.length > 0) {
+      guidance += `**🎯 INTERACTIVE LEARNING ACTIVITIES:**\n`;
+      components.interactive.forEach(comp => {
+        const pedagogicalDesc = this.convertToPedagogicalDescription(comp.description, comp.usage);
+        guidance += `- ${pedagogicalDesc}\n`;
+      });
+      guidance += `\n`;
+    }
+
+    if (components.special.length > 0) {
+      guidance += `**🏆 SPECIAL LEARNING ELEMENTS:**\n`;
+      components.special.forEach(comp => {
+        const pedagogicalDesc = this.convertToPedagogicalDescription(comp.description, comp.usage);
+        guidance += `- ${pedagogicalDesc}\n`;
+      });
+      guidance += `\n`;
+    }
+
+    if (components.text.length > 0) {
+      guidance += `**📝 TEXT AND CONTENT ELEMENTS:**\n`;
+      components.text.forEach(comp => {
+        const pedagogicalDesc = this.convertToPedagogicalDescription(comp.description, comp.usage);
+        guidance += `- ${pedagogicalDesc}\n`;
+      });
+      guidance += `\n`;
+    }
+
+    return guidance;
+  }
+
+  /**
+   * Convert technical component description to pedagogical, user-friendly text
+   */
+  private convertToPedagogicalDescription(description: string, usage: string): string {
+    // Remove HTML tags and technical jargon
+    let pedagogical = description
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/CSS|class|onclick|px|rem|#[0-9a-fA-F]+/g, '') // Remove technical terms
+      .replace(/\s+/g, ' ') // Clean up spaces
+      .trim();
+
+    // Make it more educational and user-friendly
+    pedagogical = pedagogical
+      .replace(/button/gi, 'interactive element')
+      .replace(/component/gi, 'learning tool')
+      .replace(/element/gi, 'activity')
+      .replace(/click/gi, 'touch or interact with')
+      .replace(/hover/gi, 'point to');
+
+    // Add educational context from usage
+    const educationalUsage = usage
+      .replace(/Use for/gi, 'Helps with')
+      .replace(/click/gi, 'touch')
+      .replace(/hover/gi, 'point to');
+
+    return `${pedagogical} - ${educationalUsage}`;
+  }
 }
 
 // Singleton instance
