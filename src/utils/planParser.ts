@@ -84,11 +84,8 @@ export class PlanParser {
       const slides: SlideDescription[] = [];
       
       jsonPlan.slides.forEach((slide: any, index: number) => {
-
-        console.log('slide data', slide);
-
         const slideNumber = slide.slideNumber || index + 1;
-        const title = slide.title || slide.name || `Slide ${slideNumber}`;
+        const title = slide.title || `Slide ${slideNumber}`;
         const description = slide.content || slide.description || slide.goal || 'Educational content for this slide.';
         const type = this.mapJSONSlideType(slide.type, slideNumber, jsonPlan.slides.length);
         
@@ -96,7 +93,15 @@ export class PlanParser {
           slideNumber,
           title,
           description,
-          type
+          type,
+          slideStructure: {
+            goal: slide.goal,
+            duration: slide.duration,
+            interactiveElements: slide.interactiveElements,
+            teacherNotes: slide.teacherNotes,
+            keyPoints: slide.structure?.mainContent?.keyPoints,
+            structure: slide.structure
+          }
         });
         
         console.log(`📋 [PlanParser] Parsed JSON slide ${slideNumber}:`, { title, type, descriptionLength: description.length });
@@ -153,7 +158,7 @@ export class PlanParser {
     const slides: ParsedSlide[] = [];
     
     // Regex для пошуку слайдів: ### Slide X: Title
-    const slideRegex = /### Slide (\d+): (.+?)(?=\n### Slide \d+:|$)/gs;
+    const slideRegex = /### Slide (\d+): (.+?)(?=\n### Slide \d+:|$)/g;
     let match;
 
     while ((match = slideRegex.exec(markdown)) !== null) {
@@ -420,7 +425,8 @@ export class PlanParser {
     let totalDescriptionLength = 0;
 
     slides.forEach(slide => {
-      slideTypes[slide.type] = (slideTypes[slide.type] || 0) + 1;
+      const slideType = slide.type || 'content';
+      slideTypes[slideType] = (slideTypes[slideType] || 0) + 1;
       totalDescriptionLength += slide.description.length;
     });
 

@@ -63,13 +63,55 @@ export interface GeneratedPlanResponse {
 }
 
 export interface SlideDescription {
+  slideNumber?: number;
   title: string;
   description: string;
   type: 'introduction' | 'content' | 'activity' | 'summary';
-  estimatedDuration: number;
-  hasInteraction: boolean;
-  keyPoints: string[];
+  estimatedDuration?: number;
+  hasInteraction?: boolean;
+  keyPoints?: string[];
   customInstructions?: string;
+  
+  // Enhanced slide structure from lesson plan
+  slideStructure?: {
+    goal?: string;
+    duration?: string;
+    interactiveElements?: string[];
+    teacherNotes?: string;
+    
+    // Detailed structure from lesson plan
+    structure?: {
+      greeting?: {
+        text: string;
+        action?: string;
+        tone?: string;
+      };
+      mainContent?: {
+        text: string;
+        keyPoints?: string[];
+        visualElements?: string[];
+      };
+      interactions?: Array<{
+        type: 'touch' | 'sound' | 'movement' | 'verbal' | 'visual';
+        description: string;
+        instruction: string;
+        feedback?: string;
+      }>;
+      activities?: Array<{
+        name: string;
+        description: string;
+        duration?: string;
+        materials?: string[];
+        expectedOutcome?: string;
+      }>;
+      teacherGuidance?: {
+        preparation?: string[];
+        delivery?: string[];
+        adaptations?: string[];
+        troubleshooting?: string[];
+      };
+    };
+  };
 }
 
 // API Request/Response types

@@ -157,6 +157,21 @@ export class TemplateAPIAdapter {
 
     console.log(`🚀 [TemplateAPIAdapter] Starting parallel API generation for ${totalSlides} slides`);
 
+    // Створюємо placeholder слайди для збереження порядку
+    const placeholderSlides: SimpleSlide[] = slideDescriptions.map((slideDesc, index) => ({
+      id: `placeholder_${index + 1}_${Date.now()}`,
+      title: slideDesc.title,
+      content: 'Генерується...',
+      htmlContent: '',
+      status: 'generating' as const,
+      isPlaceholder: true,
+      updatedAt: new Date()
+    }));
+
+    // Додаємо всі placeholder'и до store одразу
+    this.slideStore.actions.addSlides(placeholderSlides);
+    console.log(`📋 [TemplateAPIAdapter] Added ${placeholderSlides.length} placeholder slides to maintain order`);
+
     // Створюємо проміси для всіх слайдів
     const slidePromises = slideDescriptions.map(async (slideDesc, index) => {
       const slideNumber = index + 1;
@@ -179,8 +194,24 @@ export class TemplateAPIAdapter {
         // Оновлюємо прогрес - завершено
         this.updateSlideProgress(slideNumber, 100);
         
-        // Додаємо слайд до store
-        this.slideStore.actions.addSlide(slide);
+        // Оновлюємо placeholder слайд на згенерований
+        const placeholderId = placeholderSlides[index].id;
+        this.slideStore.actions.updateSlide(placeholderId, {
+          id: slide.id,
+          title: slide.title,
+          content: slide.content,
+          htmlContent: slide.htmlContent,
+          status: slide.status,
+          isPlaceholder: false,
+          previewUrl: slide.previewUrl,
+          thumbnailUrl: slide.thumbnailUrl,
+          updatedAt: slide.updatedAt,
+          estimatedDuration: slide.estimatedDuration,
+          interactive: slide.interactive,
+          visualElements: slide.visualElements,
+          description: slide.description
+        });
+        console.log(`📋 [TemplateAPIAdapter] Updated placeholder ${placeholderId} with generated slide ${slideNumber}`);
 
         
         // Автоматично генеруємо превью для слайду
@@ -316,7 +347,8 @@ export class TemplateAPIAdapter {
         additionalInfo: templateData.additionalInfo
       },
       sessionId: `template_${Date.now()}`,
-      language: language || 'en'
+      language: language || 'en',
+      slideStructure: slideDesc.slideStructure
     };
 
     console.log(`🌐 [TemplateAPIAdapter] Calling API for slide ${slideNumber}...`);
@@ -324,7 +356,9 @@ export class TemplateAPIAdapter {
       title: slideDesc.title,
       description: slideDesc.description.substring(0, 200) + '...',
       type: slideDesc.type,
-      descriptionLength: slideDesc.description.length
+      descriptionLength: slideDesc.description.length,
+      hasSlideStructure: !!slideDesc.slideStructure,
+      structureKeys: slideDesc.slideStructure ? Object.keys(slideDesc.slideStructure) : []
     });
 
     const response = await fetch('/api/templates/slides/generate', {

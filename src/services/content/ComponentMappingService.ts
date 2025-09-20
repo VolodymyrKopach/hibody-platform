@@ -614,7 +614,7 @@ export class ComponentMappingService {
   }
 
   /**
-   * Генерувати інструкції для ШІ на основі точних назв класів
+   * Генерувати інструкції для ШІ на основі точних назв класів (для генерації слайдів)
    */
   generateAIInstructions(ageGroup: AgeGroup): string {
     const components = this.getComponentsForAge(ageGroup);

@@ -17,6 +17,48 @@ interface TemplateSlideGenerationRequest {
   };
   sessionId?: string;
   language?: 'uk' | 'en';
+  
+  // Enhanced slide structure data
+  slideStructure?: {
+    goal?: string;
+    duration?: string;
+    interactiveElements?: string[];
+    teacherNotes?: string;
+    keyPoints?: string[];
+    
+    // Detailed structure from lesson plan
+    structure?: {
+      greeting?: {
+        text: string;
+        action?: string;
+        tone?: string;
+      };
+      mainContent?: {
+        text: string;
+        keyPoints?: string[];
+        visualElements?: string[];
+      };
+      interactions?: Array<{
+        type: 'touch' | 'sound' | 'movement' | 'verbal' | 'visual';
+        description: string;
+        instruction: string;
+        feedback?: string;
+      }>;
+      activities?: Array<{
+        name: string;
+        description: string;
+        duration?: string;
+        materials?: string[];
+        expectedOutcome?: string;
+      }>;
+      teacherGuidance?: {
+        preparation?: string[];
+        delivery?: string[];
+        adaptations?: string[];
+        troubleshooting?: string[];
+      };
+    };
+  };
 }
 
 interface TemplateSlideGenerationResponse {
@@ -36,7 +78,8 @@ export async function POST(request: NextRequest) {
       type, 
       templateData, 
       sessionId,
-      language 
+      language,
+      slideStructure 
     }: TemplateSlideGenerationRequest = await request.json();
 
     console.log(`🎨 TEMPLATE SLIDE API: Starting slide ${slideNumber} generation...`);
@@ -47,7 +90,9 @@ export async function POST(request: NextRequest) {
       type,
       topic: templateData.topic,
       ageGroup: templateData.ageGroup,
-      sessionId
+      sessionId,
+      hasSlideStructure: !!slideStructure,
+      structureKeys: slideStructure ? Object.keys(slideStructure) : []
     });
 
     // Validate required fields
@@ -95,8 +140,8 @@ export async function POST(request: NextRequest) {
     try {
       console.log(`🎯 TEMPLATE SLIDE API: Generating slide ${slideNumber} with AI...`);
       
-      // Enhance description with template context
-      const enhancedDescription = `
+      // Enhance description with template context and slide structure
+      let enhancedDescription = `
 ${description}
 
 Context:
@@ -104,10 +149,103 @@ Context:
 - Age Group: ${templateData.ageGroup}
 - Slide Type: ${type}
 - Slide ${slideNumber} of ${templateData.slideCount}
-${templateData.hasAdditionalInfo && templateData.additionalInfo ? `- Additional Info: ${templateData.additionalInfo}` : ''}
+${templateData.hasAdditionalInfo && templateData.additionalInfo ? `- Additional Info: ${templateData.additionalInfo}` : ''}`;
 
-Please create educational content appropriate for ${templateData.ageGroup} year olds about ${templateData.topic}.
-      `.trim();
+      // Add structured slide information if available
+      if (slideStructure) {
+        enhancedDescription += '\n\nStructured Slide Information:';
+        
+        if (slideStructure.goal) {
+          enhancedDescription += `\n- Goal: ${slideStructure.goal}`;
+        }
+        
+        if (slideStructure.duration) {
+          enhancedDescription += `\n- Duration: ${slideStructure.duration}`;
+        }
+        
+        if (slideStructure.keyPoints && slideStructure.keyPoints.length > 0) {
+          enhancedDescription += `\n- Key Points: ${slideStructure.keyPoints.join(', ')}`;
+        }
+        
+        if (slideStructure.interactiveElements && slideStructure.interactiveElements.length > 0) {
+          enhancedDescription += `\n- Interactive Elements: ${slideStructure.interactiveElements.join(', ')}`;
+        }
+        
+        if (slideStructure.teacherNotes) {
+          enhancedDescription += `\n- Teacher Notes: ${slideStructure.teacherNotes}`;
+        }
+        
+        // Add detailed structure information
+        if (slideStructure.structure) {
+          enhancedDescription += '\n\nDetailed Structure:';
+          
+          if (slideStructure.structure.greeting) {
+            enhancedDescription += `\n- Greeting: ${slideStructure.structure.greeting.text}`;
+            if (slideStructure.structure.greeting.action) {
+              enhancedDescription += ` (Action: ${slideStructure.structure.greeting.action})`;
+            }
+            if (slideStructure.structure.greeting.tone) {
+              enhancedDescription += ` (Tone: ${slideStructure.structure.greeting.tone})`;
+            }
+          }
+          
+          if (slideStructure.structure.mainContent) {
+            enhancedDescription += `\n- Main Content: ${slideStructure.structure.mainContent.text}`;
+            if (slideStructure.structure.mainContent.keyPoints) {
+              enhancedDescription += `\n  Key Points: ${slideStructure.structure.mainContent.keyPoints.join(', ')}`;
+            }
+            if (slideStructure.structure.mainContent.visualElements) {
+              enhancedDescription += `\n  Visual Elements: ${slideStructure.structure.mainContent.visualElements.join(', ')}`;
+            }
+          }
+          
+          if (slideStructure.structure.interactions && slideStructure.structure.interactions.length > 0) {
+            enhancedDescription += '\n- Interactions:';
+            slideStructure.structure.interactions.forEach((interaction, index) => {
+              enhancedDescription += `\n  ${index + 1}. ${interaction.description} (Type: ${interaction.type})`;
+              enhancedDescription += `\n     Instruction: ${interaction.instruction}`;
+              if (interaction.feedback) {
+                enhancedDescription += `\n     Expected Feedback: ${interaction.feedback}`;
+              }
+            });
+          }
+          
+          if (slideStructure.structure.activities && slideStructure.structure.activities.length > 0) {
+            enhancedDescription += '\n- Activities:';
+            slideStructure.structure.activities.forEach((activity, index) => {
+              enhancedDescription += `\n  ${index + 1}. ${activity.name}: ${activity.description}`;
+              if (activity.duration) {
+                enhancedDescription += ` (Duration: ${activity.duration})`;
+              }
+              if (activity.materials && activity.materials.length > 0) {
+                enhancedDescription += `\n     Materials: ${activity.materials.join(', ')}`;
+              }
+              if (activity.expectedOutcome) {
+                enhancedDescription += `\n     Expected Outcome: ${activity.expectedOutcome}`;
+              }
+            });
+          }
+          
+          if (slideStructure.structure.teacherGuidance) {
+            enhancedDescription += '\n- Teacher Guidance:';
+            if (slideStructure.structure.teacherGuidance.preparation) {
+              enhancedDescription += `\n  Preparation: ${slideStructure.structure.teacherGuidance.preparation.join(', ')}`;
+            }
+            if (slideStructure.structure.teacherGuidance.delivery) {
+              enhancedDescription += `\n  Delivery: ${slideStructure.structure.teacherGuidance.delivery.join(', ')}`;
+            }
+            if (slideStructure.structure.teacherGuidance.adaptations) {
+              enhancedDescription += `\n  Adaptations: ${slideStructure.structure.teacherGuidance.adaptations.join(', ')}`;
+            }
+            if (slideStructure.structure.teacherGuidance.troubleshooting) {
+              enhancedDescription += `\n  Troubleshooting: ${slideStructure.structure.teacherGuidance.troubleshooting.join(', ')}`;
+            }
+          }
+        }
+      }
+
+      enhancedDescription += `\n\nPlease create educational content appropriate for ${templateData.ageGroup} year olds about ${templateData.topic}.`;
+      enhancedDescription = enhancedDescription.trim();
 
       // Generate the slide using existing service with language support
       const generatedSlide = await slideGenerationService.generateSlideWithLanguage(
