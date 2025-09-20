@@ -35,10 +35,7 @@ if (typeof window !== 'undefined') {
         delete_user: () => {}
       }
     }
-    return
-  }
-  
-  if (posthogKey && posthogKey !== 'phc_your_key_here') {
+  } else if (posthogKey && posthogKey !== 'phc_your_key_here') {
     try {
       // Production configuration only
       posthog.init(posthogKey, {
