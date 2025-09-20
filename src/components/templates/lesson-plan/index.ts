@@ -8,3 +8,6 @@ export { default as SlideNavigation } from './SlideNavigation';
 export { default as GameElements } from './GameElements';
 export { default as MaterialsList } from './MaterialsList';
 export { default as TeacherRecommendations } from './TeacherRecommendations';
+
+// Slide components (re-export for convenience)
+export * from './slide-components';

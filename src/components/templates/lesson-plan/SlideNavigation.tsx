@@ -1,33 +1,22 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Typography,
-  IconButton,
   Card,
   CardContent,
-  Chip,
-  Avatar,
-  LinearProgress
+  Typography
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
-import {
-  ArrowBackIos as PrevIcon,
-  ArrowForwardIos as NextIcon,
-  PlayArrow as PlayIcon,
-  Comment as CommentIcon,
-  Edit as EditIcon
-} from '@mui/icons-material';
 import { ParsedSlide, PlanComment } from '@/types/templates';
-import { LessonPlanJSONProcessor } from '@/utils/lessonPlanJSONProcessor';
 import {
-  GreetingSection,
-  MainContentSection,
-  InteractionsSection,
-  ActivitiesSection,
-  TeacherGuidanceSection
-} from './slide-sections';
-import { SlideCommentButton } from '../plan-editing';
+  SlideHeader,
+  SlideGreeting,
+  SlideMainContent,
+  SlideInteractions,
+  SlideActivities,
+  SlideTeacherGuidance,
+  SlideFallbackContent
+} from './slide-components';
 
 // Extended slide interface to include structure
 interface ExtendedSlide extends ParsedSlide {
@@ -65,7 +54,7 @@ interface ExtendedSlide extends ParsedSlide {
 }
 
 interface SlideNavigationProps {
-  slides: (ParsedSlide & { structure?: ExtendedSlide['structure'] })[];
+  slides: ExtendedSlide[];
   isEditingMode?: boolean;
   onAddComment?: (comment: Omit<PlanComment, 'id' | 'timestamp'>) => void;
   pendingComments?: PlanComment[];
@@ -92,7 +81,6 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({
   }
 
   const currentSlide = slides[currentSlideIndex];
-  const typeConfig = LessonPlanJSONProcessor.getSlideTypeConfig(currentSlide.type);
 
   const handlePrevSlide = () => {
     setCurrentSlideIndex(prev => prev > 0 ? prev - 1 : slides.length - 1);
@@ -103,14 +91,12 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({
   };
 
   // Handle adding comment for current slide
-  const handleAddSlideComment = () => {
+  const handleAddSlideComment = (comment: Omit<PlanComment, 'id' | 'timestamp'>) => {
     if (onAddComment) {
       onAddComment({
+        ...comment,
         sectionType: 'slide',
-        sectionId: (currentSlideIndex + 1).toString(),
-        comment: '', // Will be filled in dialog
-        priority: 'medium',
-        status: 'pending'
+        sectionId: (currentSlideIndex + 1).toString()
       });
     }
   };
@@ -135,155 +121,20 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({
         }}
       >
         {/* Slide Header */}
-        <Box sx={{ 
-          p: 4, 
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          background: `linear-gradient(135deg, ${theme.palette.primary.main}08, ${theme.palette.background.paper})`,
-          position: 'relative'
-        }}>
-          {/* Controls - Top Right */}
-          <Box sx={{ 
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1
-          }}>
-            {/* Comment Button - Always in navigation area when editing */}
-            {isEditingMode && (
-              <SlideCommentButton
-                slideNumber={currentSlideIndex + 1}
-                isEditingMode={isEditingMode}
-                hasComments={hasSlideComments}
-                commentCount={slideComments.length}
-                onAddComment={onAddComment!}
-                variant="inline"
-                size="small"
-                totalSlides={slides.length}
-              />
-            )}
-
-            {/* Navigation Controls */}
-            {slides.length > 1 && (
-              <Box sx={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                backdropFilter: 'blur(8px)',
-                borderRadius: 2,
-                p: 1,
-                boxShadow: theme.shadows[1]
-              }}>
-                <IconButton 
-                  onClick={handlePrevSlide}
-                  size="small"
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    '&:hover': {
-                      backgroundColor: theme.palette.primary.light,
-                      color: theme.palette.primary.contrastText
-                    }
-                  }}
-                >
-                  <PrevIcon fontSize="small" />
-                </IconButton>
-
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    px: 1,
-                    fontWeight: 600,
-                    color: theme.palette.text.primary,
-                    minWidth: 40,
-                    textAlign: 'center'
-                  }}
-                >
-                  {currentSlideIndex + 1}/{slides.length}
-                </Typography>
-
-                <IconButton 
-                  onClick={handleNextSlide}
-                  size="small"
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    '&:hover': {
-                      backgroundColor: theme.palette.primary.light,
-                      color: theme.palette.primary.contrastText
-                    }
-                  }}
-                >
-                  <NextIcon fontSize="small" />
-                </IconButton>
-              </Box>
-            )}
-          </Box>
-
-          {/* Slide Number Badge */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Box sx={{
-              width: 32,
-              height: 32,
-              borderRadius: '8px',
-              backgroundColor: theme.palette.primary.main,
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.875rem',
-              fontWeight: 700
-            }}>
-              {currentSlide.slideNumber}
-            </Box>
-            <Typography 
-              variant="caption"
-              sx={{ 
-                color: theme.palette.text.secondary,
-                textTransform: 'uppercase',
-                letterSpacing: 1,
-                fontWeight: 500
-              }}
-            >
-              {t(`lessonPlan.slideTypes.${currentSlide.type.toLowerCase()}`, currentSlide.type)}
-            </Typography>
-          </Box>
-
-          {/* Slide Title */}
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              fontWeight: 700,
-              color: theme.palette.text.primary,
-              mb: 1.5,
-              lineHeight: 1.2
-            }}
-          >
-            {currentSlide.title}
-          </Typography>
-
-          {/* Slide Goal */}
-          <Typography 
-            variant="body1" 
-            color="text.secondary"
-            sx={{ 
-              lineHeight: 1.5,
-              fontStyle: 'italic',
-              position: 'relative',
-              pl: 3,
-              '&:before': {
-                content: '"🎯"',
-                position: 'absolute',
-                left: 0,
-                top: 0
-              }
-            }}
-          >
-            {currentSlide.goal}
-          </Typography>
-        </Box>
+        <SlideHeader
+          slideNumber={currentSlide.slideNumber}
+          slideType={currentSlide.type}
+          title={currentSlide.title}
+          goal={currentSlide.goal}
+          currentIndex={currentSlideIndex}
+          totalSlides={slides.length}
+          onPrevSlide={slides.length > 1 ? handlePrevSlide : undefined}
+          onNextSlide={slides.length > 1 ? handleNextSlide : undefined}
+          isEditingMode={isEditingMode}
+          hasComments={hasSlideComments}
+          commentCount={slideComments.length}
+          onAddComment={onAddComment ? handleAddSlideComment : undefined}
+        />
 
         {/* Slide Content */}
         <CardContent 
@@ -342,138 +193,13 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({
                     {/* Greeting */}
                     {currentSlide.structure.greeting && (
                       <Box sx={{ mb: currentSlide.structure.mainContent ? 2 : 0 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: currentSlide.structure.greeting.action ? 1 : 0 }}>
-                          <Typography 
-                            variant="h6"
-                            sx={{ 
-                              fontStyle: 'italic',
-                              color: theme.palette.primary.main,
-                              fontSize: '1.1rem',
-                              lineHeight: 1.6,
-                              flex: 1
-                            }}
-                          >
-                            "{currentSlide.structure.greeting.text}"
-                          </Typography>
-                          {currentSlide.structure.greeting.tone && (
-                            <Typography 
-                              variant="caption"
-                              sx={{ 
-                                color: theme.palette.text.secondary,
-                                fontSize: '0.75rem',
-                                fontStyle: 'normal',
-                                backgroundColor: theme.palette.grey[100],
-                                px: 1,
-                                py: 0.5,
-                                borderRadius: 1,
-                                textTransform: 'capitalize'
-                              }}
-                            >
-                              {t(`lessonPlan.tones.${currentSlide.structure.greeting.tone}`, currentSlide.structure.greeting.tone)}
-                            </Typography>
-                          )}
-                        </Box>
-                        {currentSlide.structure.greeting.action && (
-                          <Typography 
-                            variant="body2"
-                            sx={{ 
-                              color: theme.palette.text.secondary,
-                              fontSize: '0.875rem',
-                              pl: 2,
-                              borderLeft: `2px solid ${theme.palette.primary.light}`,
-                              fontStyle: 'italic'
-                            }}
-                          >
-                            {currentSlide.structure.greeting.action}
-                          </Typography>
-                        )}
+                        <SlideGreeting greeting={currentSlide.structure.greeting} />
                       </Box>
                     )}
 
                     {/* Main Content */}
                     {currentSlide.structure.mainContent && (
-                      <Box>
-                        <Typography 
-                          variant="h6"
-                          sx={{ 
-                            fontStyle: 'italic',
-                            color: theme.palette.primary.main,
-                            fontSize: '1.1rem',
-                            lineHeight: 1.6,
-                            mb: 1
-                          }}
-                        >
-                          "{currentSlide.structure.mainContent.text}"
-                        </Typography>
-
-                        {/* Say it prompt */}
-                        <Typography 
-                          variant="body2"
-                          sx={{ 
-                            color: theme.palette.text.secondary,
-                            fontSize: '0.875rem',
-                            lineHeight: 1.5,
-                            pl: 2,
-                            borderLeft: `2px solid ${theme.palette.secondary.light}`,
-                            fontStyle: 'italic',
-                            mb: currentSlide.structure.mainContent.keyPoints?.length ? 2 : 0
-                          }}
-                        >
-                          {t('lessonPlan.prompts.sayIt', 'Промовте')}
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-                )}
-
-                {/* Key Points and Visual Elements */}
-                {currentSlide.structure?.mainContent && ((currentSlide.structure.mainContent.keyPoints && currentSlide.structure.mainContent.keyPoints.length > 0) ||
-                  (currentSlide.structure.mainContent.visualElements && currentSlide.structure.mainContent.visualElements.length > 0)) && (
-                  <Box sx={{ 
-                    backgroundColor: theme.palette.grey[50],
-                    borderRadius: 2,
-                    p: 2,
-                    borderLeft: `3px solid ${theme.palette.success.main}`,
-                    mb: 3
-                  }}>
-                    {currentSlide.structure.mainContent.keyPoints && currentSlide.structure.mainContent.keyPoints.length > 0 && (
-                      <Box sx={{ mb: currentSlide.structure.mainContent.visualElements?.length ? 2 : 0 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: theme.palette.success.main }}>
-                          {t('lessonPlan.sections.keyPoints')}:
-                        </Typography>
-                        {currentSlide.structure.mainContent.keyPoints.map((point, index) => (
-                          <Typography 
-                            key={index}
-                            variant="body2"
-                            sx={{ 
-                              fontSize: '0.875rem',
-                              lineHeight: 1.5,
-                              mb: index < (currentSlide.structure?.mainContent?.keyPoints?.length || 0) - 1 ? 0.5 : 0,
-                              '&:before': { content: '"• "', color: theme.palette.success.main }
-                            }}
-                          >
-                            {point}
-                          </Typography>
-                        ))}
-                      </Box>
-                    )}
-                    
-                    {currentSlide.structure.mainContent.visualElements && currentSlide.structure.mainContent.visualElements.length > 0 && (
-                      <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: theme.palette.warning.main }}>
-                          {t('lessonPlan.sections.visualElements')}:
-                        </Typography>
-                        <Typography 
-                          variant="body2"
-                          sx={{ 
-                            fontSize: '0.875rem',
-                            lineHeight: 1.5,
-                            color: theme.palette.text.secondary
-                          }}
-                        >
-                          {currentSlide.structure.mainContent.visualElements.join(', ')}
-                        </Typography>
-                      </Box>
+                      <SlideMainContent mainContent={currentSlide.structure.mainContent} />
                     )}
                   </Box>
                 )}
@@ -496,214 +222,33 @@ const SlideNavigation: React.FC<SlideNavigationProps> = ({
                   </Typography>
 
                   {/* Interactions */}
-                  {currentSlide.structure?.interactions && currentSlide.structure.interactions.length > 0 && (
-                    <Box sx={{ mb: 2 }}>
-                      {currentSlide.structure.interactions.map((interaction, index) => (
-                        <Box key={index} sx={{ 
-                          mb: 1.5, 
-                          p: 2, 
-                          backgroundColor: theme.palette.primary.main + '08',
-                          borderRadius: 2,
-                          borderLeft: `3px solid ${theme.palette.primary.main}`
-                        }}>
-                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 0.5 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 500, flex: 1 }}>
-                              {interaction.description}
-                            </Typography>
-                            {interaction.type && (
-                              <Typography 
-                                variant="caption"
-                                sx={{ 
-                                  color: theme.palette.primary.main,
-                                  fontSize: '0.7rem',
-                                  backgroundColor: theme.palette.primary.main + '20',
-                                  px: 1,
-                                  py: 0.25,
-                                  borderRadius: 1,
-                                  textTransform: 'capitalize'
-                                }}
-                              >
-                                {t(`lessonPlan.interactionTypes.${interaction.type}`, interaction.type)}
-                              </Typography>
-                            )}
-                          </Box>
-                          <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.8rem', mb: interaction.feedback ? 0.5 : 0 }}>
-                            {interaction.instruction}
-                          </Typography>
-                          {interaction.feedback && (
-                            <Typography variant="caption" sx={{ 
-                              color: theme.palette.primary.main, 
-                              fontSize: '0.8rem',
-                              fontStyle: 'italic',
-                              display: 'block'
-                            }}>
-                              {t('lessonPlan.sectionTitles.expectedOutcome')} {interaction.feedback}
-                            </Typography>
-                          )}
-                        </Box>
-                      ))}
-                    </Box>
+                  {currentSlide.structure?.interactions && (
+                    <SlideInteractions interactions={currentSlide.structure.interactions} />
                   )}
 
                   {/* Activities */}
-                  {currentSlide.structure?.activities && currentSlide.structure.activities.length > 0 && (
-                    <Box>
-                      {currentSlide.structure.activities.map((activity, index) => (
-                        <Box key={index} sx={{ 
-                          mb: 1.5, 
-                          p: 2, 
-                          backgroundColor: theme.palette.secondary.main + '08',
-                          borderRadius: 2,
-                          borderLeft: `3px solid ${theme.palette.secondary.main}`
-                        }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                              {activity.name}
-                            </Typography>
-                            {activity.duration && (
-                              <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                                {activity.duration}
-                              </Typography>
-                            )}
-                          </Box>
-                          <Typography variant="body2" sx={{ fontSize: '0.875rem', mb: (activity.materials?.length || activity.expectedOutcome) ? 1 : 0 }}>
-                            {activity.description}
-                          </Typography>
-                          {activity.materials && activity.materials.length > 0 && (
-                            <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.8rem', mb: activity.expectedOutcome ? 0.5 : 0 }}>
-                              {t('lessonPlan.sections.materials')} {activity.materials.join(', ')}
-                            </Typography>
-                          )}
-                          {activity.expectedOutcome && (
-                            <Typography variant="caption" sx={{ 
-                              color: theme.palette.secondary.main, 
-                              fontSize: '0.8rem',
-                              fontStyle: 'italic',
-                              display: 'block'
-                            }}>
-                              {t('lessonPlan.sections.expectedOutcome')} {activity.expectedOutcome}
-                            </Typography>
-                          )}
-                        </Box>
-                      ))}
-                    </Box>
+                  {currentSlide.structure?.activities && (
+                    <SlideActivities activities={currentSlide.structure.activities} />
                   )}
                 </Box>
               )}
 
               {/* Teacher Notes */}
               {currentSlide.structure?.teacherGuidance && (
-                <Box sx={{ 
-                  backgroundColor: theme.palette.info.main + '08',
-                  borderRadius: 2,
-                  p: 2,
-                  borderLeft: `3px solid ${theme.palette.info.main}`
-                }}>
-                  <Typography 
-                    variant="subtitle2" 
-                    sx={{ 
-                      fontWeight: 600,
-                      color: theme.palette.info.main,
-                      mb: 1,
-                      fontSize: '0.875rem'
-                    }}
-                  >
-                    {t('lessonPlan.sectionTitles.teacherNotes')}
-                  </Typography>
-                  
-                  {Object.entries(currentSlide.structure?.teacherGuidance || {}).map(([key, items]) => 
-                    items && items.length > 0 ? (
-                      <Box key={key} sx={{ mb: 1 }}>
-                        <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'capitalize', fontSize: '0.75rem' }}>
-                          {t(`lessonPlan.sectionTitles.${key}`, `${key}:`)}
-                        </Typography>
-                        {items.map((item, index) => (
-                          <Typography 
-                            key={index}
-                            variant="caption"
-                            sx={{ 
-                              display: 'block',
-                              fontSize: '0.75rem',
-                              lineHeight: 1.4,
-                              ml: 1,
-                              '&:before': { content: '"• "' }
-                            }}
-                          >
-                            {item}
-                          </Typography>
-                        ))}
-                      </Box>
-                    ) : null
-                  )}
-                </Box>
+                <SlideTeacherGuidance teacherGuidance={currentSlide.structure.teacherGuidance} />
               )}
             </Box>
           ) : (
             /* Fallback to legacy content display */
-            <Box 
-              sx={{ 
-                backgroundColor: theme.palette.grey[50],
-                borderRadius: 2,
-                p: 3,
-                border: `1px solid ${theme.palette.divider}`
-              }}
-            >
-              {currentSlide.content && currentSlide.content.includes('<') ? (
-                /* Render HTML content */
-                <Box
-                  sx={{
-                    '& *': {
-                      lineHeight: 1.6,
-                      color: theme.palette.text.primary,
-                      fontSize: '1rem'
-                    },
-                    '& .hero-image': {
-                      width: '100%',
-                      height: '200px',
-                      backgroundColor: theme.palette.grey[200],
-                      borderRadius: 2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mb: 2,
-                      cursor: 'pointer',
-                      '&:hover': {
-                        backgroundColor: theme.palette.grey[300]
-                      }
-                    },
-                    '& .main-heading': {
-                      fontSize: '1.5rem',
-                      fontWeight: 600,
-                      color: theme.palette.primary.main,
-                      textAlign: 'center',
-                      mb: 2
-                    }
-                  }}
-                  dangerouslySetInnerHTML={{ 
-                    __html: currentSlide.content.replace(/onclick="[^"]*"/g, '') // Remove onclick handlers for security
-                  }}
-                />
-              ) : (
-                /* Render plain text content */
-                <Typography 
-                  variant="body1"
-                  sx={{ 
-                    lineHeight: 1.6,
-                    color: theme.palette.text.primary,
-                    whiteSpace: 'pre-wrap',
-                    fontSize: '1rem'
-                  }}
-                >
-                  {currentSlide.content || 'No content available for this slide.'}
-                </Typography>
-              )}
-            </Box>
+            <SlideFallbackContent 
+              content={currentSlide.content}
+              allowHtml={true}
+              showPlaceholder={true}
+              placeholderText="No content available for this slide."
+            />
           )}
         </CardContent>
-
-
       </Card>
-
     </Box>
   );
 };
