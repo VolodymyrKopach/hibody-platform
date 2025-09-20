@@ -84,8 +84,11 @@ export class PlanParser {
       const slides: SlideDescription[] = [];
       
       jsonPlan.slides.forEach((slide: any, index: number) => {
+
+        console.log('slide data', slide);
+
         const slideNumber = slide.slideNumber || index + 1;
-        const title = slide.title || `Slide ${slideNumber}`;
+        const title = slide.title || slide.name || `Slide ${slideNumber}`;
         const description = slide.content || slide.description || slide.goal || 'Educational content for this slide.';
         const type = this.mapJSONSlideType(slide.type, slideNumber, jsonPlan.slides.length);
         

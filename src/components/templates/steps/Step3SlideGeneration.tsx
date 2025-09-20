@@ -394,7 +394,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
 
       
       await adapter.startTemplateGeneration(
-        JSON.stringify(generatedPlan, null, 2),
+        JSON.stringify(generatedPlan.plan, null, 2),
         templateData,
         generationCallbacks,
         i18n.language === 'uk' ? 'uk' : 'en'
