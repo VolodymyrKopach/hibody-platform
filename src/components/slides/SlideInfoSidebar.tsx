@@ -15,24 +15,25 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import { 
   X, 
-  BookOpen, 
-  Target, 
-  Clock, 
   Users, 
-  Activity, 
-  Lightbulb,
+  Clock,
+  Volume2 as SoundIcon,
   Gamepad2 as GameIcon,
-  School as TeacherIcon,
-  Eye as VisualIcon,
-  Volume2 as SoundIcon
+  Activity,
+  School as TeacherIcon
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ParsedSlide, ParsedLessonPlan } from '@/types/templates';
 import { LessonPlanParser } from '@/utils/lessonPlanParser';
 import { LessonPlanJSONProcessor } from '@/utils/lessonPlanJSONProcessor';
 import {
-  CardContent
-} from '@mui/material';
+  SlideGreeting,
+  SlideMainContent,
+  SlideInteractions,
+  SlideActivities,
+  SlideTeacherGuidance,
+  SlideFallbackContent
+} from '@/components/templates/lesson-plan/slide-components';
 
 interface SlideInfoSidebarProps {
   open: boolean;
@@ -156,8 +157,8 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
 
         <Divider />
 
-        {/* Slide Content using CardContent styling from SlideNavigation */}
-        <CardContent sx={{ p: 0 }}>
+        {/* Slide Content using new modular components */}
+        <Box sx={{ p: 3 }}>
           {extendedSlide.structure ? (
             <Box>
               {/* Main Content Flow */}
@@ -202,147 +203,17 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
                             </Typography>
                           )}
                         </Box>
-                        <Typography 
-                          variant="body1"
-                          sx={{ 
-                            mb: extendedSlide.structure.greeting.action ? 2 : 0,
-                            fontStyle: 'italic',
-                            color: theme.palette.text.primary,
-                            fontSize: '1.1rem',
-                            lineHeight: 1.7,
-                            fontWeight: 400
-                          }}
-                        >
-                          {extendedSlide.structure.greeting.text}
-                        </Typography>
-                        {extendedSlide.structure.greeting.action && (
-                          <Typography 
-                            variant="body2"
-                            sx={{ 
-                              color: theme.palette.text.secondary,
-                              fontSize: '0.875rem',
-                              lineHeight: 1.5
-                            }}
-                          >
-                            <strong>Action:</strong> {extendedSlide.structure.greeting.action}
-                          </Typography>
-                        )}
+                        <SlideGreeting greeting={extendedSlide.structure.greeting} />
                       </Box>
                     )}
 
                     {/* Main Content */}
                     {extendedSlide.structure.mainContent && (
-                      <Box>
-                        <Typography 
-                          variant="h6"
-                          sx={{ 
-                            color: theme.palette.text.primary,
-                            fontSize: '1.1rem',
-                            lineHeight: 1.4,
-                            fontWeight: 500,
-                            mb: 1
-                          }}
-                        >
-                          {extendedSlide.structure.mainContent.text}
-                        </Typography>
-                        <Typography 
-                          variant="body2"
-                          sx={{ 
-                            color: theme.palette.text.secondary,
-                            fontSize: '0.875rem'
-                          }}
-                        >
-                          Say it
-                        </Typography>
-                      </Box>
+                      <SlideMainContent mainContent={extendedSlide.structure.mainContent} />
                     )}
                   </Box>
                 )}
 
-                {/* Key Points and Visual Elements */}
-                {(extendedSlide.structure.mainContent?.keyPoints || extendedSlide.structure.mainContent?.visualElements) && (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
-                    {extendedSlide.structure.mainContent.keyPoints && (
-                      <Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                          <Box sx={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: '4px',
-                            backgroundColor: `${theme.palette.success.main}15`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}>
-                            <Target size={12} color={theme.palette.success.main} />
-                          </Box>
-                          <Typography 
-                            variant="subtitle2" 
-                            sx={{ 
-                              fontWeight: 600,
-                              color: theme.palette.text.primary,
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            Key Points:
-                          </Typography>
-                        </Box>
-                        {extendedSlide.structure.mainContent.keyPoints.map((point: string, index: number) => (
-                          <Typography 
-                            key={index}
-                            variant="body2"
-                            sx={{ 
-                              color: theme.palette.text.secondary,
-                              fontSize: '0.875rem',
-                              lineHeight: 1.4,
-                              mb: index === extendedSlide.structure.mainContent.keyPoints.length - 1 ? 0 : 0.5
-                            }}
-                          >
-                            {point}
-                          </Typography>
-                        ))}
-                      </Box>
-                    )}
-
-                    {extendedSlide.structure.mainContent?.visualElements && (
-                      <Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                          <Box sx={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: '4px',
-                            backgroundColor: `${theme.palette.info.main}15`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}>
-                            <VisualIcon size={12} color={theme.palette.info.main} />
-                          </Box>
-                          <Typography 
-                            variant="subtitle2" 
-                            sx={{ 
-                              fontWeight: 600,
-                              color: theme.palette.text.primary,
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            Visual Elements:
-                          </Typography>
-                        </Box>
-                        <Typography 
-                          variant="body2"
-                          sx={{ 
-                            color: theme.palette.text.secondary,
-                            fontSize: '0.875rem',
-                            lineHeight: 1.4
-                          }}
-                        >
-                          {extendedSlide.structure.mainContent.visualElements.join(', ')}
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-                )}
               </Box>
 
               {/* Interactive Elements */}
@@ -370,62 +241,7 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
                       Interactive Elements
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {extendedSlide.structure.interactions.map((interaction: any, index: number) => (
-                      <Box key={index}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                          <Typography 
-                            variant="body2"
-                            sx={{ 
-                              color: theme.palette.text.primary,
-                              fontSize: '0.875rem',
-                              fontWeight: 500
-                            }}
-                          >
-                            {interaction.description}
-                          </Typography>
-                          <Typography 
-                            variant="caption"
-                            sx={{ 
-                              color: theme.palette.text.secondary,
-                              fontSize: '0.75rem',
-                              backgroundColor: alpha(theme.palette.grey[500], 0.1),
-                              px: 1,
-                              py: 0.25,
-                              borderRadius: 1
-                            }}
-                          >
-                            {interaction.type}
-                          </Typography>
-                        </Box>
-                        <Typography 
-                          variant="caption"
-                          sx={{ 
-                            display: 'block',
-                            color: theme.palette.text.secondary,
-                            fontSize: '0.75rem',
-                            lineHeight: 1.4,
-                            mb: 0.5
-                          }}
-                        >
-                          {interaction.instruction}
-                        </Typography>
-                        {interaction.feedback && (
-                          <Typography 
-                            variant="caption"
-                            sx={{ 
-                              display: 'block',
-                              color: theme.palette.text.secondary,
-                              fontSize: '0.75rem',
-                              lineHeight: 1.4
-                            }}
-                          >
-                            Expected: {interaction.feedback}
-                          </Typography>
-                        )}
-                      </Box>
-                    ))}
-                  </Box>
+                  <SlideInteractions interactions={extendedSlide.structure.interactions} />
                 </Box>
               )}
 
@@ -454,71 +270,7 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
                       Activities
                     </Typography>
                   </Box>
-                  {extendedSlide.structure.activities.map((activity: any, index: number) => (
-                    <Box key={index} sx={{ mb: index === extendedSlide.structure.activities.length - 1 ? 0 : 3 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                        <Typography 
-                          variant="body2"
-                          sx={{ 
-                            color: theme.palette.text.primary,
-                            fontSize: '0.875rem',
-                            fontWeight: 500
-                          }}
-                        >
-                          {activity.name}
-                        </Typography>
-                        {activity.duration && (
-                          <Typography 
-                            variant="caption"
-                            sx={{ 
-                              color: theme.palette.text.secondary,
-                              fontSize: '0.75rem'
-                            }}
-                          >
-                            ({activity.duration})
-                          </Typography>
-                        )}
-                      </Box>
-                      <Typography 
-                        variant="body2"
-                        sx={{ 
-                          color: theme.palette.text.secondary,
-                          fontSize: '0.875rem',
-                          lineHeight: 1.4,
-                          mb: 1
-                        }}
-                      >
-                        {activity.description}
-                      </Typography>
-                      {activity.materials && (
-                        <Typography 
-                          variant="caption"
-                          sx={{ 
-                            display: 'block',
-                            color: theme.palette.text.secondary,
-                            fontSize: '0.75rem',
-                            lineHeight: 1.4,
-                            mb: 0.5
-                          }}
-                        >
-                          <strong>Materials:</strong> {activity.materials.join(', ')}
-                        </Typography>
-                      )}
-                      {activity.expectedOutcome && (
-                        <Typography 
-                          variant="caption"
-                          sx={{ 
-                            display: 'block',
-                            color: theme.palette.text.secondary,
-                            fontSize: '0.75rem',
-                            lineHeight: 1.4
-                          }}
-                        >
-                          <strong>Expected outcome:</strong> {activity.expectedOutcome}
-                        </Typography>
-                      )}
-                    </Box>
-                  ))}
+                  <SlideActivities activities={extendedSlide.structure.activities} />
                 </Box>
               )}
 
@@ -547,77 +299,20 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
                       Teacher Guidance
                     </Typography>
                   </Box>
-                  
-                  {Object.entries(extendedSlide.structure.teacherGuidance).map(([key, items]: [string, any]) => 
-                    items && items.length > 0 ? (
-                      <Box key={key} sx={{ mb: 2 }}>
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            fontWeight: 600, 
-                            textTransform: 'capitalize', 
-                            fontSize: '0.75rem',
-                            color: theme.palette.text.primary
-                          }}
-                        >
-                          {key}:
-                        </Typography>
-                        {items.map((item: string, index: number) => (
-                          <Typography 
-                            key={index}
-                            variant="caption"
-                            sx={{ 
-                              display: 'block',
-                              fontSize: '0.75rem',
-                              lineHeight: 1.4,
-                              ml: 1,
-                              color: theme.palette.text.secondary,
-                              '&:before': { content: '"• "' }
-                            }}
-                          >
-                            {item}
-                          </Typography>
-                        ))}
-                      </Box>
-                    ) : null
-                  )}
+                  <SlideTeacherGuidance teacherGuidance={extendedSlide.structure.teacherGuidance} />
                 </Box>
               )}
             </Box>
           ) : (
             /* Fallback to legacy content display */
-            <Box sx={{ p: 3 }}>
-              {currentSlide.content && currentSlide.content.includes('<') ? (
-                /* Render HTML content */
-                <Box
-                  sx={{
-                    '& *': {
-                      lineHeight: 1.6,
-                      color: theme.palette.text.primary,
-                      fontSize: '1rem'
-                    }
-                  }}
-                  dangerouslySetInnerHTML={{ 
-                    __html: currentSlide.content.replace(/onclick="[^"]*"/g, '') // Remove onclick handlers for security
-                  }}
-                />
-              ) : (
-                /* Render plain text content */
-                <Typography 
-                  variant="body1"
-                  sx={{ 
-                    lineHeight: 1.6,
-                    color: theme.palette.text.primary,
-                    whiteSpace: 'pre-wrap',
-                    fontSize: '1rem'
-                  }}
-                >
-                  {currentSlide.content || 'No content available for this slide.'}
-                </Typography>
-              )}
-            </Box>
+            <SlideFallbackContent 
+              content={currentSlide.content || ''}
+              allowHtml={true}
+              showPlaceholder={true}
+              placeholderText="No content available for this slide."
+            />
           )}
-        </CardContent>
+        </Box>
 
         {/* Lesson Overview */}
         {parsedPlan && (
@@ -655,9 +350,9 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
           position: 'absolute',
           top: 0,
           right: 0,
-          width: { xs: 350, md: 500 },
-          maxWidth: { xs: '60vw', md: '50vw' },
-          minWidth: { xs: 320, md: 400 },
+          width: { xs: 341, md: 488 },
+          maxWidth: { xs: '59vw', md: '48vw' },
+          minWidth: { xs: 312, md: 390 },
           height: '100%',
           backgroundColor: isFullscreen 
             ? alpha('#000000', 0.95)

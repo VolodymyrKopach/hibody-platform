@@ -18,12 +18,14 @@ interface SlideGreetingProps {
   greeting: GreetingData;
   showAction?: boolean;
   showTone?: boolean;
+  variant?: 'default' | 'sidebar';
 }
 
 const SlideGreeting: React.FC<SlideGreetingProps> = ({
   greeting,
   showAction = true,
-  showTone = true
+  showTone = true,
+  variant = 'default'
 }) => {
   const theme = useTheme();
   const { t } = useTranslation();
