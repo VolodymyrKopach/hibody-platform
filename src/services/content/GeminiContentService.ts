@@ -245,19 +245,19 @@ ${this.generateSlideStructure(slideCount)}
 - [Recommendation 1]
 - [Recommendation 2]
 
-${componentMappingService.generateAIInstructions(this.mapAgeToAgeGroup(age))}
+${componentMappingService.generatePedagogicalGuidance(this.mapAgeToAgeGroup(age))}
 
-${this.getAgeSpecificComponentGuidance(age)}
+${this.getAgeSpecificComponentGuidanceForMarkdown(age)}
 
 **LESSON PLAN CONTENT INTEGRATION:**
 - Seamlessly integrate age-appropriate interactive elements into slide content descriptions
-- Naturally weave teaching approaches and activities based on the component guidance above
+- Naturally weave teaching approaches and activities appropriate for the age group
 - Consider cognitive load and attention span appropriate for ${age} year olds
 - Balance interactive elements with content delivery for optimal learning
 - Plan for progressive difficulty and complexity across slides
 - Ensure teaching methods align with educational goals and developmental stage
 - Write content descriptions that educators can directly implement without technical jargon
-${this.getAgeSpecificPlanningGuidance(age)}
+${this.getAgeSpecificPlanningGuidanceForMarkdown(age)}
 
 IMPORTANT:
 - STRICTLY follow the structure "### Slide X: [Title]"
@@ -602,9 +602,9 @@ Provide only the ready HTML code without any explanations. The code must be comp
   }
 
   /**
-   * === SOLID: SRP - Отримання специфічних для віку інструкцій по компонентах ===
+   * === SOLID: SRP - Отримання специфічних для віку інструкцій по компонентах для MARKDOWN планів ===
    */
-  private getAgeSpecificComponentGuidance(age: string): string {
+  private getAgeSpecificComponentGuidanceForMarkdown(age: string): string {
     const ageGroup = this.mapAgeToAgeGroup(age);
     
     // Детальні інструкції для кожної вікової групи
@@ -625,11 +625,10 @@ Provide only the ready HTML code without any explanations. The code must be comp
 - Helps create emotional connection and engagement
 
 **🎵 SOUND AND MUSIC ELEMENTS:**
-- Buttons that play sounds using Web Audio API (NO external URLs)
+- Interactive sound buttons that make different noises when pressed
 - Audio controls so children (or teachers) can turn sound on/off
-- Everything responds with audio feedback when touched
-- Use playSound() function with different frequencies for different actions
-- Always check audioEnabled before playing sounds
+- Everything responds with fun sound effects when touched
+- Different sounds for different activities (happy sounds, animal sounds, etc.)
 - Supports learning through hearing and sound recognition
 
 **🏆 REWARD AND CELEBRATION COMPONENTS:**
@@ -682,11 +681,10 @@ Provide only the ready HTML code without any explanations. The code must be comp
 - Supports early math skills and number familiarity
 
 **🎵 SOUND AND MUSIC INTERACTIONS:**
-- Animal sound buttons using Web Audio API (NO external URLs)
+- Interactive animal sound buttons that make realistic animal noises
 - Musical elements for rhythm and audio learning
 - Audio controls so sounds can be turned on or off
-- Use playSound() function with appropriate frequencies
-- Always check audioEnabled before playing sounds
+- Different sound effects for different learning activities
 - Supports language development and listening skills
 
 **🏆 ACHIEVEMENT AND MOTIVATION ELEMENTS:**
@@ -777,11 +775,10 @@ Provide only the ready HTML code without any explanations. The code must be comp
 **🔊 COMPREHENSIVE AUDIO SUPPORT:**
 - High-quality speech synthesis that reads content aloud for auditory learners
 - Audio feedback for all interactions and activities
-- Educational content narration using Web Audio API (NO external URLs)
+- Educational content that can be read aloud for auditory learners
 - Audio hints and guidance system for additional learning support
 - User-controlled audio settings so students can customize their experience
-- Use playSound() function with appropriate frequencies for different feedback types
-- Always check audioEnabled before playing sounds
+- Different sound effects for different types of feedback and activities
 
 **TEACHING APPROACH FOR 7-8 YEARS:**
 - Complex, multi-step learning activities that challenge students appropriately
@@ -895,6 +892,379 @@ Provide only the ready HTML code without any explanations. The code must be comp
 - Recommend very short attention spans: 2-3 minutes per slide maximum
 - Suggest immediate rewards and positive feedback for every interaction
 - Plan for repetition and simple cause-and-effect activities`;
+    }
+    
+    return ''; // No special guidance for other age groups
+  }
+
+  /**
+   * === SOLID: SRP - Отримання специфічних для віку інструкцій по компонентах для JSON планів ===
+   */
+  private getAgeSpecificComponentGuidanceForJSON(age: string): string {
+    const ageGroup = this.mapAgeToAgeGroup(age);
+    
+    // Детальні інструкції для кожної вікової групи
+    if (ageGroup === '2-3') {
+      return `
+**AVAILABLE INTERACTIVE COMPONENTS FOR 2-3 YEARS:**
+
+**🌟 LARGE ACTION BUTTONS:**
+- Giant buttons that children can easily touch and click
+- One main button per slide that does something when pressed
+- Makes sounds and gives visual feedback when touched
+- Perfect for starting activities or moving to next content
+
+**🐾 FRIENDLY ANIMAL CHARACTERS:**
+- Cute animal friends that respond when children touch them
+- Animals make their characteristic sounds (cats meow, dogs bark)
+- Characters can bounce, move, or change when interacted with
+- Helps create emotional connection and engagement
+
+**🎵 SOUND AND MUSIC ELEMENTS:**
+- Interactive sound buttons that make different noises when pressed
+- Audio controls so children (or teachers) can turn sound on/off
+- Everything responds with fun sound effects when touched
+- Different sounds for different activities (happy sounds, animal sounds, etc.)
+- Supports learning through hearing and sound recognition
+
+**🏆 REWARD AND CELEBRATION COMPONENTS:**
+- Sparkling stars that appear when children complete tasks
+- Celebration animations with confetti and spinning effects
+- Progress bars that fill up to show accomplishment
+- Makes children feel successful and encourages continued learning
+
+**🔺 SIMPLE LEARNING GAMES:**
+- Large shapes (circles, squares, triangles) for basic recognition
+- Touch-and-respond activities for cause-and-effect learning
+- Color recognition and simple pattern games
+- One concept per activity to avoid overwhelming young minds
+
+**🖼️ EDUCATIONAL IMAGES:**
+- Large, colorful pictures that support the lesson topic
+- Images can be touched to trigger sounds or animations
+- Simple illustrations that clearly show one main idea
+- Visual learning support for concepts being taught
+
+**TEACHING APPROACH FOR 2-3 YEARS:**
+- Only one main activity per slide to maintain focus
+- Everything should be large and easy for small fingers to touch
+- Immediate positive feedback for every interaction
+- VERY SIMPLE language: maximum 1-2 words at a time (like "Touch!", "Good!", "Yay!")
+- Bright colors and high contrast for visual appeal
+- Repetitive patterns that help children predict what comes next
+- Short attention span accommodation: 2-3 minutes per slide maximum`;
+    }
+    
+    if (ageGroup === '4-6') {
+      return `
+**AVAILABLE INTERACTIVE COMPONENTS FOR 4-6 YEARS:**
+
+**🎯 LEARNING GAMES AND CHALLENGES:**
+- Interactive counting games with numbers and objects
+- Simple matching activities (colors, shapes, animals)
+- Basic puzzle elements that children can drag and drop
+- Memory games with 4-6 elements maximum
+- Supports cognitive development and problem-solving skills
+
+**🔢 EDUCATIONAL NUMBERS AND LETTERS:**
+- Large, colorful numbers that respond when touched
+- Each number speaks its name and shows counting examples
+- Numbers have different colors to help with visual recognition
+- Supports early math skills and number familiarity
+
+**🎵 SOUND AND MUSIC INTERACTIONS:**
+- Interactive animal sound buttons that make realistic animal noises
+- Musical elements for rhythm and audio learning
+- Audio controls so sounds can be turned on or off
+- Different sound effects for different learning activities
+- Supports language development and listening skills
+
+**🏆 ACHIEVEMENT AND MOTIVATION ELEMENTS:**
+- Reward stars that sparkle when children complete tasks
+- Achievement medals that spin and celebrate success
+- Progress bars that fill up to show learning advancement
+- Encourages continued engagement and builds confidence
+
+**🖼️ RICH VISUAL LEARNING ELEMENTS:**
+- Detailed educational images that support lesson concepts
+- Interactive pictures that reveal information when touched
+- Visual storytelling elements that guide learning progression
+- Supports visual learners and concept reinforcement
+
+**TEACHING APPROACH FOR 4-6 YEARS:**
+- Multiple related activities per slide to maintain engagement
+- Moderate complexity with clear, simple instructions
+- Positive reinforcement for attempts, not just correct answers
+- Language: Simple sentences with 3-5 words (like "Touch the red circle!")
+- Colorful, engaging design that captures attention
+- Structured activities with clear beginning, middle, and end
+- Attention span accommodation: 5-7 minutes per slide maximum
+- Choose 2-4 components that match your slide's learning objectives
+- Maintain appropriate complexity level for this age group`;
+    }
+    
+    if (ageGroup === '7-8') {
+      return `
+**AVAILABLE INTERACTIVE COMPONENTS FOR 7-8 YEARS:**
+
+**📚 PROFESSIONAL SLIDE STRUCTURE:**
+- Well-organized slides with clear headers, main content areas, and navigation
+- Scrollable content sections that can hold extensive educational material
+- Professional layout that looks more mature and sophisticated than younger age groups
+- Progress tracking and navigation controls to help students manage their learning
+
+**✍️ ADVANCED TEXT AND READING ELEMENTS:**
+- Multiple text styles for different purposes: main titles, section headings, body text
+- Special highlighting for important information that needs attention
+- Success and error feedback text that helps students understand their progress
+- Inspirational quotes and educational tips to motivate learning
+- Extended reading passages with comfortable formatting for longer texts
+- Organized lists with checkmarks to track learning objectives
+
+**🔢 STEP-BY-STEP PROBLEM SOLVING:**
+- Multi-step learning processes that break complex tasks into manageable parts
+- Sequential workflow where students complete one step before moving to the next
+- Visual progress tracking that shows which steps are completed
+- Self-pacing controls that let students work at their own speed
+- Guided learning that builds independence and confidence
+
+**📝 COMPLEX INTERACTIVE ACTIVITIES:**
+- Multiple choice questions with detailed explanations for both correct and incorrect answers
+- Text input exercises where students can type their own responses
+- Comprehensive feedback systems that help students understand mistakes
+- Interactive exercises that require critical thinking and analysis
+- Activities that connect to real-world applications and practical skills
+
+**💡 INTELLIGENT HINT AND HELP SYSTEMS:**
+- Progressive hint system that provides help without giving away answers
+- Mistake analysis that explains why an answer is wrong and how to improve
+- Multiple levels of support for students who need extra guidance
+- Contextual help that appears when students struggle with specific concepts
+- Encouraging feedback that builds confidence while providing necessary assistance
+
+**🧠 CRITICAL THINKING AND REASONING ACTIVITIES:**
+- Complex problem-solving exercises that require analytical thinking
+- Activities that encourage students to explain their reasoning
+- Connections between different concepts and subjects
+- Creative exercises that allow personal expression and unique solutions
+- Assessment activities that measure deeper understanding rather than memorization
+
+**🏆 DETAILED PROGRESS AND ACHIEVEMENT TRACKING:**
+- Visual progress indicators that show learning advancement
+- Achievement recognition for completing difficult tasks
+- Detailed feedback that explains what students did well and areas for improvement
+- Motivation systems that encourage continued learning and persistence
+- Goal-setting features that help students plan their learning journey
+
+**🖼️ EDUCATIONAL IMAGES AND MEDIA:**
+- Hero images that illustrate complex concepts and main lesson topics
+- Story images for narrative content and creative thinking exercises
+- Activity images that support interactive learning and hands-on exercises
+- Supporting educational images that clarify difficult concepts
+
+**🔊 COMPREHENSIVE AUDIO SUPPORT:**
+- High-quality speech synthesis that reads content aloud for auditory learners
+- Audio feedback for all interactions and activities
+- Educational content that can be read aloud for auditory learners
+- Audio hints and guidance system for additional learning support
+- User-controlled audio settings so students can customize their experience
+- Different sound effects for different types of feedback and activities
+
+**TEACHING APPROACH FOR 7-8 YEARS:**
+- Complex, multi-step learning activities that challenge students appropriately
+- Professional presentation style that treats students as capable learners
+- Extensive content that can be explored through scrolling and navigation
+- Self-directed learning opportunities with guidance available when needed
+- Critical thinking emphasis with reasoning and explanation requirements
+- Mistake analysis and learning from errors as part of the educational process
+- Integration of multiple learning modalities: visual, auditory, and kinesthetic
+- Real-world applications and practical skill development`;
+    }
+    
+    if (ageGroup === '9-10') {
+      return `
+**AVAILABLE COMPONENTS FOR 9-10 YEARS:**
+
+**🎓 ADVANCED LEARNING SYSTEMS:**
+- Complex multi-step problem solving with branching paths
+- Advanced self-assessment with detailed rubrics
+- Peer collaboration simulation tools
+- Research and investigation frameworks
+- Use for: Independent learning, complex reasoning, advanced skill development
+
+**🔬 CRITICAL THINKING COMPONENTS:**
+- Hypothesis formation and testing interfaces
+- Cause-and-effect analysis tools
+- Compare and contrast frameworks
+- Evidence evaluation systems
+- Use for: Scientific thinking, logical reasoning, analytical skills
+
+**📊 DATA & RESEARCH ELEMENTS:**
+- Interactive charts and graphs
+- Data collection interfaces
+- Statistical analysis tools
+- Information synthesis components
+- Use for: Math concepts, science experiments, research projects
+
+**🎯 PROJECT-BASED LEARNING:**
+- Long-term project tracking
+- Portfolio development tools
+- Presentation builders
+- Reflection and documentation systems
+- Use for: Complex projects, skill portfolios, creative work
+
+**🤝 COLLABORATIVE LEARNING:**
+- Group work simulation
+- Peer review systems
+- Discussion and debate frameworks
+- Team challenge components
+- Use for: Social learning, communication skills, teamwork
+
+**COMPONENT SELECTION GUIDELINES FOR 9-10 YEARS:**
+
+**INTRODUCTION SLIDES:**
+- Advanced learning system overview
+- Complex project introductions
+- Goal-setting and planning tools
+- Independent learning frameworks
+
+**CONTENT SLIDES:**
+- Critical thinking components for analysis
+- Data visualization for complex concepts
+- Research tools for investigation
+- Advanced self-assessment for understanding
+
+**PRACTICE SLIDES:**
+- Multi-step problem solving with validation
+- Hypothesis testing and analysis
+- Collaborative learning simulations
+- Portfolio development activities
+
+**PROJECT SLIDES:**
+- Long-term tracking and planning
+- Documentation and reflection tools
+- Presentation and sharing systems
+- Peer collaboration frameworks
+
+**ASSESSMENT SLIDES:**
+- Comprehensive self-evaluation
+- Evidence-based reasoning
+- Project portfolio review
+- Goal reflection and planning`;
+    }
+    
+    return ''; // No special guidance for other age groups
+  }
+
+  /**
+   * === SOLID: SRP - Отримання специфічних для віку інструкцій по плануванню для MARKDOWN планів ===
+   */
+  private getAgeSpecificPlanningGuidanceForMarkdown(age: string): string {
+    const ageGroup = this.mapAgeToAgeGroup(age);
+    
+    if (ageGroup === '2-3') {
+      return `
+**SPECIAL PLANNING RULES FOR AGE 2-3:**
+-- When describing slide content, use examples with VERY SIMPLE text: "Mom!", "Dad!", "Touch!", "Look!"
+-- Avoid complex phrases in content descriptions like "Here is Mom" - use "Show Mom"
+-- Plan activities with single-word instructions: "Point!", "Touch!", "Find!"
+-- Content descriptions should mention using emojis: "Add emoji to text: Touch! 👆"
+-- Recommend very short attention spans: 2-3 minutes per slide maximum
+-- Suggest immediate rewards and positive feedback for every interaction
+-- Plan for repetition and simple cause-and-effect activities`;
+    }
+    
+    if (ageGroup === '4-6') {
+      return `
+**SPECIAL PLANNING RULES FOR AGE 4-6:**
+-- Use simple sentences with 3-5 words maximum: "Touch the red circle!", "Find the cat!"
+-- Plan activities with clear beginning, middle, and end structure
+-- Include multiple related activities per slide (2-4 activities)
+-- Recommend moderate attention spans: 5-7 minutes per slide maximum
+-- Suggest positive reinforcement for attempts, not just correct answers
+-- Plan for progressive difficulty with rewards for motivation
+-- Include combination of visual, audio, and tactile learning elements`;
+    }
+    
+    if (ageGroup === '7-8') {
+      return `
+**SPECIAL PLANNING RULES FOR AGE 7-8:**
+-- Use complete sentences and more complex vocabulary appropriate for reading level
+-- Plan multi-step learning processes that build independence
+-- Include critical thinking activities that require reasoning and explanation
+-- Recommend longer attention spans: 10-15 minutes per slide maximum
+-- Suggest self-directed learning opportunities with guidance available
+-- Plan for mistake analysis and learning from errors as educational process
+-- Include real-world applications and practical skill development`;
+    }
+    
+    if (ageGroup === '9-10') {
+      return `
+**SPECIAL PLANNING RULES FOR AGE 9-10:**
+-- Use advanced vocabulary and complex sentence structures
+-- Plan project-based learning with long-term tracking and goals
+-- Include collaborative learning elements and peer interaction
+-- Recommend extended attention spans: 15-20 minutes per slide maximum
+-- Suggest independent research and investigation activities
+-- Plan for portfolio development and presentation skills
+-- Include advanced assessment with self-evaluation and reflection`;
+    }
+    
+    return ''; // No special guidance for other age groups
+  }
+
+  /**
+   * === SOLID: SRP - Отримання специфічних для віку інструкцій по плануванню для JSON планів ===
+   */
+  private getAgeSpecificPlanningGuidanceForJSON(age: string): string {
+    const ageGroup = this.mapAgeToAgeGroup(age);
+    
+    if (ageGroup === '2-3') {
+      return `
+**SPECIAL PLANNING RULES FOR AGE 2-3:**
+-- When describing slide content, use examples with VERY SIMPLE text: "Mom!", "Dad!", "Touch!", "Look!"
+-- Avoid complex phrases in content descriptions like "Here is Mom" - use "Show Mom"
+-- Plan activities with single-word instructions: "Point!", "Touch!", "Find!"
+-- Content descriptions should mention using emojis: "Add emoji to text: Touch! 👆"
+-- Recommend very short attention spans: 2-3 minutes per slide maximum
+-- Suggest immediate rewards and positive feedback for every interaction
+-- Plan for repetition and simple cause-and-effect activities`;
+    }
+    
+    if (ageGroup === '4-6') {
+      return `
+**SPECIAL PLANNING RULES FOR AGE 4-6:**
+-- Use simple sentences with 3-5 words maximum: "Touch the red circle!", "Find the cat!"
+-- Plan activities with clear beginning, middle, and end structure
+-- Include multiple related activities per slide (2-4 activities)
+-- Recommend moderate attention spans: 5-7 minutes per slide maximum
+-- Suggest positive reinforcement for attempts, not just correct answers
+-- Plan for progressive difficulty with rewards for motivation
+-- Include combination of visual, audio, and tactile learning elements`;
+    }
+    
+    if (ageGroup === '7-8') {
+      return `
+**SPECIAL PLANNING RULES FOR AGE 7-8:**
+-- Use complete sentences and more complex vocabulary appropriate for reading level
+-- Plan multi-step learning processes that build independence
+-- Include critical thinking activities that require reasoning and explanation
+-- Recommend longer attention spans: 10-15 minutes per slide maximum
+-- Suggest self-directed learning opportunities with guidance available
+-- Plan for mistake analysis and learning from errors as educational process
+-- Include real-world applications and practical skill development`;
+    }
+    
+    if (ageGroup === '9-10') {
+      return `
+**SPECIAL PLANNING RULES FOR AGE 9-10:**
+-- Use advanced vocabulary and complex sentence structures
+-- Plan project-based learning with long-term tracking and goals
+-- Include collaborative learning elements and peer interaction
+-- Recommend extended attention spans: 15-20 minutes per slide maximum
+-- Suggest independent research and investigation activities
+-- Plan for portfolio development and presentation skills
+-- Include advanced assessment with self-evaluation and reflection`;
     }
     
     return ''; // No special guidance for other age groups
@@ -1181,7 +1551,11 @@ SLIDE GENERATION RULES:
 - Include age-appropriate interactive elements
 - Adapt all content for ${age} age group
 
-${componentMappingService.generateAIInstructions(this.mapAgeToAgeGroup(age))}
+${componentMappingService.generatePedagogicalGuidance(this.mapAgeToAgeGroup(age))}
+
+${this.getAgeSpecificComponentGuidanceForJSON(age)}
+
+${this.getAgeSpecificPlanningGuidanceForJSON(age)}
 
 SLIDE STRUCTURE REQUIREMENTS:
 For each slide, provide BOTH "content" (legacy) AND "structure" (new detailed format):
