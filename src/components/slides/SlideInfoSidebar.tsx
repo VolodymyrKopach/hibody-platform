@@ -41,7 +41,6 @@ interface SlideInfoSidebarProps {
   slideIndex: number;
   lessonId: string | null; // For Materials page - load from database
   lessonPlan?: string | object | null; // For Step3 - use local plan
-  isFullscreen?: boolean;
   onClose?: () => void;
 }
 
@@ -50,7 +49,6 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
   slideIndex,
   lessonId,
   lessonPlan,
-  isFullscreen = false,
   onClose
 }) => {
   const theme = useTheme();
@@ -59,7 +57,7 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Styles (keeping the same styles as before)
+  // Styles - consistent appearance regardless of fullscreen mode
   const styles = {
     container: {
       position: 'absolute' as const,
@@ -69,28 +67,19 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
       maxWidth: { xs: '59vw', md: '48vw' },
       minWidth: { xs: 312, md: 390 },
       height: '100%',
-      backgroundColor: isFullscreen 
-        ? alpha('#000000', 0.95)
-        : alpha(theme.palette.background.paper, 0.98),
-      borderLeft: `1px solid ${isFullscreen 
-        ? alpha('#ffffff', 0.2) 
-        : theme.palette.divider}`,
+      backgroundColor: alpha(theme.palette.background.paper, 0.98),
+      borderLeft: `1px solid ${theme.palette.divider}`,
       borderRadius: { xs: '0', md: '20px 0 0 20px' },
       display: 'flex',
       flexDirection: 'column' as const,
       backdropFilter: 'blur(20px)',
       zIndex: 10,
-      boxShadow: isFullscreen 
-        ? `
-          0 0 50px ${alpha('#000000', 0.8)},
-          inset 0 1px 0 ${alpha('#ffffff', 0.1)}
-        `
-        : `
-          -8px 0 32px ${alpha(theme.palette.common.black, 0.12)},
-          -4px 0 16px ${alpha(theme.palette.common.black, 0.08)},
-          -2px 0 8px ${alpha(theme.palette.common.black, 0.04)},
-          inset 0 1px 0 ${alpha(theme.palette.common.white, 0.1)}
-        `,
+      boxShadow: `
+        -8px 0 32px ${alpha(theme.palette.common.black, 0.12)},
+        -4px 0 16px ${alpha(theme.palette.common.black, 0.08)},
+        -2px 0 8px ${alpha(theme.palette.common.black, 0.04)},
+        inset 0 1px 0 ${alpha(theme.palette.common.white, 0.1)}
+      `,
       overflow: 'hidden',
     },
     header: {
@@ -98,12 +87,8 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
       alignItems: 'center',
       justifyContent: 'space-between',
       p: 3,
-      borderBottom: `1px solid ${isFullscreen 
-        ? alpha('#ffffff', 0.2) 
-        : theme.palette.divider}`,
-      backgroundColor: isFullscreen 
-        ? alpha('#000000', 0.5)
-        : alpha(theme.palette.background.default, 0.8),
+      borderBottom: `1px solid ${theme.palette.divider}`,
+      backgroundColor: alpha(theme.palette.background.default, 0.8),
       borderRadius: { xs: '0', md: '20px 0 0 0' },
       backdropFilter: 'blur(10px)',
       boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.06)}`,
@@ -125,17 +110,15 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
     },
     headerTitle: {
       fontWeight: 600,
-      color: isFullscreen ? '#ffffff' : 'inherit'
+      color: 'inherit'
     },
     closeButton: {
-      color: isFullscreen ? '#ffffff' : 'inherit',
+      color: 'inherit',
       borderRadius: '12px',
       padding: '8px',
       transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
       '&:hover': {
-        backgroundColor: isFullscreen 
-          ? alpha('#ffffff', 0.15)
-          : alpha(theme.palette.grey[500], 0.12),
+        backgroundColor: alpha(theme.palette.grey[500], 0.12),
         transform: 'scale(1.05)',
         boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.15)}`,
       },
@@ -146,22 +129,7 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
     content: {
       flex: 1,
       overflow: 'auto',
-      color: isFullscreen ? '#ffffff' : 'inherit',
-      '& .MuiPaper-root': {
-        backgroundColor: isFullscreen 
-          ? alpha('#ffffff', 0.1)
-          : undefined,
-        color: isFullscreen ? '#ffffff' : 'inherit',
-      },
-      '& .MuiTypography-root': {
-        color: isFullscreen ? '#ffffff' : 'inherit',
-      },
-      '& .MuiChip-root': {
-        backgroundColor: isFullscreen 
-          ? alpha('#ffffff', 0.2)
-          : undefined,
-        color: isFullscreen ? '#ffffff' : 'inherit',
-      }
+      color: 'inherit',
     },
     slideInfoContainer: {
       p: 3, 

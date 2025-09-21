@@ -458,7 +458,6 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
             slideIndex={currentSlideIndex}
             lessonId={currentLesson?.id || null}
             lessonPlan={lessonPlan}
-            isFullscreen={isFullscreen}
             onClose={handleToggleSlideInfo}
           />
         </Box>
