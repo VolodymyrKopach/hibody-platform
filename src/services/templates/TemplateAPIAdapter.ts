@@ -37,12 +37,9 @@ export class TemplateAPIAdapter {
 
       // === STEP 1: Парсинг markdown плану ===
       const slideDescriptions = this.parseMarkdownPlan(generatedPlan, templateData.slideCount);
-      console.log('📄 [TemplateAPIAdapter] Parsed slide descriptions:', slideDescriptions.length);
-
 
       // === STEP 2: Ініціалізація уроку ===
       const lesson = this.initializeLesson(templateData, slideDescriptions);
-      console.log('📚 [TemplateAPIAdapter] Initialized lesson:', lesson.id);
 
       // === STEP 3: Налаштування SlideStore ===
       this.setupSlideStore(lesson);
@@ -135,7 +132,6 @@ export class TemplateAPIAdapter {
     // Позначаємо що генерація почалася
     this.slideStore.actions.setGenerating(true);
     
-    console.log('🏪 [TemplateAPIAdapter] SlideStore configured for template generation');
   }
 
   /**
@@ -155,8 +151,6 @@ export class TemplateAPIAdapter {
     let failedSlides = 0;
     const errors: string[] = [];
 
-    console.log(`🚀 [TemplateAPIAdapter] Starting parallel API generation for ${totalSlides} slides`);
-
     // Створюємо placeholder слайди для збереження порядку
     const placeholderSlides: SimpleSlide[] = slideDescriptions.map((slideDesc, index) => ({
       id: `placeholder_${index + 1}_${Date.now()}`,
@@ -170,14 +164,12 @@ export class TemplateAPIAdapter {
 
     // Додаємо всі placeholder'и до store одразу
     this.slideStore.actions.addSlides(placeholderSlides);
-    console.log(`📋 [TemplateAPIAdapter] Added ${placeholderSlides.length} placeholder slides to maintain order`);
 
     // Створюємо проміси для всіх слайдів
     const slidePromises = slideDescriptions.map(async (slideDesc, index) => {
       const slideNumber = index + 1;
       
       try {
-        console.log(`🎯 [TemplateAPIAdapter] Starting generation for slide ${slideNumber}: ${slideDesc.title}`);
         
         // Оновлюємо прогрес - початок генерації
         this.updateSlideProgress(slideNumber, 0);
@@ -211,25 +203,13 @@ export class TemplateAPIAdapter {
           visualElements: slide.visualElements,
           description: slide.description
         });
-        console.log(`📋 [TemplateAPIAdapter] Updated placeholder ${placeholderId} with generated slide ${slideNumber}`);
 
         
         // Автоматично генеруємо превью для слайду
         if (slide.htmlContent) {
-          console.log(`🎨 [TemplateAPIAdapter] Starting preview generation for slide ${slideNumber}:`, {
-            slideId: slide.id,
-            title: slide.title,
-            htmlContentLength: slide.htmlContent.length,
-            htmlPreview: slide.htmlContent.substring(0, 200) + '...'
-          });
           
           try {
             const thumbnailBase64 = await this.generateThumbnailWithRetry(slide.id, slide.htmlContent, slideNumber);
-            console.log(`✅ [TemplateAPIAdapter] Preview generated successfully for slide ${slideNumber}:`, {
-              slideId: slide.id,
-              thumbnailLength: thumbnailBase64.length,
-              thumbnailPreview: thumbnailBase64.substring(0, 50) + '...'
-            });
           } catch (error) {
             console.error(`❌ [TemplateAPIAdapter] Preview generation failed for slide ${slideNumber} after retries:`, {
               slideId: slide.id,
@@ -260,14 +240,12 @@ export class TemplateAPIAdapter {
         // Автоматично відкриваємо панель слайдів для першого слайду
         if (slideNumber === 1 && !currentState.slidePanelOpen) {
           this.slideStore.actions.setSlidePanelOpen(true);
-          console.log('📱 [TemplateAPIAdapter] Auto-opened slide panel for first slide');
         }
 
         // Викликаємо callback
         callbacks?.onSlideReady?.(slide, updatedLesson);
         
         completedSlides++;
-        console.log(`✅ [TemplateAPIAdapter] Slide ${slideNumber} completed successfully`);
         
         return slide;
 
@@ -351,15 +329,6 @@ export class TemplateAPIAdapter {
       slideStructure: slideDesc.slideStructure
     };
 
-    console.log(`🌐 [TemplateAPIAdapter] Calling API for slide ${slideNumber}...`);
-    console.log(`📋 [TemplateAPIAdapter] Slide description being sent:`, {
-      title: slideDesc.title,
-      description: slideDesc.description.substring(0, 200) + '...',
-      type: slideDesc.type,
-      descriptionLength: slideDesc.description.length,
-      hasSlideStructure: !!slideDesc.slideStructure,
-      structureKeys: slideDesc.slideStructure ? Object.keys(slideDesc.slideStructure) : []
-    });
 
     const response = await fetch('/api/templates/slides/generate', {
       method: 'POST',
@@ -385,7 +354,6 @@ export class TemplateAPIAdapter {
       throw new Error(result.error || 'API returned unsuccessful result');
     }
 
-    console.log(`✅ [TemplateAPIAdapter] API returned slide ${slideNumber}:`, result.slide.id);
     
     return result.slide;
   }
@@ -425,7 +393,6 @@ export class TemplateAPIAdapter {
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`🔄 [TemplateAPIAdapter] Thumbnail generation attempt ${attempt}/${maxRetries} for slide ${slideNumber}`);
         
         // Додаємо невелику затримку між спробами
         if (attempt > 1) {
@@ -434,7 +401,6 @@ export class TemplateAPIAdapter {
         
         const thumbnailBase64 = await this.thumbnailService.generateThumbnail(slideId, htmlContent);
         
-        console.log(`✅ [TemplateAPIAdapter] Thumbnail generated on attempt ${attempt} for slide ${slideNumber}`);
         return thumbnailBase64;
         
       } catch (error) {

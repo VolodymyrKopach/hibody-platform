@@ -51,17 +51,7 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
 
   // Simplified preview loading logic - use only cached/DB previews
   useEffect(() => {
-    console.log('🎯 PREVIEW SELECTOR: Loading cached previews', {
-      slidesCount: memoizedSlides.length,
-      slideIds: memoizedSlides.map(s => s.id),
-      cachedPreviewsCount: Object.keys(cachedPreviews).length,
-      cachedPreviewIds: Object.keys(cachedPreviews),
-      selectedPreviewId,
-      timestamp: new Date().toISOString()
-    });
-
     if (memoizedSlides.length === 0) {
-      console.log('❌ PREVIEW SELECTOR: No slides to process, exiting');
       return;
     }
 
@@ -74,21 +64,10 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
       // Priority: 1) cachedPreviews, 2) slide.thumbnailUrl, 3) fallback
       if (cachedPreviews[slide.id]) {
         previewUrl = cachedPreviews[slide.id];
-        console.log(`✅ PREVIEW SELECTOR: Using cached preview for slide ${slide.id}`, {
-          previewLength: previewUrl.length,
-          isDataUrl: previewUrl.startsWith('data:')
-        });
       } else if (slide.thumbnailUrl) {
         previewUrl = slide.thumbnailUrl;
-        console.log(`💾 PREVIEW SELECTOR: Using database thumbnailUrl for slide ${slide.id}`, {
-          thumbnailUrl: slide.thumbnailUrl
-        });
       } else {
         previewUrl = generateFallbackPreview();
-        console.log(`🎨 PREVIEW SELECTOR: Generated fallback preview for slide ${slide.id}`, {
-          previewLength: previewUrl.length,
-          isDataUrl: previewUrl.startsWith('data:')
-        });
       }
       
       initialPreviews[slide.id] = {
@@ -105,7 +84,6 @@ const PreviewSelector: React.FC<PreviewSelectorProps> = ({
       const firstSlide = memoizedSlides[0];
       const firstPreview = initialPreviews[firstSlide.id];
       if (firstPreview?.url) {
-        console.log('🎯 PREVIEW SELECTOR: Auto-selecting first slide preview:', firstSlide.id);
         onPreviewSelect(firstSlide.id, firstPreview.url);
       }
     }

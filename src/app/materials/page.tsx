@@ -78,8 +78,6 @@ interface Material {
 }
 
 const MyMaterials = () => {
-  console.log('🔄 MATERIALS PAGE: Component render started');
-  
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuth();
@@ -164,10 +162,6 @@ const MyMaterials = () => {
 
   // Function to convert database lessons to materials
   const convertDatabaseLessonsToMaterials = (lessons: DatabaseLesson[]): Material[] => {
-    console.log('🔄 MATERIALS PAGE: Converting database lessons to materials');
-    console.log('📊 Raw database lessons:', lessons);
-    console.log('📈 Total lessons count:', lessons.length);
-    
     const convertedMaterials = lessons.map((lesson, index) => {
       const material = {
         id: index + 1,
@@ -189,30 +183,8 @@ const MyMaterials = () => {
         lessonId: lesson.id,
       };
       
-      // Detailed logging for each lesson
-      console.log(`📝 Lesson ${index + 1} (${lesson.id}):`, {
-        title: lesson.title,
-        thumbnail_url: lesson.thumbnail_url,
-        has_thumbnail: !!lesson.thumbnail_url,
-        thumbnail_fallback: material.thumbnail,
-        slides_count: lesson.slides?.length || 0,
-        status: lesson.status,
-        created_at: lesson.created_at,
-        updated_at: lesson.updated_at
-      });
-      
       return material;
     });
-    
-    // Summary statistics
-    const thumbnailStats = {
-      total: convertedMaterials.length,
-      with_thumbnails: convertedMaterials.filter(m => m.thumbnail !== '/images/default-lesson.png').length,
-      with_fallback: convertedMaterials.filter(m => m.thumbnail === '/images/default-lesson.png').length
-    };
-    
-    console.log('🖼️ THUMBNAIL STATISTICS:', thumbnailStats);
-    console.log('✅ Converted materials:', convertedMaterials);
     
     return convertedMaterials;
   };
@@ -318,14 +290,6 @@ const MyMaterials = () => {
     return matchesSearch && matchesFilter;
   });
 
-  console.log('🔍 MATERIALS PAGE: Filtering and sorting results:', {
-    total_materials: materials.length,
-    filtered_materials: filteredMaterials.length,
-    search_term: searchTerm,
-    selected_filter: selectedFilter,
-    sort_by: sortBy
-  });
-
   const sortedMaterials = [...filteredMaterials].sort((a, b) => {
     switch (sortBy) {
       case 'recent':
@@ -340,8 +304,6 @@ const MyMaterials = () => {
         return 0;
     }
   });
-
-  console.log('📊 MATERIALS PAGE: Final sorted materials:', sortedMaterials.length);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, material: Material) => {
     setAnchorEl(event.currentTarget);
@@ -523,16 +485,6 @@ const MyMaterials = () => {
 
   const renderMaterialCard = (material: Material) => {
     const SubjectIcon = getSubjectIcon(material.subject);
-    
-    // Logging material card information
-    console.log(`🎨 RENDER: Material card for "${material.title}":`, {
-      id: material.id,
-      lessonId: material.lessonId,
-      thumbnail: material.thumbnail,
-      has_thumbnail: material.thumbnail !== '/images/default-lesson.png',
-      will_show_image: !!(material.thumbnail && material.thumbnail !== '/images/default-lesson.png'),
-      will_show_fallback: !(material.thumbnail && material.thumbnail !== '/images/default-lesson.png')
-    });
     
     return (
       <Card

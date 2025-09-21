@@ -54,17 +54,14 @@ const StructuredLessonPlan: React.FC<StructuredLessonPlanProps> = ({
     try {
       // If it's already a JSON object, process it directly
       if (typeof markdown === 'object' && markdown !== null) {
-        console.log('📋 [StructuredLessonPlan] Processing JSON object directly');
         return LessonPlanJSONProcessor.processJSONObject(markdown);
       }
       
       // If it's a string, try to parse as JSON first
       if (typeof markdown === 'string') {
         if (LessonPlanJSONProcessor.validateJSON(markdown)) {
-          console.log('📋 [StructuredLessonPlan] Processing JSON string');
           return LessonPlanJSONProcessor.processJSON(markdown);
         } else {
-          console.log('📋 [StructuredLessonPlan] Processing markdown string');
           return LessonPlanParser.parse(markdown);
         }
       }

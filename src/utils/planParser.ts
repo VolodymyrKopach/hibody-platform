@@ -13,15 +13,9 @@ export class PlanParser {
     planData: string | any,
     slideCount: number
   ): SlideDescription[] {
-    console.log('🔍 [PlanParser] Starting plan parsing', {
-      dataType: typeof planData,
-      expectedSlideCount: slideCount
-    });
-
     try {
       // Спочатку перевіряємо чи це JSON object
       if (typeof planData === 'object' && planData !== null) {
-        console.log('📋 [PlanParser] Detected JSON object, parsing structured plan');
         return this.parseJSONPlan(planData, slideCount);
       }
 
@@ -29,12 +23,9 @@ export class PlanParser {
       if (typeof planData === 'string') {
         try {
           const parsedJSON = JSON.parse(planData);
-          console.log('📋 [PlanParser] Successfully parsed JSON from string');
           return this.parseJSONPlan(parsedJSON, slideCount);
         } catch (jsonError) {
-          console.log('📄 [PlanParser] Not JSON, treating as markdown');
-          // Логуємо початок плану для діагностики
-          console.log('📄 [PlanParser] Plan preview:', planData.substring(0, 500) + '...');
+          // Fallback to markdown parsing
         }
       }
 
@@ -45,18 +36,12 @@ export class PlanParser {
       const structuredSlides = this.parseStructuredSlides(markdownPlan);
       
       if (structuredSlides.length > 0) {
-        console.log('✅ [PlanParser] Successfully parsed structured slides:', structuredSlides.length);
         const descriptions = this.convertParsedSlidesToDescriptions(structuredSlides);
-        console.log('📋 [PlanParser] Converted slide titles:', descriptions.map(d => d.title));
         return descriptions;
       }
 
       // Fallback: парсимо як простий markdown
-      console.log('⚠️ [PlanParser] No structured slides found, trying simple markdown parsing');
       const simpleSlides = this.parseSimpleMarkdown(markdownPlan, slideCount);
-      console.log('✅ [PlanParser] Parsed as simple markdown:', simpleSlides.length);
-      console.log('📋 [PlanParser] Simple slide titles:', simpleSlides.map(d => d.title));
-      
       return simpleSlides;
 
     } catch (error) {
@@ -72,7 +57,6 @@ export class PlanParser {
    * Парсинг JSON плану в SlideDescription[]
    */
   private static parseJSONPlan(jsonPlan: any, slideCount: number): SlideDescription[] {
-    console.log('🔍 [PlanParser] Parsing JSON plan structure');
     
     try {
       // Перевіряємо наявність slides array
@@ -104,7 +88,6 @@ export class PlanParser {
           }
         });
         
-        console.log(`📋 [PlanParser] Parsed JSON slide ${slideNumber}:`, { title, type, descriptionLength: description.length });
       });
 
       // Доповнюємо до потрібної кількості якщо потрібно
@@ -118,7 +101,6 @@ export class PlanParser {
         });
       }
 
-      console.log(`✅ [PlanParser] Successfully parsed ${slides.length} slides from JSON`);
       return slides;
 
     } catch (error) {
