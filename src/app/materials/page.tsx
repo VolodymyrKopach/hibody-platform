@@ -94,6 +94,7 @@ const MyMaterials = () => {
   const [materialToDelete, setMaterialToDelete] = useState<Material | null>(null);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedLessonForPreview, setSelectedLessonForPreview] = useState<SimpleLesson | null>(null);
+  const [selectedLessonPlan, setSelectedLessonPlan] = useState<any>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   
@@ -452,6 +453,8 @@ const MyMaterials = () => {
         id: data.lesson.id,
         title: data.lesson.title,
         slides_count: data.lesson.slides?.length || 0,
+        has_lesson_plan: !!data.lesson.lesson_plan,
+        lesson_plan_title: data.lesson.lesson_plan?.title,
         slides: data.lesson.slides?.map((slide: any, index: number) => ({
           index: index,
           id: slide.id,
@@ -464,6 +467,7 @@ const MyMaterials = () => {
       
       const simpleLesson = convertToSimpleLesson(data.lesson);
       setSelectedLessonForPreview(simpleLesson);
+      setSelectedLessonPlan(data.lesson.lesson_plan || null); // Store lesson plan
       setCurrentSlideIndex(0);
       setPreviewDialogOpen(true);
       
@@ -488,6 +492,7 @@ const MyMaterials = () => {
   const handleClosePreview = () => {
     setPreviewDialogOpen(false);
     setSelectedLessonForPreview(null);
+    setSelectedLessonPlan(null);
     setCurrentSlideIndex(0);
   };
 
@@ -1166,6 +1171,7 @@ const MyMaterials = () => {
             open={previewDialogOpen}
             currentLesson={selectedLessonForPreview}
             currentSlideIndex={currentSlideIndex}
+            lessonPlan={selectedLessonPlan}
             onClose={handleClosePreview}
             onNextSlide={goToNextSlide}
             onPrevSlide={goToPrevSlide}

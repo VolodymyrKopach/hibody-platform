@@ -260,6 +260,8 @@ export async function POST(request: NextRequest) {
       thumbnail_url: body.thumbnail_url,
       hasThumbnailData: !!body.thumbnail_data,
       thumbnailDataLength: body.thumbnail_data?.length || 0,
+      hasLessonPlan: !!body.lessonPlan,
+      lessonPlanType: typeof body.lessonPlan,
       slidesCount: body.slides?.length || 0,
       hasSlides: !!(body.slides && body.slides.length > 0),
       willAutoMigrateImages: true
@@ -357,6 +359,21 @@ export async function POST(request: NextRequest) {
     console.log('🔄 LESSONS API: Creating lesson in database...');
     const lesson = await lessonService.createLesson(lessonData);
     console.log('✅ LESSONS API: Lesson created with ID:', lesson.id);
+
+    // Save lesson plan if provided
+    if (body.lessonPlan) {
+      try {
+        const planFormat = typeof body.lessonPlan === 'string' ? 'markdown' : 'json';
+        const saveResult = await lessonService.saveLessonPlan(lesson.id, body.lessonPlan, planFormat);
+        
+        if (!saveResult.success) {
+          console.warn('⚠️ LESSONS API: Failed to save lesson plan:', saveResult.error);
+        }
+      } catch (planError) {
+        console.error('❌ LESSONS API: Error saving lesson plan:', planError);
+        // Don't fail the entire request if lesson plan saving fails
+      }
+    }
 
     // Upload thumbnail if provided
     let finalThumbnailUrl: string | null = null;

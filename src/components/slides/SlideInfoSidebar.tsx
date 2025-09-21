@@ -24,8 +24,9 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ParsedSlide, ParsedLessonPlan } from '@/types/templates';
-import { LessonPlanParser } from '@/utils/lessonPlanParser';
+import { lessonService } from '@/services/database/LessonService';
 import { LessonPlanJSONProcessor } from '@/utils/lessonPlanJSONProcessor';
+import { LessonPlanParser } from '@/utils/lessonPlanParser';
 import {
   SlideGreeting,
   SlideMainContent,
@@ -38,14 +39,16 @@ import {
 interface SlideInfoSidebarProps {
   open: boolean;
   slideIndex: number;
-  lessonPlan: string | null; // Raw lesson plan data
-  isFullscreen?: boolean; // Для адаптації під повноекранний режим
-  onClose?: () => void; // Callback для закриття сайдбару
+  lessonId: string | null; // For Materials page - load from database
+  lessonPlan?: string | object | null; // For Step3 - use local plan
+  isFullscreen?: boolean;
+  onClose?: () => void;
 }
 
 const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
   open,
   slideIndex,
+  lessonId,
   lessonPlan,
   isFullscreen = false,
   onClose
@@ -56,7 +59,7 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Styles
+  // Styles (keeping the same styles as before)
   const styles = {
     container: {
       position: 'absolute' as const,
@@ -331,42 +334,74 @@ const SlideInfoSidebar: React.FC<SlideInfoSidebarProps> = ({
     }
   };
 
-  // Parse lesson plan when it changes
+  // Load lesson plan - prioritize local plan over database
   useEffect(() => {
-    if (!lessonPlan) {
+    if (!open) {
       setParsedPlan(null);
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    // Priority 1: Use local lesson plan (Step3 scenario)
+    if (lessonPlan) {
+      setLoading(true);
+      setError(null);
 
-    try {
-      let parsed: ParsedLessonPlan;
-      
-      // Try to parse as JSON first
-      if (typeof lessonPlan === 'object') {
-        parsed = LessonPlanJSONProcessor.processJSONObject(lessonPlan);
-      } else if (typeof lessonPlan === 'string') {
-        try {
-          const jsonPlan = JSON.parse(lessonPlan);
-          parsed = LessonPlanJSONProcessor.processJSONObject(jsonPlan);
-        } catch {
-          // Fallback to markdown parsing
-          parsed = LessonPlanParser.parse(lessonPlan);
+      try {
+        let parsed: ParsedLessonPlan;
+        
+        if (typeof lessonPlan === 'string') {
+          // Try to parse as JSON first, then as markdown
+          try {
+            const jsonPlan = JSON.parse(lessonPlan);
+            parsed = LessonPlanJSONProcessor.processJSONObject(jsonPlan);
+          } catch {
+            parsed = LessonPlanParser.parse(lessonPlan);
+          }
+        } else {
+          // Object format
+          parsed = LessonPlanJSONProcessor.processJSONObject(lessonPlan);
         }
-      } else {
-        throw new Error('Invalid lesson plan format');
-      }
 
-      setParsedPlan(parsed);
-    } catch (err) {
-      console.error('❌ SlideInfoSidebar: Error parsing lesson plan:', err);
-      setError('Failed to parse lesson plan');
-    } finally {
-      setLoading(false);
+        setParsedPlan(parsed);
+        setLoading(false);
+      } catch (err) {
+        console.error('❌ SLIDE INFO SIDEBAR: Error parsing local lesson plan:', err);
+        setError('Failed to parse lesson plan');
+        setLoading(false);
+      }
+      return;
     }
-  }, [lessonPlan, slideIndex]);
+
+    // Priority 2: Load from database using lessonId (Materials page scenario)
+    if (lessonId) {
+      const loadLessonPlan = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+          const plan = await lessonService.getLessonPlan(lessonId);
+          
+          if (plan) {
+            setParsedPlan(plan);
+          } else {
+            setError('No lesson plan available for this lesson');
+          }
+        } catch (err) {
+          console.error('❌ SLIDE INFO SIDEBAR: Error loading lesson plan from database:', err);
+          setError('Failed to load lesson plan');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadLessonPlan();
+      return;
+    }
+
+    // No plan available
+    setParsedPlan(null);
+    setError(null);
+  }, [lessonId, lessonPlan, open]);
 
   const currentSlide = parsedPlan?.slides?.[slideIndex] || null;
 

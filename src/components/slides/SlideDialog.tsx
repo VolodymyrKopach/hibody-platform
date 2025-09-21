@@ -20,7 +20,7 @@ interface SlideDialogProps {
   open: boolean;
   currentLesson: SimpleLesson | null;
   currentSlideIndex: number;
-  lessonPlan?: string | null; // Додати план уроку
+  lessonPlan?: string | object | null; // For Step3 - local plan
   onClose: () => void;
   onNextSlide: () => void;
   onPrevSlide: () => void;
@@ -456,7 +456,8 @@ const SlideDialog: React.FC<SlideDialogProps> = ({
           <SlideInfoSidebar
             open={slideInfoOpen}
             slideIndex={currentSlideIndex}
-            lessonPlan={lessonPlan || null}
+            lessonId={currentLesson?.id || null}
+            lessonPlan={lessonPlan}
             isFullscreen={isFullscreen}
             onClose={handleToggleSlideInfo}
           />

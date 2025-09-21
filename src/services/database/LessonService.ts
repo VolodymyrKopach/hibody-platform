@@ -9,6 +9,9 @@ import {
   PaginatedResult,
   UserStats
 } from '@/types/database'
+import { ParsedLessonPlan, ParsedSlide } from '@/types/templates'
+import { LessonPlanJSONProcessor } from '@/utils/lessonPlanJSONProcessor'
+import { LessonPlanParser } from '@/utils/lessonPlanParser'
 
 export class LessonService {
   private supabase = createClient()
@@ -55,32 +58,6 @@ export class LessonService {
   }
 
   /**
-   * Отримати урок з слайдами
-   */
-  async getLessonWithSlides(id: string): Promise<LessonWithSlides | null> {
-    const { data, error } = await this.supabase
-      .from('lessons')
-      .select(`
-        *,
-        slides (
-          *,
-          slide_images (*)
-        )
-      `)
-      .eq('id', id)
-      .single()
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return null
-      }
-      throw new Error(`Failed to get lesson with slides: ${error.message}`)
-    }
-
-    return data as LessonWithSlides
-  }
-
-  /**
    * Оновити урок
    */
   async updateLesson(id: string, updates: LessonUpdate): Promise<LessonRow> {
@@ -112,24 +89,16 @@ export class LessonService {
     }
   }
 
-  // =============================================
-  // QUERY OPERATIONS
-  // =============================================
-
   /**
-   * Отримати уроки користувача з пагінацією та фільтрацією
+   * Отримати уроки користувача з пагінацією
    */
   async getUserLessons(
     userId: string,
-    filters: LessonFilters = {},
-    pagination: PaginationParams = {}
+    params: PaginationParams = {},
+    filters: LessonFilters = {}
   ): Promise<PaginatedResult<LessonRow>> {
-    const { 
-      page = 1, 
-      limit = 10, 
-      sortBy = 'created_at', 
-      sortOrder = 'desc' 
-    } = pagination
+    const { page = 1, limit = 10, sortBy = 'created_at', sortOrder = 'desc' } = params
+    const offset = (page - 1) * limit
 
     let query = this.supabase
       .from('lessons')
@@ -157,12 +126,11 @@ export class LessonService {
     }
 
     // Сортування та пагінація
-    const from = (page - 1) * limit
-    const to = from + limit - 1
+    query = query
+      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .range(offset, offset + limit - 1)
 
     const { data, error, count } = await query
-      .order(sortBy, { ascending: sortOrder === 'asc' })
-      .range(from, to)
 
     if (error) {
       throw new Error(`Failed to get user lessons: ${error.message}`)
@@ -178,18 +146,37 @@ export class LessonService {
   }
 
   /**
+   * Отримати урок з слайдами
+   */
+  async getLessonWithSlides(id: string): Promise<LessonWithSlides | null> {
+    const { data, error } = await this.supabase
+      .from('lessons')
+      .select(`
+        *,
+        slides (*)
+      `)
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null
+      }
+      throw new Error(`Failed to get lesson with slides: ${error.message}`)
+    }
+
+    return data as LessonWithSlides
+  }
+
+  /**
    * Отримати публічні уроки
    */
   async getPublicLessons(
-    filters: LessonFilters = {},
-    pagination: PaginationParams = {}
+    params: PaginationParams = {},
+    filters: Omit<LessonFilters, 'isPublic'> = {}
   ): Promise<PaginatedResult<LessonRow>> {
-    const { 
-      page = 1, 
-      limit = 10, 
-      sortBy = 'created_at', 
-      sortOrder = 'desc' 
-    } = pagination
+    const { page = 1, limit = 10, sortBy = 'created_at', sortOrder = 'desc' } = params
+    const offset = (page - 1) * limit
 
     let query = this.supabase
       .from('lessons')
@@ -212,12 +199,11 @@ export class LessonService {
     }
 
     // Сортування та пагінація
-    const from = (page - 1) * limit
-    const to = from + limit - 1
+    query = query
+      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .range(offset, offset + limit - 1)
 
     const { data, error, count } = await query
-      .order(sortBy, { ascending: sortOrder === 'asc' })
-      .range(from, to)
 
     if (error) {
       throw new Error(`Failed to get public lessons: ${error.message}`)
@@ -233,67 +219,6 @@ export class LessonService {
   }
 
   /**
-   * Пошук уроків
-   */
-  async searchLessons(
-    query: string,
-    filters: LessonFilters = {},
-    pagination: PaginationParams = {}
-  ): Promise<PaginatedResult<LessonRow>> {
-    return this.getPublicLessons(
-      { ...filters, search: query },
-      pagination
-    )
-  }
-
-  // =============================================
-  // STATISTICS
-  // =============================================
-
-  /**
-   * Отримати статистику користувача
-   */
-  async getUserStats(userId: string): Promise<UserStats> {
-    const { data: lessons, error } = await this.supabase
-      .from('lessons')
-      .select('id, status, views, rating')
-      .eq('user_id', userId)
-
-    if (error) {
-      throw new Error(`Failed to get user stats: ${error.message}`)
-    }
-
-    const { data: slides, error: slidesError } = await this.supabase
-      .from('slides')
-      .select('id')
-      .in('lesson_id', lessons.map(l => l.id))
-
-    if (slidesError) {
-      throw new Error(`Failed to get slides count: ${slidesError.message}`)
-    }
-
-    const totalLessons = lessons.length
-    const publishedLessons = lessons.filter((l: any) => l.status === 'published').length
-    const totalSlides = slides.length
-    const totalViews = lessons.reduce((sum: number, l: any) => sum + l.views, 0)
-    const averageRating = lessons.length > 0 
-      ? lessons.reduce((sum: number, l: any) => sum + l.rating, 0) / lessons.length 
-      : 0
-
-    return {
-      totalLessons,
-      publishedLessons,
-      totalSlides,
-      totalViews,
-      averageRating: Math.round(averageRating * 10) / 10
-    }
-  }
-
-  // =============================================
-  // UTILITY METHODS
-  // =============================================
-
-  /**
    * Збільшити кількість переглядів уроку
    */
   async incrementViews(id: string): Promise<void> {
@@ -301,97 +226,95 @@ export class LessonService {
       .rpc('increment_lesson_views', { lesson_id: id })
 
     if (error) {
-      throw new Error(`Failed to increment views: ${error.message}`)
+      console.error('Failed to increment lesson views:', error)
+      // Не кидаємо помилку, оскільки це не критично
     }
   }
 
   /**
-   * Дублювати урок
+   * Отримати статистику користувача
    */
-  async duplicateLesson(id: string, userId: string): Promise<LessonRow> {
-    // Отримуємо оригінальний урок з слайдами
-    const originalLesson = await this.getLessonWithSlides(id)
-    if (!originalLesson) {
-      throw new Error('Lesson not found')
+  async getUserStats(userId: string): Promise<UserStats> {
+    // Отримуємо кількість уроків
+    const { count: totalLessons, error: lessonsError } = await this.supabase
+      .from('lessons')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+
+    if (lessonsError) {
+      throw new Error(`Failed to get lessons count: ${lessonsError.message}`)
     }
 
-    // Створюємо копію уроку
-    const { slides, id: originalId, created_at, updated_at, views, rating, completion_rate, ...lessonData } = originalLesson
-    const newLesson = await this.createLesson({
-      ...lessonData,
-      user_id: userId,
-      title: `${lessonData.title} (Copy)`,
-      status: 'draft',
-      is_public: false
-    })
+    // Отримуємо кількість опублікованих уроків
+    const { count: publishedLessons, error: publishedError } = await this.supabase
+      .from('lessons')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', 'published')
 
-    // Дублюємо слайди
-    if (slides && slides.length > 0) {
-      // Імпортуємо SlideService динамічно, щоб уникнути циклічних залежностей
-      const { SlideService } = await import('./SlideService')
-      const slideService = new SlideService()
-      for (const slide of slides) {
-        const { id: slideId, lesson_id, created_at: slideCreatedAt, updated_at: slideUpdatedAt, ...slideData } = slide
-        await slideService.createSlide({
-          ...slideData,
-          lesson_id: newLesson.id,
-          slide_number: slide.slide_number
-        })
-      }
+    if (publishedError) {
+      throw new Error(`Failed to get published lessons count: ${publishedError.message}`)
     }
 
-    return newLesson
+    // Отримуємо кількість слайдів
+    const { count: totalSlides, error: slidesError } = await this.supabase
+      .from('slides')
+      .select('*', { count: 'exact', head: true })
+      .in('lesson_id', 
+        this.supabase
+          .from('lessons')
+          .select('id')
+          .eq('user_id', userId)
+      )
+
+    if (slidesError) {
+      throw new Error(`Failed to get slides count: ${slidesError.message}`)
+    }
+
+    // Отримуємо загальну кількість переглядів та середній рейтинг
+    const { data: statsData, error: statsError } = await this.supabase
+      .from('lessons')
+      .select('views, rating')
+      .eq('user_id', userId)
+
+    if (statsError) {
+      throw new Error(`Failed to get lesson stats: ${statsError.message}`)
+    }
+
+    const totalViews = statsData?.reduce((sum, lesson) => sum + (lesson.views || 0), 0) || 0
+    const averageRating = statsData?.length > 0 
+      ? statsData.reduce((sum, lesson) => sum + (lesson.rating || 0), 0) / statsData.length 
+      : 0
+
+    return {
+      totalLessons: totalLessons || 0,
+      publishedLessons: publishedLessons || 0,
+      totalSlides: totalSlides || 0,
+      totalViews,
+      averageRating: Math.round(averageRating * 10) / 10 // Округлюємо до 1 знака після коми
+    }
   }
 
   /**
-   * Перевірити, чи може користувач створити урок
+   * Перевірити, чи може користувач створити урок (ліміти підписки)
    */
-  async canCreateLesson(userId: string): Promise<boolean> {
-    // ТИМЧАСОВО: Дозволяємо необмежену кількість уроків для тестування
-    console.log('🔧 LESSON SERVICE: canCreateLesson called for user:', userId);
-    console.log('🔧 LESSON SERVICE: Temporarily allowing unlimited lessons for testing');
-    return true;
+  async canUserCreateLesson(userId: string): Promise<boolean> {
+    // Тимчасово повертаємо true, поки не реалізовано систему підписок
+    return true
 
-    /* 
-    // ОРИГІНАЛЬНА ЛОГІКА (закоментована для тестування):
+    /*
     // Отримуємо профіль користувача
-    const { data: profile, error } = await this.supabase
+    const { data: profile, error: profileError } = await this.supabase
       .from('user_profiles')
       .select('subscription_type')
       .eq('id', userId)
       .single()
 
-    if (error) {
-      console.error('❌ LESSON SERVICE: Failed to get user profile:', error);
-      // Якщо профіль не знайдено, створюємо базовий профіль
-      if (error.code === 'PGRST116') {
-        try {
-          const { data: newProfile, error: createError } = await this.supabase
-            .from('user_profiles')
-            .insert({
-              id: userId,
-              email: 'temp@example.com', // Тимчасовий email
-              subscription_type: 'free'
-            })
-            .select()
-            .single();
-          
-          if (createError) {
-            console.error('❌ LESSON SERVICE: Failed to create profile:', createError);
-            return false;
-          }
-          
-          console.log('✅ LESSON SERVICE: Created new profile for user:', userId);
-        } catch (createError) {
-          console.error('❌ LESSON SERVICE: Error creating profile:', createError);
-          return false;
-        }
-      } else {
-        throw new Error(`Failed to get user profile: ${error.message}`)
-      }
+    if (profileError) {
+      throw new Error(`Failed to get user profile: ${profileError.message}`)
     }
 
-    // Рахуємо кількість уроків
+    // Отримуємо кількість уроків користувача
     const { count, error: countError } = await this.supabase
       .from('lessons')
       .select('*', { count: 'exact', head: true })
@@ -423,7 +346,215 @@ export class LessonService {
     return currentCount < limit;
     */
   }
+
+  // =============================================
+  // LESSON PLAN OPERATIONS
+  // =============================================
+
+  /**
+   * Зберегти план уроку в базі даних
+   * @param lessonId - ID уроку
+   * @param rawPlan - сирий план (JSON string або object)
+   * @param planFormat - формат плану (json або markdown)
+   */
+  async saveLessonPlan(
+    lessonId: string, 
+    rawPlan: string | object,
+    planFormat: 'json' | 'markdown' = 'json'
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Парсимо план
+      let parsedPlan: ParsedLessonPlan;
+      
+      if (planFormat === 'json') {
+        if (typeof rawPlan === 'object') {
+          parsedPlan = LessonPlanJSONProcessor.processJSONObject(rawPlan);
+        } else {
+          const jsonPlan = JSON.parse(rawPlan as string);
+          parsedPlan = LessonPlanJSONProcessor.processJSONObject(jsonPlan);
+        }
+      } else {
+        parsedPlan = LessonPlanParser.parse(rawPlan as string);
+      }
+
+
+      // Оновлюємо урок з планом
+      const { error: lessonError } = await this.supabase
+        .from('lessons')
+        .update({
+          lesson_plan: parsedPlan,
+          plan_metadata: parsedPlan.metadata,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', lessonId);
+
+      if (lessonError) {
+        console.error('❌ LESSON SERVICE: Error updating lesson with plan:', lessonError);
+        throw lessonError;
+      }
+
+      // Оновлюємо слайди з витягами з плану
+      await this.updateSlidesWithPlanData(lessonId, parsedPlan.slides);
+      return { success: true };
+      
+    } catch (error) {
+      console.error('❌ LESSON SERVICE: Error saving lesson plan:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  }
+
+  /**
+   * Отримати план уроку з бази даних
+   * @param lessonId - ID уроку
+   */
+  async getLessonPlan(lessonId: string): Promise<ParsedLessonPlan | null> {
+    try {
+      const { data, error } = await this.supabase
+        .from('lessons')
+        .select('lesson_plan, plan_metadata')
+        .eq('id', lessonId)
+        .single();
+
+      if (error) {
+        console.error('❌ LESSON SERVICE: Error getting lesson plan:', error);
+        return null;
+      }
+
+      if (!data?.lesson_plan) {
+        return null;
+      }
+      return data.lesson_plan as ParsedLessonPlan;
+      
+    } catch (error) {
+      console.error('❌ LESSON SERVICE: Error getting lesson plan:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Оновити слайди з даними з плану
+   * @param lessonId - ID уроку
+   * @param planSlides - слайди з плану
+   */
+  private async updateSlidesWithPlanData(
+    lessonId: string, 
+    planSlides: ParsedSlide[]
+  ): Promise<void> {
+    try {
+      // Отримуємо існуючі слайди
+      const { data: existingSlides, error } = await this.supabase
+        .from('slides')
+        .select('id, slide_number')
+        .eq('lesson_id', lessonId)
+        .order('slide_number');
+
+      if (error) {
+        console.error('❌ LESSON SERVICE: Error getting existing slides:', error);
+        throw error;
+      }
+
+      // Оновлюємо кожен слайд з відповідними даними з плану
+      const updates = existingSlides?.map(slide => {
+        const planSlide = planSlides.find(ps => ps.slideNumber === slide.slide_number);
+        
+        return {
+          id: slide.id,
+          plan_data: planSlide ? {
+            goal: planSlide.goal,
+            content: planSlide.content,
+            slideNumber: planSlide.slideNumber,
+            type: planSlide.type,
+            structure: (planSlide as any).structure || {}
+          } : {}
+        };
+      }) || [];
+
+      // Batch update слайдів
+      for (const update of updates) {
+        const { error: updateError } = await this.supabase
+          .from('slides')
+          .update({ 
+            plan_data: update.plan_data,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', update.id);
+
+        if (updateError) {
+          console.error('❌ LESSON SERVICE: Error updating slide', update.id, updateError);
+          // Continue with other slides even if one fails
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ LESSON SERVICE: Error updating slides with plan data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Отримати дані плану для конкретного слайду
+   * @param slideId - ID слайду
+   */
+  async getSlidePlanData(slideId: string): Promise<any> {
+    try {
+      const { data, error } = await this.supabase
+        .from('slides')
+        .select('plan_data')
+        .eq('id', slideId)
+        .single();
+
+      if (error) {
+        console.error('❌ LESSON SERVICE: Error getting slide plan data:', error);
+        return null;
+      }
+      return data?.plan_data || null;
+      
+    } catch (error) {
+      console.error('❌ LESSON SERVICE: Error getting slide plan data:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Перевірити, чи має урок збережений план
+   * @param lessonId - ID уроку
+   */
+  async hasLessonPlan(lessonId: string): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase
+        .from('lessons')
+        .select('lesson_plan')
+        .eq('id', lessonId)
+        .single();
+
+      if (error) return false;
+      
+      return !!(data?.lesson_plan && Object.keys(data.lesson_plan).length > 0);
+      
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Перевірити, чи може користувач створити урок
+   * @param userId - ID користувача
+   */
+  async canCreateLesson(userId: string): Promise<boolean> {
+    try {
+      // Простий метод - завжди дозволяємо створення
+      // В майбутньому тут можна додати логіку лімітів підписки
+      
+      return true;
+    } catch (error) {
+      console.error('❌ LESSON SERVICE: Error in canCreateLesson:', error);
+      return false;
+    }
+  }
 }
 
 // Експортуємо singleton instance
-export const lessonService = new LessonService() 
+export const lessonService = new LessonService()

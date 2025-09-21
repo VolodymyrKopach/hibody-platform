@@ -11,6 +11,7 @@ export interface CreateLessonRequest {
   duration: number;
   thumbnail_url?: string;
   thumbnail_data?: string; // Base64 thumbnail data to be uploaded by server
+  lessonPlan?: string | object | null; // Raw lesson plan data for database storage
   initialSlides?: Partial<LessonSlide>[];
   slides?: Array<{
     title: string;

@@ -107,6 +107,7 @@ const SimplifiedSaveLessonDialog: React.FC<SimplifiedSaveLessonDialogProps> = ({
           targetAge: dialogData.ageGroup,
           duration: lessonData.duration || 45,
           thumbnail_data: dialogData.previewUrl,
+          lessonPlan: lessonData.lessonPlan || null, // Include lesson plan for database storage
           slides: lessonData.slides.map(slide => ({
             title: slide.title,
             description: slide.content || slide.description || '',

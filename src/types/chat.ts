@@ -79,6 +79,9 @@ export interface LessonSaveData {
   slides: SimpleSlide[];
   slidePreviews: Record<string, string>; // slideId -> base64 preview
   
+  // План уроку (для збереження в БД)
+  lessonPlan?: string | object | null; // Raw lesson plan data
+  
   // Опціональні дані
   selectedPreviewId?: string | null;
   previewUrl?: string | null;

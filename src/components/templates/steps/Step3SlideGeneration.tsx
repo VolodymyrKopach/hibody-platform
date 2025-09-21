@@ -195,6 +195,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
       duration: currentLesson.duration || 45,
       slides: slides,
       slidePreviews: slidePreviews,
+      lessonPlan: generatedPlan?.plan || null, // Include lesson plan for database storage
       selectedPreviewId: null,
       previewUrl: null
     };
@@ -721,9 +722,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
           open={slideDialogOpen}
           currentLesson={currentLesson}
           currentSlideIndex={slideDialogIndex}
-          lessonPlan={generatedPlan?.plan 
-            ? JSON.stringify(generatedPlan.plan, null, 2)
-            : ''}
+          lessonPlan={generatedPlan?.plan || null}
           onClose={() => setSlideDialogOpen(false)}
           onNextSlide={() => {
             const nextIndex = slideDialogIndex < slides.length - 1 ? slideDialogIndex + 1 : 0;
@@ -920,9 +919,7 @@ const Step3SlideGeneration: React.FC<Step3SlideGenerationProps> = ({
         open={slideDialogOpen}
         currentLesson={currentLesson}
         currentSlideIndex={slideDialogIndex}
-        lessonPlan={generatedPlan?.plan 
-          ? JSON.stringify(generatedPlan.plan, null, 2)
-          : ''}
+        lessonPlan={generatedPlan?.plan || null}
         onClose={() => setSlideDialogOpen(false)}
         onNextSlide={() => {
           const nextIndex = slideDialogIndex < slides.length - 1 ? slideDialogIndex + 1 : 0;

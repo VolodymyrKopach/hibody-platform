@@ -115,6 +115,8 @@ export interface LessonRow {
   completion_rate: number
   is_public: boolean
   metadata: Record<string, any>
+  lesson_plan: Record<string, any>
+  plan_metadata: Record<string, any>
   created_at: string
   updated_at: string
 }
@@ -132,6 +134,8 @@ export interface LessonInsert {
   difficulty?: 'easy' | 'medium' | 'hard'
   is_public?: boolean
   metadata?: Record<string, any>
+  lesson_plan?: Record<string, any>
+  plan_metadata?: Record<string, any>
 }
 
 export interface LessonUpdate {
@@ -148,6 +152,8 @@ export interface LessonUpdate {
   completion_rate?: number
   is_public?: boolean
   metadata?: Record<string, any>
+  lesson_plan?: Record<string, any>
+  plan_metadata?: Record<string, any>
 }
 
 // =============================================
@@ -169,6 +175,7 @@ export interface SlideRow {
   js_content: string | null
   dependencies: any[]
   metadata: Record<string, any>
+  plan_data: Record<string, any>
   processing_status: 'processing' | 'ready' | 'error'
   processing_error: string | null
   created_at: string
@@ -190,6 +197,7 @@ export interface SlideInsert {
   js_content?: string | null
   dependencies?: any[]
   metadata?: Record<string, any>
+  plan_data?: Record<string, any>
   processing_status?: 'processing' | 'ready' | 'error'
   processing_error?: string | null
 }
@@ -208,10 +216,10 @@ export interface SlideUpdate {
   js_content?: string | null
   dependencies?: any[]
   metadata?: Record<string, any>
+  plan_data?: Record<string, any>
   processing_status?: 'processing' | 'ready' | 'error'
   processing_error?: string | null
 }
-
 // =============================================
 // SLIDE IMAGES
 // =============================================
@@ -445,3 +453,70 @@ export interface UserStats {
   totalViews: number
   averageRating: number
 } 
+// =============================================
+// LESSON PLAN STORAGE TYPES
+// =============================================
+
+// Lesson plan metadata for quick access (stored in lessons.plan_metadata)
+export interface LessonPlanMetadata {
+  targetAudience?: string;
+  duration?: string;
+  goal?: string;
+  [key: string]: any; // Allow additional metadata fields
+}
+
+// Slide plan data structure (stored in slides.plan_data)
+export interface SlidePlanData {
+  goal?: string;
+  content?: string;
+  slideNumber?: number;
+  type?: string;
+  structure?: {
+    greeting?: {
+      text: string;
+      action?: string;
+      tone?: string;
+    };
+    mainContent?: {
+      text: string;
+      keyPoints?: string[];
+      visualElements?: string[];
+    };
+    interactions?: Array<{
+      type: 'touch' | 'sound' | 'movement' | 'verbal' | 'visual';
+      description: string;
+      instruction: string;
+      feedback?: string;
+    }>;
+    activities?: Array<{
+      name: string;
+      description: string;
+      duration?: string;
+      materials?: string[];
+      expectedOutcome?: string;
+    }>;
+    teacherGuidance?: {
+      preparation?: string[];
+      delivery?: string[];
+      adaptations?: string[];
+      troubleshooting?: string[];
+    };
+  };
+  [key: string]: any; // Allow additional plan data fields
+}
+
+// Extended lesson row with lesson plan fields
+export interface LessonRowWithPlan extends LessonRow {
+  lesson_plan: import('./templates').ParsedLessonPlan | Record<string, any>;
+  plan_metadata: LessonPlanMetadata;
+}
+
+// Extended slide row with plan data
+export interface SlideRowWithPlan extends SlideRow {
+  plan_data: SlidePlanData;
+}
+
+// Utility type for lessons with slides and plan data
+export interface LessonWithSlidesAndPlan extends LessonRowWithPlan {
+  slides: SlideRowWithPlan[];
+}
