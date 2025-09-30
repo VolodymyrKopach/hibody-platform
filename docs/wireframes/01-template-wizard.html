@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Wizard - Worksheet Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .form-container {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 32px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #374151;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .option-button {
+            flex: 1;
+            min-width: 120px;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .option-button:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .option-button.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        
+        .text-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .generate-button {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+        
+        .generate-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 8px;
+        }
+        
+        .step {
+            width: 40px;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+        }
+        
+        .step.active {
+            background: #667eea;
+        }
+        
+        .wireframe-note {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fef3c7;
+            border: 2px dashed #f59e0b;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-note">
+        🎨 WIREFRAME<br>
+        Step 1: Template Wizard<br>
+        Parameter Selection
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Create Your Worksheet</h1>
+            <p>Tell us about your lesson and we'll generate the perfect worksheet</p>
+        </div>
+        
+        <div class="form-container">
+            <div class="step-indicator">
+                <div class="step active"></div>
+                <div class="step"></div>
+                <div class="step"></div>
+                <div class="step"></div>
+            </div>
+            
+            <div class="form-group">
+                <label>Age Group</label>
+                <div class="button-group">
+                    <div class="option-button selected">
+                        <div style="font-size: 24px; margin-bottom: 4px;">👶</div>
+                        Kids<br><small>6-12 years</small>
+                    </div>
+                    <div class="option-button">
+                        <div style="font-size: 24px; margin-bottom: 4px;">🧑‍🎓</div>
+                        Teens<br><small>13-17 years</small>
+                    </div>
+                    <div class="option-button">
+                        <div style="font-size: 24px; margin-bottom: 4px;">👨‍💼</div>
+                        Adults<br><small>18+ years</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>English Level</label>
+                <div class="button-group">
+                    <div class="option-button">
+                        <div style="font-size: 20px; margin-bottom: 4px;">🌱</div>
+                        Beginner<br><small>A1-A2</small>
+                    </div>
+                    <div class="option-button selected">
+                        <div style="font-size: 20px; margin-bottom: 4px;">🌿</div>
+                        Intermediate<br><small>B1-B2</small>
+                    </div>
+                    <div class="option-button">
+                        <div style="font-size: 20px; margin-bottom: 4px;">🌳</div>
+                        Advanced<br><small>C1-C2</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Focus Area</label>
+                <div class="button-group">
+                    <div class="option-button selected">
+                        <div style="font-size: 20px; margin-bottom: 4px;">📝</div>
+                        Grammar
+                    </div>
+                    <div class="option-button">
+                        <div style="font-size: 20px; margin-bottom: 4px;">📚</div>
+                        Vocabulary
+                    </div>
+                    <div class="option-button">
+                        <div style="font-size: 20px; margin-bottom: 4px;">📖</div>
+                        Reading
+                    </div>
+                    <div class="option-button">
+                        <div style="font-size: 20px; margin-bottom: 4px;">🗣️</div>
+                        Speaking
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Worksheet Type</label>
+                <div class="button-group">
+                    <div class="option-button selected">
+                        <div style="font-size: 20px; margin-bottom: 4px;">📋</div>
+                        Practice Sheet
+                    </div>
+                    <div class="option-button">
+                        <div style="font-size: 20px; margin-bottom: 4px;">🎯</div>
+                        Exercise Set
+                    </div>
+                    <div class="option-button">
+                        <div style="font-size: 20px; margin-bottom: 4px;">❓</div>
+                        Quiz
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Topic (Optional)</label>
+                <input type="text" class="text-input" placeholder="e.g., Present Simple Tense, Family Vocabulary, Daily Routines...">
+            </div>
+            
+            <div class="form-group">
+                <label>Components to Include</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                    <label style="display: flex; align-items: center; font-size: 14px; font-weight: normal;">
+                        <input type="checkbox" checked style="margin-right: 8px;">
+                        📝 Instructions Box
+                    </label>
+                    <label style="display: flex; align-items: center; font-size: 14px; font-weight: normal;">
+                        <input type="checkbox" checked style="margin-right: 8px;">
+                        📋 Fill-in-the-Blank
+                    </label>
+                    <label style="display: flex; align-items: center; font-size: 14px; font-weight: normal;">
+                        <input type="checkbox" checked style="margin-right: 8px;">
+                        ❓ Multiple Choice
+                    </label>
+                    <label style="display: flex; align-items: center; font-size: 14px; font-weight: normal;">
+                        <input type="checkbox" style="margin-right: 8px;">
+                        ⚠️ Warning Box
+                    </label>
+                    <label style="display: flex; align-items: center; font-size: 14px; font-weight: normal;">
+                        <input type="checkbox" style="margin-right: 8px;">
+                        💡 Tip Box
+                    </label>
+                    <label style="display: flex; align-items: center; font-size: 14px; font-weight: normal;">
+                        <input type="checkbox" checked style="margin-right: 8px;">
+                        🖼️ Images
+                    </label>
+                </div>
+            </div>
+            
+            <button class="generate-button">
+                🤖 Generate My Worksheet
+            </button>
+        </div>
+    </div>
+</body>
+</html>

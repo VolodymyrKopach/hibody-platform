@@ -9,13 +9,15 @@
     "home": "Головна",
     "aiChat": "Assistant Чат",
     "myMaterials": "Мої матеріали",
-    "createLesson": "Створити урок"
+    "createLesson": "Створити урок",
+    "worksheetGenerator": "Генератор завдань"
   },
   "pages": {
     "chatTitle": "Чат з асистентом",
     "materialsTitle": "Мої матеріали",
     "accountTitle": "Акаунт",
-    "createLessonTitle": "Створити урок"
+    "createLessonTitle": "Створити урок",
+    "worksheetGeneratorTitle": "Генератор завдань"
   },
   "buttons": {
     "save": "Зберегти",

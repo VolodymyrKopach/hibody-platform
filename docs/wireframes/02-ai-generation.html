@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Generation - Worksheet Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 60px 40px;
+            text-align: center;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            gap: 8px;
+        }
+        
+        .step {
+            width: 40px;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+        }
+        
+        .step.active {
+            background: #667eea;
+        }
+        
+        .step.completed {
+            background: #10b981;
+        }
+        
+        .loading-animation {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 40px;
+            position: relative;
+        }
+        
+        .spinner {
+            width: 100%;
+            height: 100%;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .ai-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        .status-text {
+            font-size: 24px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 16px;
+        }
+        
+        .progress-text {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 40px;
+        }
+        
+        .progress-steps {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .progress-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
+        .progress-step:last-child {
+            margin-bottom: 0;
+        }
+        
+        .step-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .step-icon.completed {
+            background: #10b981;
+            color: white;
+        }
+        
+        .step-icon.active {
+            background: #667eea;
+            color: white;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .step-icon.pending {
+            background: #e5e7eb;
+            color: #9ca3af;
+        }
+        
+        .cancel-button {
+            background: none;
+            border: 2px solid #e5e7eb;
+            color: #6b7280;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .cancel-button:hover {
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+        
+        .wireframe-note {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fef3c7;
+            border: 2px dashed #f59e0b;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            max-width: 200px;
+        }
+        
+        .estimated-time {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 14px;
+            color: #1d4ed8;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-note">
+        🎨 WIREFRAME<br>
+        Step 2: AI Generation<br>
+        Loading Screen
+    </div>
+
+    <div class="container">
+        <div class="step-indicator">
+            <div class="step completed"></div>
+            <div class="step active"></div>
+            <div class="step"></div>
+            <div class="step"></div>
+        </div>
+        
+        <div class="loading-animation">
+            <div class="spinner"></div>
+            <div class="ai-icon">🤖</div>
+        </div>
+        
+        <div class="status-text">Creating Your Worksheet</div>
+        <div class="progress-text">Our AI is crafting the perfect learning material for your students...</div>
+        
+        <div class="estimated-time">
+            ⏱️ Estimated time: 30-45 seconds
+        </div>
+        
+        <div class="progress-steps">
+            <div class="progress-step">
+                <div class="step-icon completed">✓</div>
+                <span>Analyzing your requirements</span>
+            </div>
+            <div class="progress-step">
+                <div class="step-icon completed">✓</div>
+                <span>Selecting appropriate template</span>
+            </div>
+            <div class="progress-step">
+                <div class="step-icon active">⚡</div>
+                <span>Generating educational content</span>
+            </div>
+            <div class="progress-step">
+                <div class="step-icon pending">○</div>
+                <span>Creating visual layout</span>
+            </div>
+            <div class="progress-step">
+                <div class="step-icon pending">○</div>
+                <span>Adding images and styling</span>
+            </div>
+            <div class="progress-step">
+                <div class="step-icon pending">○</div>
+                <span>Final quality check</span>
+            </div>
+        </div>
+        
+        <button class="cancel-button">Cancel Generation</button>
+    </div>
+</body>
+</html>

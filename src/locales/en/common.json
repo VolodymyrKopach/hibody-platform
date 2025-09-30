@@ -8,13 +8,15 @@
     "slides": "Slides",
     "aiChat": "Assistant Chat",
     "myMaterials": "My Materials",
-    "createLesson": "Create Lesson"
+    "createLesson": "Create Lesson",
+    "worksheetGenerator": "Worksheet Generator"
   },
   "pages": {
     "chatTitle": "Assistant Chat",
     "materialsTitle": "My Materials",
     "accountTitle": "Account",
-    "createLessonTitle": "Create Lesson"
+    "createLessonTitle": "Create Lesson",
+    "worksheetGeneratorTitle": "Worksheet Generator"
   },
   "buttons": {
     "save": "Save",

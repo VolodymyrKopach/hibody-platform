@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export & Download - Worksheet Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .step-indicator {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .step {
+            width: 40px;
+            height: 4px;
+            background: #10b981;
+            border-radius: 2px;
+        }
+        
+        .success-message {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #059669;
+            font-weight: 600;
+        }
+        
+        .success-icon {
+            width: 32px;
+            height: 32px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+        }
+        
+        .preview-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .preview-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .zoom-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .zoom-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .zoom-btn:hover {
+            background: #f9fafb;
+        }
+        
+        .worksheet-preview {
+            width: 100%;
+            max-width: 595px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 40px;
+            transform: scale(0.8);
+            transform-origin: top center;
+        }
+        
+        .export-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            height: fit-content;
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 20px;
+        }
+        
+        .export-section {
+            margin-bottom: 32px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+        
+        .export-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .export-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: #374151;
+        }
+        
+        .export-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .export-btn.primary {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+        
+        .export-btn.primary:hover {
+            background: #5a67d8;
+        }
+        
+        .export-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .export-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .pdf-icon {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .png-icon {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .export-details h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .export-details p {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .download-arrow {
+            font-size: 16px;
+            color: #9ca3af;
+        }
+        
+        .export-btn.primary .download-arrow {
+            color: white;
+        }
+        
+        .save-options {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .save-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .save-option:last-child {
+            margin-bottom: 0;
+        }
+        
+        .save-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .save-option label {
+            font-size: 14px;
+            color: #374151;
+            cursor: pointer;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-align: center;
+            text-decoration: none;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #059669;
+        }
+        
+        .wireframe-note {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fef3c7;
+            border: 2px dashed #f59e0b;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            max-width: 200px;
+            z-index: 1000;
+        }
+        
+        .stats-card {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .stats-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .stats-label {
+            color: #6b7280;
+        }
+        
+        .stats-value {
+            font-weight: 600;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-note">
+        🎨 WIREFRAME<br>
+        Step 4: Export & Download<br>
+        Final Step
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="step-indicator">
+                <div class="step"></div>
+                <div class="step"></div>
+                <div class="step"></div>
+                <div class="step"></div>
+            </div>
+            
+            <div class="success-message">
+                <div class="success-icon">✓</div>
+                <span>Your worksheet is ready!</span>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="preview-section">
+                <div class="preview-header">
+                    <div class="preview-title">Final Preview</div>
+                    <div class="zoom-controls">
+                        <button class="zoom-btn">−</button>
+                        <span style="font-size: 14px; color: #6b7280;">80%</span>
+                        <button class="zoom-btn">+</button>
+                    </div>
+                </div>
+                
+                <div class="worksheet-preview">
+                    <div style="font-size: 28px; font-weight: bold; color: #2563eb; text-align: center; margin-bottom: 8px;">
+                        Present Simple Tense Practice
+                    </div>
+                    
+                    <div style="font-size: 16px; color: #6b7280; text-align: center; margin-bottom: 32px;">
+                        Complete the exercises below to practice using the present simple tense
+                    </div>
+                    
+                    <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 16px; margin-bottom: 32px; border-radius: 0 4px 4px 0;">
+                        <strong>Instructions:</strong> Fill in the blanks with the correct form of the verb in present simple tense.
+                    </div>
+                    
+                    <div style="margin-bottom: 32px;">
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #374151;">
+                            Exercise 1: Fill in the Blanks
+                        </div>
+                        
+                        <div style="margin-bottom: 12px;">1. She _______ (go) to school every day.</div>
+                        <div style="margin-bottom: 12px;">2. They _______ (play) football on Sundays.</div>
+                        <div style="margin-bottom: 12px;">3. He _______ (watch) TV in the evening.</div>
+                        <div style="margin-bottom: 12px;">4. We _______ (study) English twice a week.</div>
+                        <div style="margin-bottom: 12px;">5. The cat _______ (sleep) on the sofa.</div>
+                    </div>
+                    
+                    <div style="width: 120px; height: 80px; background: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 16px auto; font-size: 12px; color: #6b7280;">
+                        📚 Study Image
+                    </div>
+                </div>
+            </div>
+            
+            <div class="export-panel">
+                <div class="panel-title">Download & Save</div>
+                
+                <div class="stats-card">
+                    <div class="stats-row">
+                        <span class="stats-label">Created:</span>
+                        <span class="stats-value">Just now</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Format:</span>
+                        <span class="stats-value">A4 Portrait</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Elements:</span>
+                        <span class="stats-value">12 objects</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Resolution:</span>
+                        <span class="stats-value">300 DPI</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Estimated time:</span>
+                        <span class="stats-value">20-25 minutes</span>
+                    </div>
+                </div>
+                
+                <div class="export-section">
+                    <div class="section-title">Download Options</div>
+                    <div class="export-buttons">
+                        <a href="#" class="export-btn primary">
+                            <div class="export-info">
+                                <div class="export-icon pdf-icon">📄</div>
+                                <div class="export-details">
+                                    <h4>Download PDF</h4>
+                                    <p>Print ready • 300 DPI • 1.2MB</p>
+                                </div>
+                            </div>
+                            <div class="download-arrow">↓</div>
+                        </a>
+                        
+                        <a href="#" class="export-btn">
+                            <div class="export-info">
+                                <div class="export-icon png-icon">🖼️</div>
+                                <div class="export-details">
+                                    <h4>Download PNG</h4>
+                                    <p>High quality • 4x resolution • 2.8MB</p>
+                                </div>
+                            </div>
+                            <div class="download-arrow">↓</div>
+                        </a>
+                        
+                        <a href="#" class="export-btn">
+                            <div class="export-info">
+                                <div class="export-icon" style="background: #e0e7ff; color: #3730a3;">📐</div>
+                                <div class="export-details">
+                                    <h4>Download SVG</h4>
+                                    <p>Vector format • Scalable • 245KB</p>
+                                </div>
+                            </div>
+                            <div class="download-arrow">↓</div>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="export-section">
+                    <div class="section-title">Save Options</div>
+                    <div class="save-options">
+                        <div class="save-option">
+                            <input type="checkbox" id="save-account" checked>
+                            <label for="save-account">Save to my account</label>
+                        </div>
+                        <div class="save-option">
+                            <input type="checkbox" id="save-template">
+                            <label for="save-template">Save as template</label>
+                        </div>
+                        <div class="save-option">
+                            <input type="checkbox" id="email-copy">
+                            <label for="email-copy">Email me a copy</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary">✨ Create Another Worksheet</button>
+                    <button class="btn btn-secondary">📝 Edit This Worksheet</button>
+                    <button class="btn btn-secondary">📤 Share with Colleagues</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

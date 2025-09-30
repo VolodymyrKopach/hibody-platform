@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worksheet Editor - Unified Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .logo {
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .breadcrumb {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .header-center {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .header-right {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-icon {
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        
+        .main-container {
+            display: flex;
+            height: calc(100vh - 61px);
+        }
+        
+        .left-sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .sidebar-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            color: #6b7280;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .sidebar-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .sidebar-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        
+        .tool-section {
+            margin-bottom: 24px;
+        }
+        
+        .tool-section h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #374151;
+        }
+        
+        .tool-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .tool-item {
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+        
+        .tool-item:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .tool-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f9fafb;
+        }
+        
+        .canvas-toolbar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .zoom-value {
+            font-size: 13px;
+            color: #6b7280;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .canvas-wrapper {
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .worksheet-canvas {
+            width: 595px;
+            height: 842px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(to right, #667eea 1px, transparent 1px),
+                linear-gradient(to bottom, #667eea 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .canvas-element {
+            position: absolute;
+            cursor: move;
+            transition: all 0.1s;
+        }
+        
+        .canvas-element.selected {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+        
+        .canvas-element.selected::after {
+            content: '';
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: nw-resize;
+        }
+        
+        .canvas-element.selected::before {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            right: -6px;
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border: 1px solid white;
+            border-radius: 1px;
+            cursor: se-resize;
+        }
+        
+        .title-element {
+            top: 40px;
+            left: 50px;
+            width: 495px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            text-align: center;
+        }
+        
+        .subtitle-element {
+            top: 80px;
+            left: 50px;
+            width: 495px;
+            font-size: 16px;
+            color: #6b7280;
+            text-align: center;
+        }
+        
+        .instructions-element {
+            top: 120px;
+            left: 50px;
+            width: 495px;
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            padding: 16px;
+            border-radius: 0 4px 4px 0;
+            font-size: 14px;
+        }
+        
+        .exercise-element {
+            top: 200px;
+            left: 50px;
+            width: 495px;
+            font-size: 14px;
+        }
+        
+        .image-element {
+            top: 350px;
+            left: 250px;
+            width: 120px;
+            height: 80px;
+            background: #f3f4f6;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .right-sidebar {
+            width: 300px;
+            background: white;
+            border-left: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .properties-header {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .properties-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        
+        .property-group {
+            margin-bottom: 20px;
+        }
+        
+        .property-group h5 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .property-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .property-label {
+            flex: 1;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        
+        .property-input {
+            width: 80px;
+            padding: 4px 8px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .color-picker {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .layers-panel {
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            padding: 12px;
+        }
+        
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 4px;
+            background: white;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .layer-item.selected {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .layer-icon {
+            margin-right: 8px;
+            font-size: 14px;
+        }
+        
+        .layer-name {
+            flex: 1;
+        }
+        
+        .layer-controls {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .layer-control {
+            width: 16px;
+            height: 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 10px;
+            color: #6b7280;
+        }
+        
+        .wireframe-note {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fef3c7;
+            border: 2px dashed #f59e0b;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            max-width: 200px;
+            z-index: 1000;
+        }
+        
+        .smart-guides {
+            position: absolute;
+            pointer-events: none;
+        }
+        
+        .guide-line {
+            position: absolute;
+            background: #667eea;
+            opacity: 0.8;
+        }
+        
+        .guide-horizontal {
+            height: 1px;
+            left: 0;
+            right: 0;
+        }
+        
+        .guide-vertical {
+            width: 1px;
+            top: 0;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-note">
+        🎨 WIREFRAME<br>
+        Unified Editor<br>
+        Simple ↔ Advanced Mode
+    </div>
+
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">WorksheetGen</div>
+            <div class="breadcrumb">/ Grammar Worksheet / Advanced Editor</div>
+        </div>
+        
+        <div class="header-center">
+            <button class="btn btn-icon btn-secondary" title="Undo">↶</button>
+            <button class="btn btn-icon btn-secondary" title="Redo">↷</button>
+            <button class="btn btn-icon btn-secondary" title="Copy">📋</button>
+            <button class="btn btn-icon btn-secondary" title="Paste">📄</button>
+            <button class="btn btn-icon btn-secondary" title="Delete">🗑️</button>
+        </div>
+        
+        <div class="header-right">
+            <button class="btn btn-secondary">🔄 Simple Mode</button>
+            <button class="btn btn-secondary">💾 Save</button>
+            <button class="btn btn-secondary">👁️ Preview</button>
+            <button class="btn btn-primary">📤 Export</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="left-sidebar">
+            <div class="sidebar-tabs">
+                <div class="sidebar-tab active">Elements</div>
+                <div class="sidebar-tab">Templates</div>
+                <div class="sidebar-tab">Assets</div>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="tool-section">
+                    <h4>Atomic Components</h4>
+                    <div class="tool-grid">
+                        <div class="tool-item">
+                            <div class="tool-icon">📝</div>
+                            <div>Title Block</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-icon">📄</div>
+                            <div>Body Text</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-icon">📋</div>
+                            <div>Instructions</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-icon">✏️</div>
+                            <div>Fill Blanks</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-icon">❓</div>
+                            <div>Multiple Choice</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-icon">🖼️</div>
+                            <div>Image</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-section">
+                    <h4>Info Components</h4>
+                    <div class="tool-grid">
+                        <div class="tool-item">
+                            <div class="tool-icon">⚠️</div>
+                            <div>Warning Box</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-icon">💡</div>
+                            <div>Tip Box</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-section">
+                    <h4>Phase 2 Components</h4>
+                    <div class="tool-grid">
+                        <div class="tool-item">
+                            <div class="tool-icon">❓</div>
+                            <div>True/False</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-icon">📚</div>
+                            <div>Word Bank</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-icon">📊</div>
+                            <div>Table</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-icon">💬</div>
+                            <div>Speech Bubble</div>
+                        </div>
+                        <div class="tool-item">
+                            <div class="tool-icon">📱</div>
+                            <div>QR Code</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-section">
+                    <h4>AI Tools</h4>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button class="btn btn-secondary" style="width: 100%;">🤖 Generate Text</button>
+                        <button class="btn btn-secondary" style="width: 100%;">🎨 Generate Image</button>
+                        <button class="btn btn-secondary" style="width: 100%;">✨ Improve Layout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="workspace">
+            <div class="canvas-toolbar">
+                <div class="zoom-controls">
+                    <button class="btn btn-icon btn-secondary">−</button>
+                    <div class="zoom-value">85%</div>
+                    <button class="btn btn-icon btn-secondary">+</button>
+                    <button class="btn btn-secondary">Fit</button>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary">📐 Grid</button>
+                    <button class="btn btn-secondary">🧲 Snap</button>
+                    <button class="btn btn-secondary">📏 Rulers</button>
+                </div>
+            </div>
+            
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <div class="worksheet-canvas">
+                        <div class="grid-overlay"></div>
+                        
+                        <!-- Smart Guides -->
+                        <div class="smart-guides">
+                            <div class="guide-line guide-horizontal" style="top: 68px;"></div>
+                            <div class="guide-line guide-vertical" style="left: 297px;"></div>
+                        </div>
+                        
+                        <!-- Canvas Elements -->
+                        <div class="canvas-element title-element selected">
+                            Present Simple Tense Practice
+                        </div>
+                        
+                        <div class="canvas-element subtitle-element">
+                            Complete the exercises below to practice using the present simple tense
+                        </div>
+                        
+                        <div class="canvas-element instructions-element" style="display: flex; align-items: flex-start;">
+                            <span style="font-size: 14px; margin-right: 8px; margin-top: 2px;">📋</span>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">Instructions</div>
+                                Fill in the blanks with the correct form of the verb in present simple tense. Remember to add 's' or 'es' for third person singular.
+                            </div>
+                        </div>
+                        
+                        <div class="canvas-element exercise-element">
+                            <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Exercise 1: Fill in the Blanks</div>
+                            <div style="margin-bottom: 8px;">1. She _______ (go) to school every day.</div>
+                            <div style="margin-bottom: 8px;">2. They _______ (play) football on Sundays.</div>
+                            <div style="margin-bottom: 8px;">3. He _______ (watch) TV in the evening.</div>
+                        </div>
+                        
+                        <div class="canvas-element image-element">
+                            🖼️ Image
+                        </div>
+                        
+                        <!-- Tip Box Component -->
+                        <div class="canvas-element" style="top: 450px; left: 50px; width: 495px; background: #f0f4ff; border-left: 4px solid #667eea; padding: 12px; border-radius: 0 4px 4px 0; font-size: 12px;">
+                            <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 14px; margin-right: 6px;">💡</span>
+                                <strong>Tip</strong>
+                            </div>
+                            Remember: add 's' or 'es' for third person singular (he, she, it)!
+                        </div>
+                        
+                        <!-- Word Bank Component (Phase 2) -->
+                        <div class="canvas-element" style="top: 530px; left: 50px; width: 495px; background: #ecfdf5; border-left: 4px solid #059669; padding: 12px; border-radius: 0 4px 4px 0; font-size: 12px;">
+                            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 14px; margin-right: 6px;">📚</span>
+                                <strong>Word Bank</strong>
+                            </div>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px;">go</span>
+                                <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px;">play</span>
+                                <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px;">watch</span>
+                                <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px;">study</span>
+                                <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px;">sleep</span>
+                            </div>
+                        </div>
+                        
+                        <!-- True/False Component (Phase 2) -->
+                        <div class="canvas-element" style="top: 620px; left: 50px; width: 495px; background: #f9fafb; border-left: 4px solid #6b7280; padding: 12px; border-radius: 0 4px 4px 0; font-size: 12px;">
+                            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 14px; margin-right: 6px;">❓</span>
+                                <strong>True or False</strong>
+                            </div>
+                            <div style="margin-bottom: 6px;">1. English is spoken in the UK. ○ True ○ False</div>
+                            <div>2. Present Simple uses 'ing' form. ○ True ○ False</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="right-sidebar">
+            <div class="properties-header">
+                Element Properties
+            </div>
+            
+            <div class="properties-content">
+                <div class="property-group">
+                    <h5>Position</h5>
+                    <div class="property-row">
+                        <span class="property-label">X:</span>
+                        <input type="number" class="property-input" value="50">
+                    </div>
+                    <div class="property-row">
+                        <span class="property-label">Y:</span>
+                        <input type="number" class="property-input" value="40">
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <h5>Size</h5>
+                    <div class="property-row">
+                        <span class="property-label">Width:</span>
+                        <input type="number" class="property-input" value="495">
+                    </div>
+                    <div class="property-row">
+                        <span class="property-label">Height:</span>
+                        <input type="number" class="property-input" value="32">
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <h5>Typography</h5>
+                    <div class="property-row">
+                        <span class="property-label">Font:</span>
+                        <select class="property-input" style="width: 120px;">
+                            <option>Inter</option>
+                            <option>Arial</option>
+                            <option>Times</option>
+                        </select>
+                    </div>
+                    <div class="property-row">
+                        <span class="property-label">Size:</span>
+                        <input type="number" class="property-input" value="28">
+                    </div>
+                    <div class="property-row">
+                        <span class="property-label">Color:</span>
+                        <div class="color-picker" style="background: #2563eb;"></div>
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <h5>Transform</h5>
+                    <div class="property-row">
+                        <span class="property-label">Rotation:</span>
+                        <input type="number" class="property-input" value="0">
+                    </div>
+                    <div class="property-row">
+                        <span class="property-label">Opacity:</span>
+                        <input type="range" style="width: 120px;" value="100">
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <h5>AI Actions</h5>
+                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;">🤖 Rewrite Text</button>
+                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;">🎨 Change Style</button>
+                    <button class="btn btn-secondary" style="width: 100%;">📏 Auto Align</button>
+                </div>
+            </div>
+            
+            <div class="layers-panel">
+                <h5 style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #374151;">Layers</h5>
+                
+                <div class="layer-item selected">
+                    <div class="layer-icon">📝</div>
+                    <div class="layer-name">Title Block</div>
+                    <div class="layer-controls">
+                        <button class="layer-control">👁️</button>
+                        <button class="layer-control">🔒</button>
+                    </div>
+                </div>
+                
+                <div class="layer-item">
+                    <div class="layer-icon">📄</div>
+                    <div class="layer-name">Body Text</div>
+                    <div class="layer-controls">
+                        <button class="layer-control">👁️</button>
+                        <button class="layer-control">🔓</button>
+                    </div>
+                </div>
+                
+                <div class="layer-item">
+                    <div class="layer-icon">📋</div>
+                    <div class="layer-name">Instructions Box</div>
+                    <div class="layer-controls">
+                        <button class="layer-control">👁️</button>
+                        <button class="layer-control">🔓</button>
+                    </div>
+                </div>
+                
+                <div class="layer-item">
+                    <div class="layer-icon">✏️</div>
+                    <div class="layer-name">Fill-in-the-Blank</div>
+                    <div class="layer-controls">
+                        <button class="layer-control">👁️</button>
+                        <button class="layer-control">🔓</button>
+                    </div>
+                </div>
+                
+                <div class="layer-item">
+                    <div class="layer-icon">🖼️</div>
+                    <div class="layer-name">Image Placeholder</div>
+                    <div class="layer-controls">
+                        <button class="layer-control">👁️</button>
+                        <button class="layer-control">🔓</button>
+                    </div>
+                </div>
+                
+                <div class="layer-item">
+                    <div class="layer-icon">💡</div>
+                    <div class="layer-name">Tip Box</div>
+                    <div class="layer-controls">
+                        <button class="layer-control">👁️</button>
+                        <button class="layer-control">🔓</button>
+                    </div>
+                </div>
+                
+                <div style="font-size: 10px; color: #6b7280; margin: 8px 0 4px 8px; text-transform: uppercase; letter-spacing: 0.5px;">Phase 2</div>
+                
+                <div class="layer-item">
+                    <div class="layer-icon">📚</div>
+                    <div class="layer-name">Word Bank</div>
+                    <div class="layer-controls">
+                        <button class="layer-control">👁️</button>
+                        <button class="layer-control">🔓</button>
+                    </div>
+                </div>
+                
+                <div class="layer-item">
+                    <div class="layer-icon">❓</div>
+                    <div class="layer-name">True/False</div>
+                    <div class="layer-controls">
+                        <button class="layer-control">👁️</button>
+                        <button class="layer-control">🔓</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worksheet Templates - Examples</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 18px;
+            color: #6b7280;
+        }
+        
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 32px;
+            margin-bottom: 40px;
+        }
+        
+        .template-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .template-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .template-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        
+        .template-description {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .template-preview {
+            padding: 20px;
+            background: #fafafa;
+            min-height: 500px;
+        }
+        
+        .worksheet {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transform: scale(0.85);
+            transform-origin: top center;
+        }
+        
+        .worksheet-title {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        
+        .worksheet-subtitle {
+            font-size: 12px;
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+        
+        .exercise-section {
+            margin-bottom: 20px;
+        }
+        
+        .exercise-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .exercise-item {
+            margin-bottom: 8px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .exercise-number {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            margin-right: 8px;
+            color: white;
+        }
+        
+        .image-placeholder {
+            width: 80px;
+            height: 50px;
+            border: 1px dashed #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 12px auto;
+            font-size: 10px;
+            color: #6b7280;
+        }
+        
+        .wireframe-note {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fef3c7;
+            border: 2px dashed #f59e0b;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            max-width: 200px;
+            z-index: 1000;
+        }
+        
+        /* Template-specific styles */
+        .grammar-theme {
+            color: #2563eb;
+        }
+        
+        .grammar-theme .instructions {
+            background: #eff6ff;
+            border-left: 3px solid #2563eb;
+        }
+        
+        .grammar-theme .exercise-number {
+            background: #2563eb;
+        }
+        
+        .vocabulary-theme {
+            color: #059669;
+        }
+        
+        .vocabulary-theme .instructions {
+            background: #ecfdf5;
+            border-left: 3px solid #059669;
+        }
+        
+        .vocabulary-theme .exercise-number {
+            background: #059669;
+        }
+        
+        .reading-theme {
+            color: #7c2d12;
+        }
+        
+        .reading-theme .instructions {
+            background: #fef7ed;
+            border-left: 3px solid #ea580c;
+        }
+        
+        .reading-theme .exercise-number {
+            background: #ea580c;
+        }
+        
+        .speaking-theme {
+            color: #7c2d12;
+        }
+        
+        .speaking-theme .instructions {
+            background: #fdf2f8;
+            border-left: 3px solid #ec4899;
+        }
+        
+        .speaking-theme .exercise-number {
+            background: #ec4899;
+        }
+        
+        .quiz-theme {
+            color: #7c2d12;
+        }
+        
+        .quiz-theme .instructions {
+            background: #f3f4f6;
+            border-left: 3px solid #6b7280;
+        }
+        
+        .quiz-theme .exercise-number {
+            background: #6b7280;
+        }
+        
+        .word-bank {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 12px;
+            font-size: 11px;
+        }
+        
+        .reading-text {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        
+        .conversation-box {
+            background: #f0f4ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+        
+        .answer-key {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 10px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-note">
+        🎨 WIREFRAME<br>
+        Sample Templates<br>
+        5 Different Types
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Worksheet Templates</h1>
+            <p>Examples of the 5 core worksheet types in our MVP</p>
+        </div>
+        
+        <div class="templates-grid">
+            <!-- Grammar Practice Template -->
+            <div class="template-card">
+                <div class="template-header">
+                    <div class="template-title">Grammar Practice Sheet</div>
+                    <div class="template-description">Focus on specific grammar rules with structured exercises</div>
+                </div>
+                <div class="template-preview">
+                    <div class="worksheet grammar-theme">
+                        <div class="worksheet-title">Present Simple Tense Practice</div>
+                        <div class="worksheet-subtitle">Complete the exercises below to master present simple</div>
+                        
+                        <div class="instructions" style="display: flex; align-items: flex-start;">
+                            <span style="font-size: 12px; margin-right: 6px;">📋</span>
+                            <div>
+                                <strong>Instructions:</strong> Fill in the blanks with the correct form of the verb in present simple tense.
+                            </div>
+                        </div>
+                        
+                        <div class="exercise-section">
+                            <div class="exercise-title">Exercise 1: Fill in the Blanks</div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">1</div>
+                                She _______ (go) to school every day.
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">2</div>
+                                They _______ (play) football on Sundays.
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">3</div>
+                                He _______ (watch) TV in the evening.
+                            </div>
+                        </div>
+                        
+                        <div class="image-placeholder">📚 Grammar</div>
+                        
+                        <div class="exercise-section">
+                            <div class="exercise-title">Exercise 2: Multiple Choice</div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">1</div>
+                                She _____ coffee. a) drink b) drinks c) drinking
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">2</div>
+                                They _____ in London. a) live b) lives c) living
+                            </div>
+                        </div>
+                        
+                        <div class="answer-key">
+                            <strong>Answer Key:</strong> Ex1: 1.goes 2.play 3.watches | Ex2: 1.b 2.a
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vocabulary Builder Template -->
+            <div class="template-card">
+                <div class="template-header">
+                    <div class="template-title">Vocabulary Builder</div>
+                    <div class="template-description">Learn and practice new words with visual aids</div>
+                </div>
+                <div class="template-preview">
+                    <div class="worksheet vocabulary-theme">
+                        <div class="worksheet-title">Family Members Vocabulary</div>
+                        <div class="worksheet-subtitle">Learn words to describe your family</div>
+                        
+                        <div class="instructions" style="display: flex; align-items: flex-start;">
+                            <span style="font-size: 12px; margin-right: 6px;">📋</span>
+                            <div>
+                                <strong>Instructions:</strong> Study the words below and complete the exercises.
+                            </div>
+                        </div>
+                        
+                        <div class="word-bank">
+                            <strong>Word Bank:</strong> mother, father, sister, brother, grandmother, grandfather, aunt, uncle, cousin
+                        </div>
+                        
+                        <div class="exercise-section">
+                            <div class="exercise-title">Exercise 1: Match Pictures to Words</div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">1</div>
+                                👩 _______ (your mom)
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">2</div>
+                                👨 _______ (your dad)
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">3</div>
+                                👧 _______ (your female sibling)
+                            </div>
+                        </div>
+                        
+                        <div class="image-placeholder">👨‍👩‍👧‍👦 Family</div>
+                        
+                        <div class="exercise-section">
+                            <div class="exercise-title">Exercise 2: Complete Sentences</div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">1</div>
+                                My _______ is very kind. (mom)
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">2</div>
+                                I have one _______ and two _______. 
+                            </div>
+                        </div>
+                        
+                        <div class="answer-key">
+                            <strong>Answer Key:</strong> Ex1: 1.mother 2.father 3.sister | Ex2: 1.mother 2.brother,sisters
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reading Comprehension Template -->
+            <div class="template-card">
+                <div class="template-header">
+                    <div class="template-title">Reading Comprehension</div>
+                    <div class="template-description">Practice reading skills with engaging texts</div>
+                </div>
+                <div class="template-preview">
+                    <div class="worksheet reading-theme">
+                        <div class="worksheet-title">A Day at the Beach</div>
+                        <div class="worksheet-subtitle">Read the text and answer the questions</div>
+                        
+                        <div class="instructions" style="display: flex; align-items: flex-start;">
+                            <span style="font-size: 12px; margin-right: 6px;">📋</span>
+                            <div>
+                                <strong>Instructions:</strong> Read the text carefully and answer the questions below.
+                            </div>
+                        </div>
+                        
+                        <div class="reading-text">
+                            <strong>A Day at the Beach</strong><br><br>
+                            Yesterday, Sarah and her family went to the beach. The weather was perfect - sunny and warm. Sarah built a big sandcastle with her brother Tom. Their parents sat under a colorful umbrella and read books. In the afternoon, they all went swimming in the cool blue water. Sarah collected beautiful seashells along the shore. It was the best day of her summer vacation!
+                        </div>
+                        
+                        <div class="exercise-section">
+                            <div class="exercise-title">Exercise 1: True or False</div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">1</div>
+                                Sarah went to the beach alone. T / F
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">2</div>
+                                The weather was rainy. T / F
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">3</div>
+                                Sarah built a sandcastle. T / F
+                            </div>
+                        </div>
+                        
+                        <div class="image-placeholder">🏖️ Beach</div>
+                        
+                        <div class="exercise-section">
+                            <div class="exercise-title">Exercise 2: Answer Questions</div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">1</div>
+                                Who did Sarah go to the beach with?
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">2</div>
+                                What did Sarah collect?
+                            </div>
+                        </div>
+                        
+                        <div class="answer-key">
+                            <strong>Answer Key:</strong> Ex1: 1.F 2.F 3.T | Ex2: 1.Her family 2.Seashells
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Speaking Activity Template -->
+            <div class="template-card">
+                <div class="template-header">
+                    <div class="template-title">Speaking Activity Sheet</div>
+                    <div class="template-description">Interactive speaking exercises and conversation practice</div>
+                </div>
+                <div class="template-preview">
+                    <div class="worksheet speaking-theme">
+                        <div class="worksheet-title">Introducing Yourself</div>
+                        <div class="worksheet-subtitle">Practice talking about yourself and meeting new people</div>
+                        
+                        <div class="instructions" style="display: flex; align-items: flex-start;">
+                            <span style="font-size: 12px; margin-right: 6px;">📋</span>
+                            <div>
+                                <strong>Instructions:</strong> Use these activities to practice speaking English with a partner.
+                            </div>
+                        </div>
+                        
+                        <div class="exercise-section">
+                            <div class="exercise-title">Warm-up Questions</div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">1</div>
+                                What's your name?
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">2</div>
+                                Where are you from?
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">3</div>
+                                What do you like to do?
+                            </div>
+                        </div>
+                        
+                        <!-- Tip Box Component -->
+                        <div class="conversation-box" style="background: #f0f4ff; border: 1px solid #bfdbfe; border-left: 3px solid #667eea;">
+                            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                                <span style="font-size: 10px; margin-right: 4px;">💡</span>
+                                <strong style="font-size: 10px;">Useful Phrases:</strong>
+                            </div>
+                            • "Nice to meet you!"<br>
+                            • "My name is..."<br>
+                            • "I'm from..."<br>
+                            • "I like to..."
+                        </div>
+                        
+                        <div class="image-placeholder">🤝 Meeting</div>
+                        
+                        <div class="exercise-section">
+                            <div class="exercise-title">Role Play Activity</div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">A</div>
+                                You are meeting someone new at school.
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">B</div>
+                                You are the new student. Introduce yourself.
+                            </div>
+                        </div>
+                        
+                        <div class="answer-key">
+                            <strong>Homework:</strong> Practice introducing yourself to 3 different people this week.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mixed Skills Quiz Template -->
+            <div class="template-card">
+                <div class="template-header">
+                    <div class="template-title">Mixed Skills Quiz</div>
+                    <div class="template-description">Comprehensive assessment covering multiple language skills</div>
+                </div>
+                <div class="template-preview">
+                    <div class="worksheet quiz-theme">
+                        <div class="worksheet-title">English Skills Assessment</div>
+                        <div class="worksheet-subtitle">Test your grammar, vocabulary, and reading skills</div>
+                        
+                        <div class="instructions" style="display: flex; align-items: flex-start;">
+                            <span style="font-size: 12px; margin-right: 6px;">📋</span>
+                            <div>
+                                <strong>Instructions:</strong> Complete all sections. You have 30 minutes. Good luck!
+                            </div>
+                        </div>
+                        
+                        <div class="exercise-section">
+                            <div class="exercise-title">Section A: Grammar (5 points)</div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">1</div>
+                                I _____ to school yesterday. (go/went/going)
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">2</div>
+                                She _____ three languages. (speak/speaks/speaking)
+                            </div>
+                        </div>
+                        
+                        <div class="exercise-section">
+                            <div class="exercise-title">Section B: Vocabulary (5 points)</div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">1</div>
+                                A place where you buy books: _______
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">2</div>
+                                The opposite of 'hot': _______
+                            </div>
+                        </div>
+                        
+                        <div class="image-placeholder">📝 Quiz</div>
+                        
+                        <div class="exercise-section">
+                            <div class="exercise-title">Section C: Reading (5 points)</div>
+                            <div style="font-size: 10px; margin-bottom: 8px;">
+                                "Tom loves pizza. He eats it every Friday."
+                            </div>
+                            <div class="exercise-item">
+                                <div class="exercise-number">1</div>
+                                When does Tom eat pizza? _______
+                            </div>
+                        </div>
+                        
+                        <div class="answer-key">
+                            <strong>Scoring:</strong> 13-15 points: Excellent | 10-12: Good | 7-9: Fair | Below 7: Needs practice
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

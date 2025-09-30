@@ -22,6 +22,7 @@ import {
   MessageSquare,
   FileText,
   BookOpen,
+  FileEdit,
   X
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -50,6 +51,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isCollapsed, onToggl
       label: t('navigation.createLesson'),
       icon: BookOpen,
       href: '/create-lesson'
+    },
+    {
+      label: t('navigation.worksheetGenerator'),
+      icon: FileEdit,
+      href: '/worksheet-editor'
     },
     {
       label: t('navigation.myMaterials'),
