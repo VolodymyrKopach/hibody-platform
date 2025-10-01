@@ -51,6 +51,7 @@ import {
   AlertTriangle,
   List,
   ListOrdered,
+  Table as TableIcon,
 } from 'lucide-react';
 
 interface TabPanelProps {
@@ -172,6 +173,13 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
     {
       name: 'Layout',
       items: [
+        { 
+          id: 'table', 
+          name: 'Table', 
+          icon: TableIcon, 
+          color: '#7C3AED',
+          description: 'Data table' 
+        },
         { 
           id: 'divider', 
           name: 'Divider', 

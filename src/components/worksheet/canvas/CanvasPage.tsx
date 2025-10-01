@@ -17,6 +17,7 @@ import ImagePlaceholder from './atomic/ImagePlaceholder';
 import Divider from './atomic/Divider';
 import BulletList from './atomic/BulletList';
 import NumberedList from './atomic/NumberedList';
+import Table from './atomic/Table';
 
 interface CanvasPageProps {
   pageId: string;
@@ -492,6 +493,20 @@ function renderElement(
           onFocus={() => onSelect(element.id)}
         />
       );
+    case 'table':
+      return (
+        <Table
+          headers={element.properties.headers || []}
+          rows={element.properties.rows || []}
+          hasHeaders={element.properties.hasHeaders}
+          borderStyle={element.properties.borderStyle}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
     default:
       return (
         <Box sx={{ p: 2, border: '2px dashed red', borderRadius: '8px' }}>
@@ -619,6 +634,17 @@ function getDefaultProperties(type: string) {
           { id: '3', text: 'Third step or point' },
         ],
         style: 'decimal',
+      };
+    case 'table':
+      return {
+        headers: ['Column 1', 'Column 2', 'Column 3'],
+        rows: [
+          ['Row 1, Cell 1', 'Row 1, Cell 2', 'Row 1, Cell 3'],
+          ['Row 2, Cell 1', 'Row 2, Cell 2', 'Row 2, Cell 3'],
+          ['Row 3, Cell 1', 'Row 3, Cell 2', 'Row 3, Cell 3'],
+        ],
+        hasHeaders: true,
+        borderStyle: 'all',
       };
     default:
       return {};

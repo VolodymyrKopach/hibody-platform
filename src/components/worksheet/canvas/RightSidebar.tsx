@@ -430,6 +430,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                elementData.type === 'divider' ? 'Divider' :
                elementData.type === 'bullet-list' ? 'Bullet List' :
                elementData.type === 'numbered-list' ? 'Numbered List' :
+               elementData.type === 'table' ? 'Table' :
                elementData.type === 'tip-box' ? 'Tip Box' :
                elementData.type === 'warning-box' ? 'Warning Box' :
                elementData.type === 'image-placeholder' ? 'Image' :
@@ -2382,6 +2383,218 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                     No items yet. Click "Add Item" to start.
                   </Typography>
                 )}
+              </Box>
+            </Stack>
+          ) : elementData.type === 'table' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Table Properties
+              </Typography>
+
+              {/* Table Structure */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Table Structure
+                </Typography>
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      fullWidth
+                      size="small"
+                      startIcon={<Plus size={14} />}
+                      onClick={() => {
+                        const currentRows = elementData.properties?.rows || [];
+                        const colCount = (elementData.properties?.headers || []).length;
+                        const newRow = Array(colCount).fill('New cell');
+                        onUpdate?.({ rows: [...currentRows, newRow] });
+                      }}
+                      variant="outlined"
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      Add Row
+                    </Button>
+                    <Button
+                      fullWidth
+                      size="small"
+                      startIcon={<Plus size={14} />}
+                      onClick={() => {
+                        const currentHeaders = elementData.properties?.headers || [];
+                        const currentRows = elementData.properties?.rows || [];
+                        const newColIndex = currentHeaders.length + 1;
+                        onUpdate?.({
+                          headers: [...currentHeaders, `Column ${newColIndex}`],
+                          rows: currentRows.map(row => [...row, 'New cell']),
+                        });
+                      }}
+                      variant="outlined"
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      Add Column
+                    </Button>
+                  </Stack>
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      fullWidth
+                      size="small"
+                      startIcon={<Trash2 size={14} />}
+                      onClick={() => {
+                        const currentRows = elementData.properties?.rows || [];
+                        if (currentRows.length > 1) {
+                          onUpdate?.({ rows: currentRows.slice(0, -1) });
+                        }
+                      }}
+                      disabled={(elementData.properties?.rows || []).length <= 1}
+                      variant="outlined"
+                      color="error"
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      Remove Row
+                    </Button>
+                    <Button
+                      fullWidth
+                      size="small"
+                      startIcon={<Trash2 size={14} />}
+                      onClick={() => {
+                        const currentHeaders = elementData.properties?.headers || [];
+                        const currentRows = elementData.properties?.rows || [];
+                        if (currentHeaders.length > 1) {
+                          onUpdate?.({
+                            headers: currentHeaders.slice(0, -1),
+                            rows: currentRows.map(row => row.slice(0, -1)),
+                          });
+                        }
+                      }}
+                      disabled={(elementData.properties?.headers || []).length <= 1}
+                      variant="outlined"
+                      color="error"
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      Remove Column
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Show Headers Toggle */}
+              <Box>
+                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                  <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                    Show Headers
+                  </Typography>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      onUpdate?.({ hasHeaders: !(elementData.properties?.hasHeaders ?? true) });
+                    }}
+                    variant={elementData.properties?.hasHeaders ?? true ? 'contained' : 'outlined'}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '0.75rem',
+                      minWidth: 60,
+                      borderRadius: '8px',
+                    }}
+                  >
+                    {elementData.properties?.hasHeaders ?? true ? 'ON' : 'OFF'}
+                  </Button>
+                </Stack>
+              </Box>
+
+              {/* Border Style */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Border Style
+                </Typography>
+                <Stack spacing={1}>
+                  {[
+                    { label: 'All Borders', value: 'all', desc: 'Full grid' },
+                    { label: 'Horizontal Only', value: 'horizontal', desc: 'Rows only' },
+                    { label: 'No Borders', value: 'none', desc: 'Clean look' },
+                  ].map((style) => {
+                    const isActive = (elementData.properties?.borderStyle || 'all') === style.value;
+                    return (
+                      <Box
+                        key={style.value}
+                        onClick={() => onUpdate?.({ borderStyle: style.value })}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#EFF6FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: '#2563EB',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                          <Box>
+                            <Typography
+                              sx={{
+                                fontSize: '13px',
+                                fontWeight: isActive ? 600 : 500,
+                                color: isActive ? '#2563EB' : '#374151',
+                              }}
+                            >
+                              {style.label}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontSize: '11px',
+                                color: isActive ? '#2563EB' : '#9CA3AF',
+                              }}
+                            >
+                              {style.desc}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Table Info */}
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: '8px',
+                  backgroundColor: '#F9FAFB',
+                  border: '1px solid #E5E7EB',
+                }}
+              >
+                <Stack spacing={0.5}>
+                  <Typography variant="caption" sx={{ fontSize: '11px', color: '#6B7280' }}>
+                    Dimensions
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '13px' }}>
+                    {(elementData.properties?.headers || []).length} columns × {(elementData.properties?.rows || []).length} rows
+                  </Typography>
+                  <Typography variant="caption" sx={{ fontSize: '10px', color: '#9CA3AF', mt: 0.5 }}>
+                    Double-click any cell to edit its content
+                  </Typography>
+                </Stack>
               </Box>
             </Stack>
           ) : (
