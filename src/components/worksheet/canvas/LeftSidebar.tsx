@@ -49,6 +49,8 @@ import {
   MessageSquareText,
   Minus,
   AlertTriangle,
+  List,
+  ListOrdered,
 } from 'lucide-react';
 
 interface TabPanelProps {
@@ -98,6 +100,20 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           icon: AlignLeft, 
           color: '#6366F1',
           description: 'Paragraph text' 
+        },
+        { 
+          id: 'bullet-list', 
+          name: 'Bullet List', 
+          icon: List, 
+          color: '#4F46E5',
+          description: 'Bulleted list' 
+        },
+        { 
+          id: 'numbered-list', 
+          name: 'Numbered List', 
+          icon: ListOrdered, 
+          color: '#5B21B6',
+          description: 'Numbered list' 
         },
         { 
           id: 'instructions-box', 

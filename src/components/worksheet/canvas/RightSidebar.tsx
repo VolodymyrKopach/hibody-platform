@@ -428,6 +428,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                elementData.type === 'true-false' ? 'True/False' :
                elementData.type === 'short-answer' ? 'Short Answer' :
                elementData.type === 'divider' ? 'Divider' :
+               elementData.type === 'bullet-list' ? 'Bullet List' :
+               elementData.type === 'numbered-list' ? 'Numbered List' :
                elementData.type === 'tip-box' ? 'Tip Box' :
                elementData.type === 'warning-box' ? 'Warning Box' :
                elementData.type === 'image-placeholder' ? 'Image' :
@@ -2054,6 +2056,332 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                     </Box>
                   ))}
                 </Stack>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'bullet-list' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Bullet List Properties
+              </Typography>
+
+              {/* List Style */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Bullet Style
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {[
+                    { label: 'Dot', value: 'dot', icon: '●' },
+                    { label: 'Circle', value: 'circle', icon: '○' },
+                    { label: 'Square', value: 'square', icon: '■' },
+                  ].map((style) => {
+                    const isActive = (elementData.properties?.style || 'dot') === style.value;
+                    return (
+                      <Box
+                        key={style.value}
+                        onClick={() => onUpdate?.({ style: style.value })}
+                        sx={{
+                          flex: 1,
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#EFF6FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          '&:hover': {
+                            borderColor: '#2563EB',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: '18px',
+                            color: isActive ? '#2563EB' : '#6B7280',
+                          }}
+                        >
+                          {style.icon}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: '11px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#2563EB' : '#6B7280',
+                          }}
+                        >
+                          {style.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* List Items */}
+              <Box>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                    List Items
+                  </Typography>
+                  <Button
+                    size="small"
+                    startIcon={<Plus size={12} />}
+                    onClick={() => {
+                      const currentItems = elementData.properties?.items || [];
+                      const newId = (Math.max(0, ...currentItems.map((item: any) => parseInt(item.id))) + 1).toString();
+                      onUpdate?.({
+                        items: [
+                          ...currentItems,
+                          { id: newId, text: 'New list item' },
+                        ],
+                      });
+                    }}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '0.75rem',
+                      px: 1,
+                      py: 0.5,
+                      minHeight: 0,
+                      borderRadius: '6px',
+                    }}
+                  >
+                    Add Item
+                  </Button>
+                </Stack>
+
+                <Stack spacing={1}>
+                  {(elementData.properties?.items || []).map((item: any, index: number) => (
+                    <Paper
+                      key={item.id}
+                      elevation={0}
+                      sx={{
+                        p: 1.5,
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        '&:hover': {
+                          borderColor: '#D1D5DB',
+                        },
+                      }}
+                    >
+                      <Stack spacing={1}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                          <Typography variant="caption" sx={{ fontWeight: 600, color: '#6B7280' }}>
+                            Item {index + 1}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const currentItems = elementData.properties?.items || [];
+                              onUpdate?.({
+                                items: currentItems.filter((_: any, i: number) => i !== index),
+                              });
+                            }}
+                            sx={{ p: 0.5 }}
+                          >
+                            <Trash2 size={14} />
+                          </IconButton>
+                        </Stack>
+                        <TextField
+                          fullWidth
+                          multiline
+                          rows={2}
+                          value={item.text}
+                          onChange={(e) => {
+                            const currentItems = [...(elementData.properties?.items || [])];
+                            currentItems[index] = { ...item, text: e.target.value };
+                            onUpdate?.({ items: currentItems });
+                          }}
+                          placeholder="Enter list item text..."
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: '8px',
+                              fontSize: '0.8125rem',
+                            },
+                          }}
+                        />
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+
+                {(elementData.properties?.items || []).length === 0 && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', textAlign: 'center', py: 2 }}
+                  >
+                    No items yet. Click "Add Item" to start.
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+          ) : elementData.type === 'numbered-list' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Numbered List Properties
+              </Typography>
+
+              {/* List Style */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Number Style
+                </Typography>
+                <Stack spacing={1}>
+                  {[
+                    { label: 'Numbers', value: 'decimal', example: '1, 2, 3' },
+                    { label: 'Lowercase Letters', value: 'lower-alpha', example: 'a, b, c' },
+                    { label: 'Uppercase Letters', value: 'upper-alpha', example: 'A, B, C' },
+                    { label: 'Lowercase Roman', value: 'lower-roman', example: 'i, ii, iii' },
+                    { label: 'Uppercase Roman', value: 'upper-roman', example: 'I, II, III' },
+                  ].map((style) => {
+                    const isActive = (elementData.properties?.style || 'decimal') === style.value;
+                    return (
+                      <Box
+                        key={style.value}
+                        onClick={() => onUpdate?.({ style: style.value })}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#EFF6FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: '#2563EB',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                          <Typography
+                            sx={{
+                              fontSize: '13px',
+                              fontWeight: isActive ? 600 : 500,
+                              color: isActive ? '#2563EB' : '#374151',
+                            }}
+                          >
+                            {style.label}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontSize: '11px',
+                              color: isActive ? '#2563EB' : '#9CA3AF',
+                              fontFamily: 'monospace',
+                            }}
+                          >
+                            {style.example}
+                          </Typography>
+                        </Stack>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* List Items */}
+              <Box>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                    List Items
+                  </Typography>
+                  <Button
+                    size="small"
+                    startIcon={<Plus size={12} />}
+                    onClick={() => {
+                      const currentItems = elementData.properties?.items || [];
+                      const newId = (Math.max(0, ...currentItems.map((item: any) => parseInt(item.id))) + 1).toString();
+                      onUpdate?.({
+                        items: [
+                          ...currentItems,
+                          { id: newId, text: 'New list item' },
+                        ],
+                      });
+                    }}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '0.75rem',
+                      px: 1,
+                      py: 0.5,
+                      minHeight: 0,
+                      borderRadius: '6px',
+                    }}
+                  >
+                    Add Item
+                  </Button>
+                </Stack>
+
+                <Stack spacing={1}>
+                  {(elementData.properties?.items || []).map((item: any, index: number) => (
+                    <Paper
+                      key={item.id}
+                      elevation={0}
+                      sx={{
+                        p: 1.5,
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        '&:hover': {
+                          borderColor: '#D1D5DB',
+                        },
+                      }}
+                    >
+                      <Stack spacing={1}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                          <Typography variant="caption" sx={{ fontWeight: 600, color: '#6B7280' }}>
+                            Item {index + 1}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const currentItems = elementData.properties?.items || [];
+                              onUpdate?.({
+                                items: currentItems.filter((_: any, i: number) => i !== index),
+                              });
+                            }}
+                            sx={{ p: 0.5 }}
+                          >
+                            <Trash2 size={14} />
+                          </IconButton>
+                        </Stack>
+                        <TextField
+                          fullWidth
+                          multiline
+                          rows={2}
+                          value={item.text}
+                          onChange={(e) => {
+                            const currentItems = [...(elementData.properties?.items || [])];
+                            currentItems[index] = { ...item, text: e.target.value };
+                            onUpdate?.({ items: currentItems });
+                          }}
+                          placeholder="Enter list item text..."
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: '8px',
+                              fontSize: '0.8125rem',
+                            },
+                          }}
+                        />
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+
+                {(elementData.properties?.items || []).length === 0 && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', textAlign: 'center', py: 2 }}
+                  >
+                    No items yet. Click "Add Item" to start.
+                  </Typography>
+                )}
               </Box>
             </Stack>
           ) : (

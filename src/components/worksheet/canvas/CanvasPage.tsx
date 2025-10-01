@@ -15,6 +15,8 @@ import TipBox from './atomic/TipBox';
 import WarningBox from './atomic/WarningBox';
 import ImagePlaceholder from './atomic/ImagePlaceholder';
 import Divider from './atomic/Divider';
+import BulletList from './atomic/BulletList';
+import NumberedList from './atomic/NumberedList';
 
 interface CanvasPageProps {
   pageId: string;
@@ -466,6 +468,30 @@ function renderElement(
           onFocus={() => onSelect(element.id)}
         />
       );
+    case 'bullet-list':
+      return (
+        <BulletList
+          items={element.properties.items || []}
+          style={element.properties.style}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'numbered-list':
+      return (
+        <NumberedList
+          items={element.properties.items || []}
+          style={element.properties.style}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
     default:
       return (
         <Box sx={{ p: 2, border: '2px dashed red', borderRadius: '8px' }}>
@@ -575,6 +601,24 @@ function getDefaultProperties(type: string) {
         thickness: 1,
         color: '#D1D5DB',
         spacing: 'medium'
+      };
+    case 'bullet-list':
+      return {
+        items: [
+          { id: '1', text: 'First item in the list' },
+          { id: '2', text: 'Second item in the list' },
+          { id: '3', text: 'Third item in the list' },
+        ],
+        style: 'dot',
+      };
+    case 'numbered-list':
+      return {
+        items: [
+          { id: '1', text: 'First step or point' },
+          { id: '2', text: 'Second step or point' },
+          { id: '3', text: 'Third step or point' },
+        ],
+        style: 'decimal',
       };
     default:
       return {};
