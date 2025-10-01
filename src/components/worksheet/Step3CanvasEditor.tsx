@@ -30,7 +30,6 @@ import {
   ZoomOut,
   Maximize2,
   Download,
-  Save,
   ArrowLeft,
   Hand,
   MousePointer,
@@ -995,37 +994,9 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
                 size="small"
                 color="success"
                 variant="outlined"
-                sx={{ fontWeight: 600, fontSize: '0.7rem', mr: 1 }}
+                sx={{ fontWeight: 600, fontSize: '0.7rem' }}
               />
             )}
-
-            <Tooltip title="Save (Ctrl+S)">
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={isSaving ? <CircularProgress size={14} /> : <Save size={16} />}
-                onClick={handleSave}
-                disabled={isSaving}
-                sx={{ borderRadius: '8px', textTransform: 'none' }}
-              >
-                {isSaving ? 'Saving...' : 'Save'}
-              </Button>
-            </Tooltip>
-            <Tooltip title="Export to PDF/PNG">
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Download size={16} />}
-                onClick={handleExportMenuOpen}
-                sx={{
-                  borderRadius: '8px',
-                  textTransform: 'none',
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-                }}
-              >
-                Export
-              </Button>
-            </Tooltip>
           </Stack>
         </Stack>
       </Paper>
