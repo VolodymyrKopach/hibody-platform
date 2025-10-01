@@ -45,6 +45,7 @@ interface RightSidebarProps {
   selection: Selection;
   onSelectionChange?: (selection: Selection) => void;
   onUpdate?: (updates: any) => void;
+  onDuplicate?: (pageId: string, elementId: string) => void;
   onDelete?: (pageId: string, elementId: string) => void;
 }
 
@@ -52,6 +53,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   selection, 
   onSelectionChange,
   onUpdate,
+  onDuplicate,
   onDelete
 }) => {
   const theme = useTheme();
@@ -686,9 +688,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               size="small"
               startIcon={<Copy size={14} />}
               variant="outlined"
+              onClick={() => onDuplicate?.(pageData.id, elementData.id)}
               sx={{ borderRadius: '10px', textTransform: 'none', justifyContent: 'flex-start' }}
             >
-              Duplicate Element
+              Duplicate Element (Ctrl+D)
             </Button>
             <Button
               fullWidth

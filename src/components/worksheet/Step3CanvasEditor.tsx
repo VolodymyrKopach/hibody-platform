@@ -24,6 +24,8 @@ import {
   Hand,
   MousePointer,
   Plus,
+  Undo,
+  Redo,
 } from 'lucide-react';
 import LeftSidebar from './canvas/LeftSidebar';
 import RightSidebar from './canvas/RightSidebar';
@@ -114,10 +116,50 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
   const [draggedPageId, setDraggedPageId] = useState<string | null>(null);
   const [isPanning, setIsPanning] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const [clipboard, setClipboard] = useState<{ pageId: string; element: CanvasElement } | null>(null);
+  const [history, setHistory] = useState<Map<string, PageContent>[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
   const handleResetZoom = () => setZoom(1);
+
+  // Save state to history
+  const saveToHistory = (newPageContents: Map<string, PageContent>) => {
+    setHistory(prev => {
+      // Remove any future history if we're not at the end
+      const newHistory = prev.slice(0, historyIndex + 1);
+      // Add new state
+      newHistory.push(new Map(newPageContents));
+      // Limit history to 50 states
+      if (newHistory.length > 50) {
+        newHistory.shift();
+        return newHistory;
+      }
+      return newHistory;
+    });
+    setHistoryIndex(prev => Math.min(prev + 1, 49));
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setPageContents(new Map(history[newIndex]));
+      setSelection(null);
+      setSelectedElementId(null);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setPageContents(new Map(history[newIndex]));
+      setSelection(null);
+      setSelectedElementId(null);
+    }
+  };
 
   // Handle element operations
   const handleElementAdd = (pageId: string, element: Omit<CanvasElement, 'id' | 'zIndex'>) => {
@@ -136,6 +178,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
         elements: [...pageContent.elements, newElement],
       });
       
+      saveToHistory(newMap);
       return newMap;
     });
   };
@@ -172,6 +215,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
         ),
       });
       
+      saveToHistory(newMap);
       return newMap;
     });
     
@@ -217,12 +261,102 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
         elements: pageContent.elements.filter(el => el.id !== elementId),
       });
       
+      saveToHistory(newMap);
       return newMap;
     });
     
     // Clear selection
     setSelectedElementId(null);
     setSelection(null);
+  };
+
+  const handleElementDuplicate = (pageId: string, elementId: string) => {
+    setPageContents(prev => {
+      const newMap = new Map(prev);
+      const pageContent = newMap.get(pageId);
+      
+      if (!pageContent) return prev;
+      
+      const originalElement = pageContent.elements.find(el => el.id === elementId);
+      if (!originalElement) return prev;
+      
+      // Create duplicate with offset position
+      const duplicateElement: CanvasElement = {
+        ...originalElement,
+        id: `element-${Date.now()}-${Math.random()}`,
+        position: {
+          x: originalElement.position.x + 20,
+          y: originalElement.position.y + 20,
+        },
+        zIndex: pageContent.elements.length,
+      };
+      
+      newMap.set(pageId, {
+        ...pageContent,
+        elements: [...pageContent.elements, duplicateElement],
+      });
+      
+      saveToHistory(newMap);
+      return newMap;
+    });
+    
+    // Select the new duplicate
+    setTimeout(() => {
+      const newContent = pageContents.get(pageId);
+      if (newContent) {
+        const newElement = newContent.elements[newContent.elements.length - 1];
+        handleElementSelect(newElement.id);
+      }
+    }, 50);
+  };
+
+  const handleCopyElement = (pageId: string, elementId: string) => {
+    const pageContent = pageContents.get(pageId);
+    if (!pageContent) return;
+    
+    const element = pageContent.elements.find(el => el.id === elementId);
+    if (!element) return;
+    
+    setClipboard({ pageId, element });
+  };
+
+  const handlePasteElement = (targetPageId: string) => {
+    if (!clipboard) return;
+    
+    setPageContents(prev => {
+      const newMap = new Map(prev);
+      const pageContent = newMap.get(targetPageId);
+      
+      if (!pageContent) return prev;
+      
+      // Create pasted element with offset position
+      const pastedElement: CanvasElement = {
+        ...clipboard.element,
+        id: `element-${Date.now()}-${Math.random()}`,
+        position: {
+          x: clipboard.element.position.x + 20,
+          y: clipboard.element.position.y + 20,
+        },
+        zIndex: pageContent.elements.length,
+      };
+      
+      newMap.set(targetPageId, {
+        ...pageContent,
+        elements: [...pageContent.elements, pastedElement],
+      });
+      
+      saveToHistory(newMap);
+      return newMap;
+    });
+    
+    // Select the pasted element
+    setTimeout(() => {
+      const newContent = pageContents.get(targetPageId);
+      if (newContent) {
+        const newElement = newContent.elements[newContent.elements.length - 1];
+        handleElementSelect(newElement.id);
+      }
+    }, 50);
   };
 
   const handlePageMouseDown = (e: React.MouseEvent, pageId: string) => {
@@ -330,6 +464,50 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
           handleElementDelete(selection.pageData.id, selection.elementData.id);
         }
       }
+      
+      // Ctrl+D or Cmd+D to duplicate selected element
+      if (e.code === 'KeyD' && (e.ctrlKey || e.metaKey) && selection?.type === 'element') {
+        e.preventDefault();
+        handleElementDuplicate(selection.pageData.id, selection.elementData.id);
+      }
+      
+      // Ctrl+C or Cmd+C to copy selected element
+      if (e.code === 'KeyC' && (e.ctrlKey || e.metaKey) && selection?.type === 'element') {
+        const target = e.target as HTMLElement;
+        const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
+          e.preventDefault();
+          handleCopyElement(selection.pageData.id, selection.elementData.id);
+        }
+      }
+      
+      // Ctrl+V or Cmd+V to paste element
+      if (e.code === 'KeyV' && (e.ctrlKey || e.metaKey) && clipboard) {
+        const target = e.target as HTMLElement;
+        const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
+          e.preventDefault();
+          // Paste to currently selected page or first page
+          const targetPageId = selection?.type === 'page' ? selection.data.id : 
+                               selection?.type === 'element' ? selection.pageData.id : 
+                               pages[0]?.id;
+          if (targetPageId) {
+            handlePasteElement(targetPageId);
+          }
+        }
+      }
+      
+      // Ctrl+Z or Cmd+Z to undo
+      if (e.code === 'KeyZ' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+      
+      // Ctrl+Shift+Z or Cmd+Shift+Z to redo
+      if (e.code === 'KeyZ' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+        e.preventDefault();
+        handleRedo();
+      }
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -346,7 +524,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isSpacePressed, selection]);
+  }, [isSpacePressed, selection, clipboard, historyIndex, history, pages]);
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -433,10 +611,50 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
                 <Maximize2 size={18} />
               </IconButton>
             </Tooltip>
+
+            <Box sx={{ width: 1, height: 32, background: alpha(theme.palette.divider, 0.2), mx: 1 }} />
+
+            <Tooltip title="Undo (Ctrl+Z)">
+              <span>
+                <IconButton 
+                  size="small" 
+                  onClick={handleUndo}
+                  disabled={historyIndex <= 0}
+                  sx={{
+                    color: historyIndex > 0 ? theme.palette.text.secondary : theme.palette.action.disabled,
+                  }}
+                >
+                  <Undo size={18} />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="Redo (Ctrl+Shift+Z)">
+              <span>
+                <IconButton 
+                  size="small" 
+                  onClick={handleRedo}
+                  disabled={historyIndex >= history.length - 1}
+                  sx={{
+                    color: historyIndex < history.length - 1 ? theme.palette.text.secondary : theme.palette.action.disabled,
+                  }}
+                >
+                  <Redo size={18} />
+                </IconButton>
+              </span>
+            </Tooltip>
           </Stack>
 
           {/* Right */}
           <Stack direction="row" spacing={1}>
+            {clipboard && (
+              <Chip
+                label="📋 1 item"
+                size="small"
+                color="primary"
+                variant="outlined"
+                sx={{ fontWeight: 600, fontSize: '0.7rem', mr: 1 }}
+              />
+            )}
             <Button
               variant="outlined"
               size="small"
@@ -647,6 +865,9 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
                 },
               });
             }
+          }}
+          onDuplicate={(pageId, elementId) => {
+            handleElementDuplicate(pageId, elementId);
           }}
           onDelete={(pageId, elementId) => {
             handleElementDelete(pageId, elementId);
