@@ -247,7 +247,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
       await exportToPDF(pageElements, {
         filename,
         quality: 0.95,
-        scale: 2,
         format: 'a4',
       });
     } catch (error) {

@@ -20,7 +20,7 @@ export async function exportToPDF(
   const {
     filename = 'worksheet',
     quality = 0.95,
-    scale = 2,
+    scale = 3, // Increased for better quality
     format = 'a4',
   } = options;
 
@@ -46,25 +46,52 @@ export async function exportToPDF(
         pdf.addPage();
       }
 
-      // Convert HTML to canvas
+      // Get actual element dimensions
+      const rect = pageElement.getBoundingClientRect();
+      const elementWidth = rect.width;
+      const elementHeight = rect.height;
+
+      // Convert HTML to canvas with proper dimensions
       const canvas = await html2canvas(pageElement, {
         scale: scale,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        windowWidth: pageElement.scrollWidth,
-        windowHeight: pageElement.scrollHeight,
+        width: elementWidth,
+        height: elementHeight,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
+        allowTaint: false,
       });
 
       // Convert canvas to image
-      const imgData = canvas.toDataURL('image/jpeg', quality);
+      const imgData = canvas.toDataURL('image/png', 1.0); // Use PNG for better quality
 
-      // Calculate dimensions to fit page
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      // Calculate dimensions to fit page while maintaining aspect ratio
+      const canvasAspectRatio = canvas.width / canvas.height;
+      const pdfAspectRatio = pdfWidth / pdfHeight;
+
+      let imgWidth = pdfWidth;
+      let imgHeight = pdfHeight;
+
+      if (canvasAspectRatio > pdfAspectRatio) {
+        // Canvas is wider than PDF page
+        imgWidth = pdfWidth;
+        imgHeight = pdfWidth / canvasAspectRatio;
+      } else {
+        // Canvas is taller than PDF page
+        imgHeight = pdfHeight;
+        imgWidth = pdfHeight * canvasAspectRatio;
+      }
+
+      // Center the image on the page
+      const xOffset = (pdfWidth - imgWidth) / 2;
+      const yOffset = (pdfHeight - imgHeight) / 2;
 
       // Add image to PDF
-      pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgWidth, imgHeight, undefined, 'FAST');
     }
 
     // Save PDF
@@ -88,11 +115,23 @@ export async function exportToPNG(
   filename: string = 'worksheet'
 ): Promise<void> {
   try {
+    // Get actual element dimensions
+    const rect = pageElement.getBoundingClientRect();
+    const elementWidth = rect.width;
+    const elementHeight = rect.height;
+
     const canvas = await html2canvas(pageElement, {
-      scale: 2,
+      scale: 3, // Higher scale for better quality
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
+      width: elementWidth,
+      height: elementHeight,
+      x: 0,
+      y: 0,
+      scrollX: 0,
+      scrollY: 0,
+      allowTaint: false,
     });
 
     // Convert to blob and download
@@ -101,13 +140,14 @@ export async function exportToPNG(
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `${filename}.png`;
+        const timestamp = new Date().toISOString().slice(0, 10);
+        link.download = `${filename}_${timestamp}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
       }
-    }, 'image/png');
+    }, 'image/png', 1.0); // Maximum quality
 
     return Promise.resolve();
   } catch (error) {
