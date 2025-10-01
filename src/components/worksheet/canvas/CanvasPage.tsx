@@ -209,6 +209,15 @@ function renderElement(
         <FillInBlank
           items={element.properties.items || []}
           wordBank={element.properties.wordBank}
+          isSelected={isSelected}
+          onEdit={(items, wordBank) => {
+            onEdit(element.id, { 
+              ...element.properties, 
+              items, 
+              wordBank: wordBank || [] 
+            });
+          }}
+          onFocus={() => onSelect(element.id)}
         />
       );
     case 'multiple-choice':

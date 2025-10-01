@@ -32,6 +32,7 @@ import {
   Italic,
   Underline,
   ArrowLeft,
+  Plus,
 } from 'lucide-react';
 
 import { alpha } from '@mui/material';
@@ -923,6 +924,178 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                       </Stack>
                     </Button>
                   ))}
+                </Stack>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'fill-blank' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Fill in Blanks Properties
+              </Typography>
+
+              <Typography variant="caption" color="text.secondary">
+                💡 Tip: Use ______ (6 underscores) in your sentence to create a blank
+              </Typography>
+
+              {/* Items */}
+              <Box>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
+                    Items ({elementData.properties?.items?.length || 0})
+                  </Typography>
+                  <Button
+                    size="small"
+                    startIcon={<Plus size={12} />}
+                    onClick={() => {
+                      const items = elementData.properties?.items || [];
+                      const newItem = {
+                        number: items.length + 1,
+                        text: 'New sentence with ______ blank.',
+                        hint: '',
+                      };
+                      onUpdate?.({ items: [...items, newItem] });
+                    }}
+                    sx={{ fontSize: '11px', textTransform: 'none' }}
+                  >
+                    Add Item
+                  </Button>
+                </Stack>
+
+                <Stack spacing={2}>
+                  {(elementData.properties?.items || []).map((item: any, index: number) => (
+                    <Paper
+                      key={index}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        borderRadius: '10px',
+                        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                        background: alpha(theme.palette.grey[50], 0.5),
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                          <Chip
+                            label={`#${item.number}`}
+                            size="small"
+                            sx={{ fontWeight: 600, fontSize: '11px' }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items
+                                .filter((_: any, idx: number) => idx !== index)
+                                .map((it: any, idx: number) => ({ ...it, number: idx + 1 }));
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            sx={{ p: 0.5 }}
+                          >
+                            <Trash2 size={14} color="#EF4444" />
+                          </IconButton>
+                        </Stack>
+
+                        <Box>
+                          <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                            Sentence
+                          </Typography>
+                          <TextField
+                            fullWidth
+                            multiline
+                            rows={2}
+                            value={item.text || ''}
+                            onChange={(e) => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items.map((it: any, idx: number) =>
+                                idx === index ? { ...it, text: e.target.value } : it
+                              );
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            placeholder="Enter sentence with ______ for blank"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                              },
+                            }}
+                          />
+                        </Box>
+
+                        <Box>
+                          <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                            Hint (optional)
+                          </Typography>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            value={item.hint || ''}
+                            onChange={(e) => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items.map((it: any, idx: number) =>
+                                idx === index ? { ...it, hint: e.target.value } : it
+                              );
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            placeholder="e.g., verb, plural"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                              },
+                            }}
+                          />
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Word Bank */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Word Bank (optional)
+                </Typography>
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {(elementData.properties?.wordBank || []).map((word: string, idx: number) => (
+                      <Chip
+                        key={idx}
+                        label={word}
+                        size="small"
+                        onDelete={() => {
+                          const wordBank = elementData.properties?.wordBank || [];
+                          onUpdate?.({ wordBank: wordBank.filter((_: string, i: number) => i !== idx) });
+                        }}
+                        sx={{ fontSize: '12px' }}
+                      />
+                    ))}
+                  </Stack>
+                  <Stack direction="row" spacing={1}>
+                    <TextField
+                      size="small"
+                      placeholder="Add word..."
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                          const wordBank = elementData.properties?.wordBank || [];
+                          onUpdate?.({ wordBank: [...wordBank, (e.target as HTMLInputElement).value.trim()] });
+                          (e.target as HTMLInputElement).value = '';
+                        }
+                      }}
+                      sx={{
+                        flex: 1,
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                          fontSize: '0.875rem',
+                        },
+                      }}
+                    />
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                    Press Enter to add words
+                  </Typography>
                 </Stack>
               </Box>
             </Stack>
