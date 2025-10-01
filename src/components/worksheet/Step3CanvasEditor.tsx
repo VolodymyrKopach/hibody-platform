@@ -19,6 +19,11 @@ import {
   DialogContent,
   DialogActions,
   DialogContentText,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  CircularProgress,
 } from '@mui/material';
 import {
   ZoomIn,
@@ -33,7 +38,11 @@ import {
   Undo,
   Redo,
   AlertTriangle,
+  FileDown,
+  Image as ImageIcon,
+  Printer,
 } from 'lucide-react';
+import { exportToPDF, exportToPNG, printWorksheet } from '@/utils/pdfExport';
 import LeftSidebar from './canvas/LeftSidebar';
 import RightSidebar from './canvas/RightSidebar';
 import TitleBlock from './canvas/atomic/TitleBlock';
@@ -130,6 +139,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [exitCallback, setExitCallback] = useState<(() => void) | null>(null);
+  const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
@@ -161,6 +172,84 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     const confirmed = await showExitConfirmation();
     if (confirmed) {
       router.push('/');
+    }
+  };
+
+  // Export handlers
+  const handleExportMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setExportMenuAnchor(event.currentTarget);
+  };
+
+  const handleExportMenuClose = () => {
+    setExportMenuAnchor(null);
+  };
+
+  const handleExportPDF = async () => {
+    handleExportMenuClose();
+    setIsExporting(true);
+
+    try {
+      // Get all page elements
+      const pageElements = Array.from(
+        document.querySelectorAll('[data-page-id]')
+      ) as HTMLElement[];
+
+      if (pageElements.length === 0) {
+        throw new Error('No pages found to export');
+      }
+
+      await exportToPDF(pageElements, {
+        filename: 'worksheet',
+        quality: 0.95,
+        scale: 2,
+        format: 'a4',
+      });
+    } catch (error) {
+      console.error('Export PDF failed:', error);
+      alert('Failed to export PDF. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPNG = async () => {
+    handleExportMenuClose();
+    setIsExporting(true);
+
+    try {
+      // Get first page element
+      const pageElement = document.querySelector('[data-page-id]') as HTMLElement;
+
+      if (!pageElement) {
+        throw new Error('No page found to export');
+      }
+
+      await exportToPNG(pageElement, 'worksheet');
+    } catch (error) {
+      console.error('Export PNG failed:', error);
+      alert('Failed to export PNG. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handlePrint = () => {
+    handleExportMenuClose();
+
+    try {
+      // Get all page elements
+      const pageElements = Array.from(
+        document.querySelectorAll('[data-page-id]')
+      ) as HTMLElement[];
+
+      if (pageElements.length === 0) {
+        throw new Error('No pages found to print');
+      }
+
+      printWorksheet(pageElements);
+    } catch (error) {
+      console.error('Print failed:', error);
+      alert('Failed to print. Please try again.');
     }
   };
 
@@ -799,6 +888,21 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
                 </IconButton>
               </span>
             </Tooltip>
+
+            <Box sx={{ width: 1, height: 32, background: alpha(theme.palette.divider, 0.2), mx: 1 }} />
+
+            <Tooltip title="Export & Print">
+              <IconButton 
+                size="small" 
+                onClick={handleExportMenuOpen}
+                disabled={isExporting}
+                sx={{
+                  color: theme.palette.text.secondary,
+                }}
+              >
+                {isExporting ? <CircularProgress size={18} /> : <Download size={18} />}
+              </IconButton>
+            </Tooltip>
           </Stack>
 
           {/* Right */}
@@ -1032,6 +1136,62 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
           }}
         />
       </Box>
+
+      {/* Export Menu */}
+      <Menu
+        anchorEl={exportMenuAnchor}
+        open={Boolean(exportMenuAnchor)}
+        onClose={handleExportMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            borderRadius: 2,
+            minWidth: 200,
+          },
+        }}
+      >
+        <MenuItem onClick={handleExportPDF}>
+          <ListItemIcon>
+            <FileDown size={18} />
+          </ListItemIcon>
+          <ListItemText 
+            primary="Export as PDF"
+            secondary="Download worksheet as PDF"
+            primaryTypographyProps={{ fontSize: '0.875rem' }}
+            secondaryTypographyProps={{ fontSize: '0.75rem' }}
+          />
+        </MenuItem>
+        <MenuItem onClick={handleExportPNG}>
+          <ListItemIcon>
+            <ImageIcon size={18} />
+          </ListItemIcon>
+          <ListItemText 
+            primary="Export as PNG"
+            secondary="Download as image"
+            primaryTypographyProps={{ fontSize: '0.875rem' }}
+            secondaryTypographyProps={{ fontSize: '0.75rem' }}
+          />
+        </MenuItem>
+        <MenuItem onClick={handlePrint}>
+          <ListItemIcon>
+            <Printer size={18} />
+          </ListItemIcon>
+          <ListItemText 
+            primary="Print"
+            secondary="Print worksheet"
+            primaryTypographyProps={{ fontSize: '0.875rem' }}
+            secondaryTypographyProps={{ fontSize: '0.75rem' }}
+          />
+        </MenuItem>
+      </Menu>
 
       {/* Exit Confirmation Dialog */}
       <Dialog

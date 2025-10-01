@@ -161,6 +161,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   return (
     <Paper
       ref={pageRef}
+      data-page-id={pageId}
       onDrop={handleDrop}
       onDragOver={handleDragOverPage}
       elevation={4}
