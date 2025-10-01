@@ -92,16 +92,21 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     e.stopPropagation();
 
     const element = elements.find(el => el.id === elementId);
-    if (!element || element.locked) return;
+    if (!element || element.locked || !pageRef.current) return;
 
     onElementSelect(elementId);
+
+    // Calculate offset relative to page, not viewport
+    const rect = pageRef.current.getBoundingClientRect();
+    const mouseXInPage = e.clientX - rect.left;
+    const mouseYInPage = e.clientY - rect.top;
 
     setDragState({
       elementId,
       startX: e.clientX,
       startY: e.clientY,
-      offsetX: e.clientX - element.position.x,
-      offsetY: e.clientY - element.position.y,
+      offsetX: mouseXInPage - element.position.x,
+      offsetY: mouseYInPage - element.position.y,
     });
   };
 
@@ -109,8 +114,12 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     if (!dragState || !pageRef.current) return;
 
     const rect = pageRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const mouseXInPage = e.clientX - rect.left;
+    const mouseYInPage = e.clientY - rect.top;
+
+    // Apply offset so element sticks to cursor
+    const x = mouseXInPage - dragState.offsetX;
+    const y = mouseYInPage - dragState.offsetY;
 
     // Calculate alignment guides
     const currentElement = elements.find(el => el.id === dragState.elementId);
