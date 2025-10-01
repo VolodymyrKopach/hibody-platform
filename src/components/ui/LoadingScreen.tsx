@@ -86,6 +86,7 @@ export const LoadingScreen: React.FC = () => {
             alt="Loading..."
             width={80}
             height={80}
+            priority
             style={{
               objectFit: 'contain',
             }}

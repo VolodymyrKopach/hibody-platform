@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
+import Image from 'next/image';
 
 interface LogoProps {
   size?: number;
@@ -29,18 +30,19 @@ const Logo: React.FC<LogoProps> = ({ size, variant = 'header' }) => {
         boxShadow: variant === 'header' 
           ? '0 2px 8px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)'
           : '0 4px 20px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08)',
+        position: 'relative',
       }}
     >
-      <img
+      <Image
         src="/images/ts-logo.png"
         alt="TeachSpark Logo"
+        width={logoSize}
+        height={logoSize}
+        priority
         style={{
-          width: '100%',
-          height: '100%',
           objectFit: 'contain',
           borderRadius,
           padding: '3px',
-          display: 'block', // Ensure proper image display
         }}
       />
     </Box>

@@ -59,6 +59,68 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', 'reorder'); // Mark as reorder operation
+    
+    // Create a custom drag preview that preserves all styles
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    
+    // Clone the element deeply
+    const dragPreview = target.cloneNode(true) as HTMLElement;
+    
+    // Copy all computed styles to preserve MUI styles
+    const copyStyles = (sourceElement: HTMLElement, targetElement: HTMLElement) => {
+      const computedStyle = window.getComputedStyle(sourceElement);
+      Array.from(computedStyle).forEach(key => {
+        try {
+          (targetElement.style as any)[key] = computedStyle.getPropertyValue(key);
+        } catch (e) {
+          // Some styles can't be copied, skip them
+        }
+      });
+      
+      // Recursively copy styles for all children
+      const sourceChildren = sourceElement.children;
+      const targetChildren = targetElement.children;
+      for (let i = 0; i < sourceChildren.length; i++) {
+        if (sourceChildren[i] instanceof HTMLElement && targetChildren[i] instanceof HTMLElement) {
+          copyStyles(sourceChildren[i] as HTMLElement, targetChildren[i] as HTMLElement);
+        }
+      }
+    };
+    
+    // Copy all styles from original element
+    copyStyles(target, dragPreview);
+    
+    // Override only positioning styles for the preview
+    dragPreview.style.position = 'absolute';
+    dragPreview.style.top = '-9999px';
+    dragPreview.style.left = '-9999px';
+    dragPreview.style.width = `${rect.width}px`;
+    dragPreview.style.height = `${rect.height}px`;
+    dragPreview.style.pointerEvents = 'none';
+    dragPreview.style.zIndex = '10000';
+    dragPreview.style.margin = '0';
+    dragPreview.style.transform = 'none';
+    
+    // Add subtle drag effect
+    dragPreview.style.opacity = '0.92';
+    dragPreview.style.boxShadow = '0 12px 48px rgba(0, 0, 0, 0.25)';
+    
+    document.body.appendChild(dragPreview);
+    
+    // Calculate the offset from where user clicked within the element
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+    
+    // Set the drag image with correct offset
+    e.dataTransfer.setDragImage(dragPreview, offsetX, offsetY);
+    
+    // Clean up the drag preview after a short delay
+    setTimeout(() => {
+      if (document.body.contains(dragPreview)) {
+        document.body.removeChild(dragPreview);
+      }
+    }, 0);
   };
 
   // Handle element drag over (show drop indicator)
@@ -238,6 +300,10 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
               onDragOver={(e) => !element.locked && handleElementDragOver(e, index)}
               onDrop={(e) => !element.locked && handleElementDrop(e, index)}
               onDragEnd={handleElementDragEnd}
+              onMouseDown={(e) => {
+                // Prevent page drag when clicking on element
+                e.stopPropagation();
+              }}
               onClick={(e) => {
                 e.stopPropagation(); // Prevent deselect when clicking element
                 onElementSelect(element.id);
@@ -246,12 +312,16 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
                 width: '100%',
                 position: 'relative',
                 cursor: element.locked ? 'default' : 'grab',
-                border: selectedElementId === element.id
+                border: draggedIndex === index 
+                  ? `2px dashed ${alpha(theme.palette.primary.main, 0.5)}`
+                  : selectedElementId === element.id
                   ? `2px solid ${theme.palette.primary.main}`
                   : '2px solid transparent',
                 borderRadius: '4px',
-                transition: 'border 0.2s, opacity 0.2s',
-                opacity: draggedIndex === index ? 0.5 : 1,
+                transition: 'border 0.2s, opacity 0.2s, background-color 0.2s',
+                opacity: draggedIndex === index ? 0.3 : 1,
+                backgroundColor: draggedIndex === index ? alpha(theme.palette.grey[200], 0.5) : 'transparent',
+                transform: 'none', // Prevent any transforms during drag
                 '&:hover': element.locked ? {} : {
                   border: `2px solid ${alpha(theme.palette.primary.main, 0.5)}`,
                   '& .drag-handle': {

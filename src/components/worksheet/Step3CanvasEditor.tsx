@@ -734,14 +734,21 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
 
   const handlePageMouseDown = (e: React.MouseEvent, pageId: string) => {
     if (tool === 'select') {
-      e.stopPropagation();
-      const page = pages.find(p => p.id === pageId);
-      if (page) {
-        setSelection({ type: 'page', data: page });
+      // Don't start page drag if clicking on an element inside the page
+      const target = e.target as HTMLElement;
+      const isClickingElement = target.closest('[data-print-content]')?.querySelector('[draggable="true"]');
+      
+      // Only allow page drag if clicking on the page itself, not its elements
+      if (target.hasAttribute('data-page-id') || target.closest('[data-page-header]')) {
+        e.stopPropagation();
+        const page = pages.find(p => p.id === pageId);
+        if (page) {
+          setSelection({ type: 'page', data: page });
+        }
+        setIsDragging(true);
+        setDraggedPageId(pageId);
+        setDragStart({ x: e.clientX, y: e.clientY });
       }
-      setIsDragging(true);
-      setDraggedPageId(pageId);
-      setDragStart({ x: e.clientX, y: e.clientY });
     }
   };
 
@@ -756,6 +763,11 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    // Don't do anything if an element is being dragged (HTML5 drag)
+    if (e.buttons === 0 && !isPanning && !isDragging) {
+      return;
+    }
+    
     // Pan canvas
     if (isPanning) {
       const dx = e.clientX - dragStart.x;
@@ -770,8 +782,10 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
       return;
     }
     
-    // Move page
-    if (isDragging && draggedPageId && tool === 'select') {
+    // Move page (only if we have a valid drag state)
+    if (isDragging && draggedPageId && tool === 'select' && e.buttons === 1) {
+      e.preventDefault(); // Prevent text selection during drag
+      
       const dx = (e.clientX - dragStart.x) / zoom;
       const dy = (e.clientY - dragStart.y) / zoom;
       
@@ -1286,41 +1300,39 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
         }}
       >
         {/* Current Page Export - only show if page is selected */}
-        {selection && (
-          <>
-            <Box sx={{ px: 2, py: 1, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-              <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.7rem', textTransform: 'uppercase' }}>
-                {selection.type === 'page' 
-                  ? `Page ${selection.data.pageNumber}`
-                  : `Page ${selection.pageData.pageNumber}`
-                }
-              </Typography>
-            </Box>
-            <MenuItem onClick={() => handleExportPDF(true)}>
-              <ListItemIcon>
-                <File size={18} />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Export Page as PDF"
-                secondary="Current page only"
-                primaryTypographyProps={{ fontSize: '0.875rem' }}
-                secondaryTypographyProps={{ fontSize: '0.75rem' }}
-              />
-            </MenuItem>
-            <MenuItem onClick={() => handleExportPNG(true)}>
-              <ListItemIcon>
-                <ImageIcon size={18} />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Export Page as PNG"
-                secondary="Current page only"
-                primaryTypographyProps={{ fontSize: '0.875rem' }}
-                secondaryTypographyProps={{ fontSize: '0.75rem' }}
-              />
-            </MenuItem>
-            <Divider sx={{ my: 1 }} />
-          </>
-        )}
+        {selection && [
+          <Box key="page-header" sx={{ px: 2, py: 1, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.7rem', textTransform: 'uppercase' }}>
+              {selection.type === 'page' 
+                ? `Page ${selection.data.pageNumber}`
+                : `Page ${selection.pageData.pageNumber}`
+              }
+            </Typography>
+          </Box>,
+          <MenuItem key="export-pdf" onClick={() => handleExportPDF(true)}>
+            <ListItemIcon>
+              <File size={18} />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Export Page as PDF"
+              secondary="Current page only"
+              primaryTypographyProps={{ fontSize: '0.875rem' }}
+              secondaryTypographyProps={{ fontSize: '0.75rem' }}
+            />
+          </MenuItem>,
+          <MenuItem key="export-png" onClick={() => handleExportPNG(true)}>
+            <ListItemIcon>
+              <ImageIcon size={18} />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Export Page as PNG"
+              secondary="Current page only"
+              primaryTypographyProps={{ fontSize: '0.875rem' }}
+              secondaryTypographyProps={{ fontSize: '0.75rem' }}
+            />
+          </MenuItem>,
+          <Divider key="divider" sx={{ my: 1 }} />
+        ]}
 
         {/* All Pages Export */}
         <Box sx={{ px: 2, py: 1, bgcolor: alpha(theme.palette.grey[500], 0.05) }}>
