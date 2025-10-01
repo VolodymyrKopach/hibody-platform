@@ -71,7 +71,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     const newElement: Omit<CanvasElement, 'id' | 'zIndex'> = {
       type: componentType as any,
       position: { x, y },
-      size: { width: 600, height: 100 }, // Default size
+      size: { width: 600, height: 50 }, // Minimal height, auto-expands to fit content
       properties: defaultProperties,
       locked: false,
       visible: true,
@@ -186,7 +186,9 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
               left: element.position.x,
               top: element.position.y,
               width: element.size.width,
-              minHeight: element.size.height,
+              // Use auto height to fit content
+              height: 'auto',
+              minHeight: 'auto',
               cursor: element.locked ? 'default' : 'move',
               border: selectedElementId === element.id
                 ? `2px solid ${theme.palette.primary.main}`
@@ -260,7 +262,17 @@ function renderElement(
         />
       );
     case 'body-text':
-      return <BodyText text={element.properties.text || 'Text here...'} />;
+      return (
+        <BodyText 
+          text={element.properties.text || 'Your text goes here. Click to edit...'}
+          variant={element.properties.variant || 'paragraph'}
+          isSelected={isSelected}
+          onEdit={(newText) => {
+            onEdit(element.id, { ...element.properties, text: newText });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
     case 'instructions-box':
       return (
         <InstructionsBox
@@ -314,38 +326,60 @@ function renderElement(
 function getDefaultProperties(type: string) {
   switch (type) {
     case 'title-block':
-      return { text: 'Your Title Here', level: 'main', align: 'center' };
+      return { 
+        text: 'Your Title Here', 
+        level: 'main', 
+        align: 'center',
+        color: '#1F2937'
+      };
     case 'body-text':
-      return { text: 'Your text goes here...' };
+      return { 
+        text: 'Your text goes here. Click to edit and add your content...',
+        variant: 'paragraph'
+      };
     case 'instructions-box':
-      return { text: 'Complete the exercises below.', type: 'general' };
+      return { 
+        text: 'Complete the exercises below.', 
+        type: 'general' 
+      };
     case 'fill-blank':
       return {
         items: [
-          { number: 1, text: 'Example sentence with ______.', hint: 'word' },
+          { number: 1, text: 'She ______ (go) to school every day.', hint: 'goes' },
+          { number: 2, text: 'They ______ (play) football on Sundays.', hint: 'play' },
         ],
-        wordBank: [],
+        wordBank: ['goes', 'play', 'runs', 'walk'],
       };
     case 'multiple-choice':
       return {
         items: [
           {
             number: 1,
-            question: 'Your question here?',
+            question: 'She _____ coffee every morning.',
             options: [
-              { letter: 'a', text: 'Option A' },
-              { letter: 'b', text: 'Option B' },
-              { letter: 'c', text: 'Option C' },
+              { letter: 'a', text: 'drink' },
+              { letter: 'b', text: 'drinks' },
+              { letter: 'c', text: 'drinking' },
             ],
           },
         ],
       };
     case 'tip-box':
-      return { text: 'Helpful tip here...', type: 'study' };
+      return { 
+        text: 'Remember: add "s" for third person singular!', 
+        type: 'study' 
+      };
     case 'warning-box':
-      return { text: 'Pay attention to this important detail!', type: 'grammar' };
+      return { 
+        text: 'Pay attention to irregular verbs!', 
+        type: 'grammar' 
+      };
     case 'image-placeholder':
-      return { caption: 'Image description', width: 400, height: 300 };
+      return { 
+        caption: 'Image description', 
+        width: 400, 
+        height: 300 
+      };
     default:
       return {};
   }

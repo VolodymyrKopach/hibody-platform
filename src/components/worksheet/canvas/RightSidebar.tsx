@@ -394,7 +394,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
 
           {/* Selection Type Badge */}
           <Chip 
-            label={`🎨 ${elementData.type}`}
+            label={`🎨 ${elementData.type || 'Element'}`}
             size="small"
             sx={{ 
               mb: 2, 
@@ -416,7 +416,15 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             }}
           >
             <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-              {elementData.name}
+              {elementData.type === 'title-block' ? 'Title Block' :
+               elementData.type === 'body-text' ? 'Body Text' :
+               elementData.type === 'instructions-box' ? 'Instructions Box' :
+               elementData.type === 'fill-blank' ? 'Fill in Blanks' :
+               elementData.type === 'multiple-choice' ? 'Multiple Choice' :
+               elementData.type === 'tip-box' ? 'Tip Box' :
+               elementData.type === 'warning-box' ? 'Warning Box' :
+               elementData.type === 'image-placeholder' ? 'Image' :
+               elementData.name || 'Component'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               On: {pageData.title} (Page {pageData.pageNumber})
@@ -426,22 +434,23 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           <Divider sx={{ mb: 3 }} />
 
           {/* Element Properties */}
-          {elementData.type === 'title' || elementData.type === 'text' ? (
+          {elementData.type === 'title-block' ? (
             <Stack spacing={2.5}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                Text Properties
+                Title Properties
               </Typography>
 
               {/* Text Content */}
               <Box>
                 <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
-                  Content
+                  Text Content
                 </Typography>
                 <TextField
                   fullWidth
                   multiline
-                  rows={4}
-                  defaultValue={elementData.properties.text}
+                  rows={2}
+                  value={elementData.properties?.text || ''}
+                  onChange={(e) => onUpdate?.({ text: e.target.value })}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: '10px',
@@ -451,18 +460,36 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 />
               </Box>
 
-              {/* Font Size */}
+              {/* Level */}
               <Box>
                 <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
-                  Font Size: {elementData.properties.fontSize}px
+                  Title Level
                 </Typography>
-                <Slider
-                  defaultValue={elementData.properties.fontSize}
-                  min={10}
-                  max={72}
-                  valueLabelDisplay="auto"
-                  sx={{ color: theme.palette.primary.main }}
-                />
+                <Stack direction="row" spacing={0.5}>
+                  {[
+                    { label: 'Main', value: 'main', size: '28px' },
+                    { label: 'Section', value: 'section', size: '20px' },
+                    { label: 'Exercise', value: 'exercise', size: '16px' },
+                  ].map((level) => (
+                    <Button
+                      key={level.value}
+                      size="small"
+                      onClick={() => onUpdate?.({ level: level.value })}
+                      variant={elementData.properties?.level === level.value ? 'contained' : 'outlined'}
+                      sx={{
+                        flex: 1,
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Box sx={{ fontWeight: 600 }}>{level.label}</Box>
+                        <Box sx={{ fontSize: '0.65rem', opacity: 0.7 }}>{level.size}</Box>
+                      </Box>
+                    </Button>
+                  ))}
+                </Stack>
               </Box>
 
               {/* Text Align */}
@@ -472,48 +499,24 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 </Typography>
                 <Stack direction="row" spacing={0.5}>
                   {[
-                    { icon: <AlignLeft size={14} />, value: 'left' },
-                    { icon: <AlignCenter size={14} />, value: 'center' },
-                    { icon: <AlignRight size={14} />, value: 'right' },
+                    { icon: <AlignLeft size={16} />, value: 'left', label: 'Left' },
+                    { icon: <AlignCenter size={16} />, value: 'center', label: 'Center' },
+                    { icon: <AlignRight size={16} />, value: 'right', label: 'Right' },
                   ].map((align) => (
-                    <IconButton
+                    <Button
                       key={align.value}
                       size="small"
+                      onClick={() => onUpdate?.({ align: align.value })}
+                      variant={elementData.properties?.align === align.value ? 'contained' : 'outlined'}
                       sx={{
-                        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                        flex: 1,
                         borderRadius: '8px',
-                        background: elementData.properties.align === align.value
-                          ? alpha(theme.palette.primary.main, 0.1)
-                          : 'transparent',
+                        minWidth: 0,
+                        px: 1,
                       }}
                     >
                       {align.icon}
-                    </IconButton>
-                  ))}
-                </Stack>
-              </Box>
-
-              {/* Text Style */}
-              <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
-                  Style
-                </Typography>
-                <Stack direction="row" spacing={0.5}>
-                  {[
-                    { icon: <Bold size={14} />, value: 'bold' },
-                    { icon: <Italic size={14} />, value: 'italic' },
-                    { icon: <Underline size={14} />, value: 'underline' },
-                  ].map((style) => (
-                    <IconButton
-                      key={style.value}
-                      size="small"
-                      sx={{
-                        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-                        borderRadius: '8px',
-                      }}
-                    >
-                      {style.icon}
-                    </IconButton>
+                    </Button>
                   ))}
                 </Stack>
               </Box>
@@ -521,13 +524,14 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               {/* Color */}
               <Box>
                 <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
-                  Color
+                  Text Color
                 </Typography>
                 <Stack direction="row" spacing={1}>
                   <TextField
                     size="small"
                     type="color"
-                    defaultValue={elementData.properties.color}
+                    value={elementData.properties?.color || '#1F2937'}
+                    onChange={(e) => onUpdate?.({ color: e.target.value })}
                     sx={{
                       width: 60,
                       '& .MuiOutlinedInput-root': {
@@ -537,8 +541,9 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   />
                   <TextField
                     size="small"
-                    defaultValue={elementData.properties.color}
-                    placeholder="#2563EB"
+                    value={elementData.properties?.color || '#1F2937'}
+                    onChange={(e) => onUpdate?.({ color: e.target.value })}
+                    placeholder="#1F2937"
                     sx={{
                       flex: 1,
                       '& .MuiOutlinedInput-root': {
@@ -549,11 +554,108 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   />
                 </Stack>
               </Box>
+
+              {/* Quick Color Presets */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Quick Colors
+                </Typography>
+                <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                  {[
+                    { color: '#1F2937', label: 'Dark' },
+                    { color: '#2563EB', label: 'Blue' },
+                    { color: '#059669', label: 'Green' },
+                    { color: '#DC2626', label: 'Red' },
+                    { color: '#EA580C', label: 'Orange' },
+                    { color: '#7C3AED', label: 'Purple' },
+                  ].map((preset) => (
+                    <Tooltip key={preset.color} title={preset.label}>
+                      <IconButton
+                        size="small"
+                        onClick={() => onUpdate?.({ color: preset.color })}
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: '8px',
+                          background: preset.color,
+                          border: elementData.properties?.color === preset.color
+                            ? `3px solid ${theme.palette.primary.main}`
+                            : '2px solid transparent',
+                          '&:hover': {
+                            background: preset.color,
+                            opacity: 0.8,
+                          },
+                        }}
+                      />
+                    </Tooltip>
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'body-text' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Text Properties
+              </Typography>
+
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Text Content
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  value={elementData.properties?.text || ''}
+                  onChange={(e) => onUpdate?.({ text: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              {/* Variant */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Text Variant
+                </Typography>
+                <Stack direction="row" spacing={0.5}>
+                  {[
+                    { label: 'Paragraph', value: 'paragraph' },
+                    { label: 'Description', value: 'description' },
+                    { label: 'Example', value: 'example' },
+                  ].map((variant) => (
+                    <Button
+                      key={variant.value}
+                      size="small"
+                      onClick={() => onUpdate?.({ variant: variant.value })}
+                      variant={elementData.properties?.variant === variant.value ? 'contained' : 'outlined'}
+                      sx={{
+                        flex: 1,
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      {variant.label}
+                    </Button>
+                  ))}
+                </Stack>
+              </Box>
             </Stack>
           ) : (
-            <Typography variant="caption" color="text.secondary">
-              Properties for {elementData.type} coming soon...
-            </Typography>
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography sx={{ fontSize: '2rem', mb: 1 }}>🚧</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                Properties Coming Soon
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Properties for <strong>{elementData.type}</strong> will be available soon
+              </Typography>
+            </Box>
           )}
 
           <Divider sx={{ my: 3 }} />

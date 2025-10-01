@@ -208,7 +208,10 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
   const handlePageMouseDown = (e: React.MouseEvent, pageId: string) => {
     if (tool === 'select') {
       e.stopPropagation();
-      setSelectedPage(pageId);
+      const page = pages.find(p => p.id === pageId);
+      if (page) {
+        setSelection({ type: 'page', data: page });
+      }
       setIsDragging(true);
       setDraggedPageId(pageId);
       setDragStart({ x: e.clientX, y: e.clientY });
@@ -590,7 +593,30 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
         <RightSidebar 
           selection={selection}
           onSelectionChange={setSelection}
-          onUpdate={(updates) => console.log('Update:', updates)}
+          onUpdate={(updates) => {
+            if (selection?.type === 'element') {
+              const elementId = selection.elementData.id;
+              const pageId = selection.pageData.id;
+              
+              // Update element properties
+              handleElementEdit(pageId, elementId, {
+                ...selection.elementData.properties,
+                ...updates,
+              });
+              
+              // Update selection with new properties
+              setSelection({
+                ...selection,
+                elementData: {
+                  ...selection.elementData,
+                  properties: {
+                    ...selection.elementData.properties,
+                    ...updates,
+                  },
+                },
+              });
+            }
+          }}
         />
       </Box>
     </Box>

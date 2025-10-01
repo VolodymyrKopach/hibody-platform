@@ -23,8 +23,8 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
   onFocus,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(text);
   const editRef = useRef<HTMLDivElement>(null);
+  const isInitialEditRef = useRef(true);
 
   const getFontSize = () => {
     switch (level) {
@@ -39,23 +39,25 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
     return level === 'exercise' ? 600 : 700;
   };
 
-  // Sync internal state with prop
-  useEffect(() => {
-    setEditValue(text);
-  }, [text]);
-
-  // Focus on edit start
+  // Focus on edit start - only set content once
   useEffect(() => {
     if (isEditing && editRef.current) {
+      // Set the text content only on initial edit
+      editRef.current.textContent = text;
+      
+      // Focus and select all
       editRef.current.focus();
-      // Select all text
       const range = document.createRange();
       range.selectNodeContents(editRef.current);
       const selection = window.getSelection();
       selection?.removeAllRanges();
       selection?.addRange(range);
+      
+      isInitialEditRef.current = false;
+    } else if (!isEditing) {
+      isInitialEditRef.current = true;
     }
-  }, [isEditing]);
+  }, [isEditing, text]);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -76,16 +78,11 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
   const handleBlur = () => {
     setIsEditing(false);
     if (editRef.current) {
-      const newText = editRef.current.innerText.trim();
+      const newText = editRef.current.textContent?.trim() || '';
       if (newText !== text && newText !== '') {
         onEdit?.(newText);
-      } else if (newText === '') {
-        // Don't allow empty title, reset
-        setEditValue(text);
-        if (editRef.current) {
-          editRef.current.innerText = text;
-        }
       }
+      // If empty, just exit - the text prop will be displayed
     }
   };
 
@@ -95,18 +92,11 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
       editRef.current?.blur();
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      // Cancel editing
+      // Cancel editing - reset to original text
       if (editRef.current) {
-        editRef.current.innerText = text;
+        editRef.current.textContent = text;
       }
-      setEditValue(text);
       setIsEditing(false);
-    }
-  };
-
-  const handleInput = () => {
-    if (editRef.current) {
-      setEditValue(editRef.current.innerText);
     }
   };
 
@@ -116,31 +106,17 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
         mb: level === 'main' ? 3 : 2,
         position: 'relative',
         cursor: isSelected && !isEditing ? 'text' : 'inherit',
-        '&:hover': isSelected && !isEditing ? {
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            top: -4,
-            left: -4,
-            right: -4,
-            bottom: -4,
-            border: `2px dashed ${alpha('#2563EB', 0.3)}`,
-            borderRadius: '4px',
-            pointerEvents: 'none',
-          }
-        } : {},
       }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
       {isEditing ? (
-        <Typography
+        <Box
           ref={editRef}
           contentEditable
           suppressContentEditableWarning
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          onInput={handleInput}
           sx={{
             fontSize: getFontSize(),
             fontWeight: getFontWeight(),
@@ -148,18 +124,15 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
             color: color,
             fontFamily: 'Inter, sans-serif',
             outline: 'none',
-            padding: '4px 8px',
-            margin: '-4px -8px',
             borderRadius: '4px',
             background: alpha('#2563EB', 0.05),
-            border: `2px solid #2563EB`,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
             '&:focus': {
               background: alpha('#2563EB', 0.08),
             },
           }}
-        >
-          {editValue}
-        </Typography>
+        />
       ) : (
         <Typography
           sx={{
@@ -168,13 +141,6 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
             textAlign: align,
             color: color,
             fontFamily: 'Inter, sans-serif',
-            padding: '4px 8px',
-            margin: '-4px -8px',
-            borderRadius: '4px',
-            transition: 'background 0.2s',
-            '&:hover': isSelected ? {
-              background: alpha('#2563EB', 0.03),
-            } : {},
           }}
         >
           {text || 'Click to edit title'}

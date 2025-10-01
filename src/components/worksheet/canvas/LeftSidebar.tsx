@@ -71,37 +71,34 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   const [aiMessage, setAiMessage] = useState('');
   const [aiChat, setAiChat] = useState<Array<{ role: 'user' | 'ai'; message: string }>>([]);
 
-  // Components Library Data
+  // Components Library Data - IDs match CanvasElement types
   const componentCategories = [
     {
       name: 'Text',
       items: [
-        { id: 'title', name: 'Title', icon: '📝', description: 'Large heading' },
-        { id: 'text', name: 'Body Text', icon: '📄', description: 'Paragraph text' },
-        { id: 'instructions', name: 'Instructions', icon: '📋', description: 'Step-by-step guide' },
+        { id: 'title-block', name: 'Title', icon: '📝', description: 'Large heading' },
+        { id: 'body-text', name: 'Body Text', icon: '📄', description: 'Paragraph text' },
+        { id: 'instructions-box', name: 'Instructions', icon: '📋', description: 'Step-by-step guide' },
       ],
     },
     {
       name: 'Exercises',
       items: [
-        { id: 'fill-blanks', name: 'Fill in Blanks', icon: '✏️', description: 'Complete sentences' },
+        { id: 'fill-blank', name: 'Fill in Blanks', icon: '✏️', description: 'Complete sentences' },
         { id: 'multiple-choice', name: 'Multiple Choice', icon: '☑️', description: 'Choose answer' },
-        { id: 'match-pairs', name: 'Match Pairs', icon: '🔗', description: 'Connect items' },
-        { id: 'true-false', name: 'True/False', icon: '✓✗', description: 'Yes or No' },
       ],
     },
     {
       name: 'Media',
       items: [
-        { id: 'image', name: 'Image', icon: '🖼️', description: 'Add picture' },
-        { id: 'word-bank', name: 'Word Bank', icon: '📦', description: 'List of words' },
+        { id: 'image-placeholder', name: 'Image', icon: '🖼️', description: 'Add picture' },
       ],
     },
     {
       name: 'Boxes',
       items: [
-        { id: 'warning', name: 'Warning Box', icon: '⚠️', description: 'Important note' },
-        { id: 'tip', name: 'Tip Box', icon: '💡', description: 'Helpful hint' },
+        { id: 'warning-box', name: 'Warning Box', icon: '⚠️', description: 'Important note' },
+        { id: 'tip-box', name: 'Tip Box', icon: '💡', description: 'Helpful hint' },
       ],
     },
   ];
