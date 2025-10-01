@@ -14,6 +14,11 @@ import {
   Tooltip,
   Chip,
   Zoom as MuiZoom,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from '@mui/material';
 import {
   ZoomIn,
@@ -27,6 +32,7 @@ import {
   Plus,
   Undo,
   Redo,
+  AlertTriangle,
 } from 'lucide-react';
 import LeftSidebar from './canvas/LeftSidebar';
 import RightSidebar from './canvas/RightSidebar';
@@ -122,10 +128,41 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
   const [clipboard, setClipboard] = useState<{ pageId: string; element: CanvasElement } | null>(null);
   const [history, setHistory] = useState<Map<string, PageContent>[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [exitCallback, setExitCallback] = useState<(() => void) | null>(null);
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
   const handleResetZoom = () => setZoom(1);
+
+  // Show exit confirmation dialog
+  const showExitConfirmation = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setExitCallback(() => () => resolve(true));
+      setShowExitDialog(true);
+    });
+  };
+
+  const handleExitConfirm = () => {
+    setShowExitDialog(false);
+    if (exitCallback) {
+      exitCallback();
+      setExitCallback(null);
+    }
+  };
+
+  const handleExitCancel = () => {
+    setShowExitDialog(false);
+    setExitCallback(null);
+  };
+
+  // Handle back button click
+  const handleBackClick = async () => {
+    const confirmed = await showExitConfirmation();
+    if (confirmed) {
+      router.push('/');
+    }
+  };
 
   // Save state to history
   const saveToHistory = (newPageContents: Map<string, PageContent>) => {
@@ -154,14 +191,12 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
       return '';
     };
 
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
       // Prevent Cmd/Ctrl+W (close tab)
       if ((e.metaKey || e.ctrlKey) && e.key === 'w') {
         e.preventDefault();
         // Show confirmation dialog
-        const confirmed = window.confirm(
-          'Are you sure you want to leave? Your work will be lost.'
-        );
+        const confirmed = await showExitConfirmation();
         if (confirmed) {
           window.close();
         }
@@ -182,11 +217,9 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     // Push a dummy state to history to intercept back button
     window.history.pushState(null, '', window.location.href);
 
-    const handlePopState = (e: PopStateEvent) => {
+    const handlePopState = async (e: PopStateEvent) => {
       // Show confirmation dialog
-      const confirmed = window.confirm(
-        'Are you sure you want to leave? Your work will be lost.'
-      );
+      const confirmed = await showExitConfirmation();
       
       if (confirmed) {
         // User confirmed - allow navigation back
@@ -667,7 +700,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           {/* Left */}
           <Stack direction="row" alignItems="center" spacing={2}>
-            <IconButton onClick={onBack} size="small">
+            <IconButton onClick={handleBackClick} size="small">
               <ArrowLeft size={20} />
             </IconButton>
             <Box>
@@ -999,6 +1032,87 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
           }}
         />
       </Box>
+
+      {/* Exit Confirmation Dialog */}
+      <Dialog
+        open={showExitDialog}
+        onClose={handleExitCancel}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: '12px',
+                background: alpha(theme.palette.warning.main, 0.1),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <AlertTriangle size={24} color={theme.palette.warning.main} />
+            </Box>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Leave Worksheet Editor?
+              </Typography>
+            </Box>
+          </Stack>
+        </DialogTitle>
+        
+        <DialogContent>
+          <DialogContentText sx={{ fontSize: '0.95rem', color: 'text.secondary' }}>
+            Your work will be lost if you leave now. Are you sure you want to continue?
+          </DialogContentText>
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 3, pt: 2 }}>
+          <Button
+            onClick={handleExitCancel}
+            variant="outlined"
+            size="large"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              px: 3,
+              borderColor: theme.palette.divider,
+              color: 'text.primary',
+              '&:hover': {
+                borderColor: theme.palette.primary.main,
+                backgroundColor: alpha(theme.palette.primary.main, 0.04),
+              },
+            }}
+          >
+            Stay on Page
+          </Button>
+          <Button
+            onClick={handleExitConfirm}
+            variant="contained"
+            size="large"
+            color="warning"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              px: 3,
+              boxShadow: 'none',
+              '&:hover': {
+                boxShadow: 'none',
+              },
+            }}
+          >
+            Leave Anyway
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
