@@ -110,12 +110,11 @@ const BulletList: React.FC<BulletListProps> = ({
     <Box onClick={handleClick}>
       <Stack spacing={1}>
         {localItems.map((item) => (
-          <Stack key={item.id} direction="row" spacing={1.5} alignItems="flex-start">
+          <Stack key={item.id} direction="row" spacing={1.5} alignItems="center">
             <Box
               sx={{
                 ...getBulletStyle(),
                 flexShrink: 0,
-                mt: '0.4em',
               }}
             />
             {editingItemId === item.id ? (
