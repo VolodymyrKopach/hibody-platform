@@ -214,6 +214,27 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     }
   };
 
+  const handleElementReorder = (pageId: string, fromIndex: number, toIndex: number) => {
+    setPageContents(prev => {
+      const newMap = new Map(prev);
+      const pageContent = newMap.get(pageId);
+      
+      if (!pageContent) return prev;
+      
+      const elements = [...pageContent.elements];
+      const [movedElement] = elements.splice(fromIndex, 1);
+      elements.splice(toIndex, 0, movedElement);
+      
+      newMap.set(pageId, {
+        ...pageContent,
+        elements,
+      });
+      
+      saveToHistory(newMap);
+      return newMap;
+    });
+  };
+
   const handleElementSelect = (elementId: string | null) => {
     setSelectedElementId(elementId);
     
@@ -733,6 +754,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
                 onElementSelect={handleElementSelect}
                 onElementAdd={(element) => handleElementAdd(page.id, element)}
                 onElementEdit={(elementId, properties) => handleElementEdit(page.id, elementId, properties)}
+                onElementReorder={(fromIndex, toIndex) => handleElementReorder(page.id, fromIndex, toIndex)}
               />
             </Box>
             );

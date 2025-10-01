@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { Box, Paper, useTheme, alpha, Typography } from '@mui/material';
+import React, { useRef, useState } from 'react';
+import { Box, Paper, useTheme, alpha, Typography, IconButton, Tooltip } from '@mui/material';
+import { GripVertical } from 'lucide-react';
 import { CanvasElement } from '@/types/canvas-element';
 import TitleBlock from './atomic/TitleBlock';
 import BodyText from './atomic/BodyText';
@@ -23,6 +24,7 @@ interface CanvasPageProps {
   onElementSelect: (elementId: string | null) => void;
   onElementAdd: (element: Omit<CanvasElement, 'id' | 'zIndex'>) => void;
   onElementEdit: (elementId: string, properties: any) => void;
+  onElementReorder?: (fromIndex: number, toIndex: number) => void;
   onDragOver?: (e: React.DragEvent) => void;
 }
 
@@ -37,10 +39,53 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   onElementSelect,
   onElementAdd,
   onElementEdit,
+  onElementReorder,
   onDragOver,
 }) => {
   const theme = useTheme();
   const pageRef = useRef<HTMLDivElement>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
+
+  // Handle element reorder drag start
+  const handleElementDragStart = (e: React.DragEvent, index: number) => {
+    e.stopPropagation(); // Prevent parent drag handlers
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', 'reorder'); // Mark as reorder operation
+  };
+
+  // Handle element drag over (show drop indicator)
+  const handleElementDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Only show indicator for reorder operations (not new elements from sidebar)
+    const dragType = e.dataTransfer.types.includes('text/plain');
+    if (dragType && draggedIndex !== null && draggedIndex !== index) {
+      setDropIndicatorIndex(index);
+    }
+  };
+
+  // Handle element drop (reorder)
+  const handleElementDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (draggedIndex !== null && draggedIndex !== dropIndex && onElementReorder) {
+      onElementReorder(draggedIndex, dropIndex);
+    }
+
+    // Reset drag state
+    setDraggedIndex(null);
+    setDropIndicatorIndex(null);
+  };
+
+  // Handle drag end (cleanup)
+  const handleElementDragEnd = () => {
+    setDraggedIndex(null);
+    setDropIndicatorIndex(null);
+  };
 
   // Handle drop from sidebar
   const handleDrop = (e: React.DragEvent) => {
@@ -124,32 +169,106 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         }}
       >
         {elements.map((element, index) => (
-          <Box
-            key={element.id}
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent deselect when clicking element
-              onElementSelect(element.id);
-            }}
-            sx={{
-              width: '100%',
-              cursor: element.locked ? 'default' : 'pointer',
-              border: selectedElementId === element.id
-                ? `2px solid ${theme.palette.primary.main}`
-                : '2px solid transparent',
-              borderRadius: '4px',
-              transition: 'border 0.2s',
-              '&:hover': element.locked ? {} : {
-                border: `2px solid ${alpha(theme.palette.primary.main, 0.5)}`,
-              },
-            }}
-          >
-            {renderElement(
-              element, 
-              selectedElementId === element.id,
-              onElementEdit,
-              onElementSelect
+          <React.Fragment key={element.id}>
+            {/* Drop indicator before element */}
+            {dropIndicatorIndex === index && draggedIndex !== index && (
+              <Box
+                sx={{
+                  height: '4px',
+                  width: '100%',
+                  backgroundColor: theme.palette.primary.main,
+                  borderRadius: '2px',
+                  my: -1.5, // Overlap with gap
+                }}
+              />
             )}
-          </Box>
+            
+            <Box
+              draggable={!element.locked}
+              onDragStart={(e) => !element.locked && handleElementDragStart(e, index)}
+              onDragOver={(e) => !element.locked && handleElementDragOver(e, index)}
+              onDrop={(e) => !element.locked && handleElementDrop(e, index)}
+              onDragEnd={handleElementDragEnd}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent deselect when clicking element
+                onElementSelect(element.id);
+              }}
+              sx={{
+                width: '100%',
+                position: 'relative',
+                cursor: element.locked ? 'default' : 'grab',
+                border: selectedElementId === element.id
+                  ? `2px solid ${theme.palette.primary.main}`
+                  : '2px solid transparent',
+                borderRadius: '4px',
+                transition: 'border 0.2s, opacity 0.2s',
+                opacity: draggedIndex === index ? 0.5 : 1,
+                '&:hover': element.locked ? {} : {
+                  border: `2px solid ${alpha(theme.palette.primary.main, 0.5)}`,
+                  '& .drag-handle': {
+                    opacity: 1,
+                  },
+                },
+                '&:active': {
+                  cursor: element.locked ? 'default' : 'grabbing',
+                },
+              }}
+            >
+              {/* Drag handle */}
+              {!element.locked && (
+                <Box
+                  className="drag-handle"
+                  sx={{
+                    position: 'absolute',
+                    left: -32,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    opacity: 0,
+                    transition: 'opacity 0.2s',
+                    cursor: 'grab',
+                    '&:active': {
+                      cursor: 'grabbing',
+                    },
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()} // Prevent element selection
+                >
+                  <Tooltip title="Drag to reorder" placement="left">
+                    <IconButton
+                      size="small"
+                      sx={{
+                        color: theme.palette.text.secondary,
+                        '&:hover': {
+                          backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                        },
+                      }}
+                    >
+                      <GripVertical size={20} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              )}
+              
+              {renderElement(
+                element, 
+                selectedElementId === element.id,
+                onElementEdit,
+                onElementSelect
+              )}
+            </Box>
+
+            {/* Drop indicator after last element */}
+            {index === elements.length - 1 && dropIndicatorIndex === elements.length && (
+              <Box
+                sx={{
+                  height: '4px',
+                  width: '100%',
+                  backgroundColor: theme.palette.primary.main,
+                  borderRadius: '2px',
+                  my: -1.5, // Overlap with gap
+                }}
+              />
+            )}
+          </React.Fragment>
         ))}
       </Box>
 
@@ -222,7 +341,16 @@ function renderElement(
         />
       );
     case 'multiple-choice':
-      return <MultipleChoice items={element.properties.items || []} />;
+      return (
+        <MultipleChoice
+          items={element.properties.items || []}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
     case 'tip-box':
       return (
         <TipBox
@@ -252,9 +380,16 @@ function renderElement(
     case 'image-placeholder':
       return (
         <ImagePlaceholder
+          url={element.properties.url}
           caption={element.properties.caption}
           width={element.properties.width}
           height={element.properties.height}
+          align={element.properties.align}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
         />
       );
     default:
@@ -322,9 +457,11 @@ function getDefaultProperties(type: string) {
       };
     case 'image-placeholder':
       return { 
-        caption: 'Image description', 
+        url: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=400',
+        caption: 'Cute cat photo from Pexels', 
         width: 400, 
-        height: 300 
+        height: 300,
+        align: 'center'
       };
     default:
       return {};

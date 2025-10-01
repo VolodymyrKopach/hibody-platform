@@ -15,7 +15,6 @@ import {
   Button,
   Switch,
   FormControlLabel,
-  Slider,
 } from '@mui/material';
 import {
   Settings,
@@ -1096,6 +1095,477 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                     Press Enter to add words
                   </Typography>
+                </Stack>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'multiple-choice' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Multiple Choice Properties
+              </Typography>
+
+              <Typography variant="caption" color="text.secondary">
+                💡 Tip: Double-click questions or options to edit them inline
+              </Typography>
+
+              {/* Questions */}
+              <Box>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
+                    Questions ({elementData.properties?.items?.length || 0})
+                  </Typography>
+                  <Button
+                    size="small"
+                    startIcon={<Plus size={12} />}
+                    onClick={() => {
+                      const items = elementData.properties?.items || [];
+                      const newItem = {
+                        number: items.length + 1,
+                        question: 'New question?',
+                        options: [
+                          { letter: 'a', text: 'Option A' },
+                          { letter: 'b', text: 'Option B' },
+                          { letter: 'c', text: 'Option C' },
+                        ],
+                      };
+                      onUpdate?.({ items: [...items, newItem] });
+                    }}
+                    sx={{ fontSize: '11px', textTransform: 'none' }}
+                  >
+                    Add Question
+                  </Button>
+                </Stack>
+
+                <Stack spacing={2}>
+                  {(elementData.properties?.items || []).map((item: any, itemIndex: number) => (
+                    <Paper
+                      key={itemIndex}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        borderRadius: '10px',
+                        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                        background: alpha(theme.palette.grey[50], 0.5),
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                          <Chip
+                            label={`#${item.number}`}
+                            size="small"
+                            sx={{ fontWeight: 600, fontSize: '11px' }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items
+                                .filter((_: any, idx: number) => idx !== itemIndex)
+                                .map((it: any, idx: number) => ({ ...it, number: idx + 1 }));
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            sx={{ p: 0.5 }}
+                          >
+                            <Trash2 size={14} color="#EF4444" />
+                          </IconButton>
+                        </Stack>
+
+                        <Box>
+                          <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                            Question
+                          </Typography>
+                          <TextField
+                            fullWidth
+                            multiline
+                            rows={2}
+                            value={item.question || ''}
+                            onChange={(e) => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items.map((it: any, idx: number) =>
+                                idx === itemIndex ? { ...it, question: e.target.value } : it
+                              );
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            placeholder="Enter your question"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                              },
+                            }}
+                          />
+                        </Box>
+
+                        <Divider />
+
+                        {/* Options */}
+                        <Box>
+                          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
+                              Options ({item.options?.length || 0})
+                            </Typography>
+                            <Button
+                              size="small"
+                              startIcon={<Plus size={10} />}
+                              onClick={() => {
+                                const items = elementData.properties?.items || [];
+                                const options = item.options || [];
+                                const letters = 'abcdefghijklmnopqrstuvwxyz';
+                                const newLetter = letters[options.length] || 'x';
+                                const newOption = {
+                                  letter: newLetter,
+                                  text: `Option ${newLetter.toUpperCase()}`,
+                                };
+                                const updatedItems = items.map((it: any, idx: number) =>
+                                  idx === itemIndex ? { ...it, options: [...options, newOption] } : it
+                                );
+                                onUpdate?.({ items: updatedItems });
+                              }}
+                              sx={{ fontSize: '10px', textTransform: 'none', py: 0.25 }}
+                            >
+                              Add Option
+                            </Button>
+                          </Stack>
+
+                          <Stack spacing={1}>
+                            {(item.options || []).map((option: any, optIndex: number) => (
+                              <Stack
+                                key={optIndex}
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                                sx={{
+                                  p: 1,
+                                  borderRadius: '8px',
+                                  background: '#FFFFFF',
+                                }}
+                              >
+                                <Chip
+                                  label={option.letter}
+                                  size="small"
+                                  sx={{
+                                    fontWeight: 600,
+                                    fontSize: '10px',
+                                    minWidth: '28px',
+                                    height: '24px',
+                                  }}
+                                />
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  value={option.text || ''}
+                                  onChange={(e) => {
+                                    const items = elementData.properties?.items || [];
+                                    const updatedItems = items.map((it: any, idx: number) =>
+                                      idx === itemIndex
+                                        ? {
+                                            ...it,
+                                            options: it.options.map((opt: any, oidx: number) =>
+                                              oidx === optIndex ? { ...opt, text: e.target.value } : opt
+                                            ),
+                                          }
+                                        : it
+                                    );
+                                    onUpdate?.({ items: updatedItems });
+                                  }}
+                                  placeholder={`Option ${option.letter.toUpperCase()}`}
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: '6px',
+                                      fontSize: '0.8rem',
+                                    },
+                                  }}
+                                />
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    const items = elementData.properties?.items || [];
+                                    const updatedItems = items.map((it: any, idx: number) =>
+                                      idx === itemIndex
+                                        ? {
+                                            ...it,
+                                            options: it.options.filter((_: any, oidx: number) => oidx !== optIndex),
+                                          }
+                                        : it
+                                    );
+                                    onUpdate?.({ items: updatedItems });
+                                  }}
+                                  sx={{ p: 0.5 }}
+                                >
+                                  <Trash2 size={12} color="#EF4444" />
+                                </IconButton>
+                              </Stack>
+                            ))}
+                          </Stack>
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'image-placeholder' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Image Properties
+              </Typography>
+
+              {/* Image URL */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Image URL
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="https://example.com/image.jpg"
+                  value={elementData.properties?.url || ''}
+                  onChange={(e) => onUpdate?.({ url: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}>
+                  Enter a direct link to an image (jpg, png, gif, svg)
+                </Typography>
+              </Box>
+
+              <Divider />
+
+              {/* Caption */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Caption
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  placeholder="Image description..."
+                  value={elementData.properties?.caption || ''}
+                  onChange={(e) => onUpdate?.({ caption: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}>
+                  💡 Tip: Double-click caption on canvas to edit it inline
+                </Typography>
+              </Box>
+
+              <Divider />
+
+              {/* Position/Alignment */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Position
+                </Typography>
+
+                <Stack direction="row" spacing={1}>
+                  {[
+                    { label: 'Left', value: 'left', icon: AlignLeft },
+                    { label: 'Center', value: 'center', icon: AlignCenter },
+                    { label: 'Right', value: 'right', icon: AlignRight },
+                  ].map((position) => {
+                    const isActive = (elementData.properties?.align || 'center') === position.value;
+                    const Icon = position.icon;
+                    return (
+                      <Box
+                        key={position.value}
+                        onClick={() => onUpdate?.({ align: position.value })}
+                        sx={{
+                          flex: 1,
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#EFF6FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          '&:hover': {
+                            borderColor: '#2563EB',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Icon size={18} color={isActive ? '#2563EB' : '#6B7280'} />
+                        <Typography
+                          sx={{
+                            fontSize: '11px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#2563EB' : '#6B7280',
+                          }}
+                        >
+                          {position.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Size Presets */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Image Size
+                </Typography>
+
+                <Stack spacing={1}>
+                  {[
+                    { label: 'Small', size: '200×150', width: 200, height: 150 },
+                    { label: 'Medium', size: '400×300', width: 400, height: 300 },
+                    { label: 'Large', size: '600×450', width: 600, height: 450 },
+                    { label: 'Full Width', size: '794×auto', width: 794, height: 400 },
+                  ].map((preset) => {
+                    const isActive = elementData.properties?.width === preset.width && 
+                                    elementData.properties?.height === preset.height;
+                    return (
+                      <Box
+                        key={preset.label}
+                        onClick={() => onUpdate?.({ width: preset.width, height: preset.height })}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#EFF6FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          '&:hover': {
+                            borderColor: '#2563EB',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 24,
+                              border: '2px solid #9CA3AF',
+                              borderRadius: '4px',
+                              backgroundColor: isActive ? '#2563EB' : '#F3F4F6',
+                              transition: 'all 0.2s',
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontSize: '13px',
+                              fontWeight: isActive ? 600 : 500,
+                              color: isActive ? '#2563EB' : '#374151',
+                            }}
+                          >
+                            {preset.label}
+                          </Typography>
+                        </Stack>
+                        <Typography
+                          sx={{
+                            fontSize: '11px',
+                            color: '#9CA3AF',
+                            fontFamily: 'monospace',
+                          }}
+                        >
+                          {preset.size}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mt: 1, display: 'block' }}>
+                  Current: {elementData.properties?.width || 400}×{elementData.properties?.height || 300}px
+                </Typography>
+              </Box>
+
+              {/* Image Preview */}
+              {elementData.properties?.url && (
+                <>
+                  <Divider />
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                      Preview
+                    </Typography>
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: '150px',
+                        borderRadius: '8px',
+                        border: '1px solid #E5E7EB',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: '#F9FAFB',
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={elementData.properties.url}
+                        alt="Preview"
+                        sx={{
+                          maxWidth: '100%',
+                          maxHeight: '100%',
+                          objectFit: 'contain',
+                        }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const parent = (e.target as HTMLImageElement).parentElement;
+                          if (parent) {
+                            parent.innerHTML = '<div style="color: #EF4444; font-size: 12px; text-align: center;">❌<br/>Invalid image URL</div>';
+                          }
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                </>
+              )}
+
+              {/* Quick Image Examples */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  🎨 Quick Examples
+                </Typography>
+                <Stack spacing={0.5}>
+                  {[
+                    { label: '🐱 Pexels Cat Photo', url: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=400' },
+                    { label: 'Placeholder 400×300', url: 'https://via.placeholder.com/400x300' },
+                    { label: 'Unsplash Random', url: 'https://source.unsplash.com/random/400x300' },
+                    { label: 'Picsum Random', url: 'https://picsum.photos/400/300' },
+                  ].map((example) => (
+                    <Box
+                      key={example.label}
+                      onClick={() => onUpdate?.({ url: example.url })}
+                      sx={{
+                        p: 1,
+                        borderRadius: '6px',
+                        border: '1px solid #E5E7EB',
+                        cursor: 'pointer',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        color: '#6B7280',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          borderColor: '#2563EB',
+                          backgroundColor: '#EFF6FF',
+                          color: '#2563EB',
+                        },
+                      }}
+                    >
+                      {example.label}
+                    </Box>
+                  ))}
                 </Stack>
               </Box>
             </Stack>
