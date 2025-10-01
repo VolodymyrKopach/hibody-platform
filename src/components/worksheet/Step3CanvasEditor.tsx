@@ -24,6 +24,7 @@ import {
   ListItemIcon,
   ListItemText,
   CircularProgress,
+  Divider,
 } from '@mui/material';
 import {
   ZoomIn,
@@ -41,6 +42,8 @@ import {
   Image as ImageIcon,
   Printer,
   Check,
+  File,
+  Files,
 } from 'lucide-react';
 import { exportToPDF, exportToPNG, printWorksheet } from '@/utils/pdfExport';
 import { autoSaveWorksheet, getCurrentWorksheetId, SavedWorksheet } from '@/utils/worksheetStorage';
@@ -198,22 +201,51 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     setExportMenuAnchor(null);
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (currentPageOnly: boolean = false) => {
     handleExportMenuClose();
     setIsExporting(true);
 
     try {
-      // Get all page elements
-      const pageElements = Array.from(
-        document.querySelectorAll('[data-page-id]')
-      ) as HTMLElement[];
+      let pageElements: HTMLElement[];
+      let filename = 'worksheet';
 
-      if (pageElements.length === 0) {
-        throw new Error('No pages found to export');
+      if (currentPageOnly && selection?.type === 'page') {
+        // Export only selected page
+        const selectedPageElement = document.querySelector(
+          `[data-page-id="${selection.data.id}"]`
+        ) as HTMLElement;
+
+        if (!selectedPageElement) {
+          throw new Error('Selected page not found');
+        }
+
+        pageElements = [selectedPageElement];
+        filename = `worksheet_page_${selection.data.pageNumber}`;
+      } else if (currentPageOnly && selection?.type === 'element') {
+        // Export page containing selected element
+        const selectedPageElement = document.querySelector(
+          `[data-page-id="${selection.pageData.id}"]`
+        ) as HTMLElement;
+
+        if (!selectedPageElement) {
+          throw new Error('Selected page not found');
+        }
+
+        pageElements = [selectedPageElement];
+        filename = `worksheet_page_${selection.pageData.pageNumber}`;
+      } else {
+        // Export all pages
+        pageElements = Array.from(
+          document.querySelectorAll('[data-page-id]')
+        ) as HTMLElement[];
+
+        if (pageElements.length === 0) {
+          throw new Error('No pages found to export');
+        }
       }
 
       await exportToPDF(pageElements, {
-        filename: 'worksheet',
+        filename,
         quality: 0.95,
         scale: 2,
         format: 'a4',
@@ -226,19 +258,48 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     }
   };
 
-  const handleExportPNG = async () => {
+  const handleExportPNG = async (currentPageOnly: boolean = false) => {
     handleExportMenuClose();
     setIsExporting(true);
 
     try {
-      // Get first page element
-      const pageElement = document.querySelector('[data-page-id]') as HTMLElement;
+      let pageElement: HTMLElement;
+      let filename = 'worksheet';
 
-      if (!pageElement) {
-        throw new Error('No page found to export');
+      if (currentPageOnly && selection?.type === 'page') {
+        // Export only selected page
+        const selectedPageElement = document.querySelector(
+          `[data-page-id="${selection.data.id}"]`
+        ) as HTMLElement;
+
+        if (!selectedPageElement) {
+          throw new Error('Selected page not found');
+        }
+
+        pageElement = selectedPageElement;
+        filename = `worksheet_page_${selection.data.pageNumber}`;
+      } else if (currentPageOnly && selection?.type === 'element') {
+        // Export page containing selected element
+        const selectedPageElement = document.querySelector(
+          `[data-page-id="${selection.pageData.id}"]`
+        ) as HTMLElement;
+
+        if (!selectedPageElement) {
+          throw new Error('Selected page not found');
+        }
+
+        pageElement = selectedPageElement;
+        filename = `worksheet_page_${selection.pageData.pageNumber}`;
+      } else {
+        // Export first page by default
+        pageElement = document.querySelector('[data-page-id]') as HTMLElement;
+
+        if (!pageElement) {
+          throw new Error('No page found to export');
+        }
       }
 
-      await exportToPNG(pageElement, 'worksheet');
+      await exportToPNG(pageElement, filename);
     } catch (error) {
       console.error('Export PNG failed:', error);
       alert('Failed to export PNG. Please try again.');
@@ -1219,24 +1280,56 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
           },
         }}
       >
-        <MenuItem onClick={handleExportPDF}>
+        {/* Current Page Export - only show if page is selected */}
+        {selection && (
+          <>
+            <Box sx={{ px: 2, py: 1, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.7rem', textTransform: 'uppercase' }}>
+                {selection.type === 'page' 
+                  ? `Page ${selection.data.pageNumber}`
+                  : `Page ${selection.pageData.pageNumber}`
+                }
+              </Typography>
+            </Box>
+            <MenuItem onClick={() => handleExportPDF(true)}>
+              <ListItemIcon>
+                <File size={18} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Export Page as PDF"
+                secondary="Current page only"
+                primaryTypographyProps={{ fontSize: '0.875rem' }}
+                secondaryTypographyProps={{ fontSize: '0.75rem' }}
+              />
+            </MenuItem>
+            <MenuItem onClick={() => handleExportPNG(true)}>
+              <ListItemIcon>
+                <ImageIcon size={18} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Export Page as PNG"
+                secondary="Current page only"
+                primaryTypographyProps={{ fontSize: '0.875rem' }}
+                secondaryTypographyProps={{ fontSize: '0.75rem' }}
+              />
+            </MenuItem>
+            <Divider sx={{ my: 1 }} />
+          </>
+        )}
+
+        {/* All Pages Export */}
+        <Box sx={{ px: 2, py: 1, bgcolor: alpha(theme.palette.grey[500], 0.05) }}>
+          <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.7rem', textTransform: 'uppercase' }}>
+            All Pages ({pages.length})
+          </Typography>
+        </Box>
+        <MenuItem onClick={() => handleExportPDF(false)}>
           <ListItemIcon>
-            <FileDown size={18} />
+            <Files size={18} />
           </ListItemIcon>
           <ListItemText 
-            primary="Export as PDF"
-            secondary="Download worksheet as PDF"
-            primaryTypographyProps={{ fontSize: '0.875rem' }}
-            secondaryTypographyProps={{ fontSize: '0.75rem' }}
-          />
-        </MenuItem>
-        <MenuItem onClick={handleExportPNG}>
-          <ListItemIcon>
-            <ImageIcon size={18} />
-          </ListItemIcon>
-          <ListItemText 
-            primary="Export as PNG"
-            secondary="Download as image"
+            primary="Export All as PDF"
+            secondary="Multi-page document"
             primaryTypographyProps={{ fontSize: '0.875rem' }}
             secondaryTypographyProps={{ fontSize: '0.75rem' }}
           />
@@ -1246,8 +1339,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
             <Printer size={18} />
           </ListItemIcon>
           <ListItemText 
-            primary="Print"
-            secondary="Print worksheet"
+            primary="Print All Pages"
+            secondary="Browser print dialog"
             primaryTypographyProps={{ fontSize: '0.875rem' }}
             secondaryTypographyProps={{ fontSize: '0.75rem' }}
           />
