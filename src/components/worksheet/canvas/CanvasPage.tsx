@@ -72,19 +72,11 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   };
 
 
-  // Click on empty space = deselect
-  const handlePageClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onElementSelect(null);
-    }
-  };
-
   return (
     <Paper
       ref={pageRef}
       onDrop={handleDrop}
       onDragOver={handleDragOverPage}
-      onClick={handlePageClick}
       elevation={4}
       sx={{
         position: 'relative',
@@ -115,6 +107,12 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
 
       {/* Canvas Elements - Linear Layout */}
       <Box 
+        onClick={(e) => {
+          // Deselect when clicking on empty space
+          if (e.target === e.currentTarget) {
+            onElementSelect(null);
+          }
+        }}
         sx={{ 
           width: '100%', 
           height: '100%', 
@@ -128,7 +126,10 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         {elements.map((element, index) => (
           <Box
             key={element.id}
-            onClick={() => onElementSelect(element.id)}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent deselect when clicking element
+              onElementSelect(element.id);
+            }}
             sx={{
               width: '100%',
               cursor: element.locked ? 'default' : 'pointer',
