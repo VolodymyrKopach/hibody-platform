@@ -9,6 +9,8 @@ import BodyText from './atomic/BodyText';
 import InstructionsBox from './atomic/InstructionsBox';
 import FillInBlank from './atomic/FillInBlank';
 import MultipleChoice from './atomic/MultipleChoice';
+import TrueFalse from './atomic/TrueFalse';
+import ShortAnswer from './atomic/ShortAnswer';
 import TipBox from './atomic/TipBox';
 import WarningBox from './atomic/WarningBox';
 import ImagePlaceholder from './atomic/ImagePlaceholder';
@@ -351,6 +353,28 @@ function renderElement(
           onFocus={() => onSelect(element.id)}
         />
       );
+    case 'true-false':
+      return (
+        <TrueFalse
+          items={element.properties.items || []}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'short-answer':
+      return (
+        <ShortAnswer
+          items={element.properties.items || []}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
     case 'tip-box':
       return (
         <TipBox
@@ -442,6 +466,38 @@ function getDefaultProperties(type: string) {
               { letter: 'b', text: 'drinks' },
               { letter: 'c', text: 'drinking' },
             ],
+          },
+        ],
+      };
+    case 'true-false':
+      return {
+        items: [
+          {
+            number: 1,
+            statement: 'The sun rises in the west.',
+          },
+          {
+            number: 2,
+            statement: 'Water freezes at 0°C (32°F).',
+          },
+          {
+            number: 3,
+            statement: 'There are 7 continents on Earth.',
+          },
+        ],
+      };
+    case 'short-answer':
+      return {
+        items: [
+          {
+            number: 1,
+            question: 'What is the capital of France?',
+            lines: 1,
+          },
+          {
+            number: 2,
+            question: 'Describe your favorite book in a few sentences.',
+            lines: 3,
           },
         ],
       };

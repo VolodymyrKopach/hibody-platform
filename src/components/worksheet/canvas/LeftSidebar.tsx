@@ -86,6 +86,8 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       items: [
         { id: 'fill-blank', name: 'Fill in Blanks', icon: '✏️', description: 'Complete sentences' },
         { id: 'multiple-choice', name: 'Multiple Choice', icon: '☑️', description: 'Choose answer' },
+        { id: 'true-false', name: 'True/False', icon: '✓✗', description: 'True or false statements' },
+        { id: 'short-answer', name: 'Short Answer', icon: '📝', description: 'Written response' },
       ],
     },
     {

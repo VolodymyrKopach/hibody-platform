@@ -425,6 +425,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                elementData.type === 'instructions-box' ? 'Instructions Box' :
                elementData.type === 'fill-blank' ? 'Fill in Blanks' :
                elementData.type === 'multiple-choice' ? 'Multiple Choice' :
+               elementData.type === 'true-false' ? 'True/False' :
+               elementData.type === 'short-answer' ? 'Short Answer' :
                elementData.type === 'tip-box' ? 'Tip Box' :
                elementData.type === 'warning-box' ? 'Warning Box' :
                elementData.type === 'image-placeholder' ? 'Image' :
@@ -1297,6 +1299,258 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                               </Stack>
                             ))}
                           </Stack>
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'true-false' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                True/False Properties
+              </Typography>
+
+              <Typography variant="caption" color="text.secondary">
+                💡 Tip: Double-click statements to edit them inline
+              </Typography>
+
+              {/* Statements */}
+              <Box>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
+                    Statements ({elementData.properties?.items?.length || 0})
+                  </Typography>
+                  <Button
+                    size="small"
+                    startIcon={<Plus size={12} />}
+                    onClick={() => {
+                      const items = elementData.properties?.items || [];
+                      const newItem = {
+                        number: items.length + 1,
+                        statement: 'New true/false statement.',
+                      };
+                      onUpdate?.({ items: [...items, newItem] });
+                    }}
+                    sx={{ fontSize: '11px', textTransform: 'none' }}
+                  >
+                    Add Statement
+                  </Button>
+                </Stack>
+
+                <Stack spacing={2}>
+                  {(elementData.properties?.items || []).map((item: any, itemIndex: number) => (
+                    <Paper
+                      key={itemIndex}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        borderRadius: '10px',
+                        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                        background: alpha(theme.palette.grey[50], 0.5),
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                          <Chip
+                            label={`#${item.number}`}
+                            size="small"
+                            sx={{ fontWeight: 600, fontSize: '11px' }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items
+                                .filter((_: any, idx: number) => idx !== itemIndex)
+                                .map((it: any, idx: number) => ({ ...it, number: idx + 1 }));
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            sx={{ p: 0.5 }}
+                          >
+                            <Trash2 size={14} color="#EF4444" />
+                          </IconButton>
+                        </Stack>
+
+                        <Box>
+                          <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                            Statement
+                          </Typography>
+                          <TextField
+                            fullWidth
+                            multiline
+                            rows={2}
+                            value={item.statement || ''}
+                            onChange={(e) => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items.map((it: any, idx: number) =>
+                                idx === itemIndex ? { ...it, statement: e.target.value } : it
+                              );
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            placeholder="Enter true or false statement"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                              },
+                            }}
+                          />
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'short-answer' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Short Answer Properties
+              </Typography>
+
+              <Typography variant="caption" color="text.secondary">
+                💡 Tip: Double-click questions to edit them inline
+              </Typography>
+
+              {/* Questions */}
+              <Box>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
+                    Questions ({elementData.properties?.items?.length || 0})
+                  </Typography>
+                  <Button
+                    size="small"
+                    startIcon={<Plus size={12} />}
+                    onClick={() => {
+                      const items = elementData.properties?.items || [];
+                      const newItem = {
+                        number: items.length + 1,
+                        question: 'New question?',
+                        lines: 3,
+                      };
+                      onUpdate?.({ items: [...items, newItem] });
+                    }}
+                    sx={{ fontSize: '11px', textTransform: 'none' }}
+                  >
+                    Add Question
+                  </Button>
+                </Stack>
+
+                <Stack spacing={2}>
+                  {(elementData.properties?.items || []).map((item: any, itemIndex: number) => (
+                    <Paper
+                      key={itemIndex}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        borderRadius: '10px',
+                        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                        background: alpha(theme.palette.grey[50], 0.5),
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                          <Chip
+                            label={`#${item.number}`}
+                            size="small"
+                            sx={{ fontWeight: 600, fontSize: '11px' }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items
+                                .filter((_: any, idx: number) => idx !== itemIndex)
+                                .map((it: any, idx: number) => ({ ...it, number: idx + 1 }));
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            sx={{ p: 0.5 }}
+                          >
+                            <Trash2 size={14} color="#EF4444" />
+                          </IconButton>
+                        </Stack>
+
+                        <Box>
+                          <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                            Question
+                          </Typography>
+                          <TextField
+                            fullWidth
+                            multiline
+                            rows={2}
+                            value={item.question || ''}
+                            onChange={(e) => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items.map((it: any, idx: number) =>
+                                idx === itemIndex ? { ...it, question: e.target.value } : it
+                              );
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            placeholder="Enter your question"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                              },
+                            }}
+                          />
+                        </Box>
+
+                        <Divider />
+
+                        {/* Number of Lines */}
+                        <Box>
+                          <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                            Answer Lines ({item.lines || 3})
+                          </Typography>
+                          <Stack direction="row" spacing={0.5}>
+                            {[1, 2, 3, 4, 5].map((lineCount) => {
+                              const isActive = item.lines === lineCount;
+                              return (
+                                <Box
+                                  key={lineCount}
+                                  onClick={() => {
+                                    const items = elementData.properties?.items || [];
+                                    const updatedItems = items.map((it: any, idx: number) =>
+                                      idx === itemIndex ? { ...it, lines: lineCount } : it
+                                    );
+                                    onUpdate?.({ items: updatedItems });
+                                  }}
+                                  sx={{
+                                    flex: 1,
+                                    p: 1,
+                                    borderRadius: '6px',
+                                    border: isActive ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                                    backgroundColor: isActive ? '#EFF6FF' : '#FFFFFF',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    '&:hover': {
+                                      borderColor: '#2563EB',
+                                      backgroundColor: '#F9FAFB',
+                                    },
+                                  }}
+                                >
+                                  <Typography
+                                    sx={{
+                                      fontSize: '13px',
+                                      fontWeight: isActive ? 600 : 500,
+                                      color: isActive ? '#2563EB' : '#6B7280',
+                                    }}
+                                  >
+                                    {lineCount}
+                                  </Typography>
+                                </Box>
+                              );
+                            })}
+                          </Stack>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}>
+                            Select number of writing lines for this question
+                          </Typography>
                         </Box>
                       </Stack>
                     </Paper>
