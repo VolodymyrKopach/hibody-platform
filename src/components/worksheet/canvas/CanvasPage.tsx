@@ -297,6 +297,11 @@ function renderElement(
         <InstructionsBox
           text={element.properties.text || 'Instructions here...'}
           type={element.properties.type}
+          isSelected={isSelected}
+          onEdit={(newText) => {
+            onEdit(element.id, { ...element.properties, text: newText });
+          }}
+          onFocus={() => onSelect(element.id)}
         />
       );
     case 'fill-blank':
@@ -313,6 +318,11 @@ function renderElement(
         <TipBox
           text={element.properties.text || 'Tip here...'}
           type={element.properties.type}
+          isSelected={isSelected}
+          onEdit={(newText) => {
+            onEdit(element.id, { ...element.properties, text: newText });
+          }}
+          onFocus={() => onSelect(element.id)}
         />
       );
     case 'warning-box':
@@ -320,6 +330,11 @@ function renderElement(
         <WarningBox
           text={element.properties.text || 'Warning here...'}
           type={element.properties.type}
+          isSelected={isSelected}
+          onEdit={(newText) => {
+            onEdit(element.id, { ...element.properties, text: newText });
+          }}
+          onFocus={() => onSelect(element.id)}
         />
       );
     case 'image-placeholder':

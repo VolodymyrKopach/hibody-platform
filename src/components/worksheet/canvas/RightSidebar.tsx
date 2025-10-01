@@ -650,6 +650,213 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 </Stack>
               </Box>
             </Stack>
+          ) : elementData.type === 'instructions-box' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Instructions Properties
+              </Typography>
+
+              {/* Text Content */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Text Content
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  value={elementData.properties?.text || ''}
+                  onChange={(e) => onUpdate?.({ text: e.target.value })}
+                  placeholder="Enter instructions here..."
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              {/* Type */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Instruction Type
+                </Typography>
+                <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                  {[
+                    { label: 'General', value: 'general', icon: '📋' },
+                    { label: 'Reading', value: 'reading', icon: '📖' },
+                    { label: 'Writing', value: 'writing', icon: '✏️' },
+                    { label: 'Listening', value: 'listening', icon: '👂' },
+                    { label: 'Speaking', value: 'speaking', icon: '🗣️' },
+                  ].map((type) => (
+                    <Button
+                      key={type.value}
+                      size="small"
+                      onClick={() => onUpdate?.({ type: type.value })}
+                      variant={elementData.properties?.type === type.value ? 'contained' : 'outlined'}
+                      sx={{
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                        minWidth: 'auto',
+                        px: 1.5,
+                      }}
+                    >
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <span>{type.icon}</span>
+                        <span>{type.label}</span>
+                      </Stack>
+                    </Button>
+                  ))}
+                </Stack>
+              </Box>
+
+              {/* Icon (optional custom) */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Custom Icon (optional)
+                </Typography>
+                <TextField
+                  fullWidth
+                  size="small"
+                  value={elementData.properties?.icon || ''}
+                  onChange={(e) => onUpdate?.({ icon: e.target.value })}
+                  placeholder="Leave empty for default icon"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                  Enter emoji or leave empty to use type icon
+                </Typography>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'tip-box' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Tip Box Properties
+              </Typography>
+
+              {/* Text Content */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Tip Text
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  value={elementData.properties?.text || ''}
+                  onChange={(e) => onUpdate?.({ text: e.target.value })}
+                  placeholder="Enter helpful tip here..."
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              {/* Type */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Tip Type
+                </Typography>
+                <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                  {[
+                    { label: 'Study', value: 'study', icon: '💡' },
+                    { label: 'Memory', value: 'memory', icon: '🧠' },
+                    { label: 'Practice', value: 'practice', icon: '🎯' },
+                    { label: 'Cultural', value: 'cultural', icon: '🌍' },
+                  ].map((type) => (
+                    <Button
+                      key={type.value}
+                      size="small"
+                      onClick={() => onUpdate?.({ type: type.value })}
+                      variant={elementData.properties?.type === type.value ? 'contained' : 'outlined'}
+                      sx={{
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                        minWidth: 'auto',
+                        px: 1.5,
+                      }}
+                    >
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <span>{type.icon}</span>
+                        <span>{type.label}</span>
+                      </Stack>
+                    </Button>
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'warning-box' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Warning Box Properties
+              </Typography>
+
+              {/* Text Content */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Warning Text
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  value={elementData.properties?.text || ''}
+                  onChange={(e) => onUpdate?.({ text: e.target.value })}
+                  placeholder="Enter warning message here..."
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              {/* Type */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Warning Type
+                </Typography>
+                <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                  {[
+                    { label: 'Grammar', value: 'grammar', icon: '⚠️' },
+                    { label: 'Time', value: 'time', icon: '⏰' },
+                    { label: 'Difficulty', value: 'difficulty', icon: '🔥' },
+                    { label: 'Common Mistake', value: 'common-mistake', icon: '❗' },
+                  ].map((type) => (
+                    <Button
+                      key={type.value}
+                      size="small"
+                      onClick={() => onUpdate?.({ type: type.value })}
+                      variant={elementData.properties?.type === type.value ? 'contained' : 'outlined'}
+                      sx={{
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                        minWidth: 'auto',
+                        px: 1.5,
+                      }}
+                    >
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <span>{type.icon}</span>
+                        <span>{type.label}</span>
+                      </Stack>
+                    </Button>
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
           ) : (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <Typography sx={{ fontSize: '2rem', mb: 1 }}>🚧</Typography>
