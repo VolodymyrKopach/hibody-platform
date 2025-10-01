@@ -146,23 +146,21 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
 
   // Prevent accidental navigation away
   useEffect(() => {
+    // Always show warning when leaving page
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Only show warning if there's any content
-      if (pageContents.size > 0) {
-        e.preventDefault();
-        // Modern browsers require returnValue to be set
-        e.returnValue = '';
-        return '';
-      }
+      e.preventDefault();
+      // Modern browsers require returnValue to be set
+      e.returnValue = '';
+      return '';
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent Cmd/Ctrl+W (close tab) if there's unsaved work
-      if ((e.metaKey || e.ctrlKey) && e.key === 'w' && pageContents.size > 0) {
+      // Prevent Cmd/Ctrl+W (close tab)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'w') {
         e.preventDefault();
         // Show confirmation dialog
         const confirmed = window.confirm(
-          'You have unsaved changes. Are you sure you want to leave?'
+          'Are you sure you want to leave? Your work will be lost.'
         );
         if (confirmed) {
           window.close();
@@ -177,31 +175,73 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [pageContents]);
+  }, []);
+
+  // Prevent browser back button navigation
+  useEffect(() => {
+    // Push a dummy state to history to intercept back button
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = (e: PopStateEvent) => {
+      // Show confirmation dialog
+      const confirmed = window.confirm(
+        'Are you sure you want to leave? Your work will be lost.'
+      );
+      
+      if (confirmed) {
+        // User confirmed - allow navigation back
+        window.history.back();
+      } else {
+        // User cancelled - push state again to stay on page
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   // Prevent browser gestures on canvas (touchpad swipe navigation)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    let touchStartX = 0;
+    let touchStartY = 0;
+
     const handleTouchStart = (e: TouchEvent) => {
-      // Prevent browser navigation gestures
-      e.stopPropagation();
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      // Prevent browser navigation gestures (back/forward swipe)
-      e.stopPropagation();
-      // Allow canvas scrolling/panning but prevent browser navigation
-      if (e.touches.length === 1) {
-        // Single touch - allow canvas interaction
-        return;
+      const touchEndX = e.touches[0].clientX;
+      const touchEndY = e.touches[0].clientY;
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+      
+      // Prevent horizontal swipe navigation (back/forward)
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+        e.preventDefault();
+        e.stopPropagation();
       }
     };
 
     const handleWheel = (e: WheelEvent) => {
       // Prevent horizontal scroll from triggering browser navigation
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    // Prevent default touchpad gestures on the entire document
+    const handleDocumentWheel = (e: WheelEvent) => {
+      // Block horizontal scroll anywhere on the page
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 10) {
         e.preventDefault();
       }
     };
@@ -210,11 +250,13 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('wheel', handleWheel, { passive: false });
+    document.addEventListener('wheel', handleDocumentWheel, { passive: false });
 
     return () => {
       canvas.removeEventListener('touchstart', handleTouchStart);
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('wheel', handleWheel);
+      document.removeEventListener('wheel', handleDocumentWheel);
     };
   }, []);
 
