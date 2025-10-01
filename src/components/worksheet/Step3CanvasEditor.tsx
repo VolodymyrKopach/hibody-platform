@@ -45,7 +45,7 @@ import {
   File,
   Files,
 } from 'lucide-react';
-import { exportToPDF, exportToPNG, printWorksheet } from '@/utils/pdfExport';
+import { exportToPDF, exportToPNG, printWorksheet } from '@/utils/pdfExportSnapdom';
 import { autoSaveWorksheet, getCurrentWorksheetId, SavedWorksheet } from '@/utils/worksheetStorage';
 import LeftSidebar from './canvas/LeftSidebar';
 import RightSidebar from './canvas/RightSidebar';
@@ -246,7 +246,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
 
       await exportToPDF(pageElements, {
         filename,
-        quality: 0.95,
         format: 'a4',
       });
     } catch (error) {

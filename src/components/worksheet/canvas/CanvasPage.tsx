@@ -162,6 +162,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     <Paper
       ref={pageRef}
       data-page-id={pageId}
+      data-page-number={pageNumber}
       onDrop={handleDrop}
       onDragOver={handleDragOverPage}
       elevation={4}
@@ -171,10 +172,14 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         height,
         background: 'white',
         overflow: 'hidden',
+        // Ensure proper rendering for export
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
       }}
     >
       {/* Page Header */}
       <Box
+        data-page-header // For export filtering
         sx={{
           position: 'absolute',
           top: 0,
@@ -194,6 +199,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
 
       {/* Canvas Elements - Linear Layout */}
       <Box 
+        data-print-content // For PDF export
         onClick={(e) => {
           // Deselect when clicking on empty space
           if (e.target === e.currentTarget) {
@@ -215,6 +221,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
             {/* Drop indicator before element */}
             {dropIndicatorIndex === index && draggedIndex !== index && (
               <Box
+                data-drop-indicator // For export filtering
                 sx={{
                   height: '4px',
                   width: '100%',
@@ -259,6 +266,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
               {/* Drag handle */}
               {!element.locked && (
                 <Box
+                  data-drag-handle // For export filtering
                   className="drag-handle"
                   sx={{
                     position: 'absolute',
@@ -301,6 +309,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
             {/* Drop indicator after last element */}
             {index === elements.length - 1 && dropIndicatorIndex === elements.length && (
               <Box
+                data-drop-indicator // For export filtering
                 sx={{
                   height: '4px',
                   width: '100%',
