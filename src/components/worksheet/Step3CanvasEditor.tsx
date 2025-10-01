@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -119,11 +119,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
   const [clipboard, setClipboard] = useState<{ pageId: string; element: CanvasElement } | null>(null);
   const [history, setHistory] = useState<Map<string, PageContent>[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  
-  // Refs to track element positions and prevent infinite updates
-  const elementPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
-  const isUpdatingRef = useRef(false);
-  const rafIdRef = useRef<number | null>(null);
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
@@ -188,73 +183,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     });
   };
 
-  const handleElementMove = useCallback((pageId: string, elementId: string, position: { x: number; y: number }) => {
-    const elementKey = `${pageId}-${elementId}`;
-    const lastPosition = elementPositionsRef.current.get(elementKey);
-    
-    // Check if position actually changed significantly (prevent infinite updates)
-    if (lastPosition && 
-        Math.abs(lastPosition.x - position.x) < 1 && 
-        Math.abs(lastPosition.y - position.y) < 1) {
-      // Position didn't change significantly, don't update
-      return;
-    }
-    
-    // Prevent concurrent updates
-    if (isUpdatingRef.current) {
-      return;
-    }
-    
-    // Update the ref with new position
-    elementPositionsRef.current.set(elementKey, { x: position.x, y: position.y });
-    
-    // Cancel any pending animation frame
-    if (rafIdRef.current !== null) {
-      cancelAnimationFrame(rafIdRef.current);
-    }
-    
-    // Use requestAnimationFrame to throttle updates
-    rafIdRef.current = requestAnimationFrame(() => {
-      isUpdatingRef.current = true;
-      
-      setPageContents(prev => {
-        const pageContent = prev.get(pageId);
-        
-        if (!pageContent) {
-          isUpdatingRef.current = false;
-          return prev;
-        }
-        
-        const newMap = new Map(prev);
-        newMap.set(pageId, {
-          ...pageContent,
-          elements: pageContent.elements.map(el =>
-            el.id === elementId ? { ...el, position } : el
-          ),
-        });
-        
-        isUpdatingRef.current = false;
-        return newMap;
-      });
-      
-      rafIdRef.current = null;
-    });
-  }, []);
-
-  const handleElementMoveEnd = useCallback((pageId: string, elementId: string) => {
-    // Cancel any pending animation frame
-    if (rafIdRef.current !== null) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
-    }
-    
-    // Reset the updating flag
-    isUpdatingRef.current = false;
-    
-    // Clear the position ref when dragging ends to allow fresh tracking on next drag
-    const elementKey = `${pageId}-${elementId}`;
-    elementPositionsRef.current.delete(elementKey);
-  }, []);
 
   const handleElementEdit = (pageId: string, elementId: string, properties: any) => {
     setPageContents(prev => {
@@ -490,14 +418,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     }
   };
 
-  // Cleanup animation frames on unmount
-  React.useEffect(() => {
-    return () => {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-      }
-    };
-  }, []);
 
   // Keyboard shortcuts
   React.useEffect(() => {
@@ -811,8 +731,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
                 elements={pageContent?.elements || []}
                 selectedElementId={selectedElementId}
                 onElementSelect={handleElementSelect}
-                onElementMove={(elementId, position) => handleElementMove(page.id, elementId, position)}
-                onElementMoveEnd={(elementId) => handleElementMoveEnd(page.id, elementId)}
                 onElementAdd={(element) => handleElementAdd(page.id, element)}
                 onElementEdit={(elementId, properties) => handleElementEdit(page.id, elementId, properties)}
               />
