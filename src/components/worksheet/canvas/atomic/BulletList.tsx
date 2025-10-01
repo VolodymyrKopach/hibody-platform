@@ -115,7 +115,7 @@ const BulletList: React.FC<BulletListProps> = ({
               sx={{
                 ...getBulletStyle(),
                 flexShrink: 0,
-                mt: 0.75,
+                mt: '0.4em',
               }}
             />
             {editingItemId === item.id ? (
