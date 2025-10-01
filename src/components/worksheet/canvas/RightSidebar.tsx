@@ -45,12 +45,14 @@ interface RightSidebarProps {
   selection: Selection;
   onSelectionChange?: (selection: Selection) => void;
   onUpdate?: (updates: any) => void;
+  onDelete?: (pageId: string, elementId: string) => void;
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({ 
   selection, 
   onSelectionChange,
-  onUpdate 
+  onUpdate,
+  onDelete
 }) => {
   const theme = useTheme();
 
@@ -694,9 +696,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               startIcon={<Trash2 size={14} />}
               variant="outlined"
               color="error"
+              onClick={() => onDelete?.(pageData.id, elementData.id)}
               sx={{ borderRadius: '10px', textTransform: 'none', justifyContent: 'flex-start' }}
             >
-              Delete Element
+              Delete Element (Del)
             </Button>
           </Stack>
         </Box>

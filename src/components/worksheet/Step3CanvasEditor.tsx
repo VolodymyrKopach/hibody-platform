@@ -205,6 +205,26 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     }
   };
 
+  const handleElementDelete = (pageId: string, elementId: string) => {
+    setPageContents(prev => {
+      const newMap = new Map(prev);
+      const pageContent = newMap.get(pageId);
+      
+      if (!pageContent) return prev;
+      
+      newMap.set(pageId, {
+        ...pageContent,
+        elements: pageContent.elements.filter(el => el.id !== elementId),
+      });
+      
+      return newMap;
+    });
+    
+    // Clear selection
+    setSelectedElementId(null);
+    setSelection(null);
+  };
+
   const handlePageMouseDown = (e: React.MouseEvent, pageId: string) => {
     if (tool === 'select') {
       e.stopPropagation();
@@ -299,6 +319,17 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
       if (e.code === 'KeyH') {
         setTool('hand');
       }
+      
+      // Delete or Backspace to delete selected element
+      if ((e.code === 'Delete' || e.code === 'Backspace') && selection?.type === 'element') {
+        // Don't delete if user is typing in an input field
+        const target = e.target as HTMLElement;
+        const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
+          e.preventDefault();
+          handleElementDelete(selection.pageData.id, selection.elementData.id);
+        }
+      }
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -315,7 +346,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isSpacePressed]);
+  }, [isSpacePressed, selection]);
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -616,6 +647,9 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
                 },
               });
             }
+          }}
+          onDelete={(pageId, elementId) => {
+            handleElementDelete(pageId, elementId);
           }}
         />
       </Box>
