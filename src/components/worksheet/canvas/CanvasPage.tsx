@@ -297,6 +297,7 @@ function renderElement(
         <InstructionsBox
           text={element.properties.text || 'Instructions here...'}
           type={element.properties.type}
+          icon={element.properties.icon}
           isSelected={isSelected}
           onEdit={(newText) => {
             onEdit(element.id, { ...element.properties, text: newText });
