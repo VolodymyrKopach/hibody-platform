@@ -41,8 +41,10 @@ import {
   FileDown,
   Image as ImageIcon,
   Printer,
+  Check,
 } from 'lucide-react';
 import { exportToPDF, exportToPNG, printWorksheet } from '@/utils/pdfExport';
+import { autoSaveWorksheet, getCurrentWorksheetId, SavedWorksheet } from '@/utils/worksheetStorage';
 import LeftSidebar from './canvas/LeftSidebar';
 import RightSidebar from './canvas/RightSidebar';
 import TitleBlock from './canvas/atomic/TitleBlock';
@@ -118,6 +120,17 @@ type Selection =
   | { type: 'element'; pageData: WorksheetPage; elementData: any }
   | null;
 
+// Helper function to format time since save
+function formatTimeSince(date: Date): string {
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes === 1) return '1 min ago';
+  if (minutes < 60) return `${minutes} mins ago`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ago`;
+}
+
 const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameters }) => {
   const theme = useTheme();
   const router = useRouter();
@@ -141,6 +154,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
   const [exitCallback, setExitCallback] = useState<(() => void) | null>(null);
   const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
@@ -252,6 +267,61 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
       alert('Failed to print. Please try again.');
     }
   };
+
+  // Save worksheet
+  const handleSave = () => {
+    setIsSaving(true);
+    try {
+      autoSaveWorksheet(pages, pageContents);
+      setLastSaved(new Date());
+    } catch (error) {
+      console.error('Save failed:', error);
+      alert('Failed to save worksheet. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    const autoSaveInterval = setInterval(() => {
+      if (pageContents.size > 0) {
+        try {
+          autoSaveWorksheet(pages, pageContents);
+          setLastSaved(new Date());
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+        }
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(autoSaveInterval);
+  }, [pages, pageContents]);
+
+  // Save on Ctrl/Cmd+S
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [pages, pageContents]);
+
+  // Update saved time display
+  useEffect(() => {
+    if (!lastSaved) return;
+
+    const updateInterval = setInterval(() => {
+      // Force re-render to update "saved X ago" text
+      setLastSaved(new Date(lastSaved));
+    }, 60000); // Update every minute
+
+    return () => clearInterval(updateInterval);
+  }, [lastSaved]);
 
   // Save state to history
   const saveToHistory = (newPageContents: Map<string, PageContent>) => {
@@ -906,7 +976,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
           </Stack>
 
           {/* Right */}
-          <Stack direction="row" spacing={1}>
+          <Stack direction="row" spacing={1} alignItems="center">
             {clipboard && (
               <Chip
                 label="📋 1 item"
@@ -916,26 +986,46 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
                 sx={{ fontWeight: 600, fontSize: '0.7rem', mr: 1 }}
               />
             )}
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Save size={16} />}
-              sx={{ borderRadius: '8px', textTransform: 'none' }}
-            >
-              Save
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Download size={16} />}
-              sx={{
-                borderRadius: '8px',
-                textTransform: 'none',
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-              }}
-            >
-              Export
-            </Button>
+            
+            {/* Saved Indicator */}
+            {lastSaved && (
+              <Chip
+                icon={<Check size={14} />}
+                label={`Saved ${formatTimeSince(lastSaved)}`}
+                size="small"
+                color="success"
+                variant="outlined"
+                sx={{ fontWeight: 600, fontSize: '0.7rem', mr: 1 }}
+              />
+            )}
+
+            <Tooltip title="Save (Ctrl+S)">
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={isSaving ? <CircularProgress size={14} /> : <Save size={16} />}
+                onClick={handleSave}
+                disabled={isSaving}
+                sx={{ borderRadius: '8px', textTransform: 'none' }}
+              >
+                {isSaving ? 'Saving...' : 'Save'}
+              </Button>
+            </Tooltip>
+            <Tooltip title="Export to PDF/PNG">
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Download size={16} />}
+                onClick={handleExportMenuOpen}
+                sx={{
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+                }}
+              >
+                Export
+              </Button>
+            </Tooltip>
           </Stack>
         </Stack>
       </Paper>
