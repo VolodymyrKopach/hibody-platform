@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Box, Paper, useTheme, alpha, Typography } from '@mui/material';
-import { CanvasElement, AlignmentGuide } from '@/types/canvas-element';
+import { CanvasElement } from '@/types/canvas-element';
 import TitleBlock from './atomic/TitleBlock';
 import BodyText from './atomic/BodyText';
 import InstructionsBox from './atomic/InstructionsBox';
@@ -21,8 +21,6 @@ interface CanvasPageProps {
   elements: CanvasElement[];
   selectedElementId: string | null;
   onElementSelect: (elementId: string | null) => void;
-  onElementMove: (elementId: string, position: { x: number; y: number }) => void;
-  onElementMoveEnd?: (elementId: string) => void;
   onElementAdd: (element: Omit<CanvasElement, 'id' | 'zIndex'>) => void;
   onElementEdit: (elementId: string, properties: any) => void;
   onDragOver?: (e: React.DragEvent) => void;
@@ -37,23 +35,12 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   elements,
   selectedElementId,
   onElementSelect,
-  onElementMove,
-  onElementMoveEnd,
   onElementAdd,
   onElementEdit,
   onDragOver,
 }) => {
   const theme = useTheme();
   const pageRef = useRef<HTMLDivElement>(null);
-  const [dragState, setDragState] = useState<{
-    elementId: string | null;
-    startX: number;
-    startY: number;
-    offsetX: number;
-    offsetY: number;
-  } | null>(null);
-
-  const [guides, setGuides] = useState<AlignmentGuide[]>([]);
 
   // Handle drop from sidebar
   const handleDrop = (e: React.DragEvent) => {
@@ -61,19 +48,15 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     e.stopPropagation();
 
     const componentType = e.dataTransfer.getData('componentType');
-    if (!componentType || !pageRef.current) return;
-
-    const rect = pageRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    if (!componentType) return;
 
     // Create default properties based on type
     const defaultProperties = getDefaultProperties(componentType);
 
     const newElement: Omit<CanvasElement, 'id' | 'zIndex'> = {
       type: componentType as any,
-      position: { x, y },
-      size: { width: 600, height: 50 }, // Minimal height, auto-expands to fit content
+      position: { x: 0, y: 0 }, // Position not used in linear layout
+      size: { width: 794, height: 50 }, // Full width A4
       properties: defaultProperties,
       locked: false,
       visible: true,
@@ -88,66 +71,6 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     onDragOver?.(e);
   };
 
-  // Handle element dragging
-  const handleElementMouseDown = (e: React.MouseEvent, elementId: string) => {
-    if (e.button !== 0) return; // Only left click
-    e.stopPropagation();
-
-    const element = elements.find(el => el.id === elementId);
-    if (!element || element.locked || !pageRef.current) return;
-
-    onElementSelect(elementId);
-
-    // Calculate offset relative to page, not viewport
-    const rect = pageRef.current.getBoundingClientRect();
-    const mouseXInPage = e.clientX - rect.left;
-    const mouseYInPage = e.clientY - rect.top;
-
-    setDragState({
-      elementId,
-      startX: e.clientX,
-      startY: e.clientY,
-      offsetX: mouseXInPage - element.position.x,
-      offsetY: mouseYInPage - element.position.y,
-    });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragState || !pageRef.current) return;
-
-    const rect = pageRef.current.getBoundingClientRect();
-    const mouseXInPage = e.clientX - rect.left;
-    const mouseYInPage = e.clientY - rect.top;
-
-    // Apply offset so element sticks to cursor
-    const x = mouseXInPage - dragState.offsetX;
-    const y = mouseYInPage - dragState.offsetY;
-
-    // Calculate alignment guides
-    const currentElement = elements.find(el => el.id === dragState.elementId);
-    if (currentElement) {
-      const newGuides = calculateAlignmentGuides(
-        { ...currentElement, position: { x, y } },
-        elements.filter(el => el.id !== dragState.elementId)
-      );
-      
-      // Only update guides if they changed (prevent infinite loop)
-      if (newGuides.length !== guides.length || 
-          !guidesAreEqual(newGuides, guides)) {
-        setGuides(newGuides);
-      }
-    }
-
-    onElementMove(dragState.elementId, { x, y });
-  };
-
-  const handleMouseUp = () => {
-    if (dragState?.elementId && onElementMoveEnd) {
-      onElementMoveEnd(dragState.elementId);
-    }
-    setDragState(null);
-    setGuides([]);
-  };
 
   // Click on empty space = deselect
   const handlePageClick = (e: React.MouseEvent) => {
@@ -161,9 +84,6 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
       ref={pageRef}
       onDrop={handleDrop}
       onDragOver={handleDragOverPage}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
       onClick={handlePageClick}
       elevation={4}
       sx={{
@@ -172,7 +92,6 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         height,
         background: 'white',
         overflow: 'hidden',
-        cursor: dragState ? 'grabbing' : 'default',
       }}
     >
       {/* Page Header */}
@@ -194,27 +113,30 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         Page {pageNumber} - {title}
       </Box>
 
-      {/* Canvas Elements */}
-      <Box sx={{ position: 'relative', width: '100%', height: '100%', pt: 5 }}>
-        {elements.map((element) => (
+      {/* Canvas Elements - Linear Layout */}
+      <Box 
+        sx={{ 
+          width: '100%', 
+          height: '100%', 
+          pt: 5,
+          px: 4, // Page padding
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3, // Spacing between elements
+        }}
+      >
+        {elements.map((element, index) => (
           <Box
             key={element.id}
-            onMouseDown={(e) => handleElementMouseDown(e, element.id)}
+            onClick={() => onElementSelect(element.id)}
             sx={{
-              position: 'absolute',
-              left: element.position.x,
-              top: element.position.y,
-              width: 'fit-content',
-              maxWidth: element.size.width,
-              // Use auto height to fit content
-              height: 'auto',
-              minHeight: 'auto',
-              cursor: element.locked ? 'default' : 'move',
+              width: '100%',
+              cursor: element.locked ? 'default' : 'pointer',
               border: selectedElementId === element.id
                 ? `2px solid ${theme.palette.primary.main}`
                 : '2px solid transparent',
               borderRadius: '4px',
-              transition: dragState?.elementId === element.id ? 'none' : 'border 0.2s',
+              transition: 'border 0.2s',
               '&:hover': element.locked ? {} : {
                 border: `2px solid ${alpha(theme.palette.primary.main, 0.5)}`,
               },
@@ -230,31 +152,6 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         ))}
       </Box>
 
-      {/* Alignment Guides */}
-      {guides.map((guide, idx) => (
-        <Box
-          key={idx}
-          sx={{
-            position: 'absolute',
-            background: guide.color,
-            ...(guide.type === 'vertical'
-              ? {
-                  left: guide.position,
-                  top: 0,
-                  bottom: 0,
-                  width: '1px',
-                }
-              : {
-                  top: guide.position,
-                  left: 0,
-                  right: 0,
-                  height: '1px',
-                }),
-            pointerEvents: 'none',
-            zIndex: 9999,
-          }}
-        />
-      ))}
     </Paper>
   );
 };
@@ -424,86 +321,6 @@ function getDefaultProperties(type: string) {
   }
 }
 
-// Helper to compare guides arrays (prevent infinite loops)
-function guidesAreEqual(guides1: AlignmentGuide[], guides2: AlignmentGuide[]): boolean {
-  if (guides1.length !== guides2.length) return false;
-  
-  for (let i = 0; i < guides1.length; i++) {
-    const g1 = guides1[i];
-    const g2 = guides2[i];
-    
-    if (g1.type !== g2.type || 
-        Math.abs(g1.position - g2.position) > 0.1 || 
-        g1.color !== g2.color) {
-      return false;
-    }
-  }
-  
-  return true;
-}
-
-// Calculate alignment guides
-function calculateAlignmentGuides(
-  draggedElement: CanvasElement,
-  otherElements: CanvasElement[]
-): AlignmentGuide[] {
-  const guides: AlignmentGuide[] = [];
-  const threshold = 5; // Snap within 5px
-
-  const draggedCenter = {
-    x: draggedElement.position.x + draggedElement.size.width / 2,
-    y: draggedElement.position.y + draggedElement.size.height / 2,
-  };
-
-  otherElements.forEach((element) => {
-    const elementCenter = {
-      x: element.position.x + element.size.width / 2,
-      y: element.position.y + element.size.height / 2,
-    };
-
-    // Vertical center alignment
-    if (Math.abs(draggedCenter.x - elementCenter.x) < threshold) {
-      guides.push({
-        type: 'vertical',
-        position: elementCenter.x,
-        color: '#FF4444',
-        elements: [draggedElement.id, element.id],
-      });
-    }
-
-    // Horizontal center alignment
-    if (Math.abs(draggedCenter.y - elementCenter.y) < threshold) {
-      guides.push({
-        type: 'horizontal',
-        position: elementCenter.y,
-        color: '#FF4444',
-        elements: [draggedElement.id, element.id],
-      });
-    }
-
-    // Left edge alignment
-    if (Math.abs(draggedElement.position.x - element.position.x) < threshold) {
-      guides.push({
-        type: 'vertical',
-        position: element.position.x,
-        color: '#4444FF',
-        elements: [draggedElement.id, element.id],
-      });
-    }
-
-    // Top edge alignment
-    if (Math.abs(draggedElement.position.y - element.position.y) < threshold) {
-      guides.push({
-        type: 'horizontal',
-        position: element.position.y,
-        color: '#4444FF',
-        elements: [draggedElement.id, element.id],
-      });
-    }
-  });
-
-  return guides;
-}
 
 export default CanvasPage;
 
