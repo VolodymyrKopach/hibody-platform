@@ -22,6 +22,7 @@ interface CanvasPageProps {
   selectedElementId: string | null;
   onElementSelect: (elementId: string | null) => void;
   onElementMove: (elementId: string, position: { x: number; y: number }) => void;
+  onElementMoveEnd?: (elementId: string) => void;
   onElementAdd: (element: Omit<CanvasElement, 'id' | 'zIndex'>) => void;
   onElementEdit: (elementId: string, properties: any) => void;
   onDragOver?: (e: React.DragEvent) => void;
@@ -37,6 +38,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   selectedElementId,
   onElementSelect,
   onElementMove,
+  onElementMoveEnd,
   onElementAdd,
   onElementEdit,
   onDragOver,
@@ -128,13 +130,21 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         { ...currentElement, position: { x, y } },
         elements.filter(el => el.id !== dragState.elementId)
       );
-      setGuides(newGuides);
+      
+      // Only update guides if they changed (prevent infinite loop)
+      if (newGuides.length !== guides.length || 
+          !guidesAreEqual(newGuides, guides)) {
+        setGuides(newGuides);
+      }
     }
 
     onElementMove(dragState.elementId, { x, y });
   };
 
   const handleMouseUp = () => {
+    if (dragState?.elementId && onElementMoveEnd) {
+      onElementMoveEnd(dragState.elementId);
+    }
     setDragState(null);
     setGuides([]);
   };
@@ -392,6 +402,24 @@ function getDefaultProperties(type: string) {
     default:
       return {};
   }
+}
+
+// Helper to compare guides arrays (prevent infinite loops)
+function guidesAreEqual(guides1: AlignmentGuide[], guides2: AlignmentGuide[]): boolean {
+  if (guides1.length !== guides2.length) return false;
+  
+  for (let i = 0; i < guides1.length; i++) {
+    const g1 = guides1[i];
+    const g2 = guides2[i];
+    
+    if (g1.type !== g2.type || 
+        Math.abs(g1.position - g2.position) > 0.1 || 
+        g1.color !== g2.color) {
+      return false;
+    }
+  }
+  
+  return true;
 }
 
 // Calculate alignment guides
