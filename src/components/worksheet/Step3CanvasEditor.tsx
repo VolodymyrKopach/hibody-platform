@@ -1109,6 +1109,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
           {/* Floating Pages - Canva Style */}
           {pages.map((page) => {
             const pageContent = pageContents.get(page.id);
+            const isSelected = selection?.type === 'page' && selection.data.id === page.id;
             
             return (
             <Box
@@ -1118,6 +1119,12 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
                 position: 'absolute',
                 left: page.x,
                 top: page.y,
+                border: isSelected 
+                  ? `3px solid ${theme.palette.primary.main}` 
+                  : '3px solid transparent',
+                borderRadius: '8px',
+                transition: 'border-color 0.2s',
+                boxShadow: isSelected ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}` : 'none',
               }}
             >
               <CanvasPage
