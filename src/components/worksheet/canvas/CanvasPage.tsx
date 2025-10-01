@@ -296,6 +296,7 @@ function renderElement(
       return (
         <InstructionsBox
           text={element.properties.text || 'Instructions here...'}
+          title={element.properties.title}
           type={element.properties.type}
           icon={element.properties.icon}
           isSelected={isSelected}
@@ -318,6 +319,7 @@ function renderElement(
       return (
         <TipBox
           text={element.properties.text || 'Tip here...'}
+          title={element.properties.title}
           type={element.properties.type}
           isSelected={isSelected}
           onEdit={(newText) => {
@@ -330,6 +332,7 @@ function renderElement(
       return (
         <WarningBox
           text={element.properties.text || 'Warning here...'}
+          title={element.properties.title}
           type={element.properties.type}
           isSelected={isSelected}
           onEdit={(newText) => {

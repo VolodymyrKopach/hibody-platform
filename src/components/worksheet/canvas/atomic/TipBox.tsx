@@ -5,6 +5,7 @@ import { Box, Typography, Stack, alpha, useTheme } from '@mui/material';
 
 interface TipBoxProps {
   text: string;
+  title?: string;
   type?: 'study' | 'memory' | 'practice' | 'cultural';
   isSelected?: boolean;
   onEdit?: (newText: string) => void;
@@ -12,7 +13,8 @@ interface TipBoxProps {
 }
 
 const TipBox: React.FC<TipBoxProps> = ({ 
-  text, 
+  text,
+  title = 'Tip',
   type = 'study',
   isSelected = false,
   onEdit,
@@ -125,7 +127,7 @@ const TipBox: React.FC<TipBoxProps> = ({
               fontFamily: 'Inter, sans-serif',
             }}
           >
-            Tip
+            {title}
           </Typography>
           <Box
             ref={textRef}

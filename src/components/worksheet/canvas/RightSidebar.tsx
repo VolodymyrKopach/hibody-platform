@@ -656,6 +656,29 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 Instructions Properties
               </Typography>
 
+              {/* Title */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Title
+                </Typography>
+                <TextField
+                  fullWidth
+                  size="small"
+                  value={elementData.properties?.title || ''}
+                  onChange={(e) => onUpdate?.({ title: e.target.value })}
+                  placeholder="Instructions"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                  Default: "Instructions"
+                </Typography>
+              </Box>
+
               {/* Text Content */}
               <Box>
                 <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
@@ -741,6 +764,29 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 Tip Box Properties
               </Typography>
 
+              {/* Title */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Title
+                </Typography>
+                <TextField
+                  fullWidth
+                  size="small"
+                  value={elementData.properties?.title || ''}
+                  onChange={(e) => onUpdate?.({ title: e.target.value })}
+                  placeholder="Tip"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                  Default: "Tip"
+                </Typography>
+              </Box>
+
               {/* Text Content */}
               <Box>
                 <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
@@ -801,6 +847,29 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 Warning Box Properties
               </Typography>
+
+              {/* Title */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Title
+                </Typography>
+                <TextField
+                  fullWidth
+                  size="small"
+                  value={elementData.properties?.title || ''}
+                  onChange={(e) => onUpdate?.({ title: e.target.value })}
+                  placeholder="Warning"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                  Default: "Warning"
+                </Typography>
+              </Box>
 
               {/* Text Content */}
               <Box>

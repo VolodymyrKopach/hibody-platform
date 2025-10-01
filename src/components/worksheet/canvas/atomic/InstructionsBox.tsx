@@ -5,6 +5,7 @@ import { Box, Typography, Stack, alpha, useTheme } from '@mui/material';
 
 interface InstructionsBoxProps {
   text: string;
+  title?: string;
   icon?: string;
   type?: 'reading' | 'writing' | 'listening' | 'speaking' | 'general';
   isSelected?: boolean;
@@ -13,7 +14,8 @@ interface InstructionsBoxProps {
 }
 
 const InstructionsBox: React.FC<InstructionsBoxProps> = ({ 
-  text, 
+  text,
+  title = 'Instructions',
   icon,
   type = 'general',
   isSelected = false,
@@ -130,7 +132,7 @@ const InstructionsBox: React.FC<InstructionsBoxProps> = ({
               fontFamily: 'Inter, sans-serif',
             }}
           >
-            Instructions
+            {title}
           </Typography>
           <Box
             ref={textRef}

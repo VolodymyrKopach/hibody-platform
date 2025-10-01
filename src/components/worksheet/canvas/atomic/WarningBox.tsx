@@ -5,6 +5,7 @@ import { Box, Typography, Stack, alpha, useTheme } from '@mui/material';
 
 interface WarningBoxProps {
   text: string;
+  title?: string;
   type?: 'grammar' | 'time' | 'difficulty' | 'common-mistake';
   isSelected?: boolean;
   onEdit?: (newText: string) => void;
@@ -12,7 +13,8 @@ interface WarningBoxProps {
 }
 
 const WarningBox: React.FC<WarningBoxProps> = ({ 
-  text, 
+  text,
+  title = 'Warning',
   type = 'grammar',
   isSelected = false,
   onEdit,
@@ -125,7 +127,7 @@ const WarningBox: React.FC<WarningBoxProps> = ({
               fontFamily: 'Inter, sans-serif',
             }}
           >
-            Warning
+            {title}
           </Typography>
           <Box
             ref={textRef}
