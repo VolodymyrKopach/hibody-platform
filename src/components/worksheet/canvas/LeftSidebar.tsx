@@ -40,6 +40,15 @@ import {
   RefreshCw,
   Languages,
   Palette,
+  Heading1,
+  AlignLeft,
+  ClipboardList,
+  PenLine,
+  CircleDot,
+  CheckCheck,
+  MessageSquareText,
+  Minus,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface TabPanelProps {
@@ -74,39 +83,105 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   // Components Library Data - IDs match CanvasElement types
   const componentCategories = [
     {
-      name: 'Text',
+      name: 'Text & Structure',
       items: [
-        { id: 'title-block', name: 'Title', icon: '📝', description: 'Large heading' },
-        { id: 'body-text', name: 'Body Text', icon: '📄', description: 'Paragraph text' },
-        { id: 'instructions-box', name: 'Instructions', icon: '📋', description: 'Step-by-step guide' },
+        { 
+          id: 'title-block', 
+          name: 'Title', 
+          icon: Heading1, 
+          color: '#2563EB',
+          description: 'Large heading' 
+        },
+        { 
+          id: 'body-text', 
+          name: 'Body Text', 
+          icon: AlignLeft, 
+          color: '#6366F1',
+          description: 'Paragraph text' 
+        },
+        { 
+          id: 'instructions-box', 
+          name: 'Instructions', 
+          icon: ClipboardList, 
+          color: '#3B82F6',
+          description: 'Step-by-step guide' 
+        },
       ],
     },
     {
       name: 'Exercises',
       items: [
-        { id: 'fill-blank', name: 'Fill in Blanks', icon: '✏️', description: 'Complete sentences' },
-        { id: 'multiple-choice', name: 'Multiple Choice', icon: '☑️', description: 'Choose answer' },
-        { id: 'true-false', name: 'True/False', icon: '✓✗', description: 'True or false statements' },
-        { id: 'short-answer', name: 'Short Answer', icon: '📝', description: 'Written response' },
+        { 
+          id: 'fill-blank', 
+          name: 'Fill in Blanks', 
+          icon: PenLine, 
+          color: '#10B981',
+          description: 'Complete sentences' 
+        },
+        { 
+          id: 'multiple-choice', 
+          name: 'Multiple Choice', 
+          icon: CircleDot, 
+          color: '#14B8A6',
+          description: 'Choose answer' 
+        },
+        { 
+          id: 'true-false', 
+          name: 'True/False', 
+          icon: CheckCheck, 
+          color: '#06B6D4',
+          description: 'True or false' 
+        },
+        { 
+          id: 'short-answer', 
+          name: 'Short Answer', 
+          icon: MessageSquareText, 
+          color: '#0EA5E9',
+          description: 'Written response' 
+        },
       ],
     },
     {
       name: 'Media',
       items: [
-        { id: 'image-placeholder', name: 'Image', icon: '🖼️', description: 'Add picture' },
+        { 
+          id: 'image-placeholder', 
+          name: 'Image', 
+          icon: ImageIcon, 
+          color: '#F59E0B',
+          description: 'Add picture' 
+        },
       ],
     },
     {
       name: 'Layout',
       items: [
-        { id: 'divider', name: 'Divider', icon: '━', description: 'Horizontal line' },
+        { 
+          id: 'divider', 
+          name: 'Divider', 
+          icon: Minus, 
+          color: '#8B5CF6',
+          description: 'Horizontal line' 
+        },
       ],
     },
     {
       name: 'Boxes',
       items: [
-        { id: 'warning-box', name: 'Warning Box', icon: '⚠️', description: 'Important note' },
-        { id: 'tip-box', name: 'Tip Box', icon: '💡', description: 'Helpful hint' },
+        { 
+          id: 'warning-box', 
+          name: 'Warning', 
+          icon: AlertTriangle, 
+          color: '#EF4444',
+          description: 'Important note' 
+        },
+        { 
+          id: 'tip-box', 
+          name: 'Tip', 
+          icon: Lightbulb, 
+          color: '#F59E0B',
+          description: 'Helpful hint' 
+        },
       ],
     },
   ];
@@ -195,8 +270,19 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             />
 
             {/* Component Categories */}
-            <Stack spacing={3}>
-              {componentCategories.map((category) => (
+            <Stack spacing={2.5}>
+              {componentCategories
+                .map((category) => ({
+                  ...category,
+                  items: category.items.filter((item) =>
+                    searchQuery
+                      ? item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+                      : true
+                  ),
+                }))
+                .filter((category) => category.items.length > 0)
+                .map((category) => (
                 <Box key={category.name}>
                   <Typography
                     variant="caption"
@@ -205,55 +291,92 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                       color: theme.palette.text.secondary,
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
+                      fontSize: '0.7rem',
                       mb: 1,
                       display: 'block',
                     }}
                   >
                     {category.name}
                   </Typography>
-                  <Stack spacing={1}>
-                    {category.items.map((item) => (
-                      <Paper
-                        key={item.id}
-                        elevation={0}
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('componentType', item.id);
-                          e.dataTransfer.effectAllowed = 'copy';
-                          onComponentDragStart?.(item.id);
-                        }}
-                        sx={{
-                          p: 1.5,
-                          borderRadius: '10px',
-                          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                          cursor: 'grab',
-                          transition: 'all 0.2s',
-                          '&:hover': {
-                            borderColor: theme.palette.primary.main,
-                            background: alpha(theme.palette.primary.main, 0.03),
-                            transform: 'translateY(-2px)',
-                            boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.15)}`,
-                          },
-                          '&:active': {
-                            cursor: 'grabbing',
-                          },
-                        }}
-                      >
-                        <Stack direction="row" alignItems="center" spacing={1.5}>
-                          <Typography sx={{ fontSize: '1.5rem' }}>
-                            {item.icon}
-                          </Typography>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                              {item.name}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                              {item.description}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      </Paper>
-                    ))}
+                  <Stack spacing={0.75}>
+                    {category.items.map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <Paper
+                          key={item.id}
+                          elevation={0}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('componentType', item.id);
+                            e.dataTransfer.effectAllowed = 'copy';
+                            onComponentDragStart?.(item.id);
+                          }}
+                          sx={{
+                            p: 1.25,
+                            borderRadius: '10px',
+                            border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                            cursor: 'grab',
+                            transition: 'all 0.2s',
+                            background: 'transparent',
+                            '&:hover': {
+                              borderColor: item.color,
+                              background: alpha(item.color, 0.04),
+                              transform: 'translateX(4px)',
+                              boxShadow: `0 2px 8px ${alpha(item.color, 0.12)}`,
+                            },
+                            '&:active': {
+                              cursor: 'grabbing',
+                              transform: 'translateX(2px)',
+                            },
+                          }}
+                        >
+                          <Stack direction="row" alignItems="center" spacing={1.25}>
+                            <Box
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: '8px',
+                                background: alpha(item.color, 0.1),
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                transition: 'all 0.2s',
+                                '.MuiPaper-root:hover &': {
+                                  background: alpha(item.color, 0.15),
+                                },
+                              }}
+                            >
+                              <IconComponent size={16} color={item.color} strokeWidth={2.5} />
+                            </Box>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography 
+                                variant="body2" 
+                                sx={{ 
+                                  fontWeight: 600, 
+                                  fontSize: '0.8125rem',
+                                  lineHeight: 1.3,
+                                  mb: 0.25,
+                                }}
+                              >
+                                {item.name}
+                              </Typography>
+                              <Typography 
+                                variant="caption" 
+                                color="text.secondary" 
+                                sx={{ 
+                                  fontSize: '0.7rem',
+                                  lineHeight: 1.2,
+                                  display: 'block',
+                                }}
+                              >
+                                {item.description}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </Paper>
+                      );
+                    })}
                   </Stack>
                 </Box>
               ))}
