@@ -97,6 +97,12 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       ],
     },
     {
+      name: 'Layout',
+      items: [
+        { id: 'divider', name: 'Divider', icon: '━', description: 'Horizontal line' },
+      ],
+    },
+    {
       name: 'Boxes',
       items: [
         { id: 'warning-box', name: 'Warning Box', icon: '⚠️', description: 'Important note' },

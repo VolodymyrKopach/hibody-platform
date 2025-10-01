@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Box, Paper, useTheme, alpha, Typography, IconButton, Tooltip } from '@mui/material';
 import { GripVertical } from 'lucide-react';
 import { CanvasElement } from '@/types/canvas-element';
@@ -14,6 +14,7 @@ import ShortAnswer from './atomic/ShortAnswer';
 import TipBox from './atomic/TipBox';
 import WarningBox from './atomic/WarningBox';
 import ImagePlaceholder from './atomic/ImagePlaceholder';
+import Divider from './atomic/Divider';
 
 interface CanvasPageProps {
   pageId: string;
@@ -88,6 +89,41 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     setDraggedIndex(null);
     setDropIndicatorIndex(null);
   };
+
+  // Prevent browser gestures on page (touchpad swipe navigation)
+  useEffect(() => {
+    const page = pageRef.current;
+    if (!page) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      // Prevent browser navigation gestures
+      e.stopPropagation();
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      // Prevent browser navigation gestures (back/forward swipe)
+      e.stopPropagation();
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      // Prevent horizontal scroll from triggering browser navigation
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    // Add listeners with appropriate options
+    page.addEventListener('touchstart', handleTouchStart, { passive: false });
+    page.addEventListener('touchmove', handleTouchMove, { passive: false });
+    page.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      page.removeEventListener('touchstart', handleTouchStart);
+      page.removeEventListener('touchmove', handleTouchMove);
+      page.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   // Handle drop from sidebar
   const handleDrop = (e: React.DragEvent) => {
@@ -416,6 +452,20 @@ function renderElement(
           onFocus={() => onSelect(element.id)}
         />
       );
+    case 'divider':
+      return (
+        <Divider
+          style={element.properties.style}
+          thickness={element.properties.thickness}
+          color={element.properties.color}
+          spacing={element.properties.spacing}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
     default:
       return (
         <Box sx={{ p: 2, border: '2px dashed red', borderRadius: '8px' }}>
@@ -518,6 +568,13 @@ function getDefaultProperties(type: string) {
         width: 400, 
         height: 300,
         align: 'center'
+      };
+    case 'divider':
+      return {
+        style: 'solid',
+        thickness: 1,
+        color: '#D1D5DB',
+        spacing: 'medium'
       };
     default:
       return {};

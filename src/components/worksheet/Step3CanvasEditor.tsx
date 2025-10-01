@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Typography,
@@ -104,6 +105,8 @@ type Selection =
 
 const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameters }) => {
   const theme = useTheme();
+  const router = useRouter();
+  const canvasRef = React.useRef<HTMLDivElement>(null);
   const [pages, setPages] = useState<WorksheetPage[]>(MOCK_CANVAS_PAGES);
   const [pageContents, setPageContents] = useState<Map<string, PageContent>>(new Map());
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
@@ -140,6 +143,80 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     });
     setHistoryIndex(prev => Math.min(prev + 1, 49));
   };
+
+  // Prevent accidental navigation away
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Only show warning if there's any content
+      if (pageContents.size > 0) {
+        e.preventDefault();
+        // Modern browsers require returnValue to be set
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent Cmd/Ctrl+W (close tab) if there's unsaved work
+      if ((e.metaKey || e.ctrlKey) && e.key === 'w' && pageContents.size > 0) {
+        e.preventDefault();
+        // Show confirmation dialog
+        const confirmed = window.confirm(
+          'You have unsaved changes. Are you sure you want to leave?'
+        );
+        if (confirmed) {
+          window.close();
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [pageContents]);
+
+  // Prevent browser gestures on canvas (touchpad swipe navigation)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      // Prevent browser navigation gestures
+      e.stopPropagation();
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      // Prevent browser navigation gestures (back/forward swipe)
+      e.stopPropagation();
+      // Allow canvas scrolling/panning but prevent browser navigation
+      if (e.touches.length === 1) {
+        // Single touch - allow canvas interaction
+        return;
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      // Prevent horizontal scroll from triggering browser navigation
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
+      }
+    };
+
+    // Add listeners with appropriate options
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   const handleUndo = () => {
     if (historyIndex > 0) {
@@ -699,6 +776,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
 
         {/* Infinite Canvas */}
         <Box
+          ref={canvasRef}
           sx={{
             flex: 1,
             position: 'relative',

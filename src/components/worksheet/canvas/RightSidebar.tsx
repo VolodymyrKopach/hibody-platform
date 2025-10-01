@@ -427,6 +427,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                elementData.type === 'multiple-choice' ? 'Multiple Choice' :
                elementData.type === 'true-false' ? 'True/False' :
                elementData.type === 'short-answer' ? 'Short Answer' :
+               elementData.type === 'divider' ? 'Divider' :
                elementData.type === 'tip-box' ? 'Tip Box' :
                elementData.type === 'warning-box' ? 'Warning Box' :
                elementData.type === 'image-placeholder' ? 'Image' :
@@ -1555,6 +1556,238 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                       </Stack>
                     </Paper>
                   ))}
+                </Stack>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'divider' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Divider Properties
+              </Typography>
+
+              {/* Style */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Line Style
+                </Typography>
+                <Stack spacing={1}>
+                  {[
+                    { label: 'Solid', value: 'solid', preview: '━━━━━━━' },
+                    { label: 'Dashed', value: 'dashed', preview: '╌╌╌╌╌╌╌' },
+                    { label: 'Dotted', value: 'dotted', preview: '┈┈┈┈┈┈┈' },
+                    { label: 'Double', value: 'double', preview: '═══════' },
+                  ].map((style) => {
+                    const isActive = (elementData.properties?.style || 'solid') === style.value;
+                    return (
+                      <Box
+                        key={style.value}
+                        onClick={() => onUpdate?.({ style: style.value })}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#EFF6FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          '&:hover': {
+                            borderColor: '#2563EB',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: '13px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#2563EB' : '#374151',
+                          }}
+                        >
+                          {style.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: '16px',
+                            color: isActive ? '#2563EB' : '#9CA3AF',
+                            fontFamily: 'monospace',
+                            letterSpacing: '-2px',
+                          }}
+                        >
+                          {style.preview}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Thickness */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Thickness
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {[1, 2, 3, 4].map((thickness) => {
+                    const isActive = (elementData.properties?.thickness || 1) === thickness;
+                    return (
+                      <Box
+                        key={thickness}
+                        onClick={() => onUpdate?.({ thickness })}
+                        sx={{
+                          flex: 1,
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#EFF6FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          '&:hover': {
+                            borderColor: '#2563EB',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: '100%',
+                            height: `${thickness}px`,
+                            backgroundColor: isActive ? '#2563EB' : '#9CA3AF',
+                          }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: '11px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#2563EB' : '#6B7280',
+                          }}
+                        >
+                          {thickness}px
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Color */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Color
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {[
+                    { label: 'Light Gray', value: '#D1D5DB' },
+                    { label: 'Gray', value: '#9CA3AF' },
+                    { label: 'Dark Gray', value: '#6B7280' },
+                    { label: 'Black', value: '#000000' },
+                    { label: 'Blue', value: '#2563EB' },
+                    { label: 'Red', value: '#EF4444' },
+                    { label: 'Green', value: '#10B981' },
+                    { label: 'Yellow', value: '#F59E0B' },
+                  ].map((color) => {
+                    const isActive = (elementData.properties?.color || '#D1D5DB') === color.value;
+                    return (
+                      <Box
+                        key={color.value}
+                        onClick={() => onUpdate?.({ color: color.value })}
+                        sx={{
+                          width: 'calc(50% - 4px)',
+                          p: 1,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                          backgroundColor: '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          '&:hover': {
+                            borderColor: '#2563EB',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: '4px',
+                            backgroundColor: color.value,
+                            border: '1px solid #E5E7EB',
+                          }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: '11px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#2563EB' : '#6B7280',
+                          }}
+                        >
+                          {color.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Spacing */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Spacing
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {[
+                    { label: 'Small', value: 'small' },
+                    { label: 'Medium', value: 'medium' },
+                    { label: 'Large', value: 'large' },
+                  ].map((spacing) => {
+                    const isActive = (elementData.properties?.spacing || 'medium') === spacing.value;
+                    return (
+                      <Box
+                        key={spacing.value}
+                        onClick={() => onUpdate?.({ spacing: spacing.value })}
+                        sx={{
+                          flex: 1,
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #2563EB' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#EFF6FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          '&:hover': {
+                            borderColor: '#2563EB',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: '13px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#2563EB' : '#6B7280',
+                          }}
+                        >
+                          {spacing.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
                 </Stack>
               </Box>
             </Stack>
