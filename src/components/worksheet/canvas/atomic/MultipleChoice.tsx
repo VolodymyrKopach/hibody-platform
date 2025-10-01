@@ -20,7 +20,7 @@ interface MultipleChoiceProps {
 
 const MultipleChoice: React.FC<MultipleChoiceProps> = ({ items }) => {
   return (
-    <Box sx={{ mb: 3 }}>
+    <Box>
       <Stack spacing={3}>
         {items.map((item) => (
           <Box key={item.number}>

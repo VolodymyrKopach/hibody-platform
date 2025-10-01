@@ -88,7 +88,6 @@ const InstructionsBox: React.FC<InstructionsBoxProps> = ({
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       sx={{
-        mb: 3,
         p: 2,
         borderRadius: '8px',
         background: '#EFF6FF',

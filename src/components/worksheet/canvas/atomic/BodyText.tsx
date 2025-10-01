@@ -96,8 +96,7 @@ const BodyText: React.FC<BodyTextProps> = ({
 
   return (
     <Box 
-      sx={{ 
-        mb: 2,
+      sx={{
         position: 'relative',
         cursor: isSelected && !isEditing ? 'text' : 'inherit',
       }}

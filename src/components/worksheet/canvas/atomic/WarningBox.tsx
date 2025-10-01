@@ -83,7 +83,6 @@ const WarningBox: React.FC<WarningBoxProps> = ({
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       sx={{
-        mb: 3,
         p: 2,
         borderRadius: '8px',
         background: '#FFF7ED',

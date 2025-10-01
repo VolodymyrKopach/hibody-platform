@@ -102,8 +102,7 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
 
   return (
     <Box 
-      sx={{ 
-        mb: level === 'main' ? 3 : 2,
+      sx={{
         position: 'relative',
         cursor: isSelected && !isEditing ? 'text' : 'inherit',
       }}

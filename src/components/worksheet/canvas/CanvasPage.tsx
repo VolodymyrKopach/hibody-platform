@@ -204,7 +204,8 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
               position: 'absolute',
               left: element.position.x,
               top: element.position.y,
-              width: element.size.width,
+              width: 'fit-content',
+              maxWidth: element.size.width,
               // Use auto height to fit content
               height: 'auto',
               minHeight: 'auto',

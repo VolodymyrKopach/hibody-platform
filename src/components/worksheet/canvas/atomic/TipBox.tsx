@@ -83,7 +83,6 @@ const TipBox: React.FC<TipBoxProps> = ({
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       sx={{
-        mb: 3,
         p: 2,
         borderRadius: '8px',
         background: '#F0F4FF',

@@ -16,7 +16,7 @@ const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
   height = 300,
 }) => {
   return (
-    <Box sx={{ mb: 3 }}>
+    <Box>
       <Box
         sx={{
           width: '100%',

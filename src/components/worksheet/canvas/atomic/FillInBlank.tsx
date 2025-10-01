@@ -16,7 +16,7 @@ interface FillInBlankProps {
 
 const FillInBlank: React.FC<FillInBlankProps> = ({ items, wordBank }) => {
   return (
-    <Box sx={{ mb: 3 }}>
+    <Box>
       {wordBank && wordBank.length > 0 && (
         <Box
           sx={{
