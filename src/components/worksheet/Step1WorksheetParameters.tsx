@@ -35,13 +35,13 @@ import {
   Globe,
   Image as ImageIcon,
 } from 'lucide-react';
+import AgeGroupTooltip from './AgeGroupTooltip';
 
 interface WorksheetParameters {
   topic: string;
   level: string;
   focusAreas: string[];
   exerciseTypes: string[];
-  numberOfPages: number;
   duration: string;
   purpose: string;
   additionalNotes: string;
@@ -64,26 +64,31 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
 
   const [parameters, setParameters] = useState<WorksheetParameters>({
     topic: '',
-    level: 'intermediate',
+    level: '8-9', // Default to elementary age group
     focusAreas: ['grammar', 'vocabulary'],
     exerciseTypes: ['fill-blanks', 'multiple-choice'],
-    numberOfPages: 3,
     duration: 'standard',
     purpose: 'general',
     additionalNotes: '',
-    language: 'en',            // NEW
-    includeImages: true,       // NEW
+    language: 'en',
+    includeImages: true,
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [autoExerciseTypes, setAutoExerciseTypes] = useState(false); // NEW
 
+  // Age groups
   const levels = [
-    { value: 'beginner', label: 'Beginner', emoji: '🌱', description: 'A1 - Starting basics' },
-    { value: 'elementary', label: 'Elementary', emoji: '🌿', description: 'A2 - Simple talks' },
-    { value: 'intermediate', label: 'Intermediate', emoji: '🌳', description: 'B1 - Everyday topics' },
-    { value: 'upper-intermediate', label: 'Upper-Int.', emoji: '🎯', description: 'B2 - Complex topics' },
-    { value: 'advanced', label: 'Advanced', emoji: '🚀', description: 'C1+ - Fluent' },
+    { value: '3-5', label: '3-5 years', emoji: '🎨', description: 'Дошкільний вік', ageRange: '3-5 years' },
+    { value: '6-7', label: '6-7 years', emoji: '📚', description: '1-2 клас', ageRange: '6-7 years' },
+    { value: '8-9', label: '8-9 years', emoji: '✏️', description: '3-4 клас', ageRange: '8-9 years' },
+    { value: '10-12', label: '10-12 years', emoji: '📖', description: '5-6 клас', ageRange: '10-12 years' },
+    { value: '13-15', label: '13-15 years', emoji: '🎯', description: '7-9 клас', ageRange: '13-15 years' },
+    { value: '16-18', label: '16-18 years', emoji: '🎓', description: '10-12 клас', ageRange: '16-18 years' },
+    { value: '19-25', label: '19-25 years', emoji: '💼', description: 'Молоді дорослі', ageRange: '19-25 years' },
+    { value: '26-35', label: '26-35 years', emoji: '👔', description: 'Дорослі', ageRange: '26-35 years' },
+    { value: '36-50', label: '36-50 years', emoji: '🏆', description: 'Зрілі дорослі', ageRange: '36-50 years' },
+    { value: '50+', label: '50+ years', emoji: '⭐', description: 'Старші дорослі', ageRange: '50+ years' },
   ];
 
   const focusAreas = [
@@ -253,40 +258,45 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
               />
             </Box>
 
-            {/* 2. Student Level - Compact Chips */}
+            {/* 2. Age Group - Compact Chips */}
             <Box>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
                 <Target size={18} color={theme.palette.primary.main} />
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Student Level
+                  Вікова група
                 </Typography>
               </Stack>
               <Stack direction="row" flexWrap="wrap" gap={1}>
                 {levels.map((level) => (
-                  <Chip
+                  <AgeGroupTooltip
                     key={level.value}
-                    label={`${level.emoji} ${level.label}`}
-                    onClick={() => setParameters({ ...parameters, level: level.value })}
-                    sx={{
-                      px: 1.5,
-                      py: 2.5,
-                      fontSize: '0.875rem',
-                      fontWeight: 500,
-                      borderRadius: '12px',
-                      background: parameters.level === level.value
-                        ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`
-                        : alpha(theme.palette.grey[400], 0.1),
-                      color: parameters.level === level.value ? 'white' : theme.palette.text.primary,
-                      border: 'none',
-                      transition: 'all 0.2s',
-                      '&:hover': {
+                    ageGroup={level.value}
+                    duration={parameters.duration as 'quick' | 'standard' | 'extended'}
+                  >
+                    <Chip
+                      label={`${level.emoji} ${level.label}`}
+                      onClick={() => setParameters({ ...parameters, level: level.value })}
+                      sx={{
+                        px: 1.5,
+                        py: 2.5,
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        borderRadius: '12px',
                         background: parameters.level === level.value
-                          ? `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`
-                          : alpha(theme.palette.primary.main, 0.15),
-                        transform: 'translateY(-2px)',
-                      },
-                    }}
-                  />
+                          ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`
+                          : alpha(theme.palette.grey[400], 0.1),
+                        color: parameters.level === level.value ? 'white' : theme.palette.text.primary,
+                        border: 'none',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          background: parameters.level === level.value
+                            ? `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`
+                            : alpha(theme.palette.primary.main, 0.15),
+                          transform: 'translateY(-2px)',
+                        },
+                      }}
+                    />
+                  </AgeGroupTooltip>
                 ))}
               </Stack>
             </Box>
@@ -410,85 +420,6 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
               )}
             </Box>
 
-            {/* 5. Number of Pages */}
-            <Box>
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-                <FileEdit size={18} color={theme.palette.primary.main} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Number of Pages
-                </Typography>
-                <Tooltip title="How many worksheet pages to generate">
-                  <IconButton size="small" sx={{ ml: 0.5 }}>
-                    <Info size={14} />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-              <Stack direction="row" gap={1.5}>
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <Box
-                    key={num}
-                    onClick={() => setParameters({ ...parameters, numberOfPages: num })}
-                    sx={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      background: parameters.numberOfPages === num
-                        ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`
-                        : alpha(theme.palette.grey[400], 0.1),
-                      color: parameters.numberOfPages === num ? 'white' : theme.palette.text.primary,
-                      fontWeight: 700,
-                      fontSize: '1.25rem',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        background: parameters.numberOfPages === num
-                          ? `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`
-                          : alpha(theme.palette.primary.main, 0.15),
-                        transform: 'translateY(-2px)',
-                        boxShadow: parameters.numberOfPages === num 
-                          ? `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`
-                          : 'none',
-                      },
-                    }}
-                  >
-                    {num}
-                  </Box>
-                ))}
-                <TextField
-                  type="number"
-                  value={parameters.numberOfPages > 5 ? parameters.numberOfPages : ''}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (val > 0 && val <= 20) {
-                      setParameters({ ...parameters, numberOfPages: val });
-                    }
-                  }}
-                  placeholder="6+"
-                  inputProps={{ min: 6, max: 20 }}
-                  sx={{
-                    width: 64,
-                    '& .MuiOutlinedInput-root': {
-                      height: 56,
-                      borderRadius: '12px',
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      textAlign: 'center',
-                      '& input': {
-                        textAlign: 'center',
-                        p: 0,
-                      },
-                    },
-                  }}
-                />
-              </Stack>
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                Recommended: 3-5 pages for optimal learning
-              </Typography>
-            </Box>
-
             {/* Advanced Options - Collapsible */}
             <Box>
               <Button
@@ -574,8 +505,11 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
                         Duration
                       </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        (affects content amount)
+                      </Typography>
                     </Stack>
-                    <Stack direction="row" gap={1}>
+                    <Stack direction="row" gap={1} flexWrap="wrap">
                       {durations.map((duration) => (
                         <Chip
                           key={duration.value}
@@ -596,6 +530,9 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
                         />
                       ))}
                     </Stack>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      Content amount auto-adjusts based on age group
+                    </Typography>
                   </Box>
 
                   {/* Purpose */}

@@ -9,11 +9,15 @@ import {
   WorksheetGenerationResponse,
   GeneratedPage,
   AIGenerationOptions,
+  GeneratedElement,
 } from '@/types/worksheet-generation';
 import { worksheetComponentSchemaService } from './WorksheetComponentSchemaService';
+import { ContentPaginationService, PAGE_CONFIGS } from './ContentPaginationService';
+import { ageBasedContentService, type Duration as AgeDuration } from './AgeBasedContentService';
 
 export class GeminiWorksheetGenerationService {
   private client: GoogleGenAI;
+  private paginationService: ContentPaginationService;
 
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -21,6 +25,7 @@ export class GeminiWorksheetGenerationService {
       throw new Error('GEMINI_API_KEY environment variable is required');
     }
     this.client = new GoogleGenAI({ apiKey });
+    this.paginationService = new ContentPaginationService(PAGE_CONFIGS.A4);
   }
 
   /**
@@ -30,28 +35,70 @@ export class GeminiWorksheetGenerationService {
     request: WorksheetGenerationRequest,
     options: AIGenerationOptions = {}
   ): Promise<WorksheetGenerationResponse> {
-    console.log('🎯 [WORKSHEET_GEN] Starting worksheet generation:', {
+    console.log('🎯 [WORKSHEET_GEN] Starting worksheet generation (AUTO-PAGINATION):', {
       topic: request.topic,
       ageGroup: request.ageGroup,
-      pageCount: request.pageCount || 1,
+      duration: request.duration || 'standard',
     });
 
     try {
       // Build prompt with component library and educational guidelines
+      // AI generates all content without page breaks
       const prompt = this.buildGenerationPrompt(request);
 
-      // Call Gemini API
+      // Call Gemini API - AI generates one big content list
       const response = await this.callGeminiAPI(prompt, options);
 
-      // Parse response
-      const parsedResponse = this.parseGeminiResponse(response, request);
+      // Parse response to get all elements
+      const allElements = this.parseGeminiResponseToElements(response, request);
 
-      console.log('✅ [WORKSHEET_GEN] Generation successful:', {
-        pages: parsedResponse.pages.length,
-        totalComponents: parsedResponse.pages.reduce((sum, p) => sum + p.elements.length, 0),
+      // === Validate component count for age group ===
+      const validation = ageBasedContentService.validateComponentCount(
+        request.ageGroup,
+        request.duration as AgeDuration || 'standard',
+        allElements.length
+      );
+      
+      if (!validation.valid) {
+        console.warn('⚠️ [WORKSHEET_GEN] Component count validation:', validation.reason);
+        console.warn(`   Suggested: ${validation.suggestion}, Actual: ${allElements.length}`);
+      } else {
+        console.log('✅ [WORKSHEET_GEN] Component count appropriate for age group');
+      }
+
+      // Smart auto-pagination - distribute elements across pages
+      console.log('📄 [WORKSHEET_GEN] Auto-paginating content...');
+      // Set age range for proper component sizing
+      this.paginationService.setAgeRange(request.ageGroup);
+      const paginationResult = this.paginationService.paginateContent(
+        allElements,
+        `${request.topic} Worksheet`
+      );
+
+      // Build final response with paginated content
+      const finalResponse: WorksheetGenerationResponse = {
+        pages: paginationResult.pages,
+        metadata: {
+          topic: request.topic,
+          ageGroup: request.ageGroup,
+          difficulty: request.difficulty || 'medium',
+          language: request.language || 'en',
+          pageCount: paginationResult.totalPages,
+          generatedAt: new Date().toISOString(),
+          componentsUsed: this.getComponentTypesUsed(allElements),
+          estimatedDuration: this.estimateDurationFromElements(allElements),
+          autoPaginated: true,
+        },
+      };
+
+      console.log('✅ [WORKSHEET_GEN] Generation successful (AUTO-PAGINATED):', {
+        totalElements: allElements.length,
+        totalPages: paginationResult.totalPages,
+        elementsPerPage: paginationResult.elementsPerPage.join(', '),
+        totalComponents: paginationResult.pages.reduce((sum, p) => sum + p.elements.length, 0),
       });
 
-      return parsedResponse;
+      return finalResponse;
     } catch (error) {
       console.error('❌ [WORKSHEET_GEN] Generation failed:', error);
       throw error;
@@ -68,7 +115,7 @@ export class GeminiWorksheetGenerationService {
       exerciseTypes = [],
       difficulty = 'medium',
       language = 'en',
-      pageCount = 1,
+      duration = 'standard',
       includeImages = true,
       additionalInstructions = '',
     } = request;
@@ -83,10 +130,31 @@ export class GeminiWorksheetGenerationService {
     // Build examples
     const examples = this.buildExamples();
 
+    // === Get age-based content requirements ===
+    const ageSpecificGuidelines = ageBasedContentService.formatForPrompt(
+      ageGroup,
+      duration as AgeDuration
+    );
+    
+    const contentAmount = ageBasedContentService.calculateComponentCount(
+      ageGroup,
+      duration as AgeDuration
+    );
+
+    // Map duration to time guidance
+    const durationMap: Record<string, string> = {
+      quick: '10-15 minutes',
+      standard: '20-30 minutes',
+      extended: '40-50 minutes',
+    };
+    const durationGuidance = durationMap[duration] || durationMap['standard'];
+
     const prompt = `You are an expert educational content creator specializing in worksheet generation for children.
 
 # TASK
 Generate a complete educational worksheet about "${topic}" for age group ${ageGroup} (${ageGuidelines.readingLevel}).
+
+**IMPORTANT: Generate ALL content as a SINGLE list of components. Do NOT organize into pages. The system will automatically distribute content across pages based on actual component sizes.**
 
 # GENERATION PARAMETERS
 - **Topic:** ${topic}
@@ -94,13 +162,15 @@ Generate a complete educational worksheet about "${topic}" for age group ${ageGr
 - **Reading Level:** ${ageGuidelines.readingLevel}
 - **Difficulty:** ${difficulty}
 - **Language:** ${language}
-- **Number of Pages:** ${pageCount}
+- **Duration:** ${duration} - ${durationGuidance}
 - **Include Images:** ${includeImages ? 'Yes' : 'No'}
 - **Attention Span:** ~${ageGuidelines.attentionSpan} minutes
 ${exerciseTypes.length > 0 ? `- **Preferred Exercise Types:** ${exerciseTypes.join(', ')} (prioritize these, but you can include others if beneficial)` : '- **Exercise Types:** Use any appropriate types based on topic and age'}
 ${additionalInstructions ? `- **Additional Instructions:** ${additionalInstructions}` : ''}
 
 # EDUCATIONAL GUIDELINES FOR AGE ${ageGroup}
+
+${ageSpecificGuidelines}
 
 ## Text Length Guidelines
 - **Title:** ${ageGuidelines.textLengthGuidelines.title}
@@ -123,10 +193,10 @@ ${additionalInstructions ? `- **Additional Instructions:** ${additionalInstructi
 
 ${componentLibrary}
 
-# WORKSHEET STRUCTURE RULES
+# CONTENT STRUCTURE RULES
 
-## Page Organization
-1. **Start with Title:** Every page begins with title-block (level: 'main')
+## Content Organization (Linear Flow - Auto-Paginated Later)
+1. **Start with Title:** Begin with title-block (level: 'main')
 2. **Instructions Box:** Add instructions-box after title to guide students
 3. **Content Flow:** Explanation → Examples → Exercises → Review
 4. **Variety:** Mix different component types for engagement
@@ -141,63 +211,70 @@ ${componentLibrary}
 - **Warnings:** warning-box before difficult exercises
 - **Separation:** divider between major sections
 
-## Recommended Component Mix (per page)
-- **1 Title** (title-block with level 'main')
+## TARGET COMPONENT COUNT
+**YOU MUST GENERATE ${contentAmount.targetCount} COMPONENTS (Range: ${contentAmount.minCount}-${contentAmount.maxCount})**
+
+This count is specifically calculated for:
+- Age Group: ${ageGroup} years
+- Duration: ${duration} (${durationGuidance})
+- Processing Speed: This age group processes content at a specific pace
+- Attention Span: Optimized to maintain engagement without overwhelming
+
+## Recommended Component Mix
+Distribute your ${contentAmount.targetCount} components as follows:
+- **1 Main Title** (title-block with level 'main')
 - **1-2 Instructions** (instructions-box)
-- **2-3 Text Blocks** (body-text, bullet-list, or numbered-list)
-- **2-4 Exercises** (fill-blank, multiple-choice, true-false, short-answer)
-- **1-2 Helper Boxes** (tip-box, warning-box)
-- **0-2 Images** (if includeImages is true)
-- **1-2 Dividers** (to separate sections)
+- **${Math.ceil(contentAmount.targetCount * 0.3)} Text/Explanation Blocks** (body-text, bullet-list, numbered-list)
+- **${Math.ceil(contentAmount.targetCount * 0.5)} Exercise Components** (use age-appropriate types listed above)
+- **${Math.ceil(contentAmount.targetCount * 0.1)} Helper Elements** (tip-box, warning-box, dividers)
+- **${includeImages ? Math.ceil(contentAmount.targetCount * 0.1) : 0} Images** (if includeImages is true)
+
+**CRITICAL:** Aim for exactly ${contentAmount.targetCount} components. Quality matters - ensure each component is engaging and age-appropriate.
 
 # RESPONSE FORMAT
+
+**IMPORTANT:** Generate content as a SINGLE linear list of components. Do NOT split into pages - the system will auto-paginate.
 
 You MUST respond with ONLY valid JSON in this exact format:
 
 {
   "topic": "${topic}",
   "ageGroup": "${ageGroup}",
-  "pages": [
+  "elements": [
     {
-      "pageNumber": 1,
-      "title": "Page Title Here",
-      "elements": [
-        {
-          "type": "title-block",
-          "properties": {
-            "text": "Main Title",
-            "level": "main",
-            "align": "center"
+      "type": "title-block",
+      "properties": {
+        "text": "Main Title",
+        "level": "main",
+        "align": "center"
+      }
+    },
+    {
+      "type": "instructions-box",
+      "properties": {
+        "text": "Complete the exercises below.",
+        "type": "general"
+      }
+    },
+    {
+      "type": "body-text",
+      "properties": {
+        "text": "Explanation text here...",
+        "variant": "paragraph"
+      }
+    },
+    {
+      "type": "fill-blank",
+      "properties": {
+        "items": [
+          {
+            "number": 1,
+            "text": "Sentence with ______ blank.",
+            "hint": "answer"
           }
-        },
-        {
-          "type": "instructions-box",
-          "properties": {
-            "text": "Complete the exercises below.",
-            "type": "general"
-          }
-        },
-        {
-          "type": "body-text",
-          "properties": {
-            "text": "Explanation text here...",
-            "variant": "paragraph"
-          }
-        },
-        {
-          "type": "fill-blank",
-          "properties": {
-            "items": [
-              {
-                "number": 1,
-                "text": "Sentence with ______ blank.",
-                "hint": "answer"
-              }
-            ],
-            "wordBank": ["word1", "word2", "word3"]
-          }
-        }
-      ]
+        ],
+        "wordBank": ["word1", "word2", "word3"]
+      }
     }
   ]
 }
@@ -481,7 +558,46 @@ Now generate the worksheet as pure JSON:`;
   }
 
   /**
-   * Parse Gemini response to WorksheetGenerationResponse
+   * Parse Gemini response to array of elements (NEW FORMAT)
+   * Response format: { "topic": "...", "ageGroup": "...", "elements": [...] }
+   */
+  private parseGeminiResponseToElements(
+    response: string,
+    request: WorksheetGenerationRequest
+  ): GeneratedElement[] {
+    console.log('🔍 [PARSER] Parsing Gemini response to elements...');
+
+    try {
+      // Remove markdown code blocks if present
+      let cleanedResponse = response.trim();
+      if (cleanedResponse.startsWith('```json')) {
+        cleanedResponse = cleanedResponse.replace(/^```json\s*\n/, '').replace(/\n```$/, '');
+      } else if (cleanedResponse.startsWith('```')) {
+        cleanedResponse = cleanedResponse.replace(/^```\s*\n/, '').replace(/\n```$/, '');
+      }
+
+      // Parse JSON
+      const parsed = JSON.parse(cleanedResponse);
+
+      // Validate structure - NEW FORMAT with elements array
+      if (!parsed.elements || !Array.isArray(parsed.elements)) {
+        throw new Error('Invalid response: missing "elements" array');
+      }
+
+      console.log('✅ [PARSER] Parsing successful:', {
+        totalElements: parsed.elements.length,
+      });
+
+      return parsed.elements;
+    } catch (error) {
+      console.error('❌ [PARSER] Parsing failed:', error);
+      console.error('Response was:', response.substring(0, 500));
+      throw new Error(`Failed to parse Gemini response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Parse Gemini response to WorksheetGenerationResponse (LEGACY - for backwards compatibility)
    */
   private parseGeminiResponse(
     response: string,
@@ -544,46 +660,74 @@ Now generate the worksheet as pure JSON:`;
   }
 
   /**
-   * Estimate completion duration based on content
+   * Get component types used from elements array
    */
-  private estimateDuration(pages: GeneratedPage[]): number {
+  private getComponentTypesUsed(elements: GeneratedElement[]): string[] {
+    const componentsUsed = new Set<string>();
+    elements.forEach((element) => {
+      componentsUsed.add(element.type);
+    });
+    return Array.from(componentsUsed);
+  }
+
+  /**
+   * Estimate completion duration from elements array (NEW)
+   */
+  private estimateDurationFromElements(elements: GeneratedElement[]): number {
     let minutes = 0;
 
-    pages.forEach((page) => {
-      page.elements?.forEach((element) => {
-        // Rough estimates per component type
-        switch (element.type) {
-          case 'title-block':
-            minutes += 0.5;
-            break;
-          case 'body-text':
-            minutes += 1;
-            break;
-          case 'instructions-box':
-            minutes += 0.5;
-            break;
-          case 'fill-blank':
-            minutes += element.properties?.items?.length * 1 || 2;
-            break;
-          case 'multiple-choice':
-            minutes += element.properties?.items?.length * 0.75 || 2;
-            break;
-          case 'true-false':
-            minutes += element.properties?.items?.length * 0.5 || 1.5;
-            break;
-          case 'short-answer':
-            minutes += element.properties?.items?.length * 2 || 4;
-            break;
-          case 'image-placeholder':
-            minutes += 0.5;
-            break;
-          default:
-            minutes += 0.5;
-        }
-      });
+    elements.forEach((element) => {
+      // Rough estimates per component type
+      switch (element.type) {
+        case 'title-block':
+          minutes += 0.5;
+          break;
+        case 'body-text':
+          minutes += 1;
+          break;
+        case 'instructions-box':
+          minutes += 0.5;
+          break;
+        case 'fill-blank':
+          minutes += element.properties?.items?.length * 1 || 2;
+          break;
+        case 'multiple-choice':
+          minutes += element.properties?.items?.length * 0.75 || 2;
+          break;
+        case 'true-false':
+          minutes += element.properties?.items?.length * 0.5 || 1.5;
+          break;
+        case 'short-answer':
+          minutes += element.properties?.items?.length * 2 || 4;
+          break;
+        case 'image-placeholder':
+          minutes += 0.5;
+          break;
+        case 'match-pairs':
+          minutes += element.properties?.pairs?.length * 1.5 || 3;
+          break;
+        case 'word-bank':
+          minutes += 2;
+          break;
+        default:
+          minutes += 0.5;
+      }
     });
 
     return Math.ceil(minutes);
+  }
+
+  /**
+   * Estimate completion duration based on content (LEGACY - for pages)
+   */
+  private estimateDuration(pages: GeneratedPage[]): number {
+    const allElements: GeneratedElement[] = [];
+    pages.forEach((page) => {
+      if (page.elements) {
+        allElements.push(...page.elements);
+      }
+    });
+    return this.estimateDurationFromElements(allElements);
   }
 }
 

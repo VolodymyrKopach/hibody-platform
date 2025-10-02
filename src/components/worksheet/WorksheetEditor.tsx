@@ -66,7 +66,7 @@ const WorksheetEditor: React.FC = () => {
         exerciseTypes: params.exerciseTypes || [],
         difficulty: getDifficultyFromLevel(params.level),
         language: params.language || 'en',
-        pageCount: params.numberOfPages || 1,
+        duration: params.duration || 'standard', // Duration affects content amount, not page count
         includeImages: params.includeImages !== false,
         additionalInstructions: params.additionalNotes || '',
       };
@@ -240,7 +240,7 @@ const WorksheetEditor: React.FC = () => {
                       ✨ AI is Creating Your Worksheet
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                      Generating {parameters?.numberOfPages || 1} page(s) about "{parameters?.topic}"...
+                      Generating content about "{parameters?.topic}"... (auto-paginating)
                     </Typography>
                     
                     {/* Progress Bar */}

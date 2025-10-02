@@ -30,14 +30,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build generation request
+    // Build generation request (AUTO-PAGINATION - no pageCount needed)
     const generationRequest: WorksheetGenerationRequest = {
       topic: body.topic,
       ageGroup: body.ageGroup,
       exerciseTypes: body.exerciseTypes || [],
       difficulty: body.difficulty || 'medium',
       language: body.language || 'en',
-      pageCount: body.pageCount || 1,
+      duration: body.duration || 'standard', // Duration affects content amount, not page count
       includeImages: body.includeImages !== false, // Default true
       additionalInstructions: body.additionalInstructions || '',
     };

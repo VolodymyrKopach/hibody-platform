@@ -41,6 +41,7 @@ export interface ComponentExample {
 
 /**
  * Request to generate worksheet
+ * NOTE: pageCount is removed - content will be auto-paginated based on actual content
  */
 export interface WorksheetGenerationRequest {
   topic: string; // Main topic (e.g., "Present Simple Tense", "Animals")
@@ -48,9 +49,9 @@ export interface WorksheetGenerationRequest {
   exerciseTypes?: string[]; // Preferred exercise types
   difficulty?: 'easy' | 'medium' | 'hard';
   language?: string; // Content language (default: 'en')
-  pageCount?: number; // Number of pages to generate (default: 1)
   includeImages?: boolean; // Whether to include images
   additionalInstructions?: string; // Custom instructions from user
+  duration?: string; // Lesson duration (affects content amount, not page count)
 }
 
 /**
@@ -87,10 +88,11 @@ export interface WorksheetMetadata {
   ageGroup: string;
   difficulty: string;
   language: string;
-  pageCount: number;
+  pageCount: number; // Calculated after auto-pagination
   generatedAt: string;
   componentsUsed: string[];
   estimatedDuration?: number; // Minutes to complete
+  autoPaginated: boolean; // Whether pages were auto-generated
 }
 
 /**
