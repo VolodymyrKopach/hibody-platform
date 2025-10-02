@@ -230,7 +230,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   const [draggedPageId, setDraggedPageId] = useState<string | null>(null);
   const [isPanning, setIsPanning] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
-  const [clipboard, setClipboard] = useState<{ pageId: string; element: CanvasElement } | null>(null);
+  const [clipboard, setClipboard] = useState<{ pageId: string; element: CanvasElement; operation: 'copy' | 'cut' } | null>(null);
+  const [crossPageDrag, setCrossPageDrag] = useState<{ sourcePageId: string; elementId: string; element: CanvasElement } | null>(null);
   const [history, setHistory] = useState<Map<string, PageContent>[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [showExitDialog, setShowExitDialog] = useState(false);
@@ -978,7 +979,19 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     const element = pageContent.elements.find(el => el.id === elementId);
     if (!element) return;
     
-    setClipboard({ pageId, element });
+    setClipboard({ pageId, element, operation: 'copy' });
+    console.log('📋 Element copied to clipboard');
+  };
+
+  const handleCutElement = (pageId: string, elementId: string) => {
+    const pageContent = pageContents.get(pageId);
+    if (!pageContent) return;
+    
+    const element = pageContent.elements.find(el => el.id === elementId);
+    if (!element) return;
+    
+    setClipboard({ pageId, element, operation: 'cut' });
+    console.log('✂️ Element cut to clipboard');
   };
 
   const handlePasteElement = (targetPageId: string) => {
@@ -986,29 +999,50 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     
     setPageContents(prev => {
       const newMap = new Map(prev);
-      const pageContent = newMap.get(targetPageId);
+      const targetContent = newMap.get(targetPageId);
       
-      if (!pageContent) return prev;
+      if (!targetContent) return prev;
       
-      // Create pasted element with offset position
+      // Create pasted element with offset position (only if pasting to same page)
+      const isSamePage = clipboard.pageId === targetPageId;
       const pastedElement: CanvasElement = {
         ...clipboard.element,
         id: `element-${Date.now()}-${Math.random()}`,
         position: {
-          x: clipboard.element.position.x + 20,
-          y: clipboard.element.position.y + 20,
+          x: clipboard.element.position.x + (isSamePage ? 20 : 0),
+          y: clipboard.element.position.y + (isSamePage ? 20 : 0),
         },
-        zIndex: pageContent.elements.length,
+        zIndex: targetContent.elements.length,
       };
       
+      // If cut operation, remove from source page
+      if (clipboard.operation === 'cut' && clipboard.pageId !== targetPageId) {
+        const sourceContent = newMap.get(clipboard.pageId);
+        if (sourceContent) {
+          newMap.set(clipboard.pageId, {
+            ...sourceContent,
+            elements: sourceContent.elements.filter(el => el.id !== clipboard.element.id),
+          });
+        }
+      }
+      
+      // Add to target page
       newMap.set(targetPageId, {
-        ...pageContent,
-        elements: [...pageContent.elements, pastedElement],
+        ...targetContent,
+        elements: [...targetContent.elements, pastedElement],
       });
       
       saveToHistory(newMap);
       return newMap;
     });
+    
+    // Clear clipboard if it was a cut operation
+    if (clipboard.operation === 'cut') {
+      setClipboard(null);
+      console.log('✅ Element moved to new page');
+    } else {
+      console.log('✅ Element pasted to page');
+    }
     
     // Select the pasted element
     setTimeout(() => {
@@ -1018,6 +1052,71 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         handleElementSelect(newElement.id);
       }
     }, 50);
+  };
+
+  // Cross-page drag handlers
+  const handleCrossPageDragStart = (sourcePageId: string, elementId: string) => {
+    const pageContent = pageContents.get(sourcePageId);
+    if (!pageContent) return;
+    
+    const element = pageContent.elements.find(el => el.id === elementId);
+    if (!element) return;
+    
+    setCrossPageDrag({ sourcePageId, elementId, element });
+    console.log('🔄 Cross-page drag started:', { sourcePageId, elementId });
+  };
+
+  const handleCrossPageDragEnd = () => {
+    setCrossPageDrag(null);
+    console.log('✅ Cross-page drag ended');
+  };
+
+  const handleCrossPageDrop = (targetPageId: string) => {
+    if (!crossPageDrag) return;
+    
+    const { sourcePageId, elementId, element } = crossPageDrag;
+    
+    if (sourcePageId === targetPageId) {
+      console.log('⚠️ Cannot drop on same page (use reorder instead)');
+      setCrossPageDrag(null);
+      return;
+    }
+
+    setPageContents(prev => {
+      const newMap = new Map(prev);
+      const sourceContent = newMap.get(sourcePageId);
+      const targetContent = newMap.get(targetPageId);
+      
+      if (!sourceContent || !targetContent) return prev;
+      
+      // Remove from source page
+      newMap.set(sourcePageId, {
+        ...sourceContent,
+        elements: sourceContent.elements.filter(el => el.id !== elementId),
+      });
+      
+      // Add to target page with new ID to avoid conflicts
+      const movedElement: CanvasElement = {
+        ...element,
+        id: `element-${Date.now()}-${Math.random()}`,
+        zIndex: targetContent.elements.length,
+      };
+      
+      newMap.set(targetPageId, {
+        ...targetContent,
+        elements: [...targetContent.elements, movedElement],
+      });
+      
+      saveToHistory(newMap);
+      return newMap;
+    });
+    
+    console.log(`✅ Element moved from page ${sourcePageId} to ${targetPageId} via drag`);
+    
+    // Clear cross-page drag state
+    setCrossPageDrag(null);
+    setSelectedElementId(null);
+    setSelection(null);
   };
 
   const handlePageMouseDown = (e: React.MouseEvent, pageId: string) => {
@@ -1170,6 +1269,16 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
           e.preventDefault();
           handleCopyElement(selection.pageData.id, selection.elementData.id);
+        }
+      }
+      
+      // Ctrl+X or Cmd+X to cut selected element
+      if (e.code === 'KeyX' && (e.ctrlKey || e.metaKey) && selection?.type === 'element') {
+        const target = e.target as HTMLElement;
+        const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
+          e.preventDefault();
+          handleCutElement(selection.pageData.id, selection.elementData.id);
         }
       }
       
@@ -1491,10 +1600,15 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 background={page.background}
                 elements={pageContent?.elements || []}
                 selectedElementId={selectedElementId}
+                clipboard={clipboard}
+                crossPageDrag={crossPageDrag}
                 onElementSelect={handleElementSelect}
                 onElementAdd={(element) => handleElementAdd(page.id, element)}
                 onElementEdit={(elementId, properties) => handleElementEdit(page.id, elementId, properties)}
                 onElementReorder={(fromIndex, toIndex) => handleElementReorder(page.id, fromIndex, toIndex)}
+                onCrossPageDragStart={(elementId) => handleCrossPageDragStart(page.id, elementId)}
+                onCrossPageDragEnd={handleCrossPageDragEnd}
+                onCrossPageDrop={() => handleCrossPageDrop(page.id)}
               />
             </Box>
             );

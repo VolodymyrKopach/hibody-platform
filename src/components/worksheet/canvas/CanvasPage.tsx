@@ -56,10 +56,15 @@ interface CanvasPageProps {
   background?: PageBackground;
   elements: CanvasElement[];
   selectedElementId: string | null;
+  clipboard?: { pageId: string; element: CanvasElement; operation: 'copy' | 'cut' } | null;
+  crossPageDrag?: { sourcePageId: string; elementId: string; element: CanvasElement } | null;
   onElementSelect: (elementId: string | null) => void;
   onElementAdd: (element: Omit<CanvasElement, 'id' | 'zIndex'>) => void;
   onElementEdit: (elementId: string, properties: any) => void;
   onElementReorder?: (fromIndex: number, toIndex: number) => void;
+  onCrossPageDragStart?: (elementId: string) => void;
+  onCrossPageDragEnd?: () => void;
+  onCrossPageDrop?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
 }
 
@@ -72,16 +77,22 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   background,
   elements,
   selectedElementId,
+  clipboard,
+  crossPageDrag,
   onElementSelect,
   onElementAdd,
   onElementEdit,
   onElementReorder,
+  onCrossPageDragStart,
+  onCrossPageDragEnd,
+  onCrossPageDrop,
   onDragOver,
 }) => {
   const theme = useTheme();
   const pageRef = useRef<HTMLDivElement>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
+  const [isDropTarget, setIsDropTarget] = useState(false);
 
   // Generate background CSS based on type
   const getBackgroundStyle = (): React.CSSProperties => {
@@ -187,6 +198,13 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', 'reorder'); // Mark as reorder operation
+    e.dataTransfer.setData('cross-page-drag', 'true'); // Mark for cross-page capability
+    
+    // Notify parent about cross-page drag
+    const element = elements[index];
+    if (element && onCrossPageDragStart) {
+      onCrossPageDragStart(element.id);
+    }
     
     // Create a custom drag preview that preserves all styles
     const target = e.currentTarget as HTMLElement;
@@ -281,6 +299,12 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   const handleElementDragEnd = () => {
     setDraggedIndex(null);
     setDropIndicatorIndex(null);
+    setIsDropTarget(false);
+    
+    // Notify parent about drag end
+    if (onCrossPageDragEnd) {
+      onCrossPageDragEnd();
+    }
   };
 
   // Prevent browser gestures on page (touchpad swipe navigation)
@@ -318,33 +342,65 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     };
   }, []);
 
-  // Handle drop from sidebar
+  // Handle drop from sidebar or cross-page
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsDropTarget(false);
 
+    // Check if it's a cross-page drag
+    const isCrossPageDrag = e.dataTransfer.getData('cross-page-drag') === 'true';
+    
+    if (isCrossPageDrag && crossPageDrag && crossPageDrag.sourcePageId !== pageId) {
+      // Handle cross-page drop
+      console.log('📥 Cross-page drop detected on page:', pageId);
+      if (onCrossPageDrop) {
+        onCrossPageDrop();
+      }
+      return;
+    }
+
+    // Handle sidebar component drop
     const componentType = e.dataTransfer.getData('componentType');
-    if (!componentType) return;
+    if (componentType) {
+      // Create default properties based on type
+      const defaultProperties = getDefaultProperties(componentType);
 
-    // Create default properties based on type
-    const defaultProperties = getDefaultProperties(componentType);
+      const newElement: Omit<CanvasElement, 'id' | 'zIndex'> = {
+        type: componentType as any,
+        position: { x: 0, y: 0 }, // Position not used in linear layout
+        size: { width: 794, height: 50 }, // Full width A4
+        properties: defaultProperties,
+        locked: false,
+        visible: true,
+      };
 
-    const newElement: Omit<CanvasElement, 'id' | 'zIndex'> = {
-      type: componentType as any,
-      position: { x: 0, y: 0 }, // Position not used in linear layout
-      size: { width: 794, height: 50 }, // Full width A4
-      properties: defaultProperties,
-      locked: false,
-      visible: true,
-    };
-
-    onElementAdd(newElement);
+      onElementAdd(newElement);
+    }
   };
 
   const handleDragOverPage = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Check if it's a cross-page drag from another page
+    const isCrossPageDrag = e.dataTransfer.types.includes('cross-page-drag');
+    if (isCrossPageDrag && crossPageDrag && crossPageDrag.sourcePageId !== pageId) {
+      setIsDropTarget(true);
+    }
+    
     onDragOver?.(e);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Only reset if leaving the page container entirely
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (!pageRef.current?.contains(relatedTarget)) {
+      setIsDropTarget(false);
+    }
   };
 
 
@@ -355,6 +411,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
       data-page-number={pageNumber}
       onDrop={handleDrop}
       onDragOver={handleDragOverPage}
+      onDragLeave={handleDragLeave}
       elevation={4}
       sx={{
         position: 'relative',
@@ -365,6 +422,27 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         // Ensure proper rendering for export
         WebkitFontSmoothing: 'antialiased',
         MozOsxFontSmoothing: 'grayscale',
+        // Cross-page drop target visual feedback
+        ...(isDropTarget && {
+          outline: `4px dashed ${theme.palette.success.main}`,
+          outlineOffset: '-4px',
+          '&::after': {
+            content: '"📥 Drop here to move element"',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            padding: '16px 24px',
+            background: alpha(theme.palette.success.main, 0.95),
+            color: 'white',
+            borderRadius: '12px',
+            fontSize: '16px',
+            fontWeight: 700,
+            boxShadow: `0 8px 32px ${alpha(theme.palette.success.main, 0.4)}`,
+            zIndex: 1000,
+            pointerEvents: 'none',
+          },
+        }),
       }}
     >
       {/* Page Header */}
@@ -442,13 +520,29 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
                 cursor: element.locked ? 'default' : 'grab',
                 border: draggedIndex === index 
                   ? `2px dashed ${alpha(theme.palette.primary.main, 0.5)}`
+                  : crossPageDrag?.elementId === element.id && crossPageDrag?.sourcePageId === pageId
+                  ? `2px dashed ${alpha(theme.palette.info.main, 0.8)}`
                   : selectedElementId === element.id
                   ? `2px solid ${theme.palette.primary.main}`
+                  : clipboard?.operation === 'cut' && clipboard?.element.id === element.id && clipboard?.pageId === pageId
+                  ? `2px dashed ${alpha(theme.palette.warning.main, 0.7)}`
                   : '2px solid transparent',
                 borderRadius: '4px',
                 transition: 'border 0.2s, opacity 0.2s, background-color 0.2s',
-                opacity: draggedIndex === index ? 0.3 : 1,
-                backgroundColor: draggedIndex === index ? alpha(theme.palette.grey[200], 0.5) : 'transparent',
+                opacity: draggedIndex === index 
+                  ? 0.3 
+                  : crossPageDrag?.elementId === element.id && crossPageDrag?.sourcePageId === pageId
+                  ? 0.6
+                  : clipboard?.operation === 'cut' && clipboard?.element.id === element.id && clipboard?.pageId === pageId
+                  ? 0.5
+                  : 1,
+                backgroundColor: draggedIndex === index 
+                  ? alpha(theme.palette.grey[200], 0.5) 
+                  : crossPageDrag?.elementId === element.id && crossPageDrag?.sourcePageId === pageId
+                  ? alpha(theme.palette.info.main, 0.08)
+                  : clipboard?.operation === 'cut' && clipboard?.element.id === element.id && clipboard?.pageId === pageId
+                  ? alpha(theme.palette.warning.main, 0.05)
+                  : 'transparent',
                 transform: 'none', // Prevent any transforms during drag
                 '&:hover': element.locked ? {} : {
                   border: `2px solid ${alpha(theme.palette.primary.main, 0.5)}`,
