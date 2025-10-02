@@ -1,0 +1,592 @@
+/**
+ * Service for AI-powered worksheet generation using Gemini 2.5 Flash
+ * Generates complete worksheets with educational components based on topic and age group
+ */
+
+import { GoogleGenAI } from '@google/genai';
+import {
+  WorksheetGenerationRequest,
+  WorksheetGenerationResponse,
+  GeneratedPage,
+  AIGenerationOptions,
+} from '@/types/worksheet-generation';
+import { worksheetComponentSchemaService } from './WorksheetComponentSchemaService';
+
+export class GeminiWorksheetGenerationService {
+  private client: GoogleGenAI;
+
+  constructor() {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY environment variable is required');
+    }
+    this.client = new GoogleGenAI({ apiKey });
+  }
+
+  /**
+   * Generate complete worksheet with AI
+   */
+  async generateWorksheet(
+    request: WorksheetGenerationRequest,
+    options: AIGenerationOptions = {}
+  ): Promise<WorksheetGenerationResponse> {
+    console.log('🎯 [WORKSHEET_GEN] Starting worksheet generation:', {
+      topic: request.topic,
+      ageGroup: request.ageGroup,
+      pageCount: request.pageCount || 1,
+    });
+
+    try {
+      // Build prompt with component library and educational guidelines
+      const prompt = this.buildGenerationPrompt(request);
+
+      // Call Gemini API
+      const response = await this.callGeminiAPI(prompt, options);
+
+      // Parse response
+      const parsedResponse = this.parseGeminiResponse(response, request);
+
+      console.log('✅ [WORKSHEET_GEN] Generation successful:', {
+        pages: parsedResponse.pages.length,
+        totalComponents: parsedResponse.pages.reduce((sum, p) => sum + p.elements.length, 0),
+      });
+
+      return parsedResponse;
+    } catch (error) {
+      console.error('❌ [WORKSHEET_GEN] Generation failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Build detailed prompt for Gemini with component library
+   */
+  private buildGenerationPrompt(request: WorksheetGenerationRequest): string {
+    const {
+      topic,
+      ageGroup,
+      exerciseTypes = [],
+      difficulty = 'medium',
+      language = 'en',
+      pageCount = 1,
+      includeImages = true,
+      additionalInstructions = '',
+    } = request;
+
+    // Get component schemas and age guidelines
+    const schemas = worksheetComponentSchemaService.getAllComponentSchemas();
+    const ageGuidelines = worksheetComponentSchemaService.getAgeGroupGuidelines(ageGroup);
+
+    // Build component library documentation
+    const componentLibrary = this.buildComponentLibraryDoc(schemas);
+
+    // Build examples
+    const examples = this.buildExamples();
+
+    const prompt = `You are an expert educational content creator specializing in worksheet generation for children.
+
+# TASK
+Generate a complete educational worksheet about "${topic}" for age group ${ageGroup} (${ageGuidelines.readingLevel}).
+
+# GENERATION PARAMETERS
+- **Topic:** ${topic}
+- **Age Group:** ${ageGroup} years old
+- **Reading Level:** ${ageGuidelines.readingLevel}
+- **Difficulty:** ${difficulty}
+- **Language:** ${language}
+- **Number of Pages:** ${pageCount}
+- **Include Images:** ${includeImages ? 'Yes' : 'No'}
+- **Attention Span:** ~${ageGuidelines.attentionSpan} minutes
+${exerciseTypes.length > 0 ? `- **Preferred Exercise Types:** ${exerciseTypes.join(', ')} (prioritize these, but you can include others if beneficial)` : '- **Exercise Types:** Use any appropriate types based on topic and age'}
+${additionalInstructions ? `- **Additional Instructions:** ${additionalInstructions}` : ''}
+
+# EDUCATIONAL GUIDELINES FOR AGE ${ageGroup}
+
+## Text Length Guidelines
+- **Title:** ${ageGuidelines.textLengthGuidelines.title}
+- **Instructions:** ${ageGuidelines.textLengthGuidelines.instruction}
+- **Body Text:** ${ageGuidelines.textLengthGuidelines.bodyText}
+- **Questions:** ${ageGuidelines.textLengthGuidelines.question}
+
+## Complexity Level
+- **Complexity:** ${ageGuidelines.complexity}
+- **Visual Importance:** ${ageGuidelines.visualImportance}
+- **Recommended Exercises:** ${ageGuidelines.recommendedExerciseTypes.join(', ')}
+
+## Content Principles
+1. **Age-Appropriate Language:** Use simple, clear vocabulary suitable for ${ageGuidelines.readingLevel}
+2. **Engagement:** Include variety to maintain attention for ${ageGuidelines.attentionSpan} minutes
+3. **Visual Support:** ${ageGuidelines.visualImportance === 'critical' || ageGuidelines.visualImportance === 'high' ? 'Use images and visual elements frequently' : 'Use images when helpful'}
+4. **Progressive Difficulty:** Start easy, gradually increase challenge
+5. **Clear Instructions:** Be explicit and step-by-step
+6. **Balanced Mix:** ${exerciseTypes.length > 0 ? `Focus on preferred exercise types but include variety. You can use other types if they better fit the content.` : 'Combine different exercise types for engagement and choose the most appropriate for the topic.'}
+
+${componentLibrary}
+
+# WORKSHEET STRUCTURE RULES
+
+## Page Organization
+1. **Start with Title:** Every page begins with title-block (level: 'main')
+2. **Instructions Box:** Add instructions-box after title to guide students
+3. **Content Flow:** Explanation → Examples → Exercises → Review
+4. **Variety:** Mix different component types for engagement
+5. **Visual Breaks:** Use dividers between major sections
+6. **Images:** Place images near related content
+
+## Component Ordering Best Practices
+- **Introduction:** title-block → body-text/instructions-box
+- **Teaching:** body-text → tip-box → examples (bullet-list/numbered-list)
+- **Practice:** instructions-box → exercise components (fill-blank, multiple-choice, etc.)
+- **Visual Aid:** image-placeholder near relevant content
+- **Warnings:** warning-box before difficult exercises
+- **Separation:** divider between major sections
+
+## Recommended Component Mix (per page)
+- **1 Title** (title-block with level 'main')
+- **1-2 Instructions** (instructions-box)
+- **2-3 Text Blocks** (body-text, bullet-list, or numbered-list)
+- **2-4 Exercises** (fill-blank, multiple-choice, true-false, short-answer)
+- **1-2 Helper Boxes** (tip-box, warning-box)
+- **0-2 Images** (if includeImages is true)
+- **1-2 Dividers** (to separate sections)
+
+# RESPONSE FORMAT
+
+You MUST respond with ONLY valid JSON in this exact format:
+
+{
+  "topic": "${topic}",
+  "ageGroup": "${ageGroup}",
+  "pages": [
+    {
+      "pageNumber": 1,
+      "title": "Page Title Here",
+      "elements": [
+        {
+          "type": "title-block",
+          "properties": {
+            "text": "Main Title",
+            "level": "main",
+            "align": "center"
+          }
+        },
+        {
+          "type": "instructions-box",
+          "properties": {
+            "text": "Complete the exercises below.",
+            "type": "general"
+          }
+        },
+        {
+          "type": "body-text",
+          "properties": {
+            "text": "Explanation text here...",
+            "variant": "paragraph"
+          }
+        },
+        {
+          "type": "fill-blank",
+          "properties": {
+            "items": [
+              {
+                "number": 1,
+                "text": "Sentence with ______ blank.",
+                "hint": "answer"
+              }
+            ],
+            "wordBank": ["word1", "word2", "word3"]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+# CRITICAL RULES
+
+1. **Valid JSON Only:** No markdown, no code blocks, no extra text - just pure JSON
+2. **Required Fields:** Every component must have 'type' and 'properties'
+3. **Component Types:** Only use types from the component library above
+4. **Properties:** Match the property schema for each component type exactly
+5. **Age-Appropriate:** Follow text length and complexity guidelines for age ${ageGroup}
+6. **Logical Order:** Components should flow naturally (title → instructions → content → exercises)
+7. **Balanced Content:** Don't overwhelm with too many exercises or too much text
+8. **Language:** All user-facing text in ${language}, technical fields in English
+9. **Images (IMPORTANT):** ${includeImages ? 
+  'When using image-placeholder, ALWAYS provide "imagePrompt" instead of "url". The imagePrompt should be a detailed, child-friendly description for AI image generation (e.g., "A friendly T-Rex dinosaur in prehistoric forest, educational illustration for children"). DO NOT provide url field when using imagePrompt.' : 
+  'Do not include any image-placeholder components.'}
+
+# EXAMPLES OF GOOD WORKSHEETS
+
+${examples}
+
+# FINAL CHECKLIST BEFORE GENERATING
+
+- [ ] Age-appropriate vocabulary and sentence structure?
+- [ ] Text lengths follow guidelines for age ${ageGroup}?
+- [ ] Good mix of component types?
+- [ ] Clear instructions for each exercise?
+- [ ] Logical flow from introduction to exercises?
+- [ ] Tips or warnings where helpful?
+- [ ] Images included (if requested)?
+- [ ] Dividers to separate sections?
+- [ ] Valid JSON with correct component types and properties?
+
+Now generate the worksheet as pure JSON:`;
+
+    return prompt;
+  }
+
+  /**
+   * Build component library documentation
+   */
+  private buildComponentLibraryDoc(schemas: any[]): string {
+    let doc = '# COMPONENT LIBRARY\n\n';
+    doc += 'You can use these educational components to build the worksheet:\n\n';
+
+    schemas.forEach((schema, index) => {
+      doc += `## ${index + 1}. ${schema.name} (type: "${schema.id}")\n`;
+      doc += `**Category:** ${schema.category}\n`;
+      doc += `**Description:** ${schema.description}\n`;
+      doc += `**Use Cases:** ${schema.useCases.join(', ')}\n\n`;
+
+      doc += '**Properties:**\n';
+      Object.entries(schema.properties).forEach(([propName, propSchema]: [string, any]) => {
+        const required = propSchema.required ? '(required)' : '(optional)';
+        const defaultVal = propSchema.default ? ` [default: ${JSON.stringify(propSchema.default)}]` : '';
+        doc += `- \`${propName}\` ${required}${defaultVal}: ${propSchema.description}\n`;
+        
+        if (propSchema.enum) {
+          doc += `  - Allowed values: ${propSchema.enum.map((v: string) => `"${v}"`).join(', ')}\n`;
+        }
+        
+        if (propSchema.examples && propSchema.examples.length > 0) {
+          doc += `  - Examples: ${propSchema.examples.map((ex: any) => JSON.stringify(ex)).slice(0, 2).join(', ')}\n`;
+        }
+      });
+
+      if (schema.examples && schema.examples.length > 0) {
+        doc += '\n**Example Usage:**\n```json\n';
+        doc += JSON.stringify({
+          type: schema.id,
+          properties: schema.examples[0].properties,
+        }, null, 2);
+        doc += '\n```\n';
+      }
+
+      doc += '\n---\n\n';
+    });
+
+    return doc;
+  }
+
+  /**
+   * Build examples of good worksheets
+   */
+  private buildExamples(): string {
+    return `
+## Example 1: Simple Worksheet (Age 6-7)
+
+\`\`\`json
+{
+  "topic": "Colors",
+  "ageGroup": "6-7",
+  "pages": [
+    {
+      "pageNumber": 1,
+      "title": "Learning Colors",
+      "elements": [
+        {
+          "type": "title-block",
+          "properties": {
+            "text": "Colors Around Us",
+            "level": "main",
+            "align": "center"
+          }
+        },
+        {
+          "type": "instructions-box",
+          "properties": {
+            "text": "Look at the pictures and answer the questions.",
+            "type": "general"
+          }
+        },
+        {
+          "type": "body-text",
+          "properties": {
+            "text": "Colors are everywhere! Red, blue, yellow, green - can you find them?",
+            "variant": "paragraph"
+          }
+        },
+        {
+          "type": "image-placeholder",
+          "properties": {
+            "caption": "A colorful rainbow",
+            "width": 400,
+            "height": 300,
+            "align": "center"
+          }
+        },
+        {
+          "type": "multiple-choice",
+          "properties": {
+            "items": [
+              {
+                "number": 1,
+                "question": "What color is the sky?",
+                "options": [
+                  { "letter": "a", "text": "Red" },
+                  { "letter": "b", "text": "Blue" },
+                  { "letter": "c", "text": "Green" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+\`\`\`
+
+## Example 2: Grammar Worksheet (Age 10-11)
+
+\`\`\`json
+{
+  "topic": "Present Simple Tense",
+  "ageGroup": "10-11",
+  "pages": [
+    {
+      "pageNumber": 1,
+      "title": "Present Simple Practice",
+      "elements": [
+        {
+          "type": "title-block",
+          "properties": {
+            "text": "Present Simple Tense",
+            "level": "main",
+            "align": "center"
+          }
+        },
+        {
+          "type": "body-text",
+          "properties": {
+            "text": "We use the present simple tense to talk about habits, routines, and general truths. The verb changes for he, she, and it.",
+            "variant": "paragraph"
+          }
+        },
+        {
+          "type": "tip-box",
+          "properties": {
+            "text": "Remember: Add 's' or 'es' to the verb when the subject is he, she, or it.",
+            "type": "study"
+          }
+        },
+        {
+          "type": "divider",
+          "properties": {
+            "style": "solid",
+            "thickness": 2,
+            "spacing": "medium"
+          }
+        },
+        {
+          "type": "title-block",
+          "properties": {
+            "text": "Exercise 1: Fill in the Blanks",
+            "level": "section",
+            "align": "left"
+          }
+        },
+        {
+          "type": "instructions-box",
+          "properties": {
+            "text": "Complete the sentences using the correct form of the verb in brackets.",
+            "type": "writing"
+          }
+        },
+        {
+          "type": "fill-blank",
+          "properties": {
+            "items": [
+              {
+                "number": 1,
+                "text": "She ______ (go) to school every day.",
+                "hint": "goes"
+              },
+              {
+                "number": 2,
+                "text": "They ______ (play) football on Saturdays.",
+                "hint": "play"
+              }
+            ],
+            "wordBank": ["goes", "go", "plays", "play"]
+          }
+        }
+      ]
+    }
+  ]
+}
+\`\`\`
+`;
+  }
+
+  /**
+   * Call Gemini API
+   */
+  private async callGeminiAPI(
+    prompt: string,
+    options: AIGenerationOptions = {}
+  ): Promise<string> {
+    const {
+      temperature = 0.7,
+      maxTokens = 8000,
+      model = 'gemini-2.5-flash',
+    } = options;
+
+    console.log('🤖 [GEMINI_API] Calling Gemini:', {
+      model,
+      temperature,
+      maxTokens,
+      promptLength: prompt.length,
+    });
+
+    try {
+      const response = await this.client.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          temperature,
+          maxOutputTokens: maxTokens,
+          topP: 0.9,
+          topK: 40,
+        },
+      });
+
+      const content = response.text;
+
+      if (!content) {
+        throw new Error('Empty response from Gemini API');
+      }
+
+      console.log('✅ [GEMINI_API] Response received:', {
+        responseLength: content.length,
+      });
+
+      return content;
+    } catch (error) {
+      console.error('❌ [GEMINI_API] API call failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Parse Gemini response to WorksheetGenerationResponse
+   */
+  private parseGeminiResponse(
+    response: string,
+    request: WorksheetGenerationRequest
+  ): WorksheetGenerationResponse {
+    console.log('🔍 [PARSER] Parsing Gemini response...');
+
+    try {
+      // Remove markdown code blocks if present
+      let cleanedResponse = response.trim();
+      if (cleanedResponse.startsWith('```json')) {
+        cleanedResponse = cleanedResponse.replace(/^```json\s*\n/, '').replace(/\n```$/, '');
+      } else if (cleanedResponse.startsWith('```')) {
+        cleanedResponse = cleanedResponse.replace(/^```\s*\n/, '').replace(/\n```$/, '');
+      }
+
+      // Parse JSON
+      const parsed = JSON.parse(cleanedResponse);
+
+      // Validate structure
+      if (!parsed.pages || !Array.isArray(parsed.pages)) {
+        throw new Error('Invalid response: missing "pages" array');
+      }
+
+      // Extract component types used
+      const componentsUsed = new Set<string>();
+      parsed.pages.forEach((page: GeneratedPage) => {
+        page.elements?.forEach((element) => {
+          componentsUsed.add(element.type);
+        });
+      });
+
+      // Build response
+      const result: WorksheetGenerationResponse = {
+        pages: parsed.pages,
+        metadata: {
+          topic: request.topic,
+          ageGroup: request.ageGroup,
+          difficulty: request.difficulty || 'medium',
+          language: request.language || 'en',
+          pageCount: parsed.pages.length,
+          generatedAt: new Date().toISOString(),
+          componentsUsed: Array.from(componentsUsed),
+          estimatedDuration: this.estimateDuration(parsed.pages),
+        },
+      };
+
+      console.log('✅ [PARSER] Parsing successful:', {
+        pages: result.pages.length,
+        componentsUsed: result.metadata.componentsUsed,
+        estimatedDuration: result.metadata.estimatedDuration,
+      });
+
+      return result;
+    } catch (error) {
+      console.error('❌ [PARSER] Parsing failed:', error);
+      console.error('Response was:', response.substring(0, 500));
+      throw new Error(`Failed to parse Gemini response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Estimate completion duration based on content
+   */
+  private estimateDuration(pages: GeneratedPage[]): number {
+    let minutes = 0;
+
+    pages.forEach((page) => {
+      page.elements?.forEach((element) => {
+        // Rough estimates per component type
+        switch (element.type) {
+          case 'title-block':
+            minutes += 0.5;
+            break;
+          case 'body-text':
+            minutes += 1;
+            break;
+          case 'instructions-box':
+            minutes += 0.5;
+            break;
+          case 'fill-blank':
+            minutes += element.properties?.items?.length * 1 || 2;
+            break;
+          case 'multiple-choice':
+            minutes += element.properties?.items?.length * 0.75 || 2;
+            break;
+          case 'true-false':
+            minutes += element.properties?.items?.length * 0.5 || 1.5;
+            break;
+          case 'short-answer':
+            minutes += element.properties?.items?.length * 2 || 4;
+            break;
+          case 'image-placeholder':
+            minutes += 0.5;
+            break;
+          default:
+            minutes += 0.5;
+        }
+      });
+    });
+
+    return Math.ceil(minutes);
+  }
+}
+
+// Singleton instance
+export const geminiWorksheetGenerationService = new GeminiWorksheetGenerationService();
+

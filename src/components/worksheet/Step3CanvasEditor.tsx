@@ -47,6 +47,7 @@ import {
   File,
   Files,
   Palette,
+  Sparkles,
 } from 'lucide-react';
 import { exportToPDF, exportToPNG, printWorksheet } from '@/utils/pdfExportSnapdom';
 import { autoSaveWorksheet, getCurrentWorksheetId, SavedWorksheet, clearAllWorksheets } from '@/utils/worksheetStorage';
@@ -62,6 +63,7 @@ import MultipleChoice from './canvas/atomic/MultipleChoice';
 import TipBox from './canvas/atomic/TipBox';
 import CanvasPage from './canvas/CanvasPage';
 import { CanvasElement, PageContent } from '@/types/canvas-element';
+import { ParsedWorksheet } from '@/types/worksheet-generation';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -161,8 +163,9 @@ const MOCK_CANVAS_PAGES: WorksheetPage[] = [
 ];
 
 interface Step3CanvasEditorProps {
-  onBack: () => void;
-  parameters: any;
+  parameters?: any;
+  generatedWorksheet?: ParsedWorksheet | null;
+  onOpenGenerateDialog?: () => void;
 }
 
 // Selection types
@@ -182,12 +185,41 @@ function formatTimeSince(date: Date): string {
   return `${hours}h ago`;
 }
 
-const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameters }) => {
+const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, generatedWorksheet, onOpenGenerateDialog }) => {
   const theme = useTheme();
   const router = useRouter();
   const canvasRef = React.useRef<HTMLDivElement>(null);
-  const [pages, setPages] = useState<WorksheetPage[]>(MOCK_CANVAS_PAGES);
-  const [pageContents, setPageContents] = useState<Map<string, PageContent>>(new Map());
+  
+  // Initialize pages from generated worksheet or empty canvas
+  const PAGE_GAP = 150; // Gap between pages
+  const initialPages = generatedWorksheet 
+    ? generatedWorksheet.pages.map((page, index) => ({
+        id: page.pageId,
+        title: page.title,
+        pageNumber: page.pageNumber,
+        x: 100, // All pages start at x: 100
+        y: 100 + (A4_HEIGHT + PAGE_GAP) * index, // Stack vertically
+        width: A4_WIDTH,
+        height: A4_HEIGHT,
+        content: [`worksheet-page-${page.pageNumber}`],
+        thumbnail: '📄',
+        background: page.background || { type: 'solid' as const, color: '#FFFFFF' },
+      }))
+    : []; // Start with empty canvas
+
+  const [pages, setPages] = useState<WorksheetPage[]>(initialPages);
+  
+  // Initialize page contents from generated worksheet
+  const initialPageContents = new Map<string, PageContent>();
+  if (generatedWorksheet) {
+    generatedWorksheet.pages.forEach(page => {
+      initialPageContents.set(page.pageId, {
+        elements: page.elements,
+      });
+    });
+  }
+  
+  const [pageContents, setPageContents] = useState<Map<string, PageContent>>(initialPageContents);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(0.5);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -203,6 +235,38 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [exitCallback, setExitCallback] = useState<(() => void) | null>(null);
+
+  // Update pages and contents when generatedWorksheet changes
+  useEffect(() => {
+    if (generatedWorksheet && generatedWorksheet.pages.length > 0) {
+      console.log('📄 Updating canvas with generated worksheet:', generatedWorksheet);
+      
+      const newPages = generatedWorksheet.pages.map((page, index) => ({
+        id: page.pageId,
+        title: page.title,
+        pageNumber: page.pageNumber,
+        x: 100,
+        y: 100 + (A4_HEIGHT + PAGE_GAP) * index,
+        width: A4_WIDTH,
+        height: A4_HEIGHT,
+        content: [`worksheet-page-${page.pageNumber}`],
+        thumbnail: '📄',
+        background: page.background || { type: 'solid' as const, color: '#FFFFFF' },
+      }));
+
+      const newPageContents = new Map<string, PageContent>();
+      generatedWorksheet.pages.forEach(page => {
+        newPageContents.set(page.pageId, {
+          elements: page.elements,
+        });
+      });
+
+      setPages(newPages);
+      setPageContents(newPageContents);
+      
+      console.log(`✅ Canvas updated with ${newPages.length} pages`);
+    }
+  }, [generatedWorksheet]);
   const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -1063,8 +1127,13 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     const handleKeyDown = (e: KeyboardEvent) => {
       // Space for temporary hand tool
       if (e.code === 'Space' && !isSpacePressed) {
-        e.preventDefault();
-        setIsSpacePressed(true);
+        // Don't prevent space if user is typing in an input field
+        const target = e.target as HTMLElement;
+        const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
+          e.preventDefault();
+          setIsSpacePressed(true);
+        }
       }
       
       // V for select tool
@@ -1144,7 +1213,12 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
-        e.preventDefault();
+        // Don't prevent space if user is typing in an input field
+        const target = e.target as HTMLElement;
+        const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
+          e.preventDefault();
+        }
         setIsSpacePressed(false);
       }
     };
@@ -1186,6 +1260,29 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
                 {pages.length} pages • Drag to arrange
               </Typography>
             </Box>
+            
+            {/* Generate with AI Button */}
+            {onOpenGenerateDialog && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Sparkles size={16} />}
+                onClick={onOpenGenerateDialog}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderColor: alpha(theme.palette.primary.main, 0.3),
+                  color: theme.palette.primary.main,
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                    background: alpha(theme.palette.primary.main, 0.05),
+                  },
+                }}
+              >
+                Generate with AI
+              </Button>
+            )}
           </Stack>
 
           {/* Center - Tools */}
