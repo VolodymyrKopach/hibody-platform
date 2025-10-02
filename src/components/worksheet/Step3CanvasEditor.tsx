@@ -25,6 +25,8 @@ import {
   ListItemText,
   CircularProgress,
   Divider,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   ZoomIn,
@@ -44,9 +46,12 @@ import {
   Check,
   File,
   Files,
+  Palette,
 } from 'lucide-react';
 import { exportToPDF, exportToPNG, printWorksheet } from '@/utils/pdfExportSnapdom';
-import { autoSaveWorksheet, getCurrentWorksheetId, SavedWorksheet } from '@/utils/worksheetStorage';
+import { autoSaveWorksheet, getCurrentWorksheetId, SavedWorksheet, clearAllWorksheets } from '@/utils/worksheetStorage';
+import { clearAllImages } from '@/utils/imageStorage';
+import { localImageService } from '@/services/images/LocalImageService';
 import LeftSidebar from './canvas/LeftSidebar';
 import RightSidebar from './canvas/RightSidebar';
 import TitleBlock from './canvas/atomic/TitleBlock';
@@ -58,6 +63,34 @@ import TipBox from './canvas/atomic/TipBox';
 import CanvasPage from './canvas/CanvasPage';
 import { CanvasElement, PageContent } from '@/types/canvas-element';
 
+interface PageBackground {
+  type: 'solid' | 'gradient' | 'pattern' | 'image';
+  color?: string;
+  image?: {
+    url: string;
+    size: 'cover' | 'contain' | 'repeat' | 'auto';
+    position: 'center' | 'top' | 'bottom' | 'left' | 'right';
+    opacity?: number;
+  };
+  gradient?: {
+    from: string;
+    to: string;
+    colors?: string[]; // For multi-color gradients (2-4 colors)
+    direction: 'to-bottom' | 'to-top' | 'to-right' | 'to-left' | 'to-bottom-right' | 'to-bottom-left' | 'to-top-right' | 'to-top-left';
+  };
+  pattern?: {
+    name: string;
+    backgroundColor: string;
+    patternColor: string;
+    css: string;
+    backgroundSize: string;
+    backgroundPosition?: string;
+    scale?: number; // Custom scale multiplier (0.5 - 2.0)
+    opacity?: number; // Pattern opacity (0-100)
+  };
+  opacity?: number;
+}
+
 interface WorksheetPage {
   id: string;
   pageNumber: number;
@@ -68,6 +101,7 @@ interface WorksheetPage {
   height: number;
   content: string[];
   thumbnail: string;
+  background?: PageBackground;
 }
 
 // A4 format: 210mm x 297mm = 794px x 1123px at 96 DPI
@@ -86,6 +120,11 @@ const MOCK_CANVAS_PAGES: WorksheetPage[] = [
     height: A4_HEIGHT,
     content: ['worksheet-page-1'],
     thumbnail: '📋',
+    background: {
+      type: 'solid',
+      color: '#FFFFFF',
+      opacity: 100,
+    },
   },
   {
     id: '2',
@@ -97,6 +136,11 @@ const MOCK_CANVAS_PAGES: WorksheetPage[] = [
     height: A4_HEIGHT,
     content: ['worksheet-page-2'],
     thumbnail: '✏️',
+    background: {
+      type: 'solid',
+      color: '#FFFFFF',
+      opacity: 100,
+    },
   },
   {
     id: '3',
@@ -108,6 +152,11 @@ const MOCK_CANVAS_PAGES: WorksheetPage[] = [
     height: A4_HEIGHT,
     content: ['worksheet-page-3'],
     thumbnail: '🎯',
+    background: {
+      type: 'solid',
+      color: '#FFFFFF',
+      opacity: 100,
+    },
   },
 ];
 
@@ -163,6 +212,83 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
   const handleResetZoom = () => setZoom(1);
 
+  const handlePageBackgroundUpdate = (pageId: string, background: PageBackground) => {
+    console.log('🎨 Background Update:', { pageId, background });
+    
+    setPages(prev => prev.map(page =>
+      page.id === pageId ? { ...page, background } : page
+    ));
+    
+    // Update selection if the modified page is currently selected
+    setSelection(prevSelection => {
+      if (prevSelection?.type === 'page' && prevSelection.data.id === pageId) {
+        return {
+          type: 'page',
+          data: {
+            ...prevSelection.data,
+            background,
+          },
+        };
+      }
+      return prevSelection;
+    });
+  };
+
+  const handleImageUpload = async (pageId: string, file: File) => {
+    try {
+      // Upload image using LocalImageService
+      const result = await localImageService.uploadLocalImage(file, {
+        compress: true,
+        maxWidth: 1920,
+      });
+
+      if (!result.success) {
+        alert(result.error || 'Failed to upload image');
+        return;
+      }
+
+      console.log('✅ Image uploaded:', result);
+
+      // Apply as background
+      const newBackground: PageBackground = {
+        type: 'image',
+        image: {
+          url: result.url, // Blob URL from IndexedDB
+          size: 'cover',
+          position: 'center',
+          opacity: 100,
+        },
+        opacity: 100,
+      };
+
+      setPages(prev => prev.map(page =>
+        page.id === pageId
+          ? {
+              ...page,
+              background: newBackground,
+            }
+          : page
+      ));
+
+      // Update selection if the modified page is currently selected
+      setSelection(prevSelection => {
+        if (prevSelection?.type === 'page' && prevSelection.data.id === pageId) {
+          return {
+            type: 'page',
+            data: {
+              ...prevSelection.data,
+              background: newBackground,
+            },
+          };
+        }
+        return prevSelection;
+      });
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      alert('Failed to upload image. Please try again.');
+    }
+  };
+
   // Show exit confirmation dialog
   const showExitConfirmation = (): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -184,10 +310,73 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     setExitCallback(null);
   };
 
+  const handleExitWithoutSave = () => {
+    setShowExitDialog(false);
+    if (exitCallback) {
+      exitCallback();
+      setExitCallback(null);
+    }
+    // Navigate back or close
+    if (onExit) {
+      onExit();
+    }
+  };
+
+  const handleExitWithSave = async () => {
+    setShowExitDialog(false);
+    try {
+      // Export all pages as PDF before exiting
+      await handleExportPDF(false);
+      
+      if (exitCallback) {
+        exitCallback();
+        setExitCallback(null);
+      }
+      
+      // Navigate back or close after saving
+      if (onExit) {
+        onExit();
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export PDF. Please try again.');
+      setShowExitDialog(true);
+    }
+  };
+
+  // Handle download from exit dialog
+  const handleDownloadFromDialog = async () => {
+    try {
+      setIsExporting(true);
+      
+      // Close dialog temporarily to allow proper rendering
+      setShowExitDialog(false);
+      
+      // Wait a bit for dialog to close
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Export all pages as PDF
+      await handleExportPDF(false);
+      
+      // Reopen dialog after export
+      setShowExitDialog(true);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export PDF. Please try again.');
+      // Reopen dialog even on error
+      setShowExitDialog(true);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Handle back button click
   const handleBackClick = async () => {
     const confirmed = await showExitConfirmation();
     if (confirmed) {
+      console.log('🧹 Cleaning up storage on back button...');
+      clearAllWorksheets();
+      await clearAllImages();
       router.push('/');
     }
   };
@@ -206,6 +395,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     setIsExporting(true);
 
     try {
+      console.log('📄 Starting PDF export...', { currentPageOnly, pagesCount: pages.length });
+      
       let pageElements: HTMLElement[];
       let filename = 'worksheet';
 
@@ -235,22 +426,31 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
         filename = `worksheet_page_${selection.pageData.pageNumber}`;
       } else {
         // Export all pages
+        console.log('🔍 Looking for page elements with [data-page-id]...');
         pageElements = Array.from(
           document.querySelectorAll('[data-page-id]')
         ) as HTMLElement[];
 
+        console.log(`📋 Found ${pageElements.length} page elements`);
+
         if (pageElements.length === 0) {
-          throw new Error('No pages found to export');
+          throw new Error('No pages found to export. Please make sure you have created pages.');
         }
       }
 
+      console.log('📤 Exporting to PDF...', { elementsCount: pageElements.length });
+      
       await exportToPDF(pageElements, {
         filename,
         format: 'a4',
       });
+
+      console.log('✅ PDF export successful!');
     } catch (error) {
-      console.error('Export PDF failed:', error);
-      alert('Failed to export PDF. Please try again.');
+      console.error('❌ Export PDF failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Failed to export PDF: ${errorMessage}\n\nPlease try again.`);
+      throw error; // Re-throw to be caught by caller
     } finally {
       setIsExporting(false);
     }
@@ -368,6 +568,30 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [pages, pageContents]);
+
+  // Cleanup storage when leaving the canvas page
+  useEffect(() => {
+    // Cleanup on page unload (closing tab/window)
+    const handleBeforeUnload = () => {
+      console.log('🧹 Cleaning up storage on page close...');
+      clearAllWorksheets();
+      clearAllImages(); // Note: this is synchronous cleanup
+    };
+
+    // Cleanup on component unmount (navigation away)
+    const handleUnmount = async () => {
+      console.log('🧹 Cleaning up storage on navigation...');
+      clearAllWorksheets();
+      await clearAllImages();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      handleUnmount();
+    };
+  }, []);
 
   // Update saved time display
   useEffect(() => {
@@ -805,22 +1029,33 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
     setIsPanning(false);
   };
 
-  // Wheel zoom and pan
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    
-    if (e.ctrlKey || e.metaKey) {
-      // Zoom with Ctrl/Cmd + Wheel
-      const delta = -e.deltaY * 0.001;
-      setZoom(prev => Math.max(0.1, Math.min(3, prev + delta)));
-    } else {
-      // Pan with Wheel
-      setPan(prev => ({
-        x: prev.x - e.deltaX / zoom,
-        y: prev.y - e.deltaY / zoom,
-      }));
-    }
-  };
+  // Canvas container ref for wheel event
+  const canvasContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Wheel zoom and pan with proper passive: false
+  useEffect(() => {
+    const container = canvasContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      
+      if (e.ctrlKey || e.metaKey) {
+        // Zoom with Ctrl/Cmd + Wheel
+        const delta = -e.deltaY * 0.001;
+        setZoom(prev => Math.max(0.1, Math.min(3, prev + delta)));
+      } else {
+        // Pan with Wheel
+        setPan(prev => ({
+          x: prev.x - e.deltaX / zoom,
+          y: prev.y - e.deltaY / zoom,
+        }));
+      }
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, [zoom]);
 
 
   // Keyboard shortcuts
@@ -895,6 +1130,15 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
       if (e.code === 'KeyZ' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
         e.preventDefault();
         handleRedo();
+      }
+      
+      // Ctrl+B or Cmd+B to open background menu
+      if (e.code === 'KeyB' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        const button = document.querySelector('[data-background-button]') as HTMLElement;
+        if (button) {
+          button.click();
+        }
       }
     };
     
@@ -1101,11 +1345,11 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
           backgroundSize: '20px 20px',
           cursor: isPanning ? 'grabbing' : (isSpacePressed || tool === 'hand' ? 'grab' : 'default'),
         }}
+        ref={canvasContainerRef}
         onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleCanvasMouseMove}
         onMouseUp={handleCanvasMouseUp}
         onMouseLeave={handleCanvasMouseUp}
-        onWheel={handleWheel}
       >
         {/* Canvas Container */}
         <Box
@@ -1147,6 +1391,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
                 title={page.title}
                 width={page.width}
                 height={page.height}
+                background={page.background}
                 elements={pageContent?.elements || []}
                 selectedElementId={selectedElementId}
                 onElementSelect={handleElementSelect}
@@ -1245,6 +1490,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
         <RightSidebar 
           selection={selection}
           onSelectionChange={setSelection}
+          onImageUpload={handleImageUpload}
           onUpdate={(updates) => {
             if (selection?.type === 'element') {
               const elementId = selection.elementData.id;
@@ -1275,6 +1521,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
           onDelete={(pageId, elementId) => {
             handleElementDelete(pageId, elementId);
           }}
+          onPageBackgroundUpdate={handlePageBackgroundUpdate}
         />
       </Box>
 
@@ -1394,53 +1641,27 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ onBack, parameter
             </Box>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Leave Worksheet Editor?
+                Download Before Leaving
               </Typography>
             </Box>
           </Stack>
         </DialogTitle>
         
         <DialogContent>
-          <DialogContentText sx={{ fontSize: '0.95rem', color: 'text.secondary' }}>
-            Your work will be lost if you leave now. Are you sure you want to continue?
-          </DialogContentText>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            You have unsaved changes. Would you like to download your worksheet before leaving?
+          </Typography>
         </DialogContent>
         
-        <DialogActions sx={{ p: 3, pt: 2 }}>
-          <Button
-            onClick={handleExitCancel}
-            variant="outlined"
-            size="large"
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none',
-              px: 3,
-              borderColor: theme.palette.divider,
-              color: 'text.primary',
-              '&:hover': {
-                borderColor: theme.palette.primary.main,
-                backgroundColor: alpha(theme.palette.primary.main, 0.04),
-              },
-            }}
-          >
-            Stay on Page
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button onClick={handleExitCancel} color="inherit">
+            Cancel
           </Button>
-          <Button
-            onClick={handleExitConfirm}
-            variant="contained"
-            size="large"
-            color="warning"
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none',
-              px: 3,
-              boxShadow: 'none',
-              '&:hover': {
-                boxShadow: 'none',
-              },
-            }}
-          >
-            Leave Anyway
+          <Button onClick={handleExitWithoutSave} color="inherit">
+            Leave Without Saving
+          </Button>
+          <Button onClick={handleExitWithSave} variant="contained" color="primary">
+            Download & Leave
           </Button>
         </DialogActions>
       </Dialog>

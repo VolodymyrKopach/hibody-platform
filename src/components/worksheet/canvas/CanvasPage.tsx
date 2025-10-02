@@ -19,12 +19,41 @@ import BulletList from './atomic/BulletList';
 import NumberedList from './atomic/NumberedList';
 import Table from './atomic/Table';
 
+interface PageBackground {
+  type: 'solid' | 'gradient' | 'pattern' | 'image';
+  color?: string;
+  image?: {
+    url: string;
+    size: 'cover' | 'contain' | 'repeat' | 'auto';
+    position: 'center' | 'top' | 'bottom' | 'left' | 'right';
+    opacity?: number;
+  };
+  gradient?: {
+    from: string;
+    to: string;
+    colors?: string[]; // For multi-color gradients (2-4 colors)
+    direction: 'to-bottom' | 'to-top' | 'to-right' | 'to-left' | 'to-bottom-right' | 'to-bottom-left' | 'to-top-right' | 'to-top-left';
+  };
+  pattern?: {
+    name: string;
+    backgroundColor: string;
+    patternColor: string;
+    css: string;
+    backgroundSize: string;
+    backgroundPosition?: string;
+    scale?: number; // Custom scale multiplier (0.5 - 2.0)
+    opacity?: number; // Pattern opacity (0-100)
+  };
+  opacity?: number;
+}
+
 interface CanvasPageProps {
   pageId: string;
   pageNumber: number;
   title: string;
   width: number;
   height: number;
+  background?: PageBackground;
   elements: CanvasElement[];
   selectedElementId: string | null;
   onElementSelect: (elementId: string | null) => void;
@@ -40,6 +69,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   title,
   width,
   height,
+  background,
   elements,
   selectedElementId,
   onElementSelect,
@@ -52,6 +82,104 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   const pageRef = useRef<HTMLDivElement>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
+
+  // Generate background CSS based on type
+  const getBackgroundStyle = (): React.CSSProperties => {
+    if (!background) return { background: 'white' };
+
+    const opacity = background.opacity ? background.opacity / 100 : 1;
+
+    switch (background.type) {
+      case 'solid':
+        return {
+          background: background.color || 'white',
+        };
+      
+      case 'gradient':
+        if (background.gradient) {
+          const { from, to, colors, direction } = background.gradient;
+          
+          // Support multi-color gradients
+          const gradientColors = colors && colors.length >= 2 ? colors : [from, to];
+          
+          // Convert direction format: 'to-bottom-right' -> 'to bottom right'
+          const cssDirection = direction.replace(/-/g, ' ');
+          const gradientCss = `linear-gradient(${cssDirection}, ${gradientColors.join(', ')})`;
+          
+          console.log('🌈 Gradient CSS:', { from, to, colors, direction, cssDirection, gradientColors, gradientCss });
+          
+          return {
+            background: gradientCss,
+          };
+        }
+        return { background: 'white' };
+      
+      case 'pattern':
+        if (background.pattern) {
+          const scale = background.pattern.scale || 1;
+          const patternOpacity = background.pattern.opacity !== undefined ? background.pattern.opacity / 100 : 1;
+          
+          // Parse backgroundSize and apply scale
+          let scaledSize = background.pattern.backgroundSize;
+          if (background.pattern.backgroundSize !== 'auto') {
+            // Extract numeric values and scale them
+            scaledSize = background.pattern.backgroundSize.replace(/(\d+)px/g, (match, p1) => {
+              return `${Math.round(parseInt(p1) * scale)}px`;
+            });
+          }
+          
+          // Replace colors in CSS with custom colors and apply opacity
+          let customCss = background.pattern.css
+            .replace(/#E5E7EB/g, background.pattern.patternColor)
+            .replace(/#DBEAFE/g, background.pattern.patternColor)
+            .replace(/#F3F4F6/g, background.pattern.patternColor)
+            .replace(/#FDE68A/g, background.pattern.patternColor)
+            .replace(/#D1D5DB/g, background.pattern.patternColor);
+          
+          // Add opacity to pattern color if not full opacity
+          if (patternOpacity < 1) {
+            // Convert hex to rgba with opacity
+            const hexToRgba = (hex: string, alpha: number) => {
+              const r = parseInt(hex.slice(1, 3), 16);
+              const g = parseInt(hex.slice(3, 5), 16);
+              const b = parseInt(hex.slice(5, 7), 16);
+              return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            };
+            
+            const patternColorRgba = hexToRgba(background.pattern.patternColor, patternOpacity);
+            customCss = customCss.replace(
+              new RegExp(background.pattern.patternColor, 'g'),
+              patternColorRgba
+            );
+          }
+          
+          return {
+            background: background.pattern.backgroundColor,
+            backgroundImage: customCss,
+            backgroundSize: scaledSize,
+            backgroundPosition: background.pattern.backgroundPosition || '0 0',
+          };
+        }
+        return { background: 'white' };
+      
+      case 'image':
+        if (background.image) {
+          const imageOpacity = background.image.opacity !== undefined ? background.image.opacity / 100 : 1;
+          
+          return {
+            backgroundImage: `url(${background.image.url})`,
+            backgroundSize: background.image.size,
+            backgroundPosition: background.image.position,
+            backgroundRepeat: background.image.size === 'repeat' ? 'repeat' : 'no-repeat',
+            opacity: imageOpacity,
+          };
+        }
+        return { background: 'white' };
+      
+      default:
+        return { background: 'white' };
+    }
+  };
 
   // Handle element reorder drag start
   const handleElementDragStart = (e: React.DragEvent, index: number) => {
@@ -232,7 +360,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         position: 'relative',
         width,
         height,
-        background: 'white',
+        ...getBackgroundStyle(),
         overflow: 'hidden',
         // Ensure proper rendering for export
         WebkitFontSmoothing: 'antialiased',

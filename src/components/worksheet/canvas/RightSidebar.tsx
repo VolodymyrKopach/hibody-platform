@@ -15,6 +15,9 @@ import {
   Button,
   Switch,
   FormControlLabel,
+  Slider,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   Settings,
@@ -32,9 +35,54 @@ import {
   Underline,
   ArrowLeft,
   Plus,
+  Palette,
+  Droplet,
+  Check,
+  X,
+  ArrowRight,
+  ArrowDown,
+  ArrowDownRight,
+  ArrowUpRight,
+  Upload,
+  Image as ImageIcon,
+  Trash,
 } from 'lucide-react';
 
 import { alpha } from '@mui/material';
+import { 
+  BACKGROUND_PRESETS, 
+  GRADIENT_PRESETS, 
+  PATTERN_PRESETS, 
+  TEMPLATE_PRESETS 
+} from '@/constants/backgroundPresets';
+
+interface PageBackground {
+  type: 'solid' | 'gradient' | 'pattern' | 'image';
+  color?: string;
+  image?: {
+    url: string;
+    size: 'cover' | 'contain' | 'repeat' | 'auto';
+    position: 'center' | 'top' | 'bottom' | 'left' | 'right';
+    opacity?: number;
+  };
+  gradient?: {
+    from: string;
+    to: string;
+    colors?: string[]; // For multi-color gradients (2-4 colors)
+    direction: 'to-bottom' | 'to-top' | 'to-right' | 'to-left' | 'to-bottom-right' | 'to-bottom-left' | 'to-top-right' | 'to-top-left';
+  };
+  pattern?: {
+    name: string;
+    backgroundColor: string;
+    patternColor: string;
+    css: string;
+    backgroundSize: string;
+    backgroundPosition?: string;
+    scale?: number; // Custom scale multiplier (0.5 - 2.0)
+    opacity?: number; // Pattern opacity (0-100)
+  };
+  opacity?: number;
+}
 
 type Selection = 
   | { type: 'page'; data: any }
@@ -47,6 +95,8 @@ interface RightSidebarProps {
   onUpdate?: (updates: any) => void;
   onDuplicate?: (pageId: string, elementId: string) => void;
   onDelete?: (pageId: string, elementId: string) => void;
+  onPageBackgroundUpdate?: (pageId: string, background: PageBackground) => void;
+  onImageUpload?: (pageId: string, file: File) => Promise<void>;
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({ 
@@ -54,9 +104,59 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   onSelectionChange,
   onUpdate,
   onDuplicate,
-  onDelete
+  onDelete,
+  onPageBackgroundUpdate,
+  onImageUpload
 }) => {
   const theme = useTheme();
+  const [customColor, setCustomColor] = useState('#FFFFFF');
+  const [patternBgColor, setPatternBgColor] = useState('#FFFFFF');
+  const [patternFgColor, setPatternFgColor] = useState('#E5E7EB');
+  const [patternScale, setPatternScale] = useState(1);
+  const [patternOpacity, setPatternOpacity] = useState(100);
+  
+  // Gradient builder state
+  const [gradientColors, setGradientColors] = useState<string[]>(['#667eea', '#764ba2']);
+  const [gradientDirection, setGradientDirection] = useState<'to-right' | 'to-left' | 'to-bottom' | 'to-top' | 'to-bottom-right' | 'to-bottom-left' | 'to-top-right' | 'to-top-left'>('to-right');
+  
+  // Image background state
+  const [imageSize, setImageSize] = useState<'cover' | 'contain' | 'repeat' | 'auto'>('cover');
+  const [imagePosition, setImagePosition] = useState<'center' | 'top' | 'bottom' | 'left' | 'right'>('center');
+  const [imageOpacity, setImageOpacity] = useState(100);
+  
+  // Background tab state
+  const [backgroundTab, setBackgroundTab] = useState<'colors' | 'gradients' | 'patterns' | 'templates'>('colors');
+
+  // Update local color state when selection changes
+  React.useEffect(() => {
+    if (selection?.type === 'page') {
+      const bg = selection.data.background;
+      
+      if (bg?.color) {
+        setCustomColor(bg.color);
+      }
+      
+      if (bg?.type === 'pattern' && bg.pattern) {
+        setPatternBgColor(bg.pattern.backgroundColor);
+        setPatternFgColor(bg.pattern.patternColor);
+        setPatternScale(bg.pattern.scale || 1);
+        setPatternOpacity(bg.pattern.opacity || 100);
+      }
+      
+      if (bg?.type === 'gradient' && bg.gradient) {
+        // Support multi-color gradients
+        const colors = bg.gradient.colors || [bg.gradient.from, bg.gradient.to];
+        setGradientColors(colors);
+        setGradientDirection(bg.gradient.direction);
+      }
+      
+      if (bg?.type === 'image' && bg.image) {
+        setImageSize(bg.image.size);
+        setImagePosition(bg.image.position);
+        setImageOpacity(bg.image.opacity || 100);
+      }
+    }
+  }, [selection]);
 
   // Mock layers for the selected page
   const mockLayers = selection && selection.type === 'page' ? [
@@ -286,6 +386,991 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   />
                 </Box>
               </Stack>
+            </Box>
+
+            {/* Background */}
+            <Box>
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+                <Palette size={16} color={theme.palette.text.secondary} />
+                <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
+                  Background
+                </Typography>
+              </Stack>
+              
+              {/* Tabs for background options */}
+              <Tabs 
+                value={backgroundTab} 
+                onChange={(e, newValue) => setBackgroundTab(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{ 
+                  mb: 2,
+                  minHeight: 36,
+                  '& .MuiTab-root': {
+                    minHeight: 36,
+                    fontSize: '0.75rem',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    py: 0.75,
+                    px: 1.5,
+                  },
+                  '& .MuiTabs-indicator': {
+                    height: 3,
+                    borderRadius: '3px 3px 0 0',
+                  },
+                }}
+              >
+                <Tab value="colors" label="Colors" />
+                <Tab value="gradients" label="Gradients" />
+                <Tab value="patterns" label="Patterns" />
+                <Tab value="templates" label="Templates" />
+              </Tabs>
+              
+              <Divider sx={{ mb: 2 }} />
+              
+              {/* Content based on selected tab */}
+              <Box sx={{ maxHeight: 400, overflowY: 'auto', pr: 0.5 }}>
+                {backgroundTab === 'colors' && (
+                  <Stack spacing={1.5}>
+                    {/* Color Presets */}
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {BACKGROUND_PRESETS.map((preset) => (
+                        <Tooltip key={preset.color} title={preset.name} placement="top">
+                          <Box
+                            onClick={() => {
+                              if (onPageBackgroundUpdate && pageData) {
+                                onPageBackgroundUpdate(pageData.id, {
+                                  type: 'solid',
+                                  color: preset.color,
+                                  opacity: 100,
+                                });
+                              }
+                            }}
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 1.5,
+                              backgroundColor: preset.color,
+                              border: `2px solid ${
+                                pageData?.background?.color === preset.color
+                                  ? theme.palette.primary.main
+                                  : alpha(theme.palette.divider, 0.2)
+                              }`,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '1.2rem',
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                transform: 'scale(1.1)',
+                                borderColor: theme.palette.primary.main,
+                                boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
+                              },
+                            }}
+                          >
+                            {preset.icon}
+                          </Box>
+                        </Tooltip>
+                      ))}
+                    </Stack>
+
+                    {/* Custom Color Input */}
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mb: 0.5, display: 'block' }}>
+                        Custom Color
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="color"
+                        value={customColor}
+                        onChange={(e) => setCustomColor(e.target.value)}
+                        onBlur={() => {
+                          if (onPageBackgroundUpdate && pageData) {
+                            onPageBackgroundUpdate(pageData.id, {
+                              type: 'solid',
+                              color: customColor,
+                              opacity: 100,
+                            });
+                          }
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px',
+                            height: 40,
+                          },
+                          '& input[type="color"]': {
+                            cursor: 'pointer',
+                            height: 30,
+                          },
+                        }}
+                      />
+                    </Box>
+                  </Stack>
+                )}
+
+                {backgroundTab === 'gradients' && (
+                  <Stack spacing={1.5}>
+                    {GRADIENT_PRESETS.map((gradient, index) => {
+                      const colors = gradient.colors || [gradient.from, gradient.to];
+                      const cssDirection = gradient.direction.replace(/-/g, ' ');
+                      const gradientStyle = `linear-gradient(${cssDirection}, ${colors.join(', ')})`;
+                      const isCurrentBackground = pageData?.background?.type === 'gradient' && 
+                        pageData?.background?.gradient?.from === gradient.from &&
+                        pageData?.background?.gradient?.to === gradient.to;
+                      
+                      return (
+                        <Tooltip key={index} title={gradient.name} placement="left">
+                          <Box
+                            onClick={() => {
+                              if (onPageBackgroundUpdate && pageData) {
+                                onPageBackgroundUpdate(pageData.id, {
+                                  type: 'gradient',
+                                  gradient: {
+                                    from: gradient.from,
+                                    to: gradient.to,
+                                    colors: gradient.colors,
+                                    direction: gradient.direction,
+                                  },
+                                  opacity: 100,
+                                });
+                              }
+                            }}
+                            sx={{
+                              width: '100%',
+                              backgroundColor: theme.palette.background.paper,
+                              borderRadius: 1.5,
+                              cursor: 'pointer',
+                              border: isCurrentBackground 
+                                ? `2px solid ${theme.palette.primary.main}`
+                                : `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                              transition: 'all 0.2s',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1.5,
+                              p: 1.5,
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                borderColor: theme.palette.primary.main,
+                                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}`,
+                              },
+                            }}
+                          >
+                            {/* Gradient Preview */}
+                            <Box
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 1,
+                                background: gradientStyle,
+                                flexShrink: 0,
+                                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                boxShadow: `inset 0 1px 2px ${alpha(theme.palette.common.black, 0.1)}`,
+                              }}
+                            />
+                            
+                            {/* Name */}
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography 
+                                sx={{ 
+                                  fontSize: '0.875rem',
+                                  fontWeight: 600,
+                                  color: theme.palette.text.primary,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.5,
+                                }}
+                              >
+                                <span>{gradient.icon}</span>
+                                <span>{gradient.name}</span>
+                              </Typography>
+                            </Box>
+                            
+                            {/* Check Icon */}
+                            {isCurrentBackground && (
+                              <Box
+                                sx={{
+                                  backgroundColor: theme.palette.primary.main,
+                                  color: 'white',
+                                  borderRadius: '50%',
+                                  width: 24,
+                                  height: 24,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                <Check size={14} />
+                              </Box>
+                            )}
+                          </Box>
+                        </Tooltip>
+                      );
+                    })}
+                  </Stack>
+                )}
+
+                {backgroundTab === 'patterns' && (
+                  <Stack spacing={1.5}>
+                    {PATTERN_PRESETS.map((pattern) => {
+                      const previewStyle = {
+                        background: pattern.backgroundColor,
+                        backgroundImage: pattern.css,
+                        backgroundSize: pattern.backgroundSize,
+                        backgroundPosition: pattern.backgroundPosition || '0 0',
+                      };
+                      
+                      return (
+                        <Tooltip key={pattern.pattern} title={pattern.name} placement="left">
+                          <Paper
+                            elevation={0}
+                            onClick={() => {
+                              if (onPageBackgroundUpdate && pageData) {
+                                onPageBackgroundUpdate(pageData.id, {
+                                  type: 'pattern',
+                                  pattern: {
+                                    name: pattern.pattern,
+                                    backgroundColor: pattern.backgroundColor,
+                                    patternColor: pattern.patternColor,
+                                    css: pattern.css,
+                                    backgroundSize: pattern.backgroundSize,
+                                    backgroundPosition: pattern.backgroundPosition,
+                                    scale: 1,
+                                    opacity: 100,
+                                  },
+                                  opacity: 100,
+                                });
+                              }
+                            }}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1.5,
+                              p: 1.5,
+                              borderRadius: 1.5,
+                              border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              backgroundColor: theme.palette.background.paper,
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                borderColor: theme.palette.primary.main,
+                                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}`,
+                              },
+                            }}
+                          >
+                            {/* Preview */}
+                            <Box
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 1,
+                                ...previewStyle,
+                                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                boxShadow: `inset 0 1px 2px ${alpha(theme.palette.common.black, 0.1)}`,
+                                flexShrink: 0,
+                              }}
+                            />
+                            
+                            {/* Info */}
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography 
+                                sx={{ 
+                                  fontSize: '0.875rem',
+                                  fontWeight: 600,
+                                  color: theme.palette.text.primary,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.5,
+                                }}
+                              >
+                                <span>{pattern.icon}</span>
+                                <span>{pattern.name}</span>
+                              </Typography>
+                            </Box>
+                          </Paper>
+                        </Tooltip>
+                      );
+                    })}
+                  </Stack>
+                )}
+
+                {backgroundTab === 'templates' && (
+                  <Stack spacing={1.5}>
+                    {TEMPLATE_PRESETS.map((template) => {
+                      // Generate preview style
+                      const getPreviewStyle = () => {
+                        const bg = template.background;
+                        if (bg.type === 'solid') {
+                          return { background: bg.color };
+                        } else if (bg.type === 'gradient' && bg.gradient) {
+                          const colors = bg.gradient.colors || [bg.gradient.from, bg.gradient.to];
+                          const cssDirection = bg.gradient.direction.replace(/-/g, ' ');
+                          return { background: `linear-gradient(${cssDirection}, ${colors.join(', ')})` };
+                        } else if (bg.type === 'pattern' && bg.pattern) {
+                          return {
+                            background: bg.pattern.backgroundColor,
+                            backgroundImage: bg.pattern.css,
+                            backgroundSize: bg.pattern.backgroundSize,
+                            backgroundPosition: bg.pattern.backgroundPosition || '0 0',
+                          };
+                        }
+                        return { background: 'white' };
+                      };
+
+                      return (
+                        <Tooltip key={template.name} title={template.description} placement="left">
+                          <Paper
+                            elevation={0}
+                            onClick={() => {
+                              if (onPageBackgroundUpdate && pageData) {
+                                onPageBackgroundUpdate(pageData.id, {
+                                  ...template.background,
+                                  opacity: 100,
+                                });
+                              }
+                            }}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1.5,
+                              p: 1.5,
+                              borderRadius: 1.5,
+                              border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              backgroundColor: theme.palette.background.paper,
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                borderColor: theme.palette.primary.main,
+                                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}`,
+                              },
+                            }}
+                          >
+                            {/* Preview */}
+                            <Box
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 1,
+                                ...getPreviewStyle(),
+                                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                boxShadow: `inset 0 1px 2px ${alpha(theme.palette.common.black, 0.1)}`,
+                                flexShrink: 0,
+                              }}
+                            />
+                            
+                            {/* Info */}
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography 
+                                sx={{ 
+                                  fontSize: '0.875rem',
+                                  fontWeight: 600,
+                                  color: theme.palette.text.primary,
+                                  mb: 0.5,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.5,
+                                }}
+                              >
+                                <span>{template.icon}</span>
+                                <span>{template.name}</span>
+                              </Typography>
+                              <Chip 
+                                label={template.category}
+                                size="small"
+                                sx={{
+                                  height: 18,
+                                  fontSize: '0.65rem',
+                                  fontWeight: 600,
+                                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                  color: theme.palette.primary.main,
+                                }}
+                              />
+                            </Box>
+                          </Paper>
+                        </Tooltip>
+                      );
+                    })}
+                  </Stack>
+                )}
+              </Box>
+            </Box>
+
+            {/* Gradient Builder */}
+            {pageData.background?.type === 'gradient' && pageData.background.gradient && (
+              <Box sx={{ mt: 3, pt: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Custom Gradient Builder
+                </Typography>
+                
+                <Stack spacing={2.5}>
+                  {/* Live Preview */}
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      height: 80,
+                      borderRadius: 2,
+                      background: `linear-gradient(${gradientDirection.replace(/-/g, ' ')}, ${gradientColors.join(', ')})`,
+                      border: `2px solid ${alpha(theme.palette.divider, 0.2)}`,
+                    }}
+                  />
+
+                  {/* Color Stops */}
+                  <Box>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        Gradient Colors ({gradientColors.length})
+                      </Typography>
+                      {gradientColors.length < 4 && (
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setGradientColors([...gradientColors, '#FF6B6B']);
+                          }}
+                          sx={{ width: 24, height: 24 }}
+                        >
+                          <Plus size={14} />
+                        </IconButton>
+                      )}
+                    </Stack>
+                    
+                    <Stack spacing={1}>
+                      {gradientColors.map((color, index) => (
+                        <Stack key={index} direction="row" spacing={1} alignItems="center">
+                          <TextField
+                            size="small"
+                            type="color"
+                            value={color}
+                            onChange={(e) => {
+                              const newColors = [...gradientColors];
+                              newColors[index] = e.target.value;
+                              setGradientColors(newColors);
+                            }}
+                            sx={{
+                              flex: 1,
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                height: 36,
+                              },
+                              '& input[type="color"]': {
+                                cursor: 'pointer',
+                                height: 26,
+                              },
+                            }}
+                          />
+                          <TextField
+                            size="small"
+                            value={color}
+                            onChange={(e) => {
+                              const newColors = [...gradientColors];
+                              newColors[index] = e.target.value;
+                              setGradientColors(newColors);
+                            }}
+                            sx={{
+                              width: 90,
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                height: 36,
+                                fontSize: '0.75rem',
+                              },
+                            }}
+                          />
+                          {gradientColors.length > 2 && (
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setGradientColors(gradientColors.filter((_, i) => i !== index));
+                              }}
+                              sx={{ width: 28, height: 28 }}
+                            >
+                              <X size={14} />
+                            </IconButton>
+                          )}
+                        </Stack>
+                      ))}
+                    </Stack>
+                  </Box>
+
+                  {/* Direction Selector */}
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mb: 1, display: 'block' }}>
+                      Direction
+                    </Typography>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {[
+                        { value: 'to-right', icon: <ArrowRight size={14} />, label: 'Right' },
+                        { value: 'to-left', icon: <ArrowLeft size={14} />, label: 'Left' },
+                        { value: 'to-bottom', icon: <ArrowDown size={14} />, label: 'Down' },
+                        { value: 'to-top', icon: <ArrowLeft size={14} style={{ transform: 'rotate(90deg)' }} />, label: 'Up' },
+                        { value: 'to-bottom-right', icon: <ArrowDownRight size={14} />, label: '↘' },
+                        { value: 'to-bottom-left', icon: <ArrowDownRight size={14} style={{ transform: 'scaleX(-1)' }} />, label: '↙' },
+                        { value: 'to-top-right', icon: <ArrowUpRight size={14} />, label: '↗' },
+                        { value: 'to-top-left', icon: <ArrowUpRight size={14} style={{ transform: 'scaleX(-1)' }} />, label: '↖' },
+                      ].map((dir) => (
+                        <Tooltip key={dir.value} title={dir.label}>
+                          <IconButton
+                            size="small"
+                            onClick={() => setGradientDirection(dir.value as any)}
+                            sx={{
+                              width: 36,
+                              height: 36,
+                              border: `2px solid ${
+                                gradientDirection === dir.value
+                                  ? theme.palette.primary.main
+                                  : alpha(theme.palette.divider, 0.2)
+                              }`,
+                              backgroundColor: gradientDirection === dir.value
+                                ? alpha(theme.palette.primary.main, 0.1)
+                                : 'transparent',
+                              '&:hover': {
+                                backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                                borderColor: theme.palette.primary.main,
+                              },
+                            }}
+                          >
+                            {dir.icon}
+                          </IconButton>
+                        </Tooltip>
+                      ))}
+                    </Stack>
+                  </Box>
+
+                  {/* Apply Button */}
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={() => {
+                      if (onPageBackgroundUpdate && gradientColors.length >= 2) {
+                        onPageBackgroundUpdate(pageData.id, {
+                          type: 'gradient',
+                          gradient: {
+                            from: gradientColors[0],
+                            to: gradientColors[gradientColors.length - 1],
+                            colors: gradientColors, // Include all colors for multi-color support
+                            direction: gradientDirection,
+                          },
+                          opacity: 100,
+                        });
+                      }
+                    }}
+                    sx={{
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      py: 1,
+                      boxShadow: 'none',
+                      '&:hover': {
+                        boxShadow: 'none',
+                      },
+                    }}
+                  >
+                    Apply Custom Gradient
+                  </Button>
+                </Stack>
+              </Box>
+            )}
+
+            {/* Pattern Customization Controls */}
+            {pageData.background?.type === 'pattern' && pageData.background.pattern && (
+              <Box sx={{ mt: 3, pt: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Pattern Customization
+                </Typography>
+                
+                <Stack spacing={2}>
+                  {/* Background Color */}
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mb: 0.5, display: 'block' }}>
+                      Background Color
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="color"
+                      value={patternBgColor}
+                      onChange={(e) => {
+                        setPatternBgColor(e.target.value);
+                      }}
+                      onBlur={() => {
+                        if (onPageBackgroundUpdate && pageData.background?.pattern) {
+                          onPageBackgroundUpdate(pageData.id, {
+                            type: 'pattern',
+                            pattern: {
+                              ...pageData.background.pattern,
+                              backgroundColor: patternBgColor,
+                            },
+                            opacity: 100,
+                          });
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                          height: 40,
+                        },
+                        '& input[type="color"]': {
+                          cursor: 'pointer',
+                          height: 30,
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Pattern Color */}
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mb: 0.5, display: 'block' }}>
+                      Pattern Color
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="color"
+                      value={patternFgColor}
+                      onChange={(e) => {
+                        setPatternFgColor(e.target.value);
+                      }}
+                      onBlur={() => {
+                        if (onPageBackgroundUpdate && pageData.background?.pattern) {
+                          onPageBackgroundUpdate(pageData.id, {
+                            type: 'pattern',
+                            pattern: {
+                              ...pageData.background.pattern,
+                              patternColor: patternFgColor,
+                            },
+                            opacity: 100,
+                          });
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                          height: 40,
+                        },
+                        '& input[type="color"]': {
+                          cursor: 'pointer',
+                          height: 30,
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Pattern Scale */}
+                  <Box>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        Pattern Size
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>
+                        {Math.round(patternScale * 100)}%
+                      </Typography>
+                    </Stack>
+                    <Slider
+                      value={patternScale}
+                      onChange={(e, newValue) => {
+                        setPatternScale(newValue as number);
+                      }}
+                      onChangeCommitted={(e, newValue) => {
+                        if (onPageBackgroundUpdate && pageData.background?.pattern) {
+                          onPageBackgroundUpdate(pageData.id, {
+                            type: 'pattern',
+                            pattern: {
+                              ...pageData.background.pattern,
+                              scale: newValue as number,
+                            },
+                            opacity: 100,
+                          });
+                        }
+                      }}
+                      min={0.5}
+                      max={2}
+                      step={0.1}
+                      sx={{
+                        '& .MuiSlider-thumb': {
+                          width: 16,
+                          height: 16,
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Pattern Opacity */}
+                  <Box>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        Pattern Opacity
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>
+                        {patternOpacity}%
+                      </Typography>
+                    </Stack>
+                    <Slider
+                      value={patternOpacity}
+                      onChange={(e, newValue) => {
+                        setPatternOpacity(newValue as number);
+                      }}
+                      onChangeCommitted={(e, newValue) => {
+                        if (onPageBackgroundUpdate && pageData.background?.pattern) {
+                          onPageBackgroundUpdate(pageData.id, {
+                            type: 'pattern',
+                            pattern: {
+                              ...pageData.background.pattern,
+                              opacity: newValue as number,
+                            },
+                            opacity: 100,
+                          });
+                        }
+                      }}
+                      min={0}
+                      max={100}
+                      step={5}
+                      sx={{
+                        '& .MuiSlider-thumb': {
+                          width: 16,
+                          height: 16,
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Reset Button */}
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => {
+                      if (onPageBackgroundUpdate && pageData?.background?.pattern) {
+                        const originalPattern = pageData.background.pattern;
+                        setPatternScale(1);
+                        setPatternOpacity(100);
+                        onPageBackgroundUpdate(pageData.id, {
+                          type: 'pattern',
+                          pattern: {
+                            ...originalPattern,
+                            scale: 1,
+                            opacity: 100,
+                          },
+                          opacity: 100,
+                        });
+                      }
+                    }}
+                    sx={{
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    Reset Pattern Settings
+                  </Button>
+                </Stack>
+              </Box>
+            )}
+
+            {/* Image Upload & Customization */}
+            <Box sx={{ mt: 3, pt: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+                <ImageIcon size={16} color={theme.palette.text.secondary} />
+                <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
+                  Custom Image Background
+                </Typography>
+              </Stack>
+
+              {!pageData.background || pageData.background.type !== 'image' ? (
+                // Upload Button
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  component="label"
+                  startIcon={<Upload size={16} />}
+                  sx={{
+                    borderRadius: '8px',
+                    textTransform: 'none',
+                    fontSize: '0.875rem',
+                    borderStyle: 'dashed',
+                    py: 2,
+                    '&:hover': {
+                      borderStyle: 'dashed',
+                      backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                    },
+                  }}
+                >
+                  Upload Image
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file && onImageUpload) {
+                        await onImageUpload(pageData.id, file);
+                      }
+                    }}
+                  />
+                </Button>
+              ) : (
+                // Image Controls
+                <Stack spacing={2}>
+                  {/* Preview */}
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      height: 120,
+                      borderRadius: 2,
+                      backgroundImage: `url(${pageData.background.image?.url})`,
+                      backgroundSize: imageSize,
+                      backgroundPosition: imagePosition,
+                      backgroundRepeat: imageSize === 'repeat' ? 'repeat' : 'no-repeat',
+                      opacity: imageOpacity / 100,
+                      border: `2px solid ${alpha(theme.palette.divider, 0.2)}`,
+                    }}
+                  />
+
+                  {/* Size Control */}
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mb: 1, display: 'block' }}>
+                      Image Size
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                      {['cover', 'contain', 'repeat', 'auto'].map((size) => (
+                        <Button
+                          key={size}
+                          size="small"
+                          variant={imageSize === size ? 'contained' : 'outlined'}
+                          onClick={() => {
+                            setImageSize(size as any);
+                            if (onPageBackgroundUpdate && pageData.background?.image) {
+                              onPageBackgroundUpdate(pageData.id, {
+                                type: 'image',
+                                image: {
+                                  ...pageData.background.image,
+                                  size: size as any,
+                                },
+                                opacity: 100,
+                              });
+                            }
+                          }}
+                          sx={{
+                            flex: 1,
+                            textTransform: 'capitalize',
+                            fontSize: '0.7rem',
+                            borderRadius: '6px',
+                            minWidth: 0,
+                            px: 1,
+                          }}
+                        >
+                          {size}
+                        </Button>
+                      ))}
+                    </Stack>
+                  </Box>
+
+                  {/* Position Control */}
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mb: 1, display: 'block' }}>
+                      Position
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                      {['center', 'top', 'bottom', 'left', 'right'].map((pos) => (
+                        <Button
+                          key={pos}
+                          size="small"
+                          variant={imagePosition === pos ? 'contained' : 'outlined'}
+                          onClick={() => {
+                            setImagePosition(pos as any);
+                            if (onPageBackgroundUpdate && pageData.background?.image) {
+                              onPageBackgroundUpdate(pageData.id, {
+                                type: 'image',
+                                image: {
+                                  ...pageData.background.image,
+                                  position: pos as any,
+                                },
+                                opacity: 100,
+                              });
+                            }
+                          }}
+                          sx={{
+                            flex: 1,
+                            textTransform: 'capitalize',
+                            fontSize: '0.7rem',
+                            borderRadius: '6px',
+                            minWidth: 0,
+                            px: 0.5,
+                          }}
+                        >
+                          {pos}
+                        </Button>
+                      ))}
+                    </Stack>
+                  </Box>
+
+                  {/* Opacity */}
+                  <Box>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        Opacity
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>
+                        {imageOpacity}%
+                      </Typography>
+                    </Stack>
+                    <Slider
+                      value={imageOpacity}
+                      onChange={(e, newValue) => {
+                        setImageOpacity(newValue as number);
+                      }}
+                      onChangeCommitted={(e, newValue) => {
+                        if (onPageBackgroundUpdate && pageData.background?.image) {
+                          onPageBackgroundUpdate(pageData.id, {
+                            type: 'image',
+                            image: {
+                              ...pageData.background.image,
+                              opacity: newValue as number,
+                            },
+                            opacity: 100,
+                          });
+                        }
+                      }}
+                      min={0}
+                      max={100}
+                      step={5}
+                      sx={{
+                        '& .MuiSlider-thumb': {
+                          width: 16,
+                          height: 16,
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Remove Button */}
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    color="error"
+                    startIcon={<Trash size={14} />}
+                    onClick={() => {
+                      if (onPageBackgroundUpdate && pageData) {
+                        onPageBackgroundUpdate(pageData.id, {
+                          type: 'solid',
+                          color: '#FFFFFF',
+                          opacity: 100,
+                        });
+                      }
+                    }}
+                    sx={{
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    Remove Image
+                  </Button>
+                </Stack>
+              )}
             </Box>
           </Stack>
 
