@@ -191,7 +191,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   const canvasRef = React.useRef<HTMLDivElement>(null);
   
   // Initialize pages from generated worksheet or empty canvas
-  const PAGE_GAP = 150; // Gap between pages
+  const PAGE_GAP = 45; // Gap between pages (30% of original 150px for tighter PDF-like appearance)
   const initialPages = generatedWorksheet 
     ? generatedWorksheet.pages.map((page, index) => ({
         id: page.pageId,
