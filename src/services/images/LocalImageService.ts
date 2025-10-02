@@ -1,10 +1,14 @@
 /**
- * Local Image Service - No Supabase required!
- * Stores images as Base64 Data URLs in localStorage with the worksheet
+ * Local Image Service - Uses IndexedDB for efficient image storage
+ * Stores images as Blobs instead of Base64 to save space
+ * Images are automatically cleared when leaving the canvas page
  */
 
+import { storeImage, getImageURL, clearAllImages, getStorageStats } from '@/utils/imageStorage';
+
 export interface LocalImageUploadResult {
-  url: string; // Base64 Data URL
+  url: string; // Blob URL (blob:http://...)
+  imageId: string; // IndexedDB ID for reference
   fileName: string;
   size: number;
   width?: number;
@@ -67,24 +71,6 @@ export class LocalImageService {
     });
   }
 
-  /**
-   * Converts File to Base64 Data URL
-   */
-  private fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = () => {
-        resolve(reader.result as string);
-      };
-      
-      reader.onerror = () => {
-        reject(new Error('Failed to read file'));
-      };
-      
-      reader.readAsDataURL(file);
-    });
-  }
 
   /**
    * Compresses image if it's too large (optional optimization)
@@ -137,7 +123,7 @@ export class LocalImageService {
   }
 
   /**
-   * Upload image locally (converts to Base64 Data URL)
+   * Upload image locally (stores in IndexedDB as Blob)
    */
   async uploadLocalImage(
     file: File,
@@ -152,6 +138,7 @@ export class LocalImageService {
       if (!validation.valid) {
         return {
           url: '',
+          imageId: '',
           fileName: file.name,
           size: file.size,
           success: false,
@@ -162,25 +149,40 @@ export class LocalImageService {
       // 2. Get image dimensions
       const dimensions = await this.getImageDimensions(file);
 
-      // 3. Convert to Base64 (with optional compression)
-      let dataUrl: string;
+      // 3. Compress if needed
+      let blob: Blob = file;
+      let finalSize = file.size;
       
       if (options.compress && file.size > 500 * 1024) {
         // Compress if file > 500KB
         console.log(`📦 Compressing image: ${file.name} (${(file.size / 1024).toFixed(0)}KB)`);
-        dataUrl = await this.compressImage(file, options.maxWidth);
-        console.log(`✅ Compressed to: ${(dataUrl.length / 1024).toFixed(0)}KB`);
-      } else {
-        // Use original
-        dataUrl = await this.fileToBase64(file);
+        const compressedDataUrl = await this.compressImage(file, options.maxWidth);
+        
+        // Convert back to Blob
+        const response = await fetch(compressedDataUrl);
+        blob = await response.blob();
+        finalSize = blob.size;
+        
+        console.log(`✅ Compressed to: ${(blob.size / 1024).toFixed(0)}KB`);
       }
 
-      console.log(`✅ Local image processed: ${file.name}`);
+      // 4. Store in IndexedDB
+      const imageId = await storeImage(blob, file.name);
+
+      // 5. Get Blob URL
+      const blobUrl = await getImageURL(imageId);
+      
+      if (!blobUrl) {
+        throw new Error('Failed to create blob URL');
+      }
+
+      console.log(`✅ Local image stored in IndexedDB: ${file.name}`);
 
       return {
-        url: dataUrl, // Base64 Data URL
+        url: blobUrl, // Blob URL (blob:http://...)
+        imageId, // IndexedDB ID for reference
         fileName: file.name,
-        size: dataUrl.length, // Base64 size
+        size: finalSize,
         width: dimensions?.width,
         height: dimensions?.height,
         success: true
@@ -190,6 +192,7 @@ export class LocalImageService {
       console.error('💥 Error processing local image:', error);
       return {
         url: '',
+        imageId: '',
         fileName: file.name,
         size: file.size,
         success: false,
@@ -237,58 +240,44 @@ export class LocalImageService {
   }
 
   /**
-   * Checks if URL is Base64 Data URL
+   * Checks if URL is Blob URL
+   */
+  isBlobUrl(url: string): boolean {
+    return url.startsWith('blob:');
+  }
+
+  /**
+   * Checks if URL is Base64 Data URL (for backward compatibility)
    */
   isBase64DataUrl(url: string): boolean {
     return url.startsWith('data:image/');
   }
 
   /**
-   * Gets size of Base64 string in bytes
+   * Gets IndexedDB storage usage for images
    */
-  getBase64Size(dataUrl: string): number {
-    return dataUrl.length;
-  }
-
-  /**
-   * Estimates localStorage usage for images
-   */
-  estimateStorageUsage(): {
+  async estimateStorageUsage(): Promise<{
     imageCount: number;
     totalSize: number;
     formattedSize: string;
-  } {
-    // This is a rough estimate - actual usage depends on worksheet storage
-    let imageCount = 0;
-    let totalSize = 0;
-
+  }> {
     try {
-      // Scan localStorage for data URLs
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key) {
-          const value = localStorage.getItem(key) || '';
-          
-          // Count data URLs
-          const matches = value.match(/data:image\/[^"'\s]+/g);
-          if (matches) {
-            imageCount += matches.length;
-            matches.forEach(url => {
-              totalSize += url.length;
-            });
-          }
-        }
-      }
-
-      const formattedSize = totalSize > 1024 * 1024 
-        ? `${(totalSize / 1024 / 1024).toFixed(2)} MB`
-        : `${(totalSize / 1024).toFixed(2)} KB`;
-
-      return { imageCount, totalSize, formattedSize };
-
+      return await getStorageStats();
     } catch (error) {
       console.error('Error estimating storage:', error);
-      return { imageCount: 0, totalSize: 0, formattedSize: '0 KB' };
+      return { imageCount: 0, totalSize: 0, formattedSize: '0B' };
+    }
+  }
+
+  /**
+   * Clear all images from IndexedDB
+   */
+  async clearStorage(): Promise<void> {
+    try {
+      await clearAllImages();
+      console.log('🧹 All images cleared from storage');
+    } catch (error) {
+      console.error('Error clearing storage:', error);
     }
   }
 }
