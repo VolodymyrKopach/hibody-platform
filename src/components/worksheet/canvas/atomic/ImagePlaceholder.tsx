@@ -126,6 +126,61 @@ const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
     setImageError(false);
   };
 
+  /**
+   * Fits image dimensions to standard sizes while maintaining aspect ratio
+   */
+  const fitImageToStandardSize = (originalWidth: number, originalHeight: number): { width: number; height: number } => {
+    // Standard sizes from smallest to largest
+    const standardSizes = [
+      { width: 200, height: 150 },  // Small
+      { width: 400, height: 300 },  // Medium (default)
+      { width: 600, height: 450 },  // Large
+      { width: 794, height: 400 },  // Full Width
+    ];
+
+    const aspectRatio = originalWidth / originalHeight;
+
+    // Find the best fitting standard size
+    // We want to fit the image into a container that can accommodate it without significant distortion
+    for (const size of standardSizes) {
+      const containerRatio = size.width / size.height;
+      
+      // If image fits comfortably in this size (not too small)
+      if (originalWidth <= size.width * 1.5 && originalHeight <= size.height * 1.5) {
+        // Maintain aspect ratio within this container
+        if (aspectRatio > containerRatio) {
+          // Image is wider - fit to width
+          return {
+            width: size.width,
+            height: Math.round(size.width / aspectRatio)
+          };
+        } else {
+          // Image is taller - fit to height
+          return {
+            width: Math.round(size.height * aspectRatio),
+            height: size.height
+          };
+        }
+      }
+    }
+
+    // If image is very large, use the largest standard size (Full Width)
+    const largestSize = standardSizes[standardSizes.length - 1];
+    const largestRatio = largestSize.width / largestSize.height;
+    
+    if (aspectRatio > largestRatio) {
+      return {
+        width: largestSize.width,
+        height: Math.round(largestSize.width / aspectRatio)
+      };
+    } else {
+      return {
+        width: Math.round(largestSize.height * aspectRatio),
+        height: largestSize.height
+      };
+    }
+  };
+
   // File upload handler - smart routing to local or cloud
   const handleFileSelect = async (file: File) => {
     setUploadError('');
@@ -148,18 +203,24 @@ const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
       }
 
       if (result.success && result.url) {
-        // Update component with new image URL (Base64 or Cloud URL)
+        // Calculate fitted dimensions based on original image size
+        const fittedDimensions = result.width && result.height
+          ? fitImageToStandardSize(result.width, result.height)
+          : { width: 400, height: 300 }; // Default if dimensions unavailable
+
+        // Update component with new image URL and fitted dimensions
         if (onEdit) {
           onEdit({ 
             url: result.url,
-            width: result.width,
-            height: result.height
+            width: fittedDimensions.width,
+            height: fittedDimensions.height
           });
         }
         console.log(`✅ Image uploaded successfully (${storageMode}):`, 
           storageMode === 'local' 
             ? `${(result.size / 1024).toFixed(0)}KB Base64` 
-            : result.url.substring(0, 50) + '...'
+            : result.url.substring(0, 50) + '...',
+          `\n📐 Fitted to: ${fittedDimensions.width}×${fittedDimensions.height} (original: ${result.width}×${result.height})`
         );
       } else {
         setUploadError(result.error || 'Upload failed');
