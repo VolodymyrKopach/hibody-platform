@@ -27,6 +27,7 @@ interface RichTextEditorProps {
   minHeight?: string;
   fontSize?: string;
   showToolbar?: boolean;
+  hideBorder?: boolean; // Приховати border (для Properties Panel)
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -37,6 +38,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   minHeight = '40px',
   fontSize = '14px',
   showToolbar = true,
+  hideBorder = false,
 }) => {
   const theme = useTheme();
   const contentRef = useRef<HTMLElement | null>(null);
@@ -47,6 +49,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   // Sync htmlRef with content prop
   React.useEffect(() => {
+    console.log('📝 [RichTextEditor] Content prop changed:', {
+      newContent: content,
+      type: typeof content,
+      isUndefined: content === undefined,
+      isNull: content === null,
+      isStringUndefined: content === 'undefined',
+      previousValue: htmlRef.current
+    });
     htmlRef.current = content;
   }, [content]);
 
@@ -101,6 +111,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     // Trigger onChange
     if (contentRef.current) {
       const newHtml = contentRef.current.innerHTML;
+      
+      // Захист від undefined
+      if (newHtml === undefined || newHtml === null) {
+        console.warn('⚠️ [RichTextEditor] applyColorFormat got undefined/null innerHTML, skipping update');
+        return;
+      }
+      
       htmlRef.current = newHtml;
       onChange?.(newHtml);
     }
@@ -123,6 +140,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     setTimeout(() => {
       if (contentRef.current) {
         const newHtml = contentRef.current.innerHTML;
+        
+        // Захист від undefined
+        if (newHtml === undefined || newHtml === null) {
+          console.warn('⚠️ [RichTextEditor] applyFormat got undefined/null innerHTML, skipping update');
+          return;
+        }
+        
         htmlRef.current = newHtml;
         onChange?.(newHtml);
       }
@@ -131,7 +155,25 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   // Handle content change
   const handleChange = useCallback((evt: React.FormEvent<HTMLDivElement>) => {
-    const newHtml = (evt.target as HTMLDivElement).innerHTML;
+    const target = evt.target as HTMLDivElement;
+    const newHtml = target?.innerHTML;
+    
+    console.log('✏️ [RichTextEditor] Content changed:', {
+      newHtml,
+      type: typeof newHtml,
+      length: newHtml?.length,
+      previousValue: htmlRef.current,
+      hasTarget: !!target,
+      targetExists: target !== null && target !== undefined
+    });
+    
+    // Захист від undefined - використовуємо попереднє значення
+    if (newHtml === undefined || newHtml === null) {
+      console.warn('⚠️ [RichTextEditor] handleChange received undefined/null, using previous value:', htmlRef.current);
+      // Не оновлюємо нічого, просто ігноруємо цей виклик
+      return;
+    }
+    
     htmlRef.current = newHtml;
     onChange?.(newHtml);
   }, [onChange]);
@@ -157,6 +199,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
     
     if (isEditing) {
+      console.log('👋 [RichTextEditor] Click away detected, calling onFinishEditing, current content:', {
+        currentHtml: htmlRef.current,
+        contentRef: contentRef.current?.innerHTML
+      });
       onFinishEditing?.();
     }
   }, [isEditing, onFinishEditing]);
@@ -376,8 +422,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       <Box
         data-rich-text-editor
         sx={{
-          border: isEditing ? '2px solid' : 'none',
-          borderColor: isEditing ? theme.palette.primary.main : 'transparent',
+          border: hideBorder ? 'none' : (isEditing ? '2px solid' : 'none'),
+          borderColor: hideBorder ? 'transparent' : (isEditing ? theme.palette.primary.main : 'transparent'),
           borderRadius: '4px',
           transition: 'all 0.2s',
         }}

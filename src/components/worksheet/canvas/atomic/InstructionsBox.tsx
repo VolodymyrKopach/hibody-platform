@@ -25,6 +25,17 @@ const InstructionsBox: React.FC<InstructionsBoxProps> = ({
 }) => {
   const theme = useTheme();
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Логування змін тексту
+  React.useEffect(() => {
+    console.log('📘 [InstructionsBox Component] Text prop updated:', {
+      text,
+      type: typeof text,
+      isUndefined: text === undefined,
+      isStringUndefined: text === 'undefined',
+      length: text?.length
+    });
+  }, [text]);
 
   const getIcon = () => {
     if (icon) return icon;

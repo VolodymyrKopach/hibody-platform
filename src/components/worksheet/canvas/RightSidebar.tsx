@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -55,6 +55,7 @@ import {
   PATTERN_PRESETS, 
   TEMPLATE_PRESETS 
 } from '@/constants/backgroundPresets';
+import { RichTextEditor } from './shared/RichTextEditor';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -109,6 +110,17 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   onImageUpload
 }) => {
   const theme = useTheme();
+  
+  // Логування onUpdate для відстеження
+  React.useEffect(() => {
+    if (selection?.type === 'element') {
+      console.log('🎯 [RightSidebar] Element selected:', {
+        elementType: (selection as any).elementData?.type,
+        currentText: (selection as any).elementData?.properties?.text,
+        textType: typeof (selection as any).elementData?.properties?.text
+      });
+    }
+  }, [selection]);
   const [customColor, setCustomColor] = useState('#FFFFFF');
   const [patternBgColor, setPatternBgColor] = useState('#FFFFFF');
   const [patternFgColor, setPatternFgColor] = useState('#E5E7EB');
@@ -1694,22 +1706,67 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               </Typography>
 
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
                   Text Content
                 </Typography>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  value={elementData.properties?.text || ''}
-                  onChange={(e) => onUpdate?.({ text: e.target.value })}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '10px',
-                      fontSize: '0.875rem',
-                    },
-                  }}
-                />
+                <Box sx={{
+                  border: '1px solid',
+                  borderColor: 'rgba(0, 0, 0, 0.23)',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  transition: 'border-color 0.2s',
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                  },
+                  '&:focus-within': {
+                    borderColor: theme.palette.primary.main,
+                    borderWidth: '2px',
+                  },
+                }}>
+                  <RichTextEditor
+                    content={(() => {
+                      const text = elementData.properties?.text ?? '<p></p>';
+                      console.log('🔵 [BodyText] Initial content:', {
+                        raw: elementData.properties?.text,
+                        type: typeof elementData.properties?.text,
+                        isUndefined: elementData.properties?.text === undefined,
+                        isNull: elementData.properties?.text === null,
+                        final: text
+                      });
+                      return text;
+                    })()}
+                    onChange={(html) => {
+                      console.log('🟢 [BodyText] onChange called:', {
+                        received: html,
+                        type: typeof html,
+                        isUndefined: html === undefined,
+                        isStringUndefined: html === 'undefined',
+                        length: html?.length
+                      });
+                      
+                      // Санітизація та валідація HTML
+                      if (!html || html === 'undefined' || html === 'null') {
+                        console.log('⚠️ [BodyText] Invalid value detected, setting default');
+                        onUpdate?.({ text: '<p></p>' });
+                        return;
+                      }
+                      
+                      console.log('✅ [BodyText] Updating with:', html);
+                      console.log('🔼 [BodyText] Calling onUpdate callback');
+                      onUpdate?.({ text: html });
+                      console.log('✔️ [BodyText] onUpdate callback completed');
+                    }}
+                    onFinishEditing={() => {
+                      console.log('🔴 [BodyText] onFinishEditing called');
+                    }} 
+                    isEditing={true}
+                    showToolbar={true}
+                    hideBorder={true}
+                    minHeight="100px"
+                    fontSize="14px"
+                    placeholder="Enter text content..."
+                  />
+                </Box>
               </Box>
 
               {/* Variant */}
@@ -1772,23 +1829,67 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
 
               {/* Text Content */}
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
                   Text Content
                 </Typography>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  value={elementData.properties?.text || ''}
-                  onChange={(e) => onUpdate?.({ text: e.target.value })}
-                  placeholder="Enter instructions here..."
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '10px',
-                      fontSize: '0.875rem',
-                    },
-                  }}
-                />
+                <Box sx={{
+                  border: '1px solid',
+                  borderColor: 'rgba(0, 0, 0, 0.23)',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  transition: 'border-color 0.2s',
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                  },
+                  '&:focus-within': {
+                    borderColor: theme.palette.primary.main,
+                    borderWidth: '2px',
+                  },
+                }}>
+                  <RichTextEditor
+                    content={(() => {
+                      const text = elementData.properties?.text ?? '<p></p>';
+                      console.log('🔵 [InstructionsBox] Initial content:', {
+                        raw: elementData.properties?.text,
+                        type: typeof elementData.properties?.text,
+                        isUndefined: elementData.properties?.text === undefined,
+                        isNull: elementData.properties?.text === null,
+                        final: text
+                      });
+                      return text;
+                    })()}
+                    onChange={(html) => {
+                      console.log('🟢 [InstructionsBox] onChange called:', {
+                        received: html,
+                        type: typeof html,
+                        isUndefined: html === undefined,
+                        isStringUndefined: html === 'undefined',
+                        length: html?.length
+                      });
+                      
+                      // Санітизація та валідація HTML
+                      if (!html || html === 'undefined' || html === 'null') {
+                        console.log('⚠️ [InstructionsBox] Invalid value detected, setting default');
+                        onUpdate?.({ text: '<p></p>' });
+                        return;
+                      }
+                      
+                      console.log('✅ [InstructionsBox] Updating with:', html);
+                      console.log('🔼 [InstructionsBox] Calling onUpdate callback');
+                      onUpdate?.({ text: html });
+                      console.log('✔️ [InstructionsBox] onUpdate callback completed');
+                    }}
+                    onFinishEditing={() => {
+                      console.log('🔴 [InstructionsBox] onFinishEditing called');
+                    }}
+                    isEditing={true}
+                    showToolbar={true}
+                    hideBorder={true}
+                    minHeight="100px"
+                    fontSize="13px"
+                    placeholder="Enter instructions here..."
+                  />
+                </Box>
               </Box>
 
               {/* Type */}
@@ -1880,23 +1981,67 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
 
               {/* Text Content */}
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
                   Tip Text
                 </Typography>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={3}
-                  value={elementData.properties?.text || ''}
-                  onChange={(e) => onUpdate?.({ text: e.target.value })}
-                  placeholder="Enter helpful tip here..."
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '10px',
-                      fontSize: '0.875rem',
-                    },
-                  }}
-                />
+                <Box sx={{
+                  border: '1px solid',
+                  borderColor: 'rgba(0, 0, 0, 0.23)',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  transition: 'border-color 0.2s',
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                  },
+                  '&:focus-within': {
+                    borderColor: theme.palette.primary.main,
+                    borderWidth: '2px',
+                  },
+                }}>
+                  <RichTextEditor
+                    content={(() => {
+                      const text = elementData.properties?.text ?? '<p></p>';
+                      console.log('🔵 [TipBox] Initial content:', {
+                        raw: elementData.properties?.text,
+                        type: typeof elementData.properties?.text,
+                        isUndefined: elementData.properties?.text === undefined,
+                        isNull: elementData.properties?.text === null,
+                        final: text
+                      });
+                      return text;
+                    })()}
+                    onChange={(html) => {
+                      console.log('🟢 [TipBox] onChange called:', {
+                        received: html,
+                        type: typeof html,
+                        isUndefined: html === undefined,
+                        isStringUndefined: html === 'undefined',
+                        length: html?.length
+                      });
+                      
+                      // Санітизація та валідація HTML
+                      if (!html || html === 'undefined' || html === 'null') {
+                        console.log('⚠️ [TipBox] Invalid value detected, setting default');
+                        onUpdate?.({ text: '<p></p>' });
+                        return;
+                      }
+                      
+                      console.log('✅ [TipBox] Updating with:', html);
+                      console.log('🔼 [TipBox] Calling onUpdate callback');
+                      onUpdate?.({ text: html });
+                      console.log('✔️ [TipBox] onUpdate callback completed');
+                    }}
+                    onFinishEditing={() => {
+                      console.log('🔴 [TipBox] onFinishEditing called');
+                    }}
+                    isEditing={true}
+                    showToolbar={true}
+                    hideBorder={true}
+                    minHeight="80px"
+                    fontSize="13px"
+                    placeholder="Enter helpful tip here..."
+                  />
+                </Box>
               </Box>
 
               {/* Type */}
@@ -1964,23 +2109,67 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
 
               {/* Text Content */}
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
                   Warning Text
                 </Typography>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={3}
-                  value={elementData.properties?.text || ''}
-                  onChange={(e) => onUpdate?.({ text: e.target.value })}
-                  placeholder="Enter warning message here..."
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '10px',
-                      fontSize: '0.875rem',
-                    },
-                  }}
-                />
+                <Box sx={{
+                  border: '1px solid',
+                  borderColor: 'rgba(0, 0, 0, 0.23)',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  transition: 'border-color 0.2s',
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                  },
+                  '&:focus-within': {
+                    borderColor: theme.palette.primary.main,
+                    borderWidth: '2px',
+                  },
+                }}>
+                  <RichTextEditor
+                    content={(() => {
+                      const text = elementData.properties?.text ?? '<p></p>';
+                      console.log('🔵 [WarningBox] Initial content:', {
+                        raw: elementData.properties?.text,
+                        type: typeof elementData.properties?.text,
+                        isUndefined: elementData.properties?.text === undefined,
+                        isNull: elementData.properties?.text === null,
+                        final: text
+                      });
+                      return text;
+                    })()}
+                    onChange={(html) => {
+                      console.log('🟢 [WarningBox] onChange called:', {
+                        received: html,
+                        type: typeof html,
+                        isUndefined: html === undefined,
+                        isStringUndefined: html === 'undefined',
+                        length: html?.length
+                      });
+                      
+                      // Санітизація та валідація HTML
+                      if (!html || html === 'undefined' || html === 'null') {
+                        console.log('⚠️ [WarningBox] Invalid value detected, setting default');
+                        onUpdate?.({ text: '<p></p>' });
+                        return;
+                      }
+                      
+                      console.log('✅ [WarningBox] Updating with:', html);
+                      console.log('🔼 [WarningBox] Calling onUpdate callback');
+                      onUpdate?.({ text: html });
+                      console.log('✔️ [WarningBox] onUpdate callback completed');
+                    }}
+                    onFinishEditing={() => {
+                      console.log('🔴 [WarningBox] onFinishEditing called');
+                    }}
+                    isEditing={true}
+                    showToolbar={true}
+                    hideBorder={true}
+                    minHeight="80px"
+                    fontSize="13px"
+                    placeholder="Enter warning message here..."
+                  />
+                </Box>
               </Box>
 
               {/* Type */}

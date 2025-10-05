@@ -23,6 +23,17 @@ const TipBox: React.FC<TipBoxProps> = ({
 }) => {
   const theme = useTheme();
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Логування змін тексту
+  React.useEffect(() => {
+    console.log('💡 [TipBox Component] Text prop updated:', {
+      text,
+      type: typeof text,
+      isUndefined: text === undefined,
+      isStringUndefined: text === 'undefined',
+      length: text?.length
+    });
+  }, [text]);
 
   const getIcon = () => {
     switch (type) {
