@@ -1486,59 +1486,12 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
       >
         <Box sx={{ p: 2 }}>
           {/* Header */}
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
             <Settings size={20} color={theme.palette.primary.main} />
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
               Properties
             </Typography>
           </Stack>
-
-          {/* Selection Type Badge */}
-          <Chip 
-            label={`🎨 ${elementData.type || 'Element'}`}
-            size="small"
-            sx={{ 
-              mb: 2, 
-              fontWeight: 600,
-              background: alpha(theme.palette.secondary.main, 0.1),
-              color: theme.palette.secondary.main,
-            }}
-          />
-
-          {/* Element Info */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              borderRadius: '12px',
-              background: `linear-gradient(135deg, ${alpha(theme.palette.secondary.main, 0.08)} 0%, ${alpha(theme.palette.secondary.light, 0.05)} 100%)`,
-              border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
-              mb: 3,
-            }}
-          >
-            <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-              {elementData.type === 'title-block' ? 'Title Block' :
-               elementData.type === 'body-text' ? 'Body Text' :
-               elementData.type === 'instructions-box' ? 'Instructions Box' :
-               elementData.type === 'fill-blank' ? 'Fill in Blanks' :
-               elementData.type === 'multiple-choice' ? 'Multiple Choice' :
-               elementData.type === 'true-false' ? 'True/False' :
-               elementData.type === 'short-answer' ? 'Short Answer' :
-               elementData.type === 'divider' ? 'Divider' :
-               elementData.type === 'bullet-list' ? 'Bullet List' :
-               elementData.type === 'numbered-list' ? 'Numbered List' :
-               elementData.type === 'table' ? 'Table' :
-               elementData.type === 'tip-box' ? 'Tip Box' :
-               elementData.type === 'warning-box' ? 'Warning Box' :
-               elementData.type === 'image-placeholder' ? 'Image' :
-               elementData.name || 'Component'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              On: {pageData.title} (Page {pageData.pageNumber})
-            </Typography>
-          </Paper>
-
-          <Divider sx={{ mb: 3 }} />
 
           {/* Element Properties */}
           {elementData.type === 'title-block' ? (
