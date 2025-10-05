@@ -517,7 +517,7 @@ Now generate the worksheet as pure JSON:`;
   ): Promise<string> {
     const {
       temperature = 0.7,
-      maxTokens = 8000,
+      maxTokens = 16000, // FIXED: Increased from 8000 to handle complex worksheets
       model = 'gemini-2.5-flash',
     } = options;
 
@@ -574,6 +574,28 @@ Now generate the worksheet as pure JSON:`;
         cleanedResponse = cleanedResponse.replace(/^```json\s*\n/, '').replace(/\n```$/, '');
       } else if (cleanedResponse.startsWith('```')) {
         cleanedResponse = cleanedResponse.replace(/^```\s*\n/, '').replace(/\n```$/, '');
+      }
+
+
+      // Try to fix incomplete JSON by adding closing brackets
+      if (!cleanedResponse.endsWith('}')) {
+        console.warn('⚠️ [PARSER] Response appears incomplete, attempting to fix...');
+        
+        // Count opening and closing brackets
+        const openBraces = (cleanedResponse.match(/{/g) || []).length;
+        const closeBraces = (cleanedResponse.match(/}/g) || []).length;
+        const openBrackets = (cleanedResponse.match(/\[/g) || []).length;
+        const closeBrackets = (cleanedResponse.match(/\]/g) || []).length;
+        
+        // Add missing closing brackets
+        const missingBrackets = openBrackets - closeBrackets;
+        const missingBraces = openBraces - closeBraces;
+        
+        if (missingBrackets > 0 || missingBraces > 0) {
+          console.log(`🔧 [PARSER] Adding ${missingBrackets} brackets and ${missingBraces} braces`);
+          cleanedResponse += ']'.repeat(Math.max(0, missingBrackets));
+          cleanedResponse += '}'.repeat(Math.max(0, missingBraces));
+        }
       }
 
       // Parse JSON
