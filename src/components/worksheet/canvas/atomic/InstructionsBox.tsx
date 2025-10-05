@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, Stack, alpha, useTheme } from '@mui/material';
+import { RichTextEditor } from '../shared/RichTextEditor';
 
 interface InstructionsBoxProps {
   text: string;
@@ -24,24 +25,6 @@ const InstructionsBox: React.FC<InstructionsBoxProps> = ({
 }) => {
   const theme = useTheme();
   const [isEditing, setIsEditing] = useState(false);
-  const [localText, setLocalText] = useState(text);
-  const textRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setLocalText(text);
-  }, [text]);
-
-  useEffect(() => {
-    if (isEditing && textRef.current) {
-      textRef.current.focus();
-      // Select all text
-      const range = document.createRange();
-      range.selectNodeContents(textRef.current);
-      const selection = window.getSelection();
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-    }
-  }, [isEditing]);
 
   const getIcon = () => {
     if (icon) return icon;
@@ -54,32 +37,27 @@ const InstructionsBox: React.FC<InstructionsBoxProps> = ({
     }
   };
 
-  const handleBlur = () => {
+  const handleChange = (html: string) => {
+    onEdit?.(html);
+  };
+
+  const handleFinishEditing = () => {
     setIsEditing(false);
-    if (onEdit && localText !== text) {
-      onEdit(localText);
-    }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      textRef.current?.blur();
-    }
-    if (e.key === 'Escape') {
-      setLocalText(text);
-      setIsEditing(false);
-    }
-  };
-
-  const handleDoubleClick = () => {
-    if (onEdit) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isEditing && isSelected) {
       setIsEditing(true);
+      onFocus?.();
+    } else if (!isSelected) {
       onFocus?.();
     }
   };
 
-  const handleClick = () => {
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(true);
     onFocus?.();
   };
 
@@ -101,7 +79,7 @@ const InstructionsBox: React.FC<InstructionsBoxProps> = ({
       }}
     >
       <Stack direction="row" spacing={1} alignItems="flex-start">
-        <Typography sx={{ fontSize: '1.2rem', flexShrink: 0 }}>{getIcon()}</Typography>
+        <Typography sx={{ fontSize: '1.2rem', flexShrink: 0, mt: 0.5 }}>{getIcon()}</Typography>
         <Box sx={{ flex: 1 }}>
           <Typography
             sx={{
@@ -114,30 +92,56 @@ const InstructionsBox: React.FC<InstructionsBoxProps> = ({
           >
             {title}
           </Typography>
-          <Box
-            ref={textRef}
-            contentEditable={isEditing}
-            suppressContentEditableWarning
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            onInput={(e) => setLocalText(e.currentTarget.textContent || '')}
-            sx={{
-              fontSize: '13px',
-              color: '#374151',
-              lineHeight: 1.5,
-              fontFamily: 'Inter, sans-serif',
-              outline: isEditing ? `2px solid ${theme.palette.primary.main}` : 'none',
-              borderRadius: isEditing ? '4px' : '0',
-              padding: isEditing ? '4px' : '0',
-              background: isEditing ? 'white' : 'transparent',
-              minHeight: '20px',
-              '&:focus': {
-                outline: `2px solid ${theme.palette.primary.main}`,
-              },
-            }}
-          >
-            {localText}
-          </Box>
+          {isEditing ? (
+            <RichTextEditor
+              content={text}
+              onChange={handleChange}
+              onFinishEditing={handleFinishEditing}
+              isEditing={true}
+              minHeight="40px"
+              fontSize="13px"
+              placeholder="Enter instructions..."
+            />
+          ) : (
+            <Box
+              sx={{
+                fontSize: '13px',
+                color: '#374151',
+                lineHeight: 1.5,
+                fontFamily: 'Inter, sans-serif',
+                minHeight: '20px',
+                cursor: isSelected ? 'text' : 'inherit',
+                '& p': {
+                  margin: 0,
+                  marginBottom: '0.5em',
+                  '&:last-child': {
+                    marginBottom: 0,
+                  },
+                },
+                '& ul, & ol': {
+                  paddingLeft: '1.5em',
+                  marginTop: '0.5em',
+                  marginBottom: '0.5em',
+                },
+                '& li': {
+                  marginBottom: '0.25em',
+                },
+                '& strong, & b': {
+                  fontWeight: 700,
+                },
+                '& em, & i': {
+                  fontStyle: 'italic',
+                },
+                '& u': {
+                  textDecoration: 'underline',
+                },
+                '& *:not([style*="color"])': {
+                  color: '#374151',
+                },
+              }}
+              dangerouslySetInnerHTML={{ __html: text || '<p style="color: #9CA3AF;">Click to edit instructions</p>' }}
+            />
+          )}
         </Box>
       </Stack>
     </Box>
