@@ -2,7 +2,7 @@
 
 import React, { useRef, useCallback, useState } from 'react';
 import ContentEditable from 'react-contenteditable';
-import { Box, Stack, IconButton, Divider, alpha, Tooltip } from '@mui/material';
+import { Box, Stack, IconButton, Divider, alpha, Tooltip, ClickAwayListener } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
   FormatBold,
@@ -16,10 +16,12 @@ import {
   FormatAlignRight,
   Highlight as HighlightIcon,
 } from '@mui/icons-material';
+import { ColorPicker } from './ColorPicker';
 
 interface RichTextEditorProps {
   content: string;
   onChange?: (html: string) => void;
+  onFinishEditing?: () => void;
   placeholder?: string;
   isEditing?: boolean;
   minHeight?: string;
@@ -30,40 +32,134 @@ interface RichTextEditorProps {
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   content,
   onChange,
-  placeholder = '',
+  onFinishEditing,
   isEditing = false,
   minHeight = '40px',
   fontSize = '14px',
   showToolbar = true,
 }) => {
   const theme = useTheme();
-  const contentRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLElement | null>(null);
   const htmlRef = useRef<string>(content);
+  const savedSelectionRef = useRef<Range | null>(null);
   const [textColor, setTextColor] = useState('#374151');
   const [highlightColor, setHighlightColor] = useState('#FFEB3B');
 
-  // Format command handler
-  const applyFormat = useCallback((command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    // Trigger onChange after format
+  // Sync htmlRef with content prop
+  React.useEffect(() => {
+    htmlRef.current = content;
+  }, [content]);
+
+  // Save current selection
+  const saveSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      savedSelectionRef.current = selection.getRangeAt(0).cloneRange();
+    }
+  }, []);
+
+  // Restore saved selection
+  const restoreSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (selection && savedSelectionRef.current) {
+      selection.removeAllRanges();
+      selection.addRange(savedSelectionRef.current);
+    }
+  }, []);
+
+  // Apply color using direct DOM manipulation (more reliable than execCommand)
+  const applyColorFormat = useCallback((type: 'color' | 'backgroundColor', color: string) => {
+    // First, restore the saved selection
+    restoreSelection();
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    if (range.collapsed) return; // No text selected
+
+    // Get selected content
+    const selectedContent = range.extractContents();
+    
+    // Create a span with the color style
+    const span = document.createElement('span');
+    span.style[type] = color;
+    span.appendChild(selectedContent);
+    
+    // Insert the styled span
+    range.insertNode(span);
+    
+    // Update selection to the new span
+    selection.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.selectNodeContents(span);
+    selection.addRange(newRange);
+    
+    // Save the new selection
+    savedSelectionRef.current = newRange.cloneRange();
+    
+    // Trigger onChange
     if (contentRef.current) {
       const newHtml = contentRef.current.innerHTML;
       htmlRef.current = newHtml;
       onChange?.(newHtml);
     }
-  }, [onChange]);
+  }, [onChange, restoreSelection]);
+
+  // Format command handler for other formats (bold, italic, etc.)
+  const applyFormat = useCallback((command: string, value?: string) => {
+    // For color commands, use our custom implementation
+    if (command === 'foreColor') {
+      applyColorFormat('color', value || '#000000');
+      return;
+    }
+    if (command === 'backColor') {
+      applyColorFormat('backgroundColor', value || 'transparent');
+      return;
+    }
+
+    // For other commands, use execCommand
+    document.execCommand(command, false, value);
+    setTimeout(() => {
+      if (contentRef.current) {
+        const newHtml = contentRef.current.innerHTML;
+        htmlRef.current = newHtml;
+        onChange?.(newHtml);
+      }
+    }, 0);
+  }, [onChange, applyColorFormat]);
 
   // Handle content change
-  const handleChange = useCallback((evt: any) => {
-    const newHtml = evt.target.value;
+  const handleChange = useCallback((evt: React.FormEvent<HTMLDivElement>) => {
+    const newHtml = (evt.target as HTMLDivElement).innerHTML;
     htmlRef.current = newHtml;
     onChange?.(newHtml);
   }, [onChange]);
 
-  // Check if format is active
-  const isFormatActive = (format: string): boolean => {
-    return document.queryCommandState(format);
-  };
+  // Handle keyboard shortcuts
+  const handleKeyDown = useCallback((evt: React.KeyboardEvent) => {
+    if (evt.key === 'Escape') {
+      evt.preventDefault();
+      onFinishEditing?.();
+    }
+  }, [onFinishEditing]);
+
+  // Handle click away - close editor when clicking outside
+  const handleClickAway = useCallback((event: MouseEvent | TouchEvent) => {
+    // Check if click was on color picker popover or any MUI Popover
+    const target = event.target as HTMLElement;
+    if (
+      target.closest('[data-color-picker-popover]') ||
+      target.closest('.MuiPopover-root') ||
+      target.closest('[role="presentation"]')
+    ) {
+      return; // Don't close if clicking on popover/modal
+    }
+    
+    if (isEditing) {
+      onFinishEditing?.();
+    }
+  }, [isEditing, onFinishEditing]);
 
   const Toolbar = () => (
     <Stack
@@ -138,84 +234,40 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
       {/* Text Color */}
-      <Tooltip title="Text Color">
-        <Box
-          component="label"
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            borderRadius: '4px',
-            cursor: 'pointer',
-            position: 'relative',
-            border: '2px solid',
-            borderColor: 'divider',
-            '&:hover': {
-              borderColor: theme.palette.primary.main,
-            },
+      <Box onMouseDown={(e) => {
+        // Save selection before opening color picker
+        e.preventDefault();
+        saveSelection();
+      }}>
+        <ColorPicker
+          value={textColor}
+          onChange={(color) => {
+            setTextColor(color);
+            applyFormat('foreColor', color);
           }}
-        >
-          <FormatColorText fontSize="small" sx={{ color: textColor }} />
-          <input
-            type="color"
-            value={textColor}
-            onChange={(e) => {
-              const color = e.target.value;
-              setTextColor(color);
-              applyFormat('foreColor', color);
-            }}
-            style={{
-              position: 'absolute',
-              opacity: 0,
-              width: '100%',
-              height: '100%',
-              cursor: 'pointer',
-            }}
-          />
-        </Box>
-      </Tooltip>
+          icon={<FormatColorText fontSize="small" />}
+          label="Text Color"
+          colorType="text"
+        />
+      </Box>
 
       {/* Highlight Color */}
-      <Tooltip title="Highlight">
-        <Box
-          component="label"
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            borderRadius: '4px',
-            cursor: 'pointer',
-            position: 'relative',
-            border: '2px solid',
-            borderColor: 'divider',
-            '&:hover': {
-              borderColor: theme.palette.primary.main,
-            },
+      <Box onMouseDown={(e) => {
+        // Save selection before opening color picker
+        e.preventDefault();
+        saveSelection();
+      }}>
+        <ColorPicker
+          value={highlightColor}
+          onChange={(color) => {
+            setHighlightColor(color);
+            applyFormat('backColor', color);
           }}
-        >
-          <HighlightIcon fontSize="small" sx={{ color: highlightColor }} />
-          <input
-            type="color"
-            value={highlightColor}
-            onChange={(e) => {
-              const color = e.target.value;
-              setHighlightColor(color);
-              applyFormat('backColor', color);
-            }}
-            style={{
-              position: 'absolute',
-              opacity: 0,
-              width: '100%',
-              height: '100%',
-              cursor: 'pointer',
-            }}
-          />
-        </Box>
-      </Tooltip>
+          icon={<HighlightIcon fontSize="small" />}
+          label="Highlight Color"
+          colorType="highlight"
+        />
+      </Box>
 
       <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
@@ -316,64 +368,80 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   );
 
   return (
-    <Box
-      sx={{
-        border: isEditing ? '2px solid' : 'none',
-        borderColor: isEditing ? theme.palette.primary.main : 'transparent',
-        borderRadius: '4px',
-        transition: 'all 0.2s',
-      }}
+    <ClickAwayListener 
+      onClickAway={handleClickAway}
+      mouseEvent="onMouseDown"
+      touchEvent="onTouchStart"
     >
-      {isEditing && showToolbar && <Toolbar />}
-
       <Box
+        data-rich-text-editor
         sx={{
-          fontFamily: 'Inter, sans-serif',
-          fontSize: fontSize,
-          color: theme.palette.text.primary,
-          lineHeight: 1.6,
-          padding: '8px 12px',
-          minHeight: minHeight,
-          outline: 'none',
-          '& p': {
-            margin: 0,
-            marginBottom: '0.5em',
-            '&:last-child': {
-              marginBottom: 0,
-            },
-          },
-          '& ul, & ol': {
-            paddingLeft: '1.5em',
-            marginTop: '0.5em',
-            marginBottom: '0.5em',
-          },
-          '& li': {
-            marginBottom: '0.25em',
-          },
-          '& strong, & b': {
-            fontWeight: 700,
-          },
-          '& em, & i': {
-            fontStyle: 'italic',
-          },
-          '& u': {
-            textDecoration: 'underline',
-          },
+          border: isEditing ? '2px solid' : 'none',
+          borderColor: isEditing ? theme.palette.primary.main : 'transparent',
+          borderRadius: '4px',
+          transition: 'all 0.2s',
         }}
       >
-        <ContentEditable
-          innerRef={contentRef}
-          html={htmlRef.current}
-          disabled={!isEditing}
-          onChange={handleChange}
-          tagName="div"
-          style={{
-            outline: 'none',
+        {isEditing && showToolbar && <Toolbar />}
+
+        <Box
+          sx={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: fontSize,
+            color: theme.palette.text.primary,
+            lineHeight: 1.6,
+            padding: '8px 12px',
             minHeight: minHeight,
+            outline: 'none',
+            '& p': {
+              margin: 0,
+              marginBottom: '0.5em',
+              '&:last-child': {
+                marginBottom: 0,
+              },
+            },
+            '& ul, & ol': {
+              paddingLeft: '1.5em',
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+            '& li': {
+              marginBottom: '0.25em',
+            },
+            '& strong, & b': {
+              fontWeight: 700,
+            },
+            '& em, & i': {
+              fontStyle: 'italic',
+            },
+            '& u': {
+              textDecoration: 'underline',
+            },
+            // Support inline color styles
+            '& span[style*="color"]': {
+              // Preserve inline color styles
+            },
+            '& span[style*="background-color"]': {
+              // Preserve inline background-color styles
+            },
           }}
-        />
+        >
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <ContentEditable
+            innerRef={contentRef as any}
+            html={htmlRef.current}
+            disabled={!isEditing}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            tagName="div"
+            style={{
+              outline: 'none',
+              minHeight: minHeight,
+            }}
+          />
+        </Box>
       </Box>
-    </Box>
+    </ClickAwayListener>
   );
 };
 

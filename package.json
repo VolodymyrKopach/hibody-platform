@@ -41,6 +41,7 @@
     "next": "15.3.4",
     "posthog-js": "^1.262.0",
     "react": "^19.0.0",
+    "react-contenteditable": "^3.3.7",
     "react-dom": "^19.0.0",
     "react-i18next": "^15.6.0",
     "react-markdown": "^10.1.0",
