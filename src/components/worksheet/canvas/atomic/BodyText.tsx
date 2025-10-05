@@ -132,7 +132,7 @@ const BodyText: React.FC<BodyTextProps> = ({
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          {text || 'Click to edit text'}
+          {text}
         </Typography>
       )}
     </Box>

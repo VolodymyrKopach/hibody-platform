@@ -100,25 +100,6 @@ const InstructionsBox: React.FC<InstructionsBoxProps> = ({
         } : {},
       }}
     >
-      {isSelected && !isEditing && onEdit && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            px: 1,
-            py: 0.5,
-            borderRadius: '4px',
-            background: alpha(theme.palette.primary.main, 0.1),
-            border: `1px solid ${theme.palette.primary.main}`,
-          }}
-        >
-          <Typography sx={{ fontSize: '10px', fontWeight: 600, color: theme.palette.primary.main }}>
-            Double-click to edit
-          </Typography>
-        </Box>
-      )}
-
       <Stack direction="row" spacing={1} alignItems="flex-start">
         <Typography sx={{ fontSize: '1.2rem', flexShrink: 0 }}>{getIcon()}</Typography>
         <Box sx={{ flex: 1 }}>

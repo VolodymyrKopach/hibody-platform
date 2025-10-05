@@ -644,7 +644,7 @@ function renderElement(
     case 'body-text':
       return (
         <BodyText 
-          text={element.properties.text || 'Your text goes here. Click to edit...'}
+          text={element.properties.text || ''}
           variant={element.properties.variant || 'paragraph'}
           isSelected={isSelected}
           onEdit={(newText) => {
@@ -832,7 +832,7 @@ function getDefaultProperties(type: string) {
       };
     case 'body-text':
       return { 
-        text: 'Your text goes here. Click to edit and add your content...',
+        text: '',
         variant: 'paragraph'
       };
     case 'instructions-box':

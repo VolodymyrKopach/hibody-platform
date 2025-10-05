@@ -95,25 +95,6 @@ const TipBox: React.FC<TipBoxProps> = ({
         } : {},
       }}
     >
-      {isSelected && !isEditing && onEdit && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            px: 1,
-            py: 0.5,
-            borderRadius: '4px',
-            background: alpha('#667EEA', 0.1),
-            border: '1px solid #667EEA',
-          }}
-        >
-          <Typography sx={{ fontSize: '10px', fontWeight: 600, color: '#667EEA' }}>
-            Double-click to edit
-          </Typography>
-        </Box>
-      )}
-
       <Stack direction="row" spacing={1} alignItems="flex-start">
         <Typography sx={{ fontSize: '1.2rem', flexShrink: 0 }}>{getIcon()}</Typography>
         <Box sx={{ flex: 1 }}>

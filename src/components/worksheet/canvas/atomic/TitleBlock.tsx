@@ -142,7 +142,7 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
             fontFamily: 'Inter, sans-serif',
           }}
         >
-          {text || 'Click to edit title'}
+          {text}
         </Typography>
       )}
     </Box>
