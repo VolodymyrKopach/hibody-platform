@@ -46,6 +46,7 @@ import {
   Upload,
   Image as ImageIcon,
   Trash,
+  Sparkles,
 } from 'lucide-react';
 
 import { alpha } from '@mui/material';
@@ -56,6 +57,8 @@ import {
   TEMPLATE_PRESETS 
 } from '@/constants/backgroundPresets';
 import { RichTextEditor } from './shared/RichTextEditor';
+import { WorksheetEdit, WorksheetEditContext } from '@/types/worksheet-generation';
+import AIAssistantPanel from './ai/AIAssistantPanel';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -98,6 +101,13 @@ interface RightSidebarProps {
   onDelete?: (pageId: string, elementId: string) => void;
   onPageBackgroundUpdate?: (pageId: string, background: PageBackground) => void;
   onImageUpload?: (pageId: string, file: File) => Promise<void>;
+  // AI Editing props
+  parameters?: any;
+  onAIEdit?: (instruction: string) => Promise<void>;
+  editHistory?: WorksheetEdit[];
+  isAIEditing?: boolean;
+  editError?: string | null;
+  onClearEditError?: () => void;
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({ 
@@ -107,7 +117,14 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   onDuplicate,
   onDelete,
   onPageBackgroundUpdate,
-  onImageUpload
+  onImageUpload,
+  // AI Editing props
+  parameters,
+  onAIEdit,
+  editHistory = [],
+  isAIEditing = false,
+  editError = null,
+  onClearEditError
 }) => {
   const theme = useTheme();
   
@@ -138,6 +155,9 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   
   // Background tab state
   const [backgroundTab, setBackgroundTab] = useState<'colors' | 'gradients' | 'patterns' | 'templates'>('colors');
+  
+  // Main sidebar tab state  
+  const [mainTab, setMainTab] = useState<'properties' | 'ai'>('properties');
 
   // Update local color state when selection changes
   React.useEffect(() => {
@@ -255,6 +275,14 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   if (selection.type === 'page') {
     const pageData = selection.data;
 
+    // Build context for AI Assistant
+    const aiContext: WorksheetEditContext | undefined = parameters ? {
+      topic: parameters.topic || 'General',
+      ageGroup: parameters.level || parameters.ageGroup || 'general',
+      difficulty: parameters.difficulty || 'medium',
+      language: parameters.language || 'en',
+    } : undefined;
+
     return (
       <Paper
         elevation={0}
@@ -265,18 +293,43 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           display: 'flex',
           flexDirection: 'column',
           background: 'rgba(255, 255, 255, 0.98)',
-          overflow: 'auto',
+          overflow: 'hidden',
         }}
       >
-        <Box sx={{ p: 2 }}>
-          {/* Header */}
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-            <Settings size={20} color={theme.palette.primary.main} />
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Properties
-            </Typography>
-          </Stack>
+        {/* Tab Navigation */}
+        <Box sx={{ borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`, px: 2, pt: 2 }}>
+          <Tabs
+            value={mainTab}
+            onChange={(e, newValue) => setMainTab(newValue)}
+            variant="fullWidth"
+            sx={{
+              minHeight: 44,
+              '& .MuiTab-root': {
+                minHeight: 44,
+                fontSize: '0.8rem',
+                textTransform: 'none',
+                fontWeight: 600,
+              },
+            }}
+          >
+            <Tab 
+              value="properties" 
+              label="Properties" 
+              icon={<Palette size={16} />}
+              iconPosition="start"
+            />
+            <Tab 
+              value="ai" 
+              label="AI Assistant" 
+              icon={<Sparkles size={16} />}
+              iconPosition="start"
+            />
+          </Tabs>
+        </Box>
 
+        {/* Tab Content */}
+        {mainTab === 'properties' ? (
+          <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
           {/* Selection Type Badge */}
           <Chip 
             label="📄 Page"
@@ -1462,7 +1515,29 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               Delete Page
             </Button>
           </Stack>
-        </Box>
+          </Box>
+        ) : (
+          <Box sx={{ flex: 1, p: 2, overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {/* AI Assistant Panel */}
+            {aiContext && onAIEdit ? (
+              <AIAssistantPanel
+                selection={selection}
+                context={aiContext}
+                onEdit={onAIEdit}
+                editHistory={editHistory}
+                isEditing={isAIEditing}
+                error={editError}
+                onClearError={onClearEditError}
+              />
+            ) : (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body2" color="text.secondary">
+                  AI Assistant не доступний. Переконайтесь що worksheet згенерований з параметрами.
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
       </Paper>
     );
   }
@@ -1470,6 +1545,14 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   // CASE 2: Element selected
   if (selection.type === 'element') {
     const { pageData, elementData } = selection;
+
+    // Build context for AI Assistant
+    const aiContext: WorksheetEditContext | undefined = parameters ? {
+      topic: parameters.topic || 'General',
+      ageGroup: parameters.level || parameters.ageGroup || 'general',
+      difficulty: parameters.difficulty || 'medium',
+      language: parameters.language || 'en',
+    } : undefined;
 
     return (
       <Paper
@@ -1481,17 +1564,43 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           display: 'flex',
           flexDirection: 'column',
           background: 'rgba(255, 255, 255, 0.98)',
-          overflow: 'auto',
+          overflow: 'hidden',
         }}
       >
-        <Box sx={{ p: 2 }}>
-          {/* Header */}
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
-            <Settings size={20} color={theme.palette.primary.main} />
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Properties
-            </Typography>
-          </Stack>
+        {/* Tab Navigation */}
+        <Box sx={{ borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`, px: 2, pt: 2 }}>
+          <Tabs
+            value={mainTab}
+            onChange={(e, newValue) => setMainTab(newValue)}
+            variant="fullWidth"
+            sx={{
+              minHeight: 44,
+              '& .MuiTab-root': {
+                minHeight: 44,
+                fontSize: '0.8rem',
+                textTransform: 'none',
+                fontWeight: 600,
+              },
+            }}
+          >
+            <Tab 
+              value="properties" 
+              label="Properties" 
+              icon={<Settings size={16} />}
+              iconPosition="start"
+            />
+            <Tab 
+              value="ai" 
+              label="AI Assistant" 
+              icon={<Sparkles size={16} />}
+              iconPosition="start"
+            />
+          </Tabs>
+        </Box>
+
+        {/* Tab Content */}
+        {mainTab === 'properties' ? (
+          <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
 
           {/* Element Properties */}
           {elementData.type === 'title-block' ? (
@@ -3879,7 +3988,29 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               Delete Element (Del)
             </Button>
           </Stack>
-        </Box>
+          </Box>
+        ) : (
+          <Box sx={{ flex: 1, p: 2, overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {/* AI Assistant Panel */}
+            {aiContext && onAIEdit ? (
+              <AIAssistantPanel
+                selection={selection}
+                context={aiContext}
+                onEdit={onAIEdit}
+                editHistory={editHistory}
+                isEditing={isAIEditing}
+                error={editError}
+                onClearError={onClearEditError}
+              />
+            ) : (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body2" color="text.secondary">
+                  AI Assistant не доступний. Переконайтесь що worksheet згенерований з параметрами.
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
       </Paper>
     );
   }

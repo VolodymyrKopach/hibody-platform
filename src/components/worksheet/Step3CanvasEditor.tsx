@@ -63,7 +63,9 @@ import MultipleChoice from './canvas/atomic/MultipleChoice';
 import TipBox from './canvas/atomic/TipBox';
 import CanvasPage from './canvas/CanvasPage';
 import { CanvasElement, PageContent } from '@/types/canvas-element';
-import { ParsedWorksheet } from '@/types/worksheet-generation';
+import { ParsedWorksheet, WorksheetEdit, WorksheetEditContext } from '@/types/worksheet-generation';
+import { WorksheetEditingService } from '@/services/worksheet/WorksheetEditingService';
+import { WorksheetImageGenerationService } from '@/services/worksheet/WorksheetImageGenerationService';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -236,6 +238,13 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [exitCallback, setExitCallback] = useState<(() => void) | null>(null);
+
+  // AI Editing state
+  const [editHistoryMap, setEditHistoryMap] = useState<Map<string, WorksheetEdit[]>>(new Map());
+  const [isAIEditing, setIsAIEditing] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [imageGenerationProgress, setImageGenerationProgress] = useState<string>('');
 
   // Update pages and contents when generatedWorksheet changes
   useEffect(() => {
@@ -930,6 +939,369 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     // Clear selection
     setSelectedElementId(null);
     setSelection(null);
+  };
+
+  // Get unique key for current selection
+  const getSelectionKey = (sel: typeof selection): string | null => {
+    if (!sel) return null;
+    
+    if (sel.type === 'page') {
+      return `page-${sel.data.id}`;
+    } else {
+      return `element-${sel.pageData.id}-${sel.elementData.id}`;
+    }
+  };
+
+  // Detect image prompt changes in page elements
+  const detectImagePromptChanges = (
+    originalElements: any[],
+    updatedElements: any[]
+  ): Array<{ element: any; newPrompt: string; oldPrompt: string }> => {
+    const changes: Array<{ element: any; newPrompt: string; oldPrompt: string }> = [];
+
+    updatedElements.forEach(updatedEl => {
+      if (updatedEl.type !== 'image-placeholder') return;
+
+      const originalEl = originalElements.find(el => el.id === updatedEl.id);
+      if (!originalEl) return;
+
+      const oldPrompt = originalEl.properties?.imagePrompt || '';
+      const newPrompt = updatedEl.properties?.imagePrompt || '';
+
+      // Check if imagePrompt changed
+      if (newPrompt && oldPrompt !== newPrompt) {
+        console.log(`🎨 Detected imagePrompt change for ${updatedEl.id}:`, {
+          old: oldPrompt.substring(0, 50) + '...',
+          new: newPrompt.substring(0, 50) + '...'
+        });
+        changes.push({
+          element: updatedEl,
+          newPrompt,
+          oldPrompt
+        });
+      }
+    });
+
+    return changes;
+  };
+
+  // Regenerate images for page elements with changed prompts
+  const regenerateImagesForPageElements = async (
+    pageId: string,
+    changes: Array<{ element: any; newPrompt: string; oldPrompt: string }>
+  ): Promise<void> => {
+    if (changes.length === 0) return;
+
+    console.log(`🎨 Regenerating ${changes.length} images for page ${pageId}...`);
+    setIsGeneratingImage(true);
+    
+    const imageService = new WorksheetImageGenerationService(process.env.NEXT_PUBLIC_TOGETHER_API_KEY);
+    let successCount = 0;
+    let failureCount = 0;
+
+    for (const change of changes) {
+      try {
+        setImageGenerationProgress(`Генерація зображення ${successCount + failureCount + 1}/${changes.length}...`);
+        
+        console.log(`🎨 Generating image for element ${change.element.id}`);
+        
+        const newImageUrl = await imageService.generateSingleImage(
+          change.newPrompt,
+          change.element.properties?.width || 400,
+          change.element.properties?.height || 300
+        );
+
+        // Update element with new image URL
+        handleElementEdit(
+          pageId,
+          change.element.id,
+          {
+            ...change.element.properties,
+            url: newImageUrl,
+            imagePrompt: change.newPrompt
+          }
+        );
+
+        successCount++;
+        console.log(`✅ Image generated successfully for ${change.element.id}`);
+        
+      } catch (error) {
+        failureCount++;
+        console.error(`❌ Failed to generate image for ${change.element.id}:`, error);
+        // Continue with other images even if one fails
+      }
+    }
+
+    setIsGeneratingImage(false);
+    setImageGenerationProgress('');
+    
+    console.log(`🎨 Image regeneration complete: ${successCount} succeeded, ${failureCount} failed`);
+  };
+
+  // Get edit history for current selection
+  const getCurrentEditHistory = (): WorksheetEdit[] => {
+    const key = getSelectionKey(selection);
+    if (!key) return [];
+    return editHistoryMap.get(key) || [];
+  };
+
+  // Add edit to history for specific selection
+  const addEditToHistory = (edit: WorksheetEdit) => {
+    const key = getSelectionKey(selection);
+    if (!key) return;
+
+    setEditHistoryMap(prev => {
+      const newMap = new Map(prev);
+      const existingHistory = newMap.get(key) || [];
+      newMap.set(key, [...existingHistory, edit]);
+      return newMap;
+    });
+  };
+
+  // AI Editing handler
+  const handleAIEdit = async (instruction: string) => {
+    if (!selection || !parameters) {
+      console.warn('⚠️ Cannot edit: no selection or parameters');
+      return;
+    }
+
+    setIsAIEditing(true);
+    setEditError(null);
+
+    try {
+      console.log('🤖 AI Edit requested:', instruction);
+
+      // SPECIAL CASE: Direct regenerate for image components
+      if (instruction === '__REGENERATE__' && selection.type === 'element' && selection.elementData.type === 'image-placeholder') {
+        console.log('🎨 Direct image regeneration requested');
+        
+        const currentPrompt = selection.elementData.properties?.imagePrompt;
+        if (!currentPrompt) {
+          throw new Error('No image prompt found for regeneration');
+        }
+
+        // Set image generation state
+        setIsGeneratingImage(true);
+        setImageGenerationProgress('Генерація зображення...');
+
+        // Generate directly with existing prompt
+        const imageService = new WorksheetImageGenerationService(process.env.NEXT_PUBLIC_TOGETHER_API_KEY);
+        const newImageUrl = await imageService.generateSingleImage(
+          currentPrompt,
+          selection.elementData.properties?.width || 400,
+          selection.elementData.properties?.height || 300
+        );
+
+        setIsGeneratingImage(false);
+        setImageGenerationProgress('');
+
+        // Update component with new image
+        handleElementEdit(
+          selection.pageData.id,
+          selection.elementData.id,
+          {
+            ...selection.elementData.properties,
+            url: newImageUrl
+          }
+        );
+
+        // Add to history
+        addEditToHistory({
+          id: `edit-${Date.now()}`,
+          timestamp: new Date(),
+          instruction: 'Перегенерувати зображення',
+          changes: [{ field: 'url', oldValue: selection.elementData.properties?.url, newValue: newImageUrl, description: 'Зображення перегенеровано' }],
+          target: 'component',
+          success: true
+        });
+
+        setIsAIEditing(false);
+        return;
+      }
+
+      const editService = new WorksheetEditingService();
+
+      // Build context from parameters
+      const context: WorksheetEditContext = {
+        topic: parameters.topic || 'General',
+        ageGroup: parameters.level || parameters.ageGroup || 'general',
+        difficulty: parameters.difficulty || getDifficultyFromLevel(parameters.level),
+        language: parameters.language || 'en',
+      };
+
+      let result;
+
+      if (selection.type === 'element') {
+        // Edit component
+        result = await editService.editComponent(
+          selection.pageData.id,
+          selection.elementData.id,
+          selection.elementData,
+          instruction,
+          context
+        );
+
+        if (result.success && result.patch.properties) {
+          // Apply patch to component
+          const updatedProperties = editService.applyComponentPatch(
+            selection.elementData.properties,
+            result.patch
+          );
+
+          handleElementEdit(
+            selection.pageData.id,
+            selection.elementData.id,
+            updatedProperties
+          );
+
+          console.log('✅ Component updated via AI');
+
+          // SPECIAL: If it's an image component and we got a new imagePrompt, generate the image
+          if (selection.elementData.type === 'image-placeholder' && (result as any).imagePrompt) {
+            console.log('🎨 Generating new image with updated prompt...');
+            
+            const newPrompt = (result as any).imagePrompt;
+            const imageService = new WorksheetImageGenerationService(process.env.NEXT_PUBLIC_TOGETHER_API_KEY);
+            
+            try {
+              // Set image generation state
+              setIsGeneratingImage(true);
+              setImageGenerationProgress('Генерація зображення з новим стилем...');
+
+              const newImageUrl = await imageService.generateSingleImage(
+                newPrompt,
+                selection.elementData.properties?.width || 400,
+                selection.elementData.properties?.height || 300
+              );
+
+              setIsGeneratingImage(false);
+              setImageGenerationProgress('');
+
+              // Update component with generated image
+              handleElementEdit(
+                selection.pageData.id,
+                selection.elementData.id,
+                {
+                  ...updatedProperties,
+                  url: newImageUrl
+                }
+              );
+
+              console.log('✅ Image generated successfully');
+            } catch (imgError) {
+              console.error('❌ Image generation failed:', imgError);
+              setIsGeneratingImage(false);
+              setImageGenerationProgress('');
+              // Continue with text changes even if image generation fails
+            }
+          }
+        }
+      } else {
+        // Edit page
+        const pageData = {
+          ...selection.data,
+          elements: pageContents.get(selection.data.id)?.elements || []
+        };
+
+        result = await editService.editPage(
+          selection.data.id,
+          pageData,
+          instruction,
+          context
+        );
+
+        if (result.success) {
+          // Apply patch to page using editService method (preserves URLs)
+          const updatedPage = editService.applyPagePatch(pageData, result.patch);
+          
+          if (result.patch.title) {
+            setPages(prev => prev.map(p =>
+              p.id === selection.data.id ? { ...p, title: result.patch.title! } : p
+            ));
+          }
+
+          if (result.patch.elements) {
+            // Detect imagePrompt changes before updating state
+            const imagePromptChanges = detectImagePromptChanges(
+              pageData.elements,
+              updatedPage.elements
+            );
+
+            setPageContents(prev => {
+              const newMap = new Map(prev);
+              const pageContent = newMap.get(selection.data.id);
+
+              if (pageContent) {
+                newMap.set(selection.data.id, {
+                  ...pageContent,
+                  elements: updatedPage.elements
+                });
+                saveToHistory(newMap);
+              }
+
+              return newMap;
+            });
+
+            // Regenerate images if imagePrompt changed
+            if (imagePromptChanges.length > 0) {
+              console.log(`🎨 Found ${imagePromptChanges.length} image prompt changes, regenerating...`);
+              
+              // Run regeneration asynchronously (don't block UI)
+              regenerateImagesForPageElements(selection.data.id, imagePromptChanges)
+                .catch(error => {
+                  console.error('❌ Image regeneration failed:', error);
+                  setEditError('Зміни застосовано, але не вдалося згенерувати деякі зображення');
+                });
+            }
+          }
+
+          console.log('✅ Page updated via AI');
+        }
+      }
+
+      // Add to edit history
+      if (result.success) {
+        const historyEntry: WorksheetEdit = {
+          id: `edit-${Date.now()}`,
+          timestamp: new Date(),
+          instruction,
+          changes: result.changes,
+          target: selection.type === 'element' ? 'component' : 'page',
+          success: true
+        };
+
+        addEditToHistory(historyEntry);
+      }
+
+    } catch (error) {
+      console.error('❌ AI Edit failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setEditError(errorMessage);
+
+      // Add failed edit to history
+      const historyEntry: WorksheetEdit = {
+        id: `edit-${Date.now()}`,
+        timestamp: new Date(),
+        instruction,
+        changes: [],
+        target: selection?.type === 'element' ? 'component' : 'page',
+        success: false,
+        error: errorMessage
+      };
+
+      addEditToHistory(historyEntry);
+    } finally {
+      setIsAIEditing(false);
+    }
+  };
+
+  // Helper: Convert level to difficulty
+  const getDifficultyFromLevel = (level: string): 'easy' | 'medium' | 'hard' => {
+    if (!level) return 'medium';
+    const lowercaseLevel = level.toLowerCase();
+    if (lowercaseLevel.includes('beginner') || lowercaseLevel.includes('elementary')) return 'easy';
+    if (lowercaseLevel.includes('advanced') || lowercaseLevel.includes('upper')) return 'hard';
+    return 'medium';
   };
 
   const handleElementDuplicate = (pageId: string, elementId: string) => {
@@ -1733,6 +2105,13 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
             handleElementDelete(pageId, elementId);
           }}
           onPageBackgroundUpdate={handlePageBackgroundUpdate}
+          // AI Editing props
+          parameters={parameters}
+          onAIEdit={handleAIEdit}
+          editHistory={getCurrentEditHistory()}
+          isAIEditing={isAIEditing}
+          editError={editError}
+          onClearEditError={() => setEditError(null)}
         />
       </Box>
 

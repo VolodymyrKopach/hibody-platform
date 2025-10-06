@@ -160,3 +160,89 @@ export interface AgeGroupGuidelines {
   };
 }
 
+// ============================================
+// AI EDITING TYPES
+// ============================================
+
+/**
+ * Context for AI editing worksheet
+ */
+export interface WorksheetEditContext {
+  topic: string;
+  ageGroup: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  language: string;
+}
+
+/**
+ * Target for AI editing (component or page)
+ */
+export interface WorksheetEditTarget {
+  type: 'component' | 'page';
+  pageId: string;
+  elementId?: string; // Only for component type
+  data: CanvasElement | ParsedPage;
+}
+
+/**
+ * Request to edit worksheet via AI
+ */
+export interface WorksheetEditRequest {
+  editTarget: WorksheetEditTarget;
+  instruction: string;
+  context: WorksheetEditContext;
+}
+
+/**
+ * Patch with only changed fields
+ */
+export interface WorksheetEditPatch {
+  properties?: Partial<any>; // Changed properties for component
+  title?: string; // Changed title for page
+  elements?: CanvasElement[]; // Updated elements array for page
+}
+
+/**
+ * Description of a single change
+ */
+export interface WorksheetEditChange {
+  field: string;
+  oldValue: any;
+  newValue: any;
+  description: string;
+}
+
+/**
+ * Response from AI editing
+ */
+export interface WorksheetEditResponse {
+  success: boolean;
+  patch: WorksheetEditPatch;
+  changes: WorksheetEditChange[];
+  error?: string;
+}
+
+/**
+ * Quick improvement action
+ */
+export interface QuickImprovement {
+  id: string;
+  label: string;
+  icon: string; // Lucide icon name
+  description: string;
+  instruction: string; // Auto-generated instruction for AI
+}
+
+/**
+ * Edit history entry for UI
+ */
+export interface WorksheetEdit {
+  id: string;
+  timestamp: Date;
+  instruction: string;
+  changes: WorksheetEditChange[];
+  target: 'component' | 'page';
+  success: boolean;
+  error?: string;
+}
+

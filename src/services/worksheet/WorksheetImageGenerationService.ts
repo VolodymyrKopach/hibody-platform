@@ -177,6 +177,17 @@ export class WorksheetImageGenerationService {
   }
 
   /**
+   * PUBLIC: Generate single image (exposed for direct usage)
+   */
+  async generateSingleImage(
+    prompt: string,
+    width: number,
+    height: number
+  ): Promise<string> {
+    return this.generateSingleImageWithRetry(prompt, width, height, 3);
+  }
+
+  /**
    * Generate single image with retry logic
    */
   private async generateSingleImageWithRetry(
