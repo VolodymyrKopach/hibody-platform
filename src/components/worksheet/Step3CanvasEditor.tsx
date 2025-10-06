@@ -1860,6 +1860,13 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       e.preventDefault();
       setIsPanning(true);
       setDragStart({ x: e.clientX, y: e.clientY });
+    } else {
+      // Clear selection when clicking on canvas background (not on pages)
+      const target = e.target as HTMLElement;
+      if (target === canvasContainerRef.current || target.closest('[data-canvas-container]')) {
+        setSelection(null);
+        setSelectedElementId(null);
+      }
     }
   };
 
@@ -1996,18 +2003,25 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         }
       }
       
-      // Ctrl+V or Cmd+V to paste element
+      // Ctrl+V or Cmd+V to paste
       if (e.code === 'KeyV' && (e.ctrlKey || e.metaKey) && clipboard) {
         const target = e.target as HTMLElement;
         const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
         if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
           e.preventDefault();
-          // Paste to currently selected page or first page
-          const targetPageId = selection?.type === 'page' ? selection.data.id : 
-                               selection?.type === 'element' ? selection.pageData.id : 
-                               pages[0]?.id;
-          if (targetPageId) {
-            handlePasteElement(targetPageId);
+          
+          // If no selection and clipboard has page - paste page on canvas
+          if (!selection && clipboard.type === 'page') {
+            handlePastePage();
+          } 
+          // If has selection or clipboard has element - paste element on page
+          else if (clipboard.type === 'element') {
+            const targetPageId = selection?.type === 'page' ? selection.data.id : 
+                                 selection?.type === 'element' ? selection.pageData.id : 
+                                 pages[0]?.id;
+            if (targetPageId) {
+              handlePasteElement(targetPageId);
+            }
           }
         }
       }
@@ -2269,6 +2283,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       >
         {/* Canvas Container */}
         <Box
+          data-canvas-container
           sx={{
             position: 'absolute',
             top: 0,
