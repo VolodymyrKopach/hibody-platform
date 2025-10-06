@@ -1223,17 +1223,18 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
               setIsGeneratingImage(false);
               setImageGenerationProgress('');
 
-              // Update component with generated image
+              // Update component with generated image AND new prompt
               handleElementEdit(
                 selection.pageData.id,
                 selection.elementData.id,
                 {
                   ...updatedProperties,
-                  url: newImageUrl
+                  url: newImageUrl,
+                  imagePrompt: newPrompt // Save the new prompt for future regenerations
                 }
               );
 
-              console.log('✅ Image generated successfully');
+              console.log('✅ Image generated successfully with new prompt');
             } catch (imgError) {
               console.error('❌ Image generation failed:', imgError);
               setIsGeneratingImage(false);
