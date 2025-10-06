@@ -47,6 +47,7 @@ import {
   Image as ImageIcon,
   Trash,
   Sparkles,
+  ChevronRight,
 } from 'lucide-react';
 
 import { alpha } from '@mui/material';
@@ -94,6 +95,8 @@ type Selection =
   | null;
 
 interface RightSidebarProps {
+  isOpen: boolean;
+  onToggle: () => void;
   selection: Selection;
   onSelectionChange?: (selection: Selection) => void;
   onUpdate?: (updates: any) => void;
@@ -111,6 +114,8 @@ interface RightSidebarProps {
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({ 
+  isOpen,
+  onToggle,
   selection, 
   onSelectionChange,
   onUpdate,
@@ -127,6 +132,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   onClearEditError
 }) => {
   const theme = useTheme();
+  const sidebarWidth = isOpen ? 320 : 72;
   
   // Логування onUpdate для відстеження
   React.useEffect(() => {
@@ -249,23 +255,73 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
       <Paper
         elevation={0}
         sx={{
-          width: 320,
+          width: sidebarWidth,
+          flexShrink: 0,
+          transition: 'width 0.3s ease',
           height: '100%',
           borderLeft: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          flexDirection: 'column',
           background: 'rgba(255, 255, 255, 0.98)',
+          overflow: 'hidden',
         }}
       >
-        <Box sx={{ textAlign: 'center', px: 3 }}>
-          <Typography sx={{ fontSize: '3rem', mb: 2 }}>👈</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            Nothing selected
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Select a page or element to edit
-          </Typography>
+        {/* Header with Toggle Button */}
+        <Box
+          sx={{
+            p: isOpen ? 2 : 1.5,
+            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isOpen ? 'space-between' : 'center',
+          }}
+        >
+          {isOpen && (
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontSize: '1rem', 
+                fontWeight: 600,
+                color: theme.palette.text.primary
+              }}
+            >
+              Properties
+            </Typography>
+          )}
+          
+          <Tooltip title={isOpen ? "Collapse panel" : "Expand panel"} placement="left">
+            <IconButton
+              onClick={onToggle}
+              size="small"
+              sx={{
+                color: theme.palette.text.secondary,
+                '&:hover': {
+                  color: theme.palette.primary.main,
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {isOpen ? <ChevronRight size={20} /> : <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />}
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        {/* Content */}
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: isOpen ? 3 : 1 }}>
+          {isOpen ? (
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography sx={{ fontSize: '3rem', mb: 2 }}>👈</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Nothing selected
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Select a page or element to edit
+              </Typography>
+            </Box>
+          ) : (
+            <Settings size={20} color={theme.palette.text.disabled} />
+          )}
         </Box>
       </Paper>
     );
@@ -287,7 +343,9 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
       <Paper
         elevation={0}
         sx={{
-          width: 320,
+          width: sidebarWidth,
+          flexShrink: 0,
+          transition: 'width 0.3s ease',
           height: '100%',
           borderLeft: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           display: 'flex',
@@ -296,51 +354,152 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           overflow: 'hidden',
         }}
       >
-        {/* Tab Navigation */}
-        <Box sx={{ borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`, px: 2, pt: 2 }}>
-          <Tabs
-            value={mainTab}
-            onChange={(e, newValue) => setMainTab(newValue)}
-            variant="fullWidth"
-            sx={{
-              minHeight: 44,
-              '& .MuiTab-root': {
-                minHeight: 44,
-                fontSize: '0.8rem',
-                textTransform: 'none',
+        {/* Header with Toggle Button */}
+        <Box
+          sx={{
+            p: isOpen ? 2 : 1.5,
+            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isOpen ? 'space-between' : 'center',
+          }}
+        >
+          {isOpen && (
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontSize: '1rem', 
                 fontWeight: 600,
-              },
-            }}
-          >
-            <Tab 
-              value="properties" 
-              label="Properties" 
-              icon={<Palette size={16} />}
-              iconPosition="start"
-            />
-            <Tab 
-              value="ai" 
-              label="AI Assistant" 
-              icon={<Sparkles size={16} />}
-              iconPosition="start"
-            />
-          </Tabs>
+                color: theme.palette.text.primary
+              }}
+            >
+              Page Properties
+            </Typography>
+          )}
+          
+          <Tooltip title={isOpen ? "Collapse panel" : "Expand panel"} placement="left">
+            <IconButton
+              onClick={onToggle}
+              size="small"
+              sx={{
+                color: theme.palette.text.secondary,
+                '&:hover': {
+                  color: theme.palette.primary.main,
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {isOpen ? <ChevronRight size={20} /> : <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />}
+            </IconButton>
+          </Tooltip>
         </Box>
 
-        {/* Tab Content */}
-        {mainTab === 'properties' ? (
-          <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
-          {/* Selection Type Badge */}
-          <Chip 
-            label="📄 Page"
-            size="small"
-            sx={{ 
-              mb: 2, 
-              fontWeight: 600,
-              background: alpha(theme.palette.primary.main, 0.1),
-              color: theme.palette.primary.main,
-            }}
-          />
+        {isOpen ? (
+          <>
+            {/* Tab Navigation */}
+            <Box sx={{ borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`, px: 2 }}>
+              <Tabs
+                value={mainTab}
+                onChange={(e, newValue) => setMainTab(newValue)}
+                variant="fullWidth"
+                sx={{
+                  minHeight: 44,
+                  '& .MuiTab-root': {
+                    minHeight: 44,
+                    fontSize: '0.8rem',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                  },
+                }}
+              >
+                <Tab 
+                  value="properties" 
+                  label="Properties" 
+                  icon={<Palette size={16} />}
+                  iconPosition="start"
+                />
+                <Tab 
+                  value="ai" 
+                  label="AI Assistant" 
+                  icon={<Sparkles size={16} />}
+                  iconPosition="start"
+                />
+              </Tabs>
+            </Box>
+          </>
+        ) : (
+          // Collapsed mode - Icon tabs
+          <Stack spacing={1} sx={{ p: 1 }}>
+            <Tooltip title="Properties" placement="left">
+              <Paper
+                elevation={0}
+                onClick={() => { setMainTab('properties'); onToggle(); }}
+                sx={{
+                  width: 48,
+                  height: 48,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '10px',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  background: mainTab === 'properties' ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                    background: alpha(theme.palette.primary.main, 0.15),
+                    transform: 'scale(1.05)',
+                  },
+                }}
+              >
+                <Palette size={20} color={mainTab === 'properties' ? theme.palette.primary.main : theme.palette.text.secondary} />
+              </Paper>
+            </Tooltip>
+            <Tooltip title="AI Assistant" placement="left">
+              <Paper
+                elevation={0}
+                onClick={() => { setMainTab('ai'); onToggle(); }}
+                sx={{
+                  width: 48,
+                  height: 48,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '10px',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  background: mainTab === 'ai' ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                    background: alpha(theme.palette.primary.main, 0.15),
+                    transform: 'scale(1.05)',
+                  },
+                }}
+              >
+                <Sparkles size={20} color={mainTab === 'ai' ? theme.palette.primary.main : theme.palette.text.secondary} />
+              </Paper>
+            </Tooltip>
+          </Stack>
+        )}
+
+        {/* Tab Content - Only show when expanded */}
+        {isOpen && (
+          <>
+            {mainTab === 'properties' ? (
+              <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
+              {/* Selection Type Badge */}
+              <Chip 
+                label="📄 Page"
+                size="small"
+                sx={{ 
+                  mb: 2, 
+                  fontWeight: 600,
+                  background: alpha(theme.palette.primary.main, 0.1),
+                  color: theme.palette.primary.main,
+                }}
+              />
 
           {/* Page Info */}
           <Paper
@@ -1538,6 +1697,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             )}
           </Box>
         )}
+          </>
+        )}
       </Paper>
     );
   }
@@ -1558,7 +1719,9 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
       <Paper
         elevation={0}
         sx={{
-          width: 320,
+          width: sidebarWidth,
+          flexShrink: 0,
+          transition: 'width 0.3s ease',
           height: '100%',
           borderLeft: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           display: 'flex',
@@ -1567,40 +1730,141 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           overflow: 'hidden',
         }}
       >
-        {/* Tab Navigation */}
-        <Box sx={{ borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`, px: 2, pt: 2 }}>
-          <Tabs
-            value={mainTab}
-            onChange={(e, newValue) => setMainTab(newValue)}
-            variant="fullWidth"
-            sx={{
-              minHeight: 44,
-              '& .MuiTab-root': {
-                minHeight: 44,
-                fontSize: '0.8rem',
-                textTransform: 'none',
+        {/* Header with Toggle Button */}
+        <Box
+          sx={{
+            p: isOpen ? 2 : 1.5,
+            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isOpen ? 'space-between' : 'center',
+          }}
+        >
+          {isOpen && (
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontSize: '1rem', 
                 fontWeight: 600,
-              },
-            }}
-          >
-            <Tab 
-              value="properties" 
-              label="Properties" 
-              icon={<Settings size={16} />}
-              iconPosition="start"
-            />
-            <Tab 
-              value="ai" 
-              label="AI Assistant" 
-              icon={<Sparkles size={16} />}
-              iconPosition="start"
-            />
-          </Tabs>
+                color: theme.palette.text.primary
+              }}
+            >
+              Element Properties
+            </Typography>
+          )}
+          
+          <Tooltip title={isOpen ? "Collapse panel" : "Expand panel"} placement="left">
+            <IconButton
+              onClick={onToggle}
+              size="small"
+              sx={{
+                color: theme.palette.text.secondary,
+                '&:hover': {
+                  color: theme.palette.primary.main,
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {isOpen ? <ChevronRight size={20} /> : <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />}
+            </IconButton>
+          </Tooltip>
         </Box>
 
-        {/* Tab Content */}
-        {mainTab === 'properties' ? (
-          <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
+        {isOpen ? (
+          <>
+            {/* Tab Navigation */}
+            <Box sx={{ borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`, px: 2 }}>
+              <Tabs
+                value={mainTab}
+                onChange={(e, newValue) => setMainTab(newValue)}
+                variant="fullWidth"
+                sx={{
+                  minHeight: 44,
+                  '& .MuiTab-root': {
+                    minHeight: 44,
+                    fontSize: '0.8rem',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                  },
+                }}
+              >
+                <Tab 
+                  value="properties" 
+                  label="Properties" 
+                  icon={<Settings size={16} />}
+                  iconPosition="start"
+                />
+                <Tab 
+                  value="ai" 
+                  label="AI Assistant" 
+                  icon={<Sparkles size={16} />}
+                  iconPosition="start"
+                />
+              </Tabs>
+            </Box>
+          </>
+        ) : (
+          // Collapsed mode - Icon tabs
+          <Stack spacing={1} sx={{ p: 1 }}>
+            <Tooltip title="Properties" placement="left">
+              <Paper
+                elevation={0}
+                onClick={() => { setMainTab('properties'); onToggle(); }}
+                sx={{
+                  width: 48,
+                  height: 48,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '10px',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  background: mainTab === 'properties' ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                    background: alpha(theme.palette.primary.main, 0.15),
+                    transform: 'scale(1.05)',
+                  },
+                }}
+              >
+                <Settings size={20} color={mainTab === 'properties' ? theme.palette.primary.main : theme.palette.text.secondary} />
+              </Paper>
+            </Tooltip>
+            <Tooltip title="AI Assistant" placement="left">
+              <Paper
+                elevation={0}
+                onClick={() => { setMainTab('ai'); onToggle(); }}
+                sx={{
+                  width: 48,
+                  height: 48,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '10px',
+                  border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  background: mainTab === 'ai' ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                    background: alpha(theme.palette.primary.main, 0.15),
+                    transform: 'scale(1.05)',
+                  },
+                }}
+              >
+                <Sparkles size={20} color={mainTab === 'ai' ? theme.palette.primary.main : theme.palette.text.secondary} />
+              </Paper>
+            </Tooltip>
+          </Stack>
+        )}
+
+        {/* Tab Content - Only show when expanded */}
+        {isOpen && (
+          <>
+            {mainTab === 'properties' ? (
+              <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
 
           {/* Element Properties */}
           {elementData.type === 'title-block' ? (
@@ -4010,6 +4274,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               </Box>
             )}
           </Box>
+        )}
+          </>
         )}
       </Paper>
     );

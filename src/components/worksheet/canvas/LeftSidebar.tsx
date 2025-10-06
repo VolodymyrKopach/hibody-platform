@@ -10,6 +10,8 @@ import {
   alpha,
   TextField,
   InputAdornment,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   Search,
@@ -27,13 +29,18 @@ import {
   List,
   ListOrdered,
   Table as TableIcon,
+  ChevronLeft,
 } from 'lucide-react';
 
 interface LeftSidebarProps {
+  isOpen: boolean;
+  onToggle: () => void;
   onComponentDragStart?: (component: string) => void;
 }
 
 const LeftSidebar: React.FC<LeftSidebarProps> = ({ 
+  isOpen,
+  onToggle,
   onComponentDragStart 
 }) => {
   const theme = useTheme();
@@ -166,176 +173,255 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
     },
   ];
 
+  const sidebarWidth = isOpen ? 280 : 72;
+
   return (
     <Paper
       elevation={0}
       sx={{
-        width: 280,
+        width: sidebarWidth,
+        flexShrink: 0,
+        transition: 'width 0.3s ease',
         height: '100%',
         borderRight: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        background: 'rgba(255, 255, 255, 0.98)',
         display: 'flex',
         flexDirection: 'column',
-        background: 'rgba(255, 255, 255, 0.98)',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      {/* Header */}
-      <Box
-        sx={{
-          p: 2,
-          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        }}
-      >
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            fontSize: '1rem', 
-            fontWeight: 600,
-            color: theme.palette.text.primary
+        {/* Header with Toggle Button */}
+        <Box
+          sx={{
+            p: isOpen ? 2 : 1.5,
+            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isOpen ? 'space-between' : 'center',
           }}
         >
-          Components
-        </Typography>
-      </Box>
+          {isOpen && (
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontSize: '1rem', 
+                fontWeight: 600,
+                color: theme.palette.text.primary
+              }}
+            >
+              Components
+            </Typography>
+          )}
+          
+          <Tooltip title={isOpen ? "Collapse panel" : "Expand panel"} placement="right">
+            <IconButton
+              onClick={onToggle}
+              size="small"
+              sx={{
+                color: theme.palette.text.secondary,
+                '&:hover': {
+                  color: theme.palette.primary.main,
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {isOpen ? <ChevronLeft size={20} /> : <ChevronLeft size={20} style={{ transform: 'rotate(180deg)' }} />}
+            </IconButton>
+          </Tooltip>
+        </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        {/* Search */}
-        <TextField
-          fullWidth
-          size="small"
-          placeholder="Search components..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search size={16} />
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            mb: 2,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '10px',
-              fontSize: '0.875rem',
-            },
-          }}
-        />
+      <Box sx={{ flex: 1, overflow: 'auto', p: isOpen ? 2 : 1 }}>
+        {/* Search - Only show when expanded */}
+        {isOpen && (
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Search components..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search size={16} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '10px',
+                fontSize: '0.875rem',
+              },
+            }}
+          />
+        )}
 
         {/* Component Categories */}
-        <Stack spacing={2.5}>
-          {componentCategories
-            .map((category) => ({
-              ...category,
-              items: category.items.filter((item) =>
-                searchQuery
-                  ? item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    item.description.toLowerCase().includes(searchQuery.toLowerCase())
-                  : true
-              ),
-            }))
-            .filter((category) => category.items.length > 0)
-            .map((category) => (
-              <Box key={category.name}>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    fontWeight: 700,
-                    color: theme.palette.text.secondary,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    fontSize: '0.7rem',
-                    mb: 1,
-                    display: 'block',
-                  }}
-                >
-                  {category.name}
-                </Typography>
-                <Stack spacing={0.75}>
-                  {category.items.map((item) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <Paper
-                        key={item.id}
-                        elevation={0}
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('componentType', item.id);
-                          e.dataTransfer.effectAllowed = 'copy';
-                          onComponentDragStart?.(item.id);
-                        }}
-                        sx={{
-                          p: 1.25,
-                          borderRadius: '10px',
-                          border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                          cursor: 'grab',
-                          transition: 'all 0.2s',
-                          background: 'transparent',
-                          '&:hover': {
-                            borderColor: item.color,
-                            background: alpha(item.color, 0.04),
-                            transform: 'translateX(4px)',
-                            boxShadow: `0 2px 8px ${alpha(item.color, 0.12)}`,
-                          },
-                          '&:active': {
-                            cursor: 'grabbing',
-                            transform: 'translateX(2px)',
-                          },
-                        }}
-                      >
-                        <Stack direction="row" alignItems="center" spacing={1.25}>
-                          <Box
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: '8px',
-                              background: alpha(item.color, 0.1),
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                              transition: 'all 0.2s',
-                              '.MuiPaper-root:hover &': {
-                                background: alpha(item.color, 0.15),
-                              },
-                            }}
-                          >
-                            <IconComponent size={16} color={item.color} strokeWidth={2.5} />
-                          </Box>
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography 
-                              variant="body2" 
-                              sx={{ 
-                                fontWeight: 600, 
-                                fontSize: '0.8125rem',
-                                lineHeight: 1.3,
-                                mb: 0.25,
+        {isOpen ? (
+          // Expanded view - Full cards with names
+          <Stack spacing={2.5}>
+            {componentCategories
+              .map((category) => ({
+                ...category,
+                items: category.items.filter((item) =>
+                  searchQuery
+                    ? item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+                    : true
+                ),
+              }))
+              .filter((category) => category.items.length > 0)
+              .map((category) => (
+                <Box key={category.name}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 700,
+                      color: theme.palette.text.secondary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      fontSize: '0.7rem',
+                      mb: 1,
+                      display: 'block',
+                    }}
+                  >
+                    {category.name}
+                  </Typography>
+                  <Stack spacing={0.75}>
+                    {category.items.map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <Paper
+                          key={item.id}
+                          elevation={0}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('componentType', item.id);
+                            e.dataTransfer.effectAllowed = 'copy';
+                            onComponentDragStart?.(item.id);
+                          }}
+                          sx={{
+                            p: 1.25,
+                            borderRadius: '10px',
+                            border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                            cursor: 'grab',
+                            transition: 'all 0.2s',
+                            background: 'transparent',
+                            '&:hover': {
+                              borderColor: item.color,
+                              background: alpha(item.color, 0.04),
+                              transform: 'translateX(4px)',
+                              boxShadow: `0 2px 8px ${alpha(item.color, 0.12)}`,
+                            },
+                            '&:active': {
+                              cursor: 'grabbing',
+                              transform: 'translateX(2px)',
+                            },
+                          }}
+                        >
+                          <Stack direction="row" alignItems="center" spacing={1.25}>
+                            <Box
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: '8px',
+                                background: alpha(item.color, 0.1),
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                transition: 'all 0.2s',
+                                '.MuiPaper-root:hover &': {
+                                  background: alpha(item.color, 0.15),
+                                },
                               }}
                             >
-                              {item.name}
-                            </Typography>
-                            <Typography 
-                              variant="caption" 
-                              color="text.secondary" 
-                              sx={{ 
-                                fontSize: '0.7rem',
-                                lineHeight: 1.2,
-                                display: 'block',
-                              }}
-                            >
-                              {item.description}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      </Paper>
-                    );
-                  })}
-                </Stack>
-              </Box>
-            ))}
-        </Stack>
+                              <IconComponent size={16} color={item.color} strokeWidth={2.5} />
+                            </Box>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography 
+                                variant="body2" 
+                                sx={{ 
+                                  fontWeight: 600, 
+                                  fontSize: '0.8125rem',
+                                  lineHeight: 1.3,
+                                  mb: 0.25,
+                                }}
+                              >
+                                {item.name}
+                              </Typography>
+                              <Typography 
+                                variant="caption" 
+                                color="text.secondary" 
+                                sx={{ 
+                                  fontSize: '0.7rem',
+                                  lineHeight: 1.2,
+                                  display: 'block',
+                                }}
+                              >
+                                {item.description}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </Paper>
+                      );
+                    })}
+                  </Stack>
+                </Box>
+              ))}
+          </Stack>
+        ) : (
+          // Collapsed view - Only icons
+          <Stack spacing={1}>
+            {componentCategories.flatMap((category) => 
+              category.items.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <Tooltip key={item.id} title={item.name} placement="right">
+                    <Paper
+                      elevation={0}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('componentType', item.id);
+                        e.dataTransfer.effectAllowed = 'copy';
+                        onComponentDragStart?.(item.id);
+                      }}
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '10px',
+                        border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                        cursor: 'grab',
+                        transition: 'all 0.2s',
+                        background: alpha(item.color, 0.05),
+                        '&:hover': {
+                          borderColor: item.color,
+                          background: alpha(item.color, 0.15),
+                          transform: 'scale(1.05)',
+                          boxShadow: `0 2px 8px ${alpha(item.color, 0.2)}`,
+                        },
+                        '&:active': {
+                          cursor: 'grabbing',
+                          transform: 'scale(0.95)',
+                        },
+                      }}
+                    >
+                      <IconComponent size={20} color={item.color} strokeWidth={2.5} />
+                    </Paper>
+                  </Tooltip>
+                );
+              })
+            )}
+          </Stack>
+        )}
       </Box>
-    </Paper>
+      </Paper>
   );
 };
 

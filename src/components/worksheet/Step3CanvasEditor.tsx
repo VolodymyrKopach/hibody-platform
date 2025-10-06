@@ -190,7 +190,6 @@ function formatTimeSince(date: Date): string {
 const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, generatedWorksheet, onOpenGenerateDialog }) => {
   const theme = useTheme();
   const router = useRouter();
-  const canvasRef = React.useRef<HTMLDivElement>(null);
   
   // Initialize pages from generated worksheet or empty canvas
   const PAGE_GAP = 45; // Gap between pages (30% of original 150px for tighter PDF-like appearance)
@@ -281,6 +280,10 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   const [isExporting, setIsExporting] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Panel visibility state
+  const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true);
+  const [isRightPanelVisible, setIsRightPanelVisible] = useState(true);
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
@@ -754,7 +757,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
 
   // Prevent browser gestures on canvas (touchpad swipe navigation)
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = canvasContainerRef.current;
     if (!canvas) return;
 
     let touchStartX = 0;
@@ -1900,12 +1903,14 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left Sidebar */}
         <LeftSidebar 
+          isOpen={isLeftPanelVisible}
+          onToggle={() => setIsLeftPanelVisible(!isLeftPanelVisible)}
           onComponentDragStart={(comp) => console.log('Dragging:', comp)}
         />
 
         {/* Infinite Canvas */}
         <Box
-          ref={canvasRef}
+          ref={canvasContainerRef}
           sx={{
             flex: 1,
             position: 'relative',
@@ -1917,7 +1922,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
           backgroundSize: '20px 20px',
           cursor: isPanning ? 'grabbing' : (isSpacePressed || tool === 'hand' ? 'grab' : 'default'),
         }}
-        ref={canvasContainerRef}
         onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleCanvasMouseMove}
         onMouseUp={handleCanvasMouseUp}
@@ -2065,48 +2069,50 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
 
         {/* Right Sidebar - Properties */}
         <RightSidebar 
+          isOpen={isRightPanelVisible}
+          onToggle={() => setIsRightPanelVisible(!isRightPanelVisible)}
           selection={selection}
-          onSelectionChange={setSelection}
-          onImageUpload={handleImageUpload}
-          onUpdate={(updates) => {
-            if (selection?.type === 'element') {
-              const elementId = selection.elementData.id;
-              const pageId = selection.pageData.id;
-              
-              // Update element properties
-              handleElementEdit(pageId, elementId, {
-                ...selection.elementData.properties,
-                ...updates,
-              });
-              
-              // Update selection with new properties
-              setSelection({
-                ...selection,
-                elementData: {
-                  ...selection.elementData,
-                  properties: {
-                    ...selection.elementData.properties,
-                    ...updates,
+            onSelectionChange={setSelection}
+            onImageUpload={handleImageUpload}
+            onUpdate={(updates) => {
+              if (selection?.type === 'element') {
+                const elementId = selection.elementData.id;
+                const pageId = selection.pageData.id;
+                
+                // Update element properties
+                handleElementEdit(pageId, elementId, {
+                  ...selection.elementData.properties,
+                  ...updates,
+                });
+                
+                // Update selection with new properties
+                setSelection({
+                  ...selection,
+                  elementData: {
+                    ...selection.elementData,
+                    properties: {
+                      ...selection.elementData.properties,
+                      ...updates,
+                    },
                   },
-                },
-              });
-            }
-          }}
-          onDuplicate={(pageId, elementId) => {
-            handleElementDuplicate(pageId, elementId);
-          }}
-          onDelete={(pageId, elementId) => {
-            handleElementDelete(pageId, elementId);
-          }}
-          onPageBackgroundUpdate={handlePageBackgroundUpdate}
-          // AI Editing props
-          parameters={parameters}
-          onAIEdit={handleAIEdit}
-          editHistory={getCurrentEditHistory()}
-          isAIEditing={isAIEditing}
-          editError={editError}
-          onClearEditError={() => setEditError(null)}
-        />
+                });
+              }
+            }}
+            onDuplicate={(pageId, elementId) => {
+              handleElementDuplicate(pageId, elementId);
+            }}
+            onDelete={(pageId, elementId) => {
+              handleElementDelete(pageId, elementId);
+            }}
+            onPageBackgroundUpdate={handlePageBackgroundUpdate}
+            // AI Editing props
+            parameters={parameters}
+            onAIEdit={handleAIEdit}
+            editHistory={getCurrentEditHistory()}
+            isAIEditing={isAIEditing}
+            editError={editError}
+            onClearEditError={() => setEditError(null)}
+          />
       </Box>
 
       {/* Export Menu */}
