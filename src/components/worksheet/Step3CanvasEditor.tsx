@@ -1041,7 +1041,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     console.log(`🎨 Regenerating ${changes.length} images for page ${pageId}...`);
     setIsGeneratingImage(true);
     
-    const imageService = new WorksheetImageGenerationService(process.env.NEXT_PUBLIC_TOGETHER_API_KEY);
+    const imageService = new WorksheetImageGenerationService();
     let successCount = 0;
     let failureCount = 0;
 
@@ -1131,7 +1131,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         setImageGenerationProgress('Генерація зображення...');
 
         // Generate directly with existing prompt
-        const imageService = new WorksheetImageGenerationService(process.env.NEXT_PUBLIC_TOGETHER_API_KEY);
+        const imageService = new WorksheetImageGenerationService();
         const newImageUrl = await imageService.generateSingleImage(
           currentPrompt,
           selection.elementData.properties?.width || 400,
@@ -1207,7 +1207,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
             console.log('🎨 Generating new image with updated prompt...');
             
             const newPrompt = (result as any).imagePrompt;
-            const imageService = new WorksheetImageGenerationService(process.env.NEXT_PUBLIC_TOGETHER_API_KEY);
+            const imageService = new WorksheetImageGenerationService();
             
             try {
               // Set image generation state

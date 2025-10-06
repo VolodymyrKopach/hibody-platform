@@ -97,14 +97,12 @@ const WorksheetEditor: React.FC = () => {
       
       let finalWorksheet = data.data.worksheet;
 
-      // STAGE 2: Generate images on client (if includeImages)
+      // STAGE 2: Generate images via secure API (if includeImages)
       if (params.includeImages !== false) {
         setGenerationStage('images');
-        console.log('🎨 Starting client-side image generation...');
+        console.log('🎨 Starting server-side image generation...');
 
-        const imageService = new WorksheetImageGenerationService(
-          process.env.NEXT_PUBLIC_TOGETHER_API_KEY
-        );
+        const imageService = new WorksheetImageGenerationService();
 
         const result = await imageService.generateImagesForWorksheet(
           finalWorksheet,

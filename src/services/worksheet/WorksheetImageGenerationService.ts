@@ -1,8 +1,9 @@
 /**
- * CLIENT-SIDE Image Generation Service for Worksheets
- * Generates images directly from browser using Together AI API
+ * SERVER-SIDE Image Generation Service for Worksheets
+ * Generates images via secure API endpoint
+ * Uses batch processing for optimal performance
  * 
- * ⚠️ WARNING: This exposes API key to client. Use only for internal tools.
+ * ✅ SECURE: API key never exposed to client
  */
 
 import { ParsedWorksheet, ParsedPage } from '@/types/worksheet-generation';
@@ -27,16 +28,33 @@ export interface ImageGenerationResult {
   errors: string[];
 }
 
+interface BatchImageRequest {
+  prompt: string;
+  width: number;
+  height: number;
+  id?: string;
+}
+
+interface BatchImageResult {
+  id?: string;
+  success: boolean;
+  image?: string;
+  error?: string;
+  prompt?: string;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+}
+
 export class WorksheetImageGenerationService {
-  private togetherApiKey: string | null = null;
-  
   constructor(apiKey?: string) {
-    // API key може бути переданий напряму або взятий з env
-    this.togetherApiKey = apiKey || process.env.NEXT_PUBLIC_TOGETHER_API_KEY || null;
+    // API key parameter kept for backwards compatibility but not used
+    // All generation now happens server-side via API endpoint
   }
 
   /**
-   * Generate images for entire worksheet
+   * Generate images for entire worksheet using batch API
    */
   async generateImagesForWorksheet(
     worksheet: ParsedWorksheet,
@@ -46,19 +64,26 @@ export class WorksheetImageGenerationService {
     
     const startTime = Date.now();
     const errors: string[] = [];
-    let totalImages = 0;
-    let generated = 0;
-    let failed = 0;
 
-    // Count total images needed
-    worksheet.pages.forEach(page => {
-      page.elements.forEach(element => {
+    // Collect all image requests from all pages
+    const imageRequests: (BatchImageRequest & { pageIndex: number; elementIndex: number })[] = [];
+    
+    worksheet.pages.forEach((page, pageIndex) => {
+      page.elements.forEach((element, elementIndex) => {
         if (element.type === 'image-placeholder' && element.properties?.imagePrompt) {
-          totalImages++;
+          imageRequests.push({
+            id: `${pageIndex}-${elementIndex}`,
+            prompt: element.properties.imagePrompt,
+            width: element.properties.width || 512,
+            height: element.properties.height || 512,
+            pageIndex,
+            elementIndex,
+          });
         }
       });
     });
 
+    const totalImages = imageRequests.length;
     console.log(`📊 [WorksheetImageGen] Found ${totalImages} images to generate`);
 
     if (totalImages === 0) {
@@ -70,259 +95,175 @@ export class WorksheetImageGenerationService {
       };
     }
 
-    // Process each page
-    const updatedPages: ParsedPage[] = [];
-    
-    for (const page of worksheet.pages) {
-      const updatedElements = await this.generateImagesForElements(
-        page.elements,
-        {
-          onProgress: (current) => {
-            onProgress?.({
-              total: totalImages,
-              completed: generated + failed,
-              current,
-              errors,
-            });
-          },
-          onSuccess: () => generated++,
-          onError: (error) => {
-            failed++;
-            errors.push(error);
-          },
-        }
-      );
-
-      updatedPages.push({
-        ...page,
-        elements: updatedElements,
-      });
-    }
-
-    const duration = Date.now() - startTime;
-
-    console.log(`✅ [WorksheetImageGen] Completed:`, {
-      totalImages,
-      generated,
-      failed,
-      duration: `${duration}ms`,
+    // Report initial progress
+    onProgress?.({
+      total: totalImages,
+      completed: 0,
+      current: 'Starting batch generation...',
+      errors: [],
     });
 
-    return {
-      success: failed === 0,
-      worksheet: {
-        ...worksheet,
-        pages: updatedPages,
-      },
-      stats: {
-        totalImages,
-        generated,
-        failed,
-        duration,
-      },
-      errors,
-    };
-  }
+    try {
+      // Call batch API endpoint
+      console.log('🚀 [WorksheetImageGen] Calling batch API endpoint...');
+      const response = await fetch('/api/worksheet/generate-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          images: imageRequests.map(req => ({
+            id: req.id,
+            prompt: req.prompt,
+            width: req.width,
+            height: req.height,
+          })),
+        }),
+      });
 
-  /**
-   * Generate images for array of elements
-   */
-  private async generateImagesForElements(
-    elements: CanvasElement[],
-    callbacks: {
-      onProgress?: (current: string) => void;
-      onSuccess?: () => void;
-      onError?: (error: string) => void;
-    }
-  ): Promise<CanvasElement[]> {
-    const updatedElements: CanvasElement[] = [];
+      if (!response.ok) {
+        throw new Error(`Batch API error: ${response.status}`);
+      }
 
-    for (const element of elements) {
-      if (element.type === 'image-placeholder' && element.properties?.imagePrompt) {
-        callbacks.onProgress?.(element.properties.caption || 'Generating image...');
+      const data = await response.json() as {
+        success: boolean;
+        results: BatchImageResult[];
+        stats: { total: number; successful: number; failed: number; duration: number };
+      };
 
-        try {
-          // Try to generate with retries (3 attempts total)
-          const imageUrl = await this.generateSingleImageWithRetry(
-            element.properties.imagePrompt,
-            element.properties.width || 400,
-            element.properties.height || 300,
-            3 // maxAttempts
-          );
+      console.log('✅ [WorksheetImageGen] Batch generation completed:', data.stats);
 
-          updatedElements.push({
+      // Map results back to worksheet pages
+      const updatedPages: ParsedPage[] = worksheet.pages.map(page => ({
+        ...page,
+        elements: [...page.elements],
+      }));
+
+      let generated = 0;
+      let failed = 0;
+
+      data.results.forEach((result, index) => {
+        const request = imageRequests[index];
+        const page = updatedPages[request.pageIndex];
+        const element = page.elements[request.elementIndex];
+
+        if (result.success && result.image) {
+          // Update element with generated image
+          page.elements[request.elementIndex] = {
             ...element,
             properties: {
               ...element.properties,
-              url: imageUrl, // Replace with generated image
+              url: `data:image/png;base64,${result.image}`,
             },
-          });
-
-          callbacks.onSuccess?.();
-        } catch (error) {
-          console.error('❌ [WorksheetImageGen] Failed to generate image after retries:', error);
-          callbacks.onError?.(
-            `Failed to generate: ${element.properties.caption || 'image'}`
-          );
-
-          // Keep element without image
-          updatedElements.push(element);
+          };
+          generated++;
+        } else {
+          // Keep placeholder, log error
+          const errorMsg = result.error || 'Unknown error';
+          errors.push(`${element.properties?.caption || 'Image'}: ${errorMsg}`);
+          failed++;
         }
-      } else {
-        updatedElements.push(element);
-      }
-    }
 
-    return updatedElements;
+        // Report progress
+        onProgress?.({
+          total: totalImages,
+          completed: generated + failed,
+          current: element.properties?.caption || `Image ${generated + failed}/${totalImages}`,
+          errors,
+        });
+      });
+
+      const duration = Date.now() - startTime;
+
+      console.log(`✅ [WorksheetImageGen] Final results:`, {
+        totalImages,
+        generated,
+        failed,
+        duration: `${duration}ms`,
+      });
+
+      return {
+        success: failed === 0,
+        worksheet: {
+          ...worksheet,
+          pages: updatedPages,
+        },
+        stats: {
+          totalImages,
+          generated,
+          failed,
+          duration,
+        },
+        errors,
+      };
+
+    } catch (error) {
+      console.error('❌ [WorksheetImageGen] Batch generation failed:', error);
+      
+      return {
+        success: false,
+        worksheet,
+        stats: {
+          totalImages,
+          generated: 0,
+          failed: totalImages,
+          duration: Date.now() - startTime,
+        },
+        errors: [error instanceof Error ? error.message : 'Unknown error'],
+      };
+    }
   }
 
   /**
-   * PUBLIC: Generate single image (exposed for direct usage)
+   * PUBLIC: Generate single image via API
+   * For cases when you need to generate just one image
    */
   async generateSingleImage(
     prompt: string,
     width: number,
     height: number
   ): Promise<string> {
-    return this.generateSingleImageWithRetry(prompt, width, height, 3);
-  }
-
-  /**
-   * Generate single image with retry logic
-   */
-  private async generateSingleImageWithRetry(
-    prompt: string,
-    width: number,
-    height: number,
-    maxAttempts: number = 3
-  ): Promise<string> {
-    let lastError: Error | null = null;
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        console.log(`🔄 [WorksheetImageGen] Attempt ${attempt}/${maxAttempts} for image generation`);
-        
-        const imageUrl = await this.generateSingleImage(prompt, width, height);
-        
-        if (attempt > 1) {
-          console.log(`✅ [WorksheetImageGen] Successfully generated on attempt ${attempt}`);
-        }
-        
-        return imageUrl;
-      } catch (error) {
-        lastError = error as Error;
-        console.warn(`⚠️ [WorksheetImageGen] Attempt ${attempt}/${maxAttempts} failed:`, error);
-
-        // Don't wait after the last attempt
-        if (attempt < maxAttempts) {
-          const waitTime = attempt * 1000; // 1s, 2s between retries
-          console.log(`⏳ Waiting ${waitTime}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        }
-      }
-    }
-
-    // All attempts failed
-    throw new Error(`Failed after ${maxAttempts} attempts: ${lastError?.message || 'Unknown error'}`);
-  }
-
-  /**
-   * Generate single image via Flux API (CLIENT-SIDE)
-   */
-  private async generateSingleImage(
-    prompt: string,
-    width: number,
-    height: number
-  ): Promise<string> {
-    if (!this.togetherApiKey) {
-      throw new Error('Together API key not configured');
-    }
-
-    console.log('🎨 [TogetherAPI] Generating image:', {
-      prompt: prompt.substring(0, 50) + '...',
-      dimensions: `${width}x${height}`,
-    });
-
-    // Adjust dimensions for Flux (multiples of 16)
-    const adjustedWidth = Math.round(width / 16) * 16;
-    const adjustedHeight = Math.round(height / 16) * 16;
-    const finalWidth = Math.max(256, Math.min(2048, adjustedWidth));
-    const finalHeight = Math.max(256, Math.min(2048, adjustedHeight));
-
-    // Enhance prompt for educational content
-    const enhancedPrompt = this.enhanceEducationalPrompt(prompt);
+    console.log('🎨 [WorksheetImageGen] Generating single image via API');
 
     try {
-      const response = await fetch('https://api.together.xyz/v1/images/generations', {
+      const response = await fetch('/api/worksheet/generate-images', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.togetherApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'black-forest-labs/FLUX.1-schnell',
-          prompt: enhancedPrompt,
-          width: finalWidth,
-          height: finalHeight,
-          steps: 4, // Fast generation
-          n: 1,
-          response_format: 'b64_json',
-          guidance_scale: 3.5,
-          seed: Math.floor(Math.random() * 1000000),
+          images: [{
+            prompt,
+            width,
+            height,
+          }],
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Flux API error: ${response.status} - ${JSON.stringify(errorData)}`);
+        throw new Error(`API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as {
+        success: boolean;
+        results: BatchImageResult[];
+      };
 
-      if (!data.data || !data.data[0] || !data.data[0].b64_json) {
-        throw new Error('No image data in Flux response');
+      if (!data.success || !data.results || data.results.length === 0) {
+        throw new Error('No results from API');
       }
 
-      // Convert base64 to data URL
-      const imageDataUrl = `data:image/png;base64,${data.data[0].b64_json}`;
+      const result = data.results[0];
+      
+      if (!result.success || !result.image) {
+        throw new Error(result.error || 'Generation failed');
+      }
 
-      console.log('✅ [FluxAPI] Image generated successfully');
-
-      return imageDataUrl;
+      return `data:image/png;base64,${result.image}`;
     } catch (error) {
-      console.error('❌ [FluxAPI] Generation failed:', error);
+      console.error('❌ [WorksheetImageGen] Single image generation failed:', error);
       throw error;
     }
-  }
-
-  /**
-   * Enhance prompt for educational content
-   */
-  private enhanceEducationalPrompt(prompt: string): string {
-    const educationalModifiers = [
-      'educational content',
-      'child-friendly',
-      'safe for children',
-      'bright and engaging',
-    ];
-
-    const technicalModifiers = [
-      'professional digital art',
-      'vibrant colors',
-      'sharp focus',
-      'highly detailed',
-    ];
-
-    // Check if already has educational terms
-    const hasEducational = educationalModifiers.some(term =>
-      prompt.toLowerCase().includes(term.toLowerCase())
-    );
-
-    if (hasEducational) {
-      return `${prompt}, ${technicalModifiers.slice(0, 2).join(', ')}`;
-    }
-
-    return `${prompt}, ${educationalModifiers.slice(0, 2).join(', ')}, ${technicalModifiers.slice(0, 2).join(', ')}`;
   }
 }
 
