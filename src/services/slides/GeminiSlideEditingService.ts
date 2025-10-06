@@ -4,6 +4,7 @@ import { SlideComment } from '@/types/templates';
 import { processSlideWithTempImages } from '@/utils/slideImageProcessor';
 import { minifyForAI, calculateTokenSavings } from '@/utils/htmlMinifier';
 import { safeEditWithImageProtection } from '@/utils/imageUrlProtection';
+import { replaceBase64WithMetadata, restoreOriginalImages, type ImageMetadataInfo } from '@/utils/imageMetadataProcessor';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface SlideEditingResult {
@@ -56,7 +57,7 @@ export class GeminiSlideEditingService {
   }
 
   /**
-   * Edit a slide based on user comments using Gemini AI with image URL protection
+   * Edit a slide based on user comments using Gemini AI with smart image metadata processing
    */
   async editSlide(
     slide: SimpleSlide,
@@ -64,7 +65,7 @@ export class GeminiSlideEditingService {
     context: SlideEditingContext,
     language: string = 'en'
   ): Promise<SlideEditingResult> {
-    console.log('🤖 [GEMINI_SLIDE_EDITING] Starting AI slide editing with image URL protection', {
+    console.log('🤖 [GEMINI_SLIDE_EDITING] Starting AI slide editing with smart image metadata', {
       slideId: slide.id,
       slideTitle: slide.title,
       commentsCount: comments.length,
@@ -72,21 +73,48 @@ export class GeminiSlideEditingService {
       htmlContentLength: slide.htmlContent?.length || 0
     });
 
-    // Use safe editing with image URL protection
-    const { result, finalHtml, stats } = await safeEditWithImageProtection(
-      slide.htmlContent || '',
+    const originalHtml = slide.htmlContent || '';
+
+    // STEP 1: Replace base64 images with metadata to save tokens
+    const metadataReplacement = replaceBase64WithMetadata(originalHtml);
+    const savedBytes = metadataReplacement.originalHtml.length - metadataReplacement.metadataHtml.length;
+    const estimatedTokensSaved = Math.ceil(savedBytes / 4);
+    
+    console.log('📊 [GEMINI_SLIDE_EDITING] Base64 → Metadata replacement', {
+      originalSize: metadataReplacement.originalHtml.length,
+      metadataSize: metadataReplacement.metadataHtml.length,
+      savedBytes,
+      savedPercentage: `${((savedBytes / metadataReplacement.originalHtml.length) * 100).toFixed(1)}%`,
+      imagesReplaced: metadataReplacement.replacedCount,
+      estimatedTokensSaved
+    });
+    
+    if (metadataReplacement.replacedCount > 0) {
+      console.log(`💰 [GEMINI_SLIDE_EDITING] Token optimization: ~${estimatedTokensSaved} tokens saved by using metadata instead of base64`);
+    }
+
+    // STEP 2: Protect remaining image URLs (for non-base64 images like temp storage)
+    const { result, finalHtml: urlProtectedHtml, stats } = await safeEditWithImageProtection(
+      metadataReplacement.metadataHtml,
       async (protectedHtml: string, protectionStats: { protectedImages: number }) => {
         // Create slide with protected HTML for AI processing
         const protectedSlide = { ...slide, htmlContent: protectedHtml };
         
-        // Build comprehensive prompt for slide editing
-        const prompt = this.buildEditingPrompt(protectedSlide, comments, context, language);
+        // Build comprehensive prompt for slide editing with metadata info
+        const prompt = this.buildEditingPrompt(
+          protectedSlide, 
+          comments, 
+          context, 
+          language,
+          metadataReplacement.replacedCount
+        );
         
-        console.log('📝 [GEMINI_SLIDE_EDITING] Generated prompt with protected URLs', {
+        console.log('📝 [GEMINI_SLIDE_EDITING] Generated prompt with metadata', {
           promptLength: prompt.length,
           slideId: slide.id,
           protectedHtmlLength: protectedHtml.length,
-          protectedImages: protectionStats.protectedImages
+          protectedUrls: protectionStats.protectedImages,
+          base64ReplacedWithMetadata: metadataReplacement.replacedCount
         });
 
         // Call Gemini AI with maximum token limit
@@ -108,31 +136,64 @@ export class GeminiSlideEditingService {
 
     console.log('🛡️ [GEMINI_SLIDE_EDITING] Image URL protection completed', {
       slideId: slide.id,
-      protectedImages: stats.protectedImages,
+      protectedUrls: stats.protectedImages,
       validationPassed: stats.validationPassed,
       remainingIds: stats.remainingIds,
       brokenUrls: stats.brokenUrls
     });
 
-    // Update the result with the final HTML (URLs restored)
+    // STEP 3: Restore original base64 images that AI wants to keep
+    const restoredHtml = restoreOriginalImages(urlProtectedHtml, metadataReplacement.imageMap);
+    
+    // Підрахунок скільки IMAGE_METADATA маркерів залишилось (які AI не видалив)
+    const remainingMetadata = (restoredHtml.match(/<!-- IMAGE_METADATA:/g) || []).length;
+    const restoredImages = metadataReplacement.replacedCount - remainingMetadata;
+    
+    console.log('🔄 [GEMINI_SLIDE_EDITING] Restored original images', {
+      slideId: slide.id,
+      totalOriginalImages: metadataReplacement.replacedCount,
+      imagesRestored: restoredImages,
+      imagesNotRestored: remainingMetadata,
+      htmlLength: restoredHtml.length
+    });
+    
+    if (restoredImages > 0) {
+      console.log(`✅ [GEMINI_SLIDE_EDITING] ${restoredImages} image(s) kept without regeneration (AI decided to keep them)`);
+    }
+    if (remainingMetadata > 0) {
+      console.log(`🔄 [GEMINI_SLIDE_EDITING] ${remainingMetadata} image(s) marked for regeneration (AI removed metadata markers)`);
+    }
+
+    // Update the result with the final HTML
     const finalResult: SlideEditingResult = {
       ...result,
       editedSlide: {
         ...result.editedSlide,
-        htmlContent: finalHtml
+        htmlContent: restoredHtml
       }
     };
     
-    console.log('✅ [GEMINI_SLIDE_EDITING] Successfully processed slide editing with URL protection', {
+    console.log('✅ [GEMINI_SLIDE_EDITING] Successfully processed slide editing', {
       slideId: slide.id,
       changesApplied: finalResult.slideChanges.changes.length,
       affectedSections: finalResult.slideChanges.summary.affectedSections,
-      finalHtmlLength: finalHtml.length,
-      htmlComplete: finalHtml.includes('</html>'),
-      urlProtectionStats: stats
+      finalHtmlLength: restoredHtml.length,
+      htmlComplete: restoredHtml.includes('</html>'),
+      tokensApproximatelySaved: estimatedTokensSaved
     });
+    
+    // Фінальний summary для легкого тестування
+    console.log('\n' + '='.repeat(80));
+    console.log('📈 [SMART IMAGE EDITING] SUMMARY:');
+    console.log('='.repeat(80));
+    console.log(`📊 Original images: ${metadataReplacement.replacedCount}`);
+    console.log(`✅ Images kept (no regeneration): ${restoredImages}`);
+    console.log(`🔄 Images to regenerate: ${remainingMetadata}`);
+    console.log(`💰 Tokens saved: ~${estimatedTokensSaved}`);
+    console.log(`⚡ Optimization: ${((savedBytes / metadataReplacement.originalHtml.length) * 100).toFixed(1)}% size reduction`);
+    console.log('='.repeat(80) + '\n');
 
-    // Process image prompts in the edited slide
+    // STEP 4: Process new image prompts that AI added
     const processedResult = await this.processImagePrompts(finalResult, slide.id);
     
     return processedResult;
@@ -145,7 +206,8 @@ export class GeminiSlideEditingService {
     slide: SimpleSlide,
     comments: SlideComment[],
     context: SlideEditingContext,
-    language: string = 'en'
+    language: string = 'en',
+    metadataImageCount: number = 0
   ): string {
     const commentsText = comments.map(comment => 
       `• ${comment.sectionType.toUpperCase()} (${comment.priority} priority): ${comment.comment}`
@@ -154,7 +216,17 @@ export class GeminiSlideEditingService {
     // Determine content language for AI generation
     const contentLanguage = language === 'uk' ? 'Ukrainian' : 'English';
 
+    const metadataInfo = metadataImageCount > 0 
+      ? `\n**IMAGE OPTIMIZATION NOTICE:**
+This slide contains ${metadataImageCount} existing image(s) that have been replaced with IMAGE_METADATA markers to optimize token usage.
+- These markers show the image description and size but not the actual image data
+- You can KEEP existing images by leaving their IMAGE_METADATA markers unchanged
+- You can REPLACE an image by removing its IMAGE_METADATA marker and adding a new IMAGE_PROMPT comment
+- Only request new images if the user feedback specifically requires image changes\n`
+      : '';
+
     return `You are an expert educational content editor. Edit this slide based on user feedback and return the COMPLETE result.
+${metadataInfo}
 
 **SLIDE TO EDIT:**
 Title: "${slide.title}"
@@ -179,13 +251,21 @@ ${this.minifyHtmlForPrompt(slide.htmlContent || 'No HTML content')}
 - Example: <h1>Корівка каже МУ!</h1> (content in ${contentLanguage})
 
 **IMAGE INTEGRATION:**
-- You can add new images by using IMAGE_PROMPT comments in this EXACT format:
+
+**EXISTING IMAGES (IMAGE_METADATA markers):**
+- Some images are represented as: <!-- IMAGE_METADATA: "description" ID: "IMG_META_xxx" WIDTH: 400 HEIGHT: 400 -->
+- These markers represent EXISTING images already in the slide
+- To KEEP an existing image: Leave the IMAGE_METADATA marker AS IS in the HTML
+- To REPLACE an existing image: Remove the IMAGE_METADATA marker and add a new IMAGE_PROMPT comment
+
+**NEW IMAGES (IMAGE_PROMPT comments):**
+- To add NEW images, use IMAGE_PROMPT comments in this EXACT format:
   <!-- IMAGE_PROMPT: "description of image" WIDTH: 400 HEIGHT: 400 -->
 - These comments will be automatically replaced with actual generated images
 - Image prompts MUST be in ENGLISH and descriptive
 - ALWAYS include quotes around the description and WIDTH/HEIGHT parameters
 - Example: <!-- IMAGE_PROMPT: "colorful cartoon elephant playing with children in a playground" WIDTH: 400 HEIGHT: 400 -->
-- Place IMAGE_PROMPT comments where you want images to appear in the HTML
+- Only add new IMAGE_PROMPT comments if the user feedback requires NEW or CHANGED images
 
 **RETURN FORMAT - PURE JSON ONLY (NO MARKDOWN):**
 {
@@ -215,10 +295,12 @@ ${this.minifyHtmlForPrompt(slide.htmlContent || 'No HTML content')}
    - Image generation prompts in data-image-prompt attributes MUST be in ENGLISH
    - IMAGE_PROMPT comments MUST be in ENGLISH
 9. **IMAGE PROCESSING:**
-   - Use IMAGE_PROMPT comments in EXACT format: <!-- IMAGE_PROMPT: "description" WIDTH: 400 HEIGHT: 400 -->
+   - KEEP existing images: Leave IMAGE_METADATA markers unchanged in the HTML
+   - REPLACE existing images: Remove IMAGE_METADATA marker and add IMAGE_PROMPT comment
+   - ADD new images: Use IMAGE_PROMPT format: <!-- IMAGE_PROMPT: "description" WIDTH: 400 HEIGHT: 400 -->
    - MUST include quotes around description and WIDTH/HEIGHT parameters
-   - Existing images will be preserved unless specifically requested to change
-   - New IMAGE_PROMPT comments will be automatically converted to actual images
+   - Only change images if user feedback explicitly requires it
+   - IMAGE_METADATA markers will be automatically converted back to actual images if kept
 
 Generate pure JSON now:`;
   }
