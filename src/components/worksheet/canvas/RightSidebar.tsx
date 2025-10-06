@@ -4111,49 +4111,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             </Box>
           )}
 
-          <Divider sx={{ my: 3 }} />
-
-          {/* Navigation Back */}
-          <Button
-            fullWidth
-            size="small"
-            startIcon={<ArrowLeft size={14} />}
-            variant="outlined"
-            onClick={() => onSelectionChange?.({ type: 'page', data: pageData })}
-            sx={{ 
-              borderRadius: '10px', 
-              textTransform: 'none', 
-              justifyContent: 'flex-start',
-              mb: 1,
-            }}
-          >
-            Back to Page
-          </Button>
-
-          {/* Actions */}
-          <Stack spacing={1}>
-            <Button
-              fullWidth
-              size="small"
-              startIcon={<Copy size={14} />}
-              variant="outlined"
-              onClick={() => onDuplicate?.(pageData.id, elementData.id)}
-              sx={{ borderRadius: '10px', textTransform: 'none', justifyContent: 'flex-start' }}
-            >
-              Duplicate Element (Ctrl+D)
-            </Button>
-            <Button
-              fullWidth
-              size="small"
-              startIcon={<Trash2 size={14} />}
-              variant="outlined"
-              color="error"
-              onClick={() => onDelete?.(pageData.id, elementData.id)}
-              sx={{ borderRadius: '10px', textTransform: 'none', justifyContent: 'flex-start' }}
-            >
-              Delete Element (Del)
-            </Button>
-          </Stack>
           </Box>
         ) : (
           <Box sx={{ flex: 1, p: 2, overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>

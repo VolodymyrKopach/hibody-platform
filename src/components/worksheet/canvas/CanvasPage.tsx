@@ -56,7 +56,10 @@ interface CanvasPageProps {
   background?: PageBackground;
   elements: CanvasElement[];
   selectedElementId: string | null;
-  clipboard?: { pageId: string; element: CanvasElement; operation: 'copy' | 'cut' } | null;
+  clipboard?: 
+    | { type: 'element'; pageId: string; element: CanvasElement; operation: 'copy' | 'cut' }
+    | { type: 'page'; page: any; pageContent: any; operation: 'copy' | 'cut' }
+    | null;
   crossPageDrag?: { sourcePageId: string; elementId: string; element: CanvasElement } | null;
   onElementSelect: (elementId: string | null) => void;
   onElementAdd: (element: Omit<CanvasElement, 'id' | 'zIndex'>) => void;
@@ -66,6 +69,8 @@ interface CanvasPageProps {
   onCrossPageDragEnd?: () => void;
   onCrossPageDrop?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
+  onElementContextMenu?: (e: React.MouseEvent, elementId: string) => void;
+  onPageContextMenu?: (e: React.MouseEvent) => void;
 }
 
 const CanvasPage: React.FC<CanvasPageProps> = ({
@@ -87,6 +92,8 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   onCrossPageDragEnd,
   onCrossPageDrop,
   onDragOver,
+  onElementContextMenu,
+  onPageContextMenu,
 }) => {
   const theme = useTheme();
   const pageRef = useRef<HTMLDivElement>(null);
@@ -474,6 +481,12 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
             onElementSelect(null);
           }
         }}
+        onContextMenu={(e) => {
+          // Show context menu when right-clicking on empty space
+          if (e.target === e.currentTarget && onPageContextMenu) {
+            onPageContextMenu(e);
+          }
+        }}
         sx={{ 
           width: '100%', 
           height: '100%', 
@@ -514,6 +527,11 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
                 e.stopPropagation(); // Prevent deselect when clicking element
                 onElementSelect(element.id);
               }}
+              onContextMenu={(e) => {
+                if (onElementContextMenu) {
+                  onElementContextMenu(e, element.id);
+                }
+              }}
               sx={{
                 width: '100%',
                 position: 'relative',
@@ -524,7 +542,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
                   ? `2px dashed ${alpha(theme.palette.info.main, 0.8)}`
                   : selectedElementId === element.id
                   ? `2px solid ${theme.palette.primary.main}`
-                  : clipboard?.operation === 'cut' && clipboard?.element.id === element.id && clipboard?.pageId === pageId
+                  : clipboard?.type === 'element' && clipboard?.operation === 'cut' && clipboard?.element.id === element.id && clipboard?.pageId === pageId
                   ? `2px dashed ${alpha(theme.palette.warning.main, 0.7)}`
                   : '2px solid transparent',
                 borderRadius: '4px',
@@ -533,14 +551,14 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
                   ? 0.3 
                   : crossPageDrag?.elementId === element.id && crossPageDrag?.sourcePageId === pageId
                   ? 0.6
-                  : clipboard?.operation === 'cut' && clipboard?.element.id === element.id && clipboard?.pageId === pageId
+                  : clipboard?.type === 'element' && clipboard?.operation === 'cut' && clipboard?.element.id === element.id && clipboard?.pageId === pageId
                   ? 0.5
                   : 1,
                 backgroundColor: draggedIndex === index 
                   ? alpha(theme.palette.grey[200], 0.5) 
                   : crossPageDrag?.elementId === element.id && crossPageDrag?.sourcePageId === pageId
                   ? alpha(theme.palette.info.main, 0.08)
-                  : clipboard?.operation === 'cut' && clipboard?.element.id === element.id && clipboard?.pageId === pageId
+                  : clipboard?.type === 'element' && clipboard?.operation === 'cut' && clipboard?.element.id === element.id && clipboard?.pageId === pageId
                   ? alpha(theme.palette.warning.main, 0.05)
                   : 'transparent',
                 transform: 'none', // Prevent any transforms during drag

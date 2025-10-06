@@ -48,6 +48,11 @@ import {
   Files,
   Palette,
   Sparkles,
+  Copy,
+  Scissors,
+  Trash2,
+  CopyPlus,
+  ClipboardPaste,
 } from 'lucide-react';
 import { exportToPDF, exportToPNG, printWorksheet } from '@/utils/pdfExportSnapdom';
 import { autoSaveWorksheet, getCurrentWorksheetId, SavedWorksheet, clearAllWorksheets } from '@/utils/worksheetStorage';
@@ -231,7 +236,11 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   const [draggedPageId, setDraggedPageId] = useState<string | null>(null);
   const [isPanning, setIsPanning] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
-  const [clipboard, setClipboard] = useState<{ pageId: string; element: CanvasElement; operation: 'copy' | 'cut' } | null>(null);
+  const [clipboard, setClipboard] = useState<
+    | { type: 'element'; pageId: string; element: CanvasElement; operation: 'copy' | 'cut' }
+    | { type: 'page'; page: WorksheetPage; pageContent: PageContent; operation: 'copy' | 'cut' }
+    | null
+  >(null);
   const [crossPageDrag, setCrossPageDrag] = useState<{ sourcePageId: string; elementId: string; element: CanvasElement } | null>(null);
   const [history, setHistory] = useState<Map<string, PageContent>[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -244,6 +253,14 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   const [editError, setEditError] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imageGenerationProgress, setImageGenerationProgress] = useState<string>('');
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    mouseX: number;
+    mouseY: number;
+    pageId?: string; // Optional - if undefined, clicked on canvas
+    elementId?: string; // Optional - if undefined, clicked on page or canvas
+  } | null>(null);
 
   // Update pages and contents when generatedWorksheet changes
   useEffect(() => {
@@ -1158,7 +1175,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         language: parameters.language || 'en',
       };
 
-      let result;
+      let result: any;
 
       if (selection.type === 'element') {
         // Edit component
@@ -1426,7 +1443,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     const element = pageContent.elements.find(el => el.id === elementId);
     if (!element) return;
     
-    setClipboard({ pageId, element, operation: 'copy' });
+    setClipboard({ type: 'element', pageId, element, operation: 'copy' });
     console.log('📋 Element copied to clipboard');
   };
 
@@ -1437,12 +1454,75 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     const element = pageContent.elements.find(el => el.id === elementId);
     if (!element) return;
     
-    setClipboard({ pageId, element, operation: 'cut' });
+    setClipboard({ type: 'element', pageId, element, operation: 'cut' });
     console.log('✂️ Element cut to clipboard');
   };
 
+  const handleCopyPage = (pageId: string) => {
+    const page = pages.find(p => p.id === pageId);
+    const pageContent = pageContents.get(pageId);
+    if (!page || !pageContent) return;
+    
+    setClipboard({ type: 'page', page, pageContent, operation: 'copy' });
+    console.log('📋 Page copied to clipboard');
+  };
+
+  const handleCutPage = (pageId: string) => {
+    const page = pages.find(p => p.id === pageId);
+    const pageContent = pageContents.get(pageId);
+    if (!page || !pageContent) return;
+    
+    setClipboard({ type: 'page', page, pageContent, operation: 'cut' });
+    console.log('✂️ Page cut to clipboard');
+  };
+
+  const handleDuplicatePage = (pageId: string) => {
+    const page = pages.find(p => p.id === pageId);
+    const pageContent = pageContents.get(pageId);
+    if (!page || !pageContent) return;
+
+    const newPageId = `page-${Date.now()}-${Math.random()}`;
+    const newPageNumber = pages.length + 1;
+    
+    // Find position for new page (below the original)
+    const newY = page.y + page.height + PAGE_GAP;
+    
+    const duplicatedPage: WorksheetPage = {
+      ...page,
+      id: newPageId,
+      pageNumber: newPageNumber,
+      title: `${page.title} (Copy)`,
+      y: newY,
+    };
+    
+    // Duplicate elements with new IDs
+    const duplicatedElements = pageContent.elements.map((el, index) => ({
+      ...el,
+      id: `element-${Date.now()}-${Math.random()}-${index}`,
+    }));
+    
+    const duplicatedPageContent: PageContent = {
+      id: `content-${newPageId}`,
+      pageId: newPageId,
+      elements: duplicatedElements,
+    };
+    
+    setPages(prev => [...prev, duplicatedPage]);
+    setPageContents(prev => {
+      const newMap = new Map(prev);
+      newMap.set(newPageId, duplicatedPageContent);
+      saveToHistory(newMap);
+      return newMap;
+    });
+    
+    // Select the new page
+    setSelection({ type: 'page', data: duplicatedPage });
+    
+    console.log(`✅ Page ${page.pageNumber} duplicated as page ${newPageNumber}`);
+  };
+
   const handlePasteElement = (targetPageId: string) => {
-    if (!clipboard) return;
+    if (!clipboard || clipboard.type !== 'element') return;
     
     setPageContents(prev => {
       const newMap = new Map(prev);
@@ -1486,7 +1566,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     // Clear clipboard if it was a cut operation
     if (clipboard.operation === 'cut') {
       setClipboard(null);
-      console.log('✅ Element moved to new page');
+      console.log('✅ Element moved to page');
     } else {
       console.log('✅ Element pasted to page');
     }
@@ -1564,6 +1644,193 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     setCrossPageDrag(null);
     setSelectedElementId(null);
     setSelection(null);
+  };
+
+  // Context menu handlers
+  const handleContextMenu = (event: React.MouseEvent, pageId?: string, elementId?: string) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // If clicked on page (not element), auto-select the page
+    if (pageId && !elementId) {
+      const page = pages.find(p => p.id === pageId);
+      if (page) {
+        setSelection({ type: 'page', data: page });
+      }
+    }
+    
+    setContextMenu({
+      mouseX: event.clientX + 2,
+      mouseY: event.clientY - 6,
+      pageId,
+      elementId,
+    });
+  };
+
+  // Canvas context menu handler (outside pages)
+  const handleCanvasContextMenu = (event: React.MouseEvent) => {
+    // Only show menu if clicking on canvas background, not on a page
+    const target = event.target as HTMLElement;
+    if (target.closest('[data-page-id]')) return; // Clicked on a page
+    
+    event.preventDefault();
+    event.stopPropagation();
+    
+    setContextMenu({
+      mouseX: event.clientX + 2,
+      mouseY: event.clientY - 6,
+      // No pageId - means we're on canvas
+    });
+  };
+
+  const handleContextMenuClose = () => {
+    setContextMenu(null);
+  };
+
+  const handleContextMenuAction = (action: 'copy' | 'cut' | 'duplicate' | 'delete' | 'paste') => {
+    if (!contextMenu) return;
+
+    const { pageId, elementId } = contextMenu;
+
+    // Clicked on canvas (no pageId) - only paste page
+    if (!pageId) {
+      if (action === 'paste' && clipboard?.type === 'page') {
+        handlePastePage();
+      }
+      handleContextMenuClose();
+      return;
+    }
+
+    // If clicked on element - use it directly
+    if (elementId) {
+      switch (action) {
+        case 'copy':
+          handleCopyElement(pageId, elementId);
+          break;
+        case 'cut':
+          handleCutElement(pageId, elementId);
+          break;
+        case 'duplicate':
+          handleElementDuplicate(pageId, elementId);
+          break;
+        case 'delete':
+          handleElementDelete(pageId, elementId);
+          break;
+      }
+    } 
+    // If clicked on page - use current selection
+    else if (selection) {
+      if (selection.type === 'element') {
+        switch (action) {
+          case 'copy':
+            handleCopyElement(selection.pageData.id, selection.elementData.id);
+            break;
+          case 'cut':
+            handleCutElement(selection.pageData.id, selection.elementData.id);
+            break;
+          case 'duplicate':
+            handleElementDuplicate(selection.pageData.id, selection.elementData.id);
+            break;
+          case 'delete':
+            handleElementDelete(selection.pageData.id, selection.elementData.id);
+            break;
+        }
+      } else if (selection.type === 'page') {
+        // Actions for selected page
+        switch (action) {
+          case 'copy':
+            handleCopyPage(selection.data.id);
+            break;
+          case 'cut':
+            handleCutPage(selection.data.id);
+            break;
+          case 'duplicate':
+            handleDuplicatePage(selection.data.id);
+            break;
+          case 'delete':
+            // Delete page
+            setPages(prev => prev.filter(p => p.id !== selection.data.id));
+            setPageContents(prev => {
+              const newMap = new Map(prev);
+              newMap.delete(selection.data.id);
+              saveToHistory(newMap);
+              return newMap;
+            });
+            setSelection(null);
+            console.log(`🗑️ Page ${selection.data.pageNumber} deleted`);
+            break;
+        }
+      }
+      // Paste element on page (only if clipboard has element)
+      if (action === 'paste' && clipboard?.type === 'element') {
+        handlePasteElement(pageId);
+      }
+    }
+    // No selection - only paste element is available
+    else if (action === 'paste' && clipboard?.type === 'element') {
+      handlePasteElement(pageId);
+    }
+
+    handleContextMenuClose();
+  };
+
+  // Paste page on canvas
+  const handlePastePage = () => {
+    if (!clipboard || clipboard.type !== 'page') return;
+
+    const newPageId = `page-${Date.now()}-${Math.random()}`;
+    const newPageNumber = pages.length + 1;
+    
+    // Find position for new page (at the end)
+    const lastPage = pages[pages.length - 1];
+    const newY = lastPage ? lastPage.y + lastPage.height + PAGE_GAP : 100;
+    
+    const pastedPage: WorksheetPage = {
+      ...clipboard.page,
+      id: newPageId,
+      pageNumber: newPageNumber,
+      title: `${clipboard.page.title} (Pasted)`,
+      y: newY,
+    };
+    
+    // Duplicate elements with new IDs
+    const pastedElements = clipboard.pageContent.elements.map((el: any, index: number) => ({
+      ...el,
+      id: `element-${Date.now()}-${Math.random()}-${index}`,
+    }));
+    
+    const pastedPageContent: PageContent = {
+      id: `content-${newPageId}`,
+      pageId: newPageId,
+      elements: pastedElements,
+    };
+    
+    // If cut operation, remove original page
+    if (clipboard.operation === 'cut') {
+      setPages(prev => prev.filter(p => p.id !== clipboard.page.id));
+      setPageContents(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(clipboard.page.id);
+        newMap.set(newPageId, pastedPageContent);
+        saveToHistory(newMap);
+        return newMap;
+      });
+      setClipboard(null);
+      console.log('✅ Page moved to canvas');
+    } else {
+      setPageContents(prev => {
+        const newMap = new Map(prev);
+        newMap.set(newPageId, pastedPageContent);
+        saveToHistory(newMap);
+        return newMap;
+      });
+      console.log('✅ Page pasted to canvas');
+    }
+    
+    setPages(prev => [...prev, pastedPage]);
+    
+    // Select the new page
+    setSelection({ type: 'page', data: pastedPage });
   };
 
   const handlePageMouseDown = (e: React.MouseEvent, pageId: string) => {
@@ -1948,7 +2215,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
           <Stack direction="row" spacing={1} alignItems="center">
             {clipboard && (
               <Chip
-                label="📋 1 item"
+                label={clipboard.type === 'page' ? '📋 1 page' : '📋 1 element'}
                 size="small"
                 color="primary"
                 variant="outlined"
@@ -1998,6 +2265,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         onMouseMove={handleCanvasMouseMove}
         onMouseUp={handleCanvasMouseUp}
         onMouseLeave={handleCanvasMouseUp}
+        onContextMenu={handleCanvasContextMenu}
       >
         {/* Canvas Container */}
         <Box
@@ -2016,6 +2284,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
           {pages.map((page) => {
             const pageContent = pageContents.get(page.id);
             const isSelected = selection?.type === 'page' && selection.data.id === page.id;
+            const isCut = clipboard?.type === 'page' && clipboard.operation === 'cut' && clipboard.page.id === page.id;
             
             return (
             <Box
@@ -2027,10 +2296,13 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 top: page.y,
                 border: isSelected 
                   ? `3px solid ${theme.palette.primary.main}` 
+                  : isCut
+                  ? `3px dashed ${alpha(theme.palette.warning.main, 0.7)}`
                   : '3px solid transparent',
                 borderRadius: '8px',
-                transition: 'border-color 0.2s',
+                transition: 'border-color 0.2s, opacity 0.2s',
                 boxShadow: isSelected ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}` : 'none',
+                opacity: isCut ? 0.5 : 1,
               }}
             >
               <CanvasPage
@@ -2051,6 +2323,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 onCrossPageDragStart={(elementId) => handleCrossPageDragStart(page.id, elementId)}
                 onCrossPageDragEnd={handleCrossPageDragEnd}
                 onCrossPageDrop={() => handleCrossPageDrop(page.id)}
+                onElementContextMenu={(e: React.MouseEvent, elementId: string) => handleContextMenu(e, page.id, elementId)}
+                onPageContextMenu={(e: React.MouseEvent) => handleContextMenu(e, page.id)}
               />
             </Box>
             );
@@ -2221,6 +2495,144 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
             secondaryTypographyProps={{ fontSize: '0.75rem' }}
           />
         </MenuItem>
+      </Menu>
+
+      {/* Context Menu */}
+      <Menu
+        open={contextMenu !== null}
+        onClose={handleContextMenuClose}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          contextMenu !== null
+            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+            : undefined
+        }
+        PaperProps={{
+          sx: {
+            borderRadius: 1.5,
+            minWidth: 160,
+          },
+        }}
+      >
+        {/* Canvas context menu (no pageId) - only paste page */}
+        {!contextMenu?.pageId ? (
+          <>
+            {clipboard?.type === 'page' ? (
+              <MenuItem 
+                onClick={() => handleContextMenuAction('paste')}
+                sx={{ py: 0.75, px: 2 }}
+              >
+                <ListItemIcon sx={{ minWidth: 32 }}>
+                  <ClipboardPaste size={16} />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="Вставити"
+                  primaryTypographyProps={{ fontSize: '0.875rem' }}
+                />
+              </MenuItem>
+            ) : (
+              <MenuItem 
+                disabled
+                sx={{ py: 0.75, px: 2 }}
+              >
+                <ListItemIcon sx={{ minWidth: 32 }}>
+                  <ClipboardPaste size={16} />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="Нічого вставити"
+                  primaryTypographyProps={{ fontSize: '0.875rem' }}
+                />
+              </MenuItem>
+            )}
+          </>
+        ) : (
+          /* Page/Element context menu */
+          <>
+            <MenuItem 
+              onClick={() => handleContextMenuAction('copy')}
+              disabled={!contextMenu?.elementId && !selection}
+              sx={{ py: 0.75, px: 2 }}
+            >
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <Copy size={16} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Копіювати"
+                primaryTypographyProps={{ fontSize: '0.875rem' }}
+              />
+            </MenuItem>
+            <MenuItem 
+              onClick={() => handleContextMenuAction('cut')}
+              disabled={!contextMenu?.elementId && !selection}
+              sx={{ py: 0.75, px: 2 }}
+            >
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <Scissors size={16} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Вирізати"
+                primaryTypographyProps={{ fontSize: '0.875rem' }}
+              />
+            </MenuItem>
+            {clipboard?.type === 'element' ? (
+              <MenuItem 
+                onClick={() => handleContextMenuAction('paste')}
+                sx={{ py: 0.75, px: 2 }}
+              >
+                <ListItemIcon sx={{ minWidth: 32 }}>
+                  <ClipboardPaste size={16} />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="Вставити"
+                  primaryTypographyProps={{ fontSize: '0.875rem' }}
+                />
+              </MenuItem>
+            ) : (
+              <MenuItem 
+                disabled
+                sx={{ py: 0.75, px: 2 }}
+              >
+                <ListItemIcon sx={{ minWidth: 32 }}>
+                  <ClipboardPaste size={16} />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={clipboard?.type === 'page' ? 'Вставити (тільки на canvas)' : 'Нічого вставити'}
+                  primaryTypographyProps={{ fontSize: '0.875rem' }}
+                />
+              </MenuItem>
+            )}
+            <MenuItem 
+              onClick={() => handleContextMenuAction('duplicate')}
+              disabled={!contextMenu?.elementId && !selection}
+              sx={{ py: 0.75, px: 2 }}
+            >
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <CopyPlus size={16} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Дублювати"
+                primaryTypographyProps={{ fontSize: '0.875rem' }}
+              />
+            </MenuItem>
+            <Divider sx={{ my: 0.5 }} />
+            <MenuItem 
+              onClick={() => handleContextMenuAction('delete')}
+              disabled={!contextMenu?.elementId && !selection}
+              sx={{ py: 0.75, px: 2 }}
+            >
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <Trash2 size={16} color={theme.palette.error.main} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Видалити"
+                primaryTypographyProps={{ 
+                  fontSize: '0.875rem',
+                  color: theme.palette.error.main,
+                }}
+              />
+            </MenuItem>
+          </>
+        )}
       </Menu>
 
       {/* Exit Confirmation Dialog */}
