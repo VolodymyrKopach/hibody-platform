@@ -2087,58 +2087,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
           </Tooltip>
         </Box>
 
-        {/* Mini Map (optional) */}
-        <Paper
-          elevation={4}
-          sx={{
-            position: 'absolute',
-            bottom: 24,
-            left: 24,
-            width: 200,
-            height: 150,
-            background: alpha(theme.palette.background.paper, 0.9),
-            backdropFilter: 'blur(20px)',
-            borderRadius: '12px',
-            p: 1,
-            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          }}
-        >
-          <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
-            Overview
-          </Typography>
-          <Box
-            sx={{
-              position: 'relative',
-              width: '100%',
-              height: 'calc(100% - 20px)',
-              background: alpha(theme.palette.grey[100], 0.5),
-              borderRadius: '8px',
-            }}
-          >
-            {pages.map((page) => {
-              const isSelected = selection?.type === 'page' && selection.data.id === page.id;
-              const isParentOfSelected = selection?.type === 'element' && selection.pageData.id === page.id;
-              
-              return (
-              <Box
-                key={page.id}
-                sx={{
-                  position: 'absolute',
-                  left: `${(page.x / 1400) * 100}%`,
-                  top: `${(page.y / 900) * 100}%`,
-                  width: 20,
-                  height: 26,
-                  background: (isSelected || isParentOfSelected) 
-                    ? theme.palette.primary.main 
-                    : alpha(theme.palette.grey[400], 0.8),
-                  borderRadius: '2px',
-                  border: `1px solid white`,
-                }}
-              />
-            );
-            })}
-          </Box>
-        </Paper>
         </Box>
 
         {/* Right Sidebar - Properties */}
