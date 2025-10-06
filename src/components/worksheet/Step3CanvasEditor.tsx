@@ -1900,12 +1900,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left Sidebar */}
         <LeftSidebar 
-          selectedPageId={selection?.type === 'page' ? selection.data.id : (selection?.type === 'element' ? selection.pageData.id : null)}
-          onPageSelect={(id) => {
-            const page = pages.find(p => p.id === id);
-            if (page) setSelection({ type: 'page', data: page });
-          }}
-          pages={pages}
           onComponentDragStart={(comp) => console.log('Dragging:', comp)}
         />
 
