@@ -2488,39 +2488,41 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         }}
       >
         {/* Current Page Export - only show if page is selected */}
-        {selection && [
-          <Box key="page-header" sx={{ px: 2, py: 1, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.7rem', textTransform: 'uppercase' }}>
-              {selection.type === 'page' 
-                ? `Page ${selection.data.pageNumber}`
-                : `Page ${selection.pageData.pageNumber}`
-              }
-            </Typography>
-          </Box>,
-          <MenuItem key="export-pdf" onClick={() => handleExportPDF(true)}>
-            <ListItemIcon>
-              <File size={18} />
-            </ListItemIcon>
-            <ListItemText 
-              primary="Export Page as PDF"
-              secondary="Current page only"
-              primaryTypographyProps={{ fontSize: '0.875rem' }}
-              secondaryTypographyProps={{ fontSize: '0.75rem' }}
-            />
-          </MenuItem>,
-          <MenuItem key="export-png" onClick={() => handleExportPNG(true)}>
-            <ListItemIcon>
-              <ImageIcon size={18} />
-            </ListItemIcon>
-            <ListItemText 
-              primary="Export Page as PNG"
-              secondary="Current page only"
-              primaryTypographyProps={{ fontSize: '0.875rem' }}
-              secondaryTypographyProps={{ fontSize: '0.75rem' }}
-            />
-          </MenuItem>,
-          <Divider key="divider" sx={{ my: 1 }} />
-        ]}
+        {selection && (
+          <>
+            <Box sx={{ px: 2, py: 1, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.7rem', textTransform: 'uppercase' }}>
+                {selection.type === 'page' 
+                  ? `Page ${selection.data.pageNumber}`
+                  : `Page ${selection.pageData.pageNumber}`
+                }
+              </Typography>
+            </Box>
+            <MenuItem onClick={() => handleExportPDF(true)}>
+              <ListItemIcon>
+                <File size={18} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Export Page as PDF"
+                secondary="Current page only"
+                primaryTypographyProps={{ fontSize: '0.875rem' }}
+                secondaryTypographyProps={{ fontSize: '0.75rem' }}
+              />
+            </MenuItem>
+            <MenuItem onClick={() => handleExportPNG(true)}>
+              <ListItemIcon>
+                <ImageIcon size={18} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Export Page as PNG"
+                secondary="Current page only"
+                primaryTypographyProps={{ fontSize: '0.875rem' }}
+                secondaryTypographyProps={{ fontSize: '0.75rem' }}
+              />
+            </MenuItem>
+            <Divider sx={{ my: 1 }} />
+          </>
+        )}
 
         {/* All Pages Export */}
         <Box sx={{ px: 2, py: 1, bgcolor: alpha(theme.palette.grey[500], 0.05) }}>
@@ -2571,39 +2573,38 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       >
         {/* Canvas context menu (no pageId) - only paste page */}
         {!contextMenu?.pageId ? (
-          <>
-            {clipboard?.type === 'page' ? (
-              <MenuItem 
-                onClick={() => handleContextMenuAction('paste')}
-                sx={{ py: 0.75, px: 2 }}
-              >
-                <ListItemIcon sx={{ minWidth: 32 }}>
-                  <ClipboardPaste size={16} />
-                </ListItemIcon>
-                <ListItemText 
-                  primary="Вставити"
-                  primaryTypographyProps={{ fontSize: '0.875rem' }}
-                />
-              </MenuItem>
-            ) : (
-              <MenuItem 
-                disabled
-                sx={{ py: 0.75, px: 2 }}
-              >
-                <ListItemIcon sx={{ minWidth: 32 }}>
-                  <ClipboardPaste size={16} />
-                </ListItemIcon>
-                <ListItemText 
-                  primary="Нічого вставити"
-                  primaryTypographyProps={{ fontSize: '0.875rem' }}
-                />
-              </MenuItem>
-            )}
-          </>
+          clipboard?.type === 'page' ? (
+            <MenuItem 
+              onClick={() => handleContextMenuAction('paste')}
+              sx={{ py: 0.75, px: 2 }}
+            >
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <ClipboardPaste size={16} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Вставити"
+                primaryTypographyProps={{ fontSize: '0.875rem' }}
+              />
+            </MenuItem>
+          ) : (
+            <MenuItem 
+              disabled
+              sx={{ py: 0.75, px: 2 }}
+            >
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <ClipboardPaste size={16} />
+              </ListItemIcon>
+              <ListItemText 
+                primary="Нічого вставити"
+                primaryTypographyProps={{ fontSize: '0.875rem' }}
+              />
+            </MenuItem>
+          )
         ) : (
           /* Page/Element context menu */
-          <>
+          [
             <MenuItem 
+              key="copy"
               onClick={() => handleContextMenuAction('copy')}
               disabled={!contextMenu?.elementId && !selection}
               sx={{ py: 0.75, px: 2 }}
@@ -2615,8 +2616,9 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 primary="Копіювати"
                 primaryTypographyProps={{ fontSize: '0.875rem' }}
               />
-            </MenuItem>
+            </MenuItem>,
             <MenuItem 
+              key="cut"
               onClick={() => handleContextMenuAction('cut')}
               disabled={!contextMenu?.elementId && !selection}
               sx={{ py: 0.75, px: 2 }}
@@ -2628,9 +2630,10 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 primary="Вирізати"
                 primaryTypographyProps={{ fontSize: '0.875rem' }}
               />
-            </MenuItem>
-            {clipboard?.type === 'element' ? (
+            </MenuItem>,
+            clipboard?.type === 'element' ? (
               <MenuItem 
+                key="paste"
                 onClick={() => handleContextMenuAction('paste')}
                 sx={{ py: 0.75, px: 2 }}
               >
@@ -2644,6 +2647,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
               </MenuItem>
             ) : (
               <MenuItem 
+                key="paste-disabled"
                 disabled
                 sx={{ py: 0.75, px: 2 }}
               >
@@ -2655,8 +2659,9 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                   primaryTypographyProps={{ fontSize: '0.875rem' }}
                 />
               </MenuItem>
-            )}
+            ),
             <MenuItem 
+              key="duplicate"
               onClick={() => handleContextMenuAction('duplicate')}
               disabled={!contextMenu?.elementId && !selection}
               sx={{ py: 0.75, px: 2 }}
@@ -2668,9 +2673,10 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 primary="Дублювати"
                 primaryTypographyProps={{ fontSize: '0.875rem' }}
               />
-            </MenuItem>
-            <Divider sx={{ my: 0.5 }} />
+            </MenuItem>,
+            <Divider key="divider" sx={{ my: 0.5 }} />,
             <MenuItem 
+              key="delete"
               onClick={() => handleContextMenuAction('delete')}
               disabled={!contextMenu?.elementId && !selection}
               sx={{ py: 0.75, px: 2 }}
@@ -2686,7 +2692,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 }}
               />
             </MenuItem>
-          </>
+          ]
         )}
       </Menu>
 
