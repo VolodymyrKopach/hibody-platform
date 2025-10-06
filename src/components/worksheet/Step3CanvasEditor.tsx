@@ -1957,49 +1957,82 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       }
       
       // V for select tool
-      if (e.code === 'KeyV') {
-        setTool('select');
+      if (e.code === 'KeyV' && !e.ctrlKey && !e.metaKey) {
+        const target = e.target as HTMLElement;
+        const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
+          setTool('select');
+        }
       }
       
       // H for hand tool
       if (e.code === 'KeyH') {
-        setTool('hand');
+        const target = e.target as HTMLElement;
+        const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
+          setTool('hand');
+        }
       }
       
-      // Delete or Backspace to delete selected element
-      if ((e.code === 'Delete' || e.code === 'Backspace') && selection?.type === 'element') {
+      // Delete or Backspace to delete selected element or page
+      if ((e.code === 'Delete' || e.code === 'Backspace') && selection) {
         // Don't delete if user is typing in an input field
         const target = e.target as HTMLElement;
         const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
         if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
           e.preventDefault();
-          handleElementDelete(selection.pageData.id, selection.elementData.id);
+          if (selection.type === 'element') {
+            handleElementDelete(selection.pageData.id, selection.elementData.id);
+          } else if (selection.type === 'page') {
+            // Delete page and its contents
+            setPages(prev => prev.filter(p => p.id !== selection.data.id));
+            setPageContents(prev => {
+              const newMap = new Map(prev);
+              newMap.delete(selection.data.id);
+              saveToHistory(newMap);
+              return newMap;
+            });
+            setSelection(null);
+            console.log(`🗑️ Page ${selection.data.pageNumber} deleted`);
+          }
         }
       }
       
-      // Ctrl+D or Cmd+D to duplicate selected element
-      if (e.code === 'KeyD' && (e.ctrlKey || e.metaKey) && selection?.type === 'element') {
+      // Ctrl+D or Cmd+D to duplicate selected element or page
+      if (e.code === 'KeyD' && (e.ctrlKey || e.metaKey) && selection) {
         e.preventDefault();
-        handleElementDuplicate(selection.pageData.id, selection.elementData.id);
-      }
-      
-      // Ctrl+C or Cmd+C to copy selected element
-      if (e.code === 'KeyC' && (e.ctrlKey || e.metaKey) && selection?.type === 'element') {
-        const target = e.target as HTMLElement;
-        const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
-        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
-          e.preventDefault();
-          handleCopyElement(selection.pageData.id, selection.elementData.id);
+        if (selection.type === 'element') {
+          handleElementDuplicate(selection.pageData.id, selection.elementData.id);
+        } else if (selection.type === 'page') {
+          handleDuplicatePage(selection.data.id);
         }
       }
       
-      // Ctrl+X or Cmd+X to cut selected element
-      if (e.code === 'KeyX' && (e.ctrlKey || e.metaKey) && selection?.type === 'element') {
+      // Ctrl+C or Cmd+C to copy selected element or page
+      if (e.code === 'KeyC' && (e.ctrlKey || e.metaKey) && selection) {
         const target = e.target as HTMLElement;
         const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
         if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
           e.preventDefault();
-          handleCutElement(selection.pageData.id, selection.elementData.id);
+          if (selection.type === 'element') {
+            handleCopyElement(selection.pageData.id, selection.elementData.id);
+          } else if (selection.type === 'page') {
+            handleCopyPage(selection.data.id);
+          }
+        }
+      }
+      
+      // Ctrl+X or Cmd+X to cut selected element or page
+      if (e.code === 'KeyX' && (e.ctrlKey || e.metaKey) && selection) {
+        const target = e.target as HTMLElement;
+        const isEditable = target.contentEditable === 'true' || target.contentEditable === 'plaintext-only';
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !isEditable) {
+          e.preventDefault();
+          if (selection.type === 'element') {
+            handleCutElement(selection.pageData.id, selection.elementData.id);
+          } else if (selection.type === 'page') {
+            handleCutPage(selection.data.id);
+          }
         }
       }
       
@@ -2045,6 +2078,13 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         if (button) {
           button.click();
         }
+      }
+      
+      // ESC to clear selection
+      if (e.code === 'Escape') {
+        e.preventDefault();
+        setSelection(null);
+        setSelectedElementId(null);
       }
     };
     
