@@ -31,7 +31,6 @@ import {
   MessageSquare,
   ChevronDown,
   Info,
-  Zap,
   Globe,
   Image as ImageIcon,
 } from 'lucide-react';
@@ -183,38 +182,6 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
         flex: 1 
       }}>
         <Stack spacing={inDialog ? 2 : 3}>
-
-        {/* Header with Quick Start */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 3,
-            borderRadius: '16px',
-            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
-            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-          }}
-        >
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
-                ✨ Create Worksheet
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Fill in topic and we'll generate a ready-to-use worksheet
-              </Typography>
-            </Box>
-            <Chip
-              icon={<Zap size={16} />}
-              label="Quick Start"
-              size="small"
-              sx={{
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-                color: 'white',
-                fontWeight: 600,
-              }}
-            />
-          </Stack>
-        </Paper>
 
         {/* Main Form - Compact */}
         <Paper
