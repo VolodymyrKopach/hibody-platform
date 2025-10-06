@@ -429,59 +429,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             </Box>
           </>
         ) : (
-          // Collapsed mode - Icon tabs
-          <Stack spacing={1} sx={{ p: 1 }}>
-            <Tooltip title="Properties" placement="left">
-              <Paper
-                elevation={0}
-                onClick={() => { setMainTab('properties'); onToggle(); }}
-                sx={{
-                  width: 48,
-                  height: 48,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '10px',
-                  border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  background: mainTab === 'properties' ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-                  '&:hover': {
-                    borderColor: theme.palette.primary.main,
-                    background: alpha(theme.palette.primary.main, 0.15),
-                    transform: 'scale(1.05)',
-                  },
-                }}
-              >
-                <Palette size={20} color={mainTab === 'properties' ? theme.palette.primary.main : theme.palette.text.secondary} />
-              </Paper>
-            </Tooltip>
-            <Tooltip title="AI Assistant" placement="left">
-              <Paper
-                elevation={0}
-                onClick={() => { setMainTab('ai'); onToggle(); }}
-                sx={{
-                  width: 48,
-                  height: 48,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '10px',
-                  border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  background: mainTab === 'ai' ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-                  '&:hover': {
-                    borderColor: theme.palette.primary.main,
-                    background: alpha(theme.palette.primary.main, 0.15),
-                    transform: 'scale(1.05)',
-                  },
-                }}
-              >
-                <Sparkles size={20} color={mainTab === 'ai' ? theme.palette.primary.main : theme.palette.text.secondary} />
-              </Paper>
-            </Tooltip>
-          </Stack>
+          // Collapsed mode - Single settings icon
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Settings size={24} color={theme.palette.text.secondary} />
+          </Box>
         )}
 
         {/* Tab Content - Only show when expanded */}
@@ -1805,59 +1756,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             </Box>
           </>
         ) : (
-          // Collapsed mode - Icon tabs
-          <Stack spacing={1} sx={{ p: 1 }}>
-            <Tooltip title="Properties" placement="left">
-              <Paper
-                elevation={0}
-                onClick={() => { setMainTab('properties'); onToggle(); }}
-                sx={{
-                  width: 48,
-                  height: 48,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '10px',
-                  border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  background: mainTab === 'properties' ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-                  '&:hover': {
-                    borderColor: theme.palette.primary.main,
-                    background: alpha(theme.palette.primary.main, 0.15),
-                    transform: 'scale(1.05)',
-                  },
-                }}
-              >
-                <Settings size={20} color={mainTab === 'properties' ? theme.palette.primary.main : theme.palette.text.secondary} />
-              </Paper>
-            </Tooltip>
-            <Tooltip title="AI Assistant" placement="left">
-              <Paper
-                elevation={0}
-                onClick={() => { setMainTab('ai'); onToggle(); }}
-                sx={{
-                  width: 48,
-                  height: 48,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '10px',
-                  border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  background: mainTab === 'ai' ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-                  '&:hover': {
-                    borderColor: theme.palette.primary.main,
-                    background: alpha(theme.palette.primary.main, 0.15),
-                    transform: 'scale(1.05)',
-                  },
-                }}
-              >
-                <Sparkles size={20} color={mainTab === 'ai' ? theme.palette.primary.main : theme.palette.text.secondary} />
-              </Paper>
-            </Tooltip>
-          </Stack>
+          // Collapsed mode - Single settings icon
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Settings size={24} color={theme.palette.text.secondary} />
+          </Box>
         )}
 
         {/* Tab Content - Only show when expanded */}
