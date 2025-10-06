@@ -45,10 +45,26 @@ const WarningBox: React.FC<WarningBoxProps> = ({
   };
 
   const handleChange = (html: string) => {
+    console.log('🔄 [WarningBox handleChange] onChange triggered:', {
+      html,
+      type: typeof html,
+      length: html?.length,
+      isUndefined: html === undefined,
+      isNull: html === null,
+      isStringUndefined: html === 'undefined'
+    });
+    
+    // Захист від undefined/null
+    if (html === undefined || html === null || html === 'undefined') {
+      console.warn('⚠️ [WarningBox handleChange] Received undefined/null, skipping onEdit call');
+      return;
+    }
+    
     onEdit?.(html);
   };
 
   const handleFinishEditing = () => {
+    console.log('👋 [WarningBox handleFinishEditing] Finish editing called');
     setIsEditing(false);
   };
 

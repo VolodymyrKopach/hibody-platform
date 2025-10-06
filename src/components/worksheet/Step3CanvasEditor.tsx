@@ -393,10 +393,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       exitCallback();
       setExitCallback(null);
     }
-    // Navigate back or close
-    if (onExit) {
-      onExit();
-    }
+    // Navigate back
+    router.push('/');
   };
 
   const handleExitWithSave = async () => {
@@ -410,10 +408,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         setExitCallback(null);
       }
       
-      // Navigate back or close after saving
-      if (onExit) {
-        onExit();
-      }
+      // Navigate back after saving
+      router.push('/');
     } catch (error) {
       console.error('Export failed:', error);
       alert('Failed to export PDF. Please try again.');
@@ -855,17 +851,47 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
 
 
   const handleElementEdit = (pageId: string, elementId: string, properties: any) => {
+    console.log('✏️ [handleElementEdit] Editing element:', {
+      pageId,
+      elementId,
+      properties,
+      textValue: properties?.text,
+      textType: typeof properties?.text,
+      textIsUndefined: properties?.text === undefined,
+      textIsNull: properties?.text === null,
+      textIsStringUndefined: properties?.text === 'undefined'
+    });
+    
+    // Захист від undefined/null значень
+    if (properties?.text === undefined || properties?.text === null || properties?.text === 'undefined') {
+      console.warn('⚠️ [handleElementEdit] Received undefined/null/string-undefined text, ignoring update');
+      return;
+    }
+    
     setPageContents(prev => {
       const newMap = new Map(prev);
       const pageContent = newMap.get(pageId);
       
-      if (!pageContent) return prev;
+      if (!pageContent) {
+        console.warn('⚠️ [handleElementEdit] Page content not found for pageId:', pageId);
+        return prev;
+      }
+      
+      const updatedElements = pageContent.elements.map(el => {
+        if (el.id === elementId) {
+          console.log('✅ [handleElementEdit] Updating element:', {
+            elementId: el.id,
+            oldProperties: el.properties,
+            newProperties: properties
+          });
+          return { ...el, properties };
+        }
+        return el;
+      });
       
       newMap.set(pageId, {
         ...pageContent,
-        elements: pageContent.elements.map(el =>
-          el.id === elementId ? { ...el, properties } : el
-        ),
+        elements: updatedElements,
       });
       
       saveToHistory(newMap);
@@ -1305,6 +1331,52 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     if (lowercaseLevel.includes('beginner') || lowercaseLevel.includes('elementary')) return 'easy';
     if (lowercaseLevel.includes('advanced') || lowercaseLevel.includes('upper')) return 'hard';
     return 'medium';
+  };
+
+  const handleAddNewPage = () => {
+    const newPageNumber = pages.length + 1;
+    const newPageId = `page-${Date.now()}-${Math.random()}`;
+    
+    // Find the last page position to stack the new page below it
+    const lastPage = pages.length > 0 ? pages[pages.length - 1] : null;
+    const newY = lastPage ? lastPage.y + lastPage.height + PAGE_GAP : 100;
+    
+    const newPage: WorksheetPage = {
+      id: newPageId,
+      pageNumber: newPageNumber,
+      title: `Page ${newPageNumber}`,
+      x: 100,
+      y: newY,
+      width: A4_WIDTH,
+      height: A4_HEIGHT,
+      content: [`worksheet-page-${newPageNumber}`],
+      thumbnail: '📄',
+      background: {
+        type: 'solid',
+        color: '#FFFFFF',
+        opacity: 100,
+      },
+    };
+    
+    // Add page to pages array
+    setPages(prev => [...prev, newPage]);
+    
+    // Initialize empty content for the new page
+    setPageContents(prev => {
+      const newMap = new Map(prev);
+      newMap.set(newPageId, {
+        id: `content-${newPageId}`,
+        pageId: newPageId,
+        elements: [],
+      });
+      saveToHistory(newMap);
+      return newMap;
+    });
+    
+    // Select the new page
+    setSelection({ type: 'page', data: newPage });
+    
+    console.log(`✅ New page ${newPageNumber} added at position (${newPage.x}, ${newY})`);
   };
 
   const handleElementDuplicate = (pageId: string, elementId: string) => {
@@ -1996,6 +2068,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
           <Tooltip title="Add New Page">
             <IconButton
               size="large"
+              onClick={handleAddNewPage}
               sx={{
                 width: 56,
                 height: 56,
@@ -2006,6 +2079,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                   background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
                   transform: 'scale(1.1)',
                 },
+                transition: 'all 0.2s ease-in-out',
               }}
             >
               <Plus size={24} />

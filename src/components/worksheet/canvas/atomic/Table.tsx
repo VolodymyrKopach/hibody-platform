@@ -51,6 +51,14 @@ const Table: React.FC<TableProps> = ({
   const handleBlur = () => {
     if (editingCell && textRef.current && onEdit) {
       const text = textRef.current.textContent || '';
+      
+      // Захист від undefined/null
+      if (text === undefined || text === null || text === 'undefined') {
+        console.warn('⚠️ [Table handleBlur] Received undefined/null text, skipping update');
+        setEditingCell(null);
+        return;
+      }
+      
       if (editingCell.isHeader) {
         const updatedHeaders = [...localHeaders];
         updatedHeaders[editingCell.col] = text;

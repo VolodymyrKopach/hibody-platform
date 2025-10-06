@@ -45,10 +45,26 @@ const TipBox: React.FC<TipBoxProps> = ({
   };
 
   const handleChange = (html: string) => {
+    console.log('🔄 [TipBox handleChange] onChange triggered:', {
+      html,
+      type: typeof html,
+      length: html?.length,
+      isUndefined: html === undefined,
+      isNull: html === null,
+      isStringUndefined: html === 'undefined'
+    });
+    
+    // Захист від undefined/null
+    if (html === undefined || html === null || html === 'undefined') {
+      console.warn('⚠️ [TipBox handleChange] Received undefined/null, skipping onEdit call');
+      return;
+    }
+    
     onEdit?.(html);
   };
 
   const handleFinishEditing = () => {
+    console.log('👋 [TipBox handleFinishEditing] Finish editing called');
     setIsEditing(false);
   };
 

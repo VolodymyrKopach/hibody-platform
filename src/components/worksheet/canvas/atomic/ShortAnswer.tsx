@@ -46,6 +46,14 @@ const ShortAnswer: React.FC<ShortAnswerProps> = ({
 
   const handleQuestionBlur = (itemNumber: number) => {
     const text = questionRef.current?.textContent || '';
+    
+    // Захист від undefined/null
+    if (text === undefined || text === null || text === 'undefined') {
+      console.warn('⚠️ [ShortAnswer handleQuestionBlur] Received undefined/null text, skipping update');
+      setEditingQuestion(null);
+      return;
+    }
+    
     if (text.trim() && onEdit) {
       const updatedItems = localItems.map(item =>
         item.number === itemNumber ? { ...item, question: text.trim() } : item

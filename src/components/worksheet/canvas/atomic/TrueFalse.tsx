@@ -46,6 +46,14 @@ const TrueFalse: React.FC<TrueFalseProps> = ({
 
   const handleStatementBlur = (itemNumber: number) => {
     const text = statementRef.current?.textContent || '';
+    
+    // Захист від undefined/null
+    if (text === undefined || text === null || text === 'undefined') {
+      console.warn('⚠️ [TrueFalse handleStatementBlur] Received undefined/null text, skipping update');
+      setEditingStatement(null);
+      return;
+    }
+    
     if (text.trim() && onEdit) {
       const updatedItems = localItems.map(item =>
         item.number === itemNumber ? { ...item, statement: text.trim() } : item

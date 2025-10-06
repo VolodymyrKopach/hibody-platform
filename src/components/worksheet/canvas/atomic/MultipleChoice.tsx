@@ -65,6 +65,14 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
 
   const handleQuestionBlur = (itemNumber: number) => {
     const text = questionRef.current?.textContent || '';
+    
+    // Захист від undefined/null
+    if (text === undefined || text === null || text === 'undefined') {
+      console.warn('⚠️ [MultipleChoice handleQuestionBlur] Received undefined/null text, skipping update');
+      setEditingQuestion(null);
+      return;
+    }
+    
     if (text.trim() && onEdit) {
       const updatedItems = localItems.map(item =>
         item.number === itemNumber ? { ...item, question: text.trim() } : item
@@ -77,6 +85,14 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
 
   const handleOptionBlur = (itemNumber: number, letter: string) => {
     const text = optionRef.current?.textContent || '';
+    
+    // Захист від undefined/null
+    if (text === undefined || text === null || text === 'undefined') {
+      console.warn('⚠️ [MultipleChoice handleOptionBlur] Received undefined/null text, skipping update');
+      setEditingOption(null);
+      return;
+    }
+    
     if (text.trim() && onEdit) {
       const updatedItems = localItems.map(item =>
         item.number === itemNumber

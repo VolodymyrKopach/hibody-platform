@@ -47,7 +47,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [textColor, setTextColor] = useState('#374151');
   const [highlightColor, setHighlightColor] = useState('#FFEB3B');
 
-  // Sync htmlRef with content prop
+  // Sync htmlRef with content prop - критично для оновлення з зовні
   React.useEffect(() => {
     console.log('📝 [RichTextEditor] Content prop changed:', {
       newContent: content,
@@ -57,7 +57,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       isStringUndefined: content === 'undefined',
       previousValue: htmlRef.current
     });
-    htmlRef.current = content;
+    
+    // Завжди синхронізуємо з content prop, навіть під час редагування
+    if (content !== undefined && content !== null && content !== 'undefined') {
+      htmlRef.current = content;
+    }
   }, [content]);
 
   // Save current selection
@@ -154,28 +158,31 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   }, [onChange, applyColorFormat]);
 
   // Handle content change
-  const handleChange = useCallback((evt: React.FormEvent<HTMLDivElement>) => {
-    const target = evt.target as HTMLDivElement;
-    const newHtml = target?.innerHTML;
+  const handleChange = useCallback((evt: any) => {
+    // react-contenteditable передає об'єкт з evt.target.value
+    const newHtml = evt?.target?.value ?? contentRef.current?.innerHTML;
     
     console.log('✏️ [RichTextEditor] Content changed:', {
       newHtml,
       type: typeof newHtml,
       length: newHtml?.length,
       previousValue: htmlRef.current,
-      hasTarget: !!target,
-      targetExists: target !== null && target !== undefined
+      eventType: evt?.type,
+      hasValue: evt?.target?.value !== undefined
     });
     
     // Захист від undefined - використовуємо попереднє значення
-    if (newHtml === undefined || newHtml === null) {
-      console.warn('⚠️ [RichTextEditor] handleChange received undefined/null, using previous value:', htmlRef.current);
+    if (newHtml === undefined || newHtml === null || newHtml === 'undefined') {
+      console.warn('⚠️ [RichTextEditor] handleChange received undefined/null, keeping previous value:', htmlRef.current);
       // Не оновлюємо нічого, просто ігноруємо цей виклик
       return;
     }
     
-    htmlRef.current = newHtml;
-    onChange?.(newHtml);
+    // Оновлюємо тільки якщо значення змінилося
+    if (newHtml !== htmlRef.current) {
+      htmlRef.current = newHtml;
+      onChange?.(newHtml);
+    }
   }, [onChange]);
 
   // Handle keyboard shortcuts
@@ -199,13 +206,26 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
     
     if (isEditing) {
-      console.log('👋 [RichTextEditor] Click away detected, calling onFinishEditing, current content:', {
-        currentHtml: htmlRef.current,
-        contentRef: contentRef.current?.innerHTML
-      });
+      // Перед закриттям переконаємось, що останні зміни збережені
+      if (contentRef.current) {
+        const finalHtml = contentRef.current.innerHTML;
+        
+        console.log('👋 [RichTextEditor] Click away detected, saving final content:', {
+          finalHtml,
+          currentHtmlRef: htmlRef.current,
+          areEqual: finalHtml === htmlRef.current
+        });
+        
+        // Якщо є нові зміни, що не були збережені через onChange
+        if (finalHtml && finalHtml !== htmlRef.current && finalHtml !== 'undefined') {
+          htmlRef.current = finalHtml;
+          onChange?.(finalHtml);
+        }
+      }
+      
       onFinishEditing?.();
     }
-  }, [isEditing, onFinishEditing]);
+  }, [isEditing, onFinishEditing, onChange]);
 
   const Toolbar = () => (
     <Stack

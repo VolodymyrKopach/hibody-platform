@@ -49,10 +49,26 @@ const InstructionsBox: React.FC<InstructionsBoxProps> = ({
   };
 
   const handleChange = (html: string) => {
+    console.log('🔄 [InstructionsBox handleChange] onChange triggered:', {
+      html,
+      type: typeof html,
+      length: html?.length,
+      isUndefined: html === undefined,
+      isNull: html === null,
+      isStringUndefined: html === 'undefined'
+    });
+    
+    // Захист від undefined/null
+    if (html === undefined || html === null || html === 'undefined') {
+      console.warn('⚠️ [InstructionsBox handleChange] Received undefined/null, skipping onEdit call');
+      return;
+    }
+    
     onEdit?.(html);
   };
 
   const handleFinishEditing = () => {
+    console.log('👋 [InstructionsBox handleFinishEditing] Finish editing called');
     setIsEditing(false);
   };
 

@@ -62,10 +62,26 @@ const BodyText: React.FC<BodyTextProps> = ({
   };
 
   const handleChange = (html: string) => {
+    console.log('🔄 [BodyText handleChange] onChange triggered:', {
+      html,
+      type: typeof html,
+      length: html?.length,
+      isUndefined: html === undefined,
+      isNull: html === null,
+      isStringUndefined: html === 'undefined'
+    });
+    
+    // Захист від undefined/null
+    if (html === undefined || html === null || html === 'undefined') {
+      console.warn('⚠️ [BodyText handleChange] Received undefined/null, skipping onEdit call');
+      return;
+    }
+    
     onEdit?.(html);
   };
 
   const handleFinishEditing = () => {
+    console.log('👋 [BodyText handleFinishEditing] Finish editing called');
     setIsEditing(false);
   };
 

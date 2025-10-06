@@ -44,6 +44,14 @@ const BulletList: React.FC<BulletListProps> = ({
 
   const handleBlur = (itemId: string) => {
     const text = textRef.current?.textContent || '';
+    
+    // Захист від undefined/null
+    if (text === undefined || text === null || text === 'undefined') {
+      console.warn('⚠️ [BulletList handleBlur] Received undefined/null text, skipping update');
+      setEditingItemId(null);
+      return;
+    }
+    
     if (text.trim() && onEdit) {
       const updatedItems = localItems.map(item =>
         item.id === itemId ? { ...item, text: text.trim() } : item

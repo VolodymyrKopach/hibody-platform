@@ -79,6 +79,13 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
     setIsEditing(false);
     if (editRef.current) {
       const newText = editRef.current.textContent?.trim() || '';
+      
+      // Захист від undefined/null
+      if (newText === undefined || newText === null || newText === 'undefined') {
+        console.warn('⚠️ [TitleBlock handleBlur] Received undefined/null text, skipping update');
+        return;
+      }
+      
       if (newText !== text && newText !== '') {
         onEdit?.(newText);
       }
