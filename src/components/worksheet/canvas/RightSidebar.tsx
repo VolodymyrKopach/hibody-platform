@@ -4028,6 +4028,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   {[
                     { label: 'All Borders', value: 'all', desc: 'Full grid' },
                     { label: 'Horizontal Only', value: 'horizontal', desc: 'Rows only' },
+                    { label: 'Vertical Only', value: 'vertical', desc: 'Columns only' },
                     { label: 'No Borders', value: 'none', desc: 'Clean look' },
                   ].map((style) => {
                     const isActive = (elementData.properties?.borderStyle || 'all') === style.value;
@@ -4072,6 +4073,134 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                       </Box>
                     );
                   })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Text Alignment */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Text Alignment
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {[
+                    { label: 'Left', value: 'left', icon: <AlignLeft size={16} /> },
+                    { label: 'Center', value: 'center', icon: <AlignCenter size={16} /> },
+                    { label: 'Right', value: 'right', icon: <AlignRight size={16} /> },
+                  ].map((align) => {
+                    const isActive = (elementData.properties?.textAlign || 'left') === align.value;
+                    return (
+                      <Button
+                        key={align.value}
+                        onClick={() => onUpdate?.({ textAlign: align.value })}
+                        variant={isActive ? 'contained' : 'outlined'}
+                        size="small"
+                        sx={{
+                          flex: 1,
+                          borderRadius: '8px',
+                          textTransform: 'none',
+                          fontSize: '0.75rem',
+                          minWidth: 0,
+                          px: 1,
+                        }}
+                      >
+                        {align.icon}
+                      </Button>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              {/* Colors */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Colors
+                </Typography>
+                <Stack spacing={1.5}>
+                  <Box>
+                    <Typography variant="caption" sx={{ fontSize: '11px', color: '#6B7280', mb: 0.5, display: 'block' }}>
+                      Header Background
+                    </Typography>
+                    <TextField
+                      type="color"
+                      size="small"
+                      value={elementData.properties?.headerBgColor || '#F3F4F6'}
+                      onChange={(e) => onUpdate?.({ headerBgColor: e.target.value })}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                          height: 36,
+                        },
+                      }}
+                      fullWidth
+                    />
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ fontSize: '11px', color: '#6B7280', mb: 0.5, display: 'block' }}>
+                      Border Color
+                    </Typography>
+                    <TextField
+                      type="color"
+                      size="small"
+                      value={elementData.properties?.borderColor || '#D1D5DB'}
+                      onChange={(e) => onUpdate?.({ borderColor: e.target.value })}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                          height: 36,
+                        },
+                      }}
+                      fullWidth
+                    />
+                  </Box>
+                </Stack>
+              </Box>
+
+              {/* Typography */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Typography
+                </Typography>
+                <Stack spacing={1.5}>
+                  <Box>
+                    <Typography variant="caption" sx={{ fontSize: '11px', color: '#6B7280', mb: 1, display: 'block' }}>
+                      Font Size: {elementData.properties?.fontSize || 13}px
+                    </Typography>
+                    <Slider
+                      value={elementData.properties?.fontSize || 13}
+                      onChange={(_, value) => onUpdate?.({ fontSize: value as number })}
+                      min={10}
+                      max={20}
+                      step={1}
+                      marks
+                      sx={{
+                        '& .MuiSlider-thumb': {
+                          width: 16,
+                          height: 16,
+                        },
+                      }}
+                    />
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ fontSize: '11px', color: '#6B7280', mb: 1, display: 'block' }}>
+                      Cell Padding: {elementData.properties?.cellPadding || 10}px
+                    </Typography>
+                    <Slider
+                      value={elementData.properties?.cellPadding || 10}
+                      onChange={(_, value) => onUpdate?.({ cellPadding: value as number })}
+                      min={4}
+                      max={20}
+                      step={2}
+                      marks
+                      sx={{
+                        '& .MuiSlider-thumb': {
+                          width: 16,
+                          height: 16,
+                        },
+                      }}
+                    />
+                  </Box>
                 </Stack>
               </Box>
 

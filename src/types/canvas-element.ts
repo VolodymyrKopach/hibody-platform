@@ -2,7 +2,7 @@
 
 export interface CanvasElement {
   id: string;
-  type: 'title-block' | 'body-text' | 'instructions-box' | 'fill-blank' | 'multiple-choice' | 'tip-box' | 'warning-box' | 'image-placeholder';
+  type: 'title-block' | 'body-text' | 'instructions-box' | 'fill-blank' | 'multiple-choice' | 'tip-box' | 'warning-box' | 'image-placeholder' | 'bullet-list' | 'numbered-list' | 'true-false' | 'short-answer' | 'table' | 'divider';
   position: {
     x: number;
     y: number;

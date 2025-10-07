@@ -818,8 +818,13 @@ function renderElement(
         <Table
           headers={element.properties.headers || []}
           rows={element.properties.rows || []}
-          hasHeaders={element.properties.hasHeaders}
-          borderStyle={element.properties.borderStyle}
+          hasHeaders={element.properties.hasHeaders ?? true}
+          borderStyle={element.properties.borderStyle || 'all'}
+          headerBgColor={element.properties.headerBgColor || '#F3F4F6'}
+          borderColor={element.properties.borderColor || '#D1D5DB'}
+          cellPadding={element.properties.cellPadding || 10}
+          fontSize={element.properties.fontSize || 13}
+          textAlign={element.properties.textAlign || 'left'}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -965,6 +970,11 @@ function getDefaultProperties(type: string) {
         ],
         hasHeaders: true,
         borderStyle: 'all',
+        headerBgColor: '#F3F4F6',
+        borderColor: '#D1D5DB',
+        cellPadding: 10,
+        fontSize: 13,
+        textAlign: 'left',
       };
     default:
       return {};

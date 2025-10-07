@@ -885,10 +885,13 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     });
     
     // Захист від undefined/null значень ТІЛЬКИ для текстових елементів
-    // Для image-placeholder text не є обов'язковим
-    if (element?.type !== 'image-placeholder') {
-      if (properties?.text === undefined || properties?.text === null || properties?.text === 'undefined') {
-        console.warn('⚠️ [handleElementEdit] Received undefined/null/string-undefined text for non-image element, ignoring update');
+    // Елементи, які НЕ потребують text: image-placeholder, table, divider, bullet-list, numbered-list
+    const nonTextElements = ['image-placeholder', 'table', 'divider', 'bullet-list', 'numbered-list'];
+    const isTextElement = !nonTextElements.includes(element?.type || '');
+    
+    if (isTextElement && 'text' in properties) {
+      if (properties.text === undefined || properties.text === null || properties.text === 'undefined') {
+        console.warn('⚠️ [handleElementEdit] Received undefined/null/string-undefined text for text element, ignoring update');
         return;
       }
     }

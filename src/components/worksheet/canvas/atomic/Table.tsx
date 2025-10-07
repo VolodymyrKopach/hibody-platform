@@ -1,19 +1,30 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, IconButton, Tooltip } from '@mui/material';
+import { Trash2 } from 'lucide-react';
 
 interface TableProps {
   headers: string[];
   rows: string[][];
   hasHeaders?: boolean;
-  borderStyle?: 'all' | 'horizontal' | 'none';
+  borderStyle?: 'all' | 'horizontal' | 'vertical' | 'none';
+  headerBgColor?: string;
+  borderColor?: string;
+  cellPadding?: number;
+  fontSize?: number;
+  textAlign?: 'left' | 'center' | 'right';
   isSelected?: boolean;
   onEdit?: (properties: {
     headers?: string[];
     rows?: string[][];
     hasHeaders?: boolean;
     borderStyle?: string;
+    headerBgColor?: string;
+    borderColor?: string;
+    cellPadding?: number;
+    fontSize?: number;
+    textAlign?: 'left' | 'center' | 'right';
   }) => void;
   onFocus?: () => void;
 }
@@ -23,6 +34,11 @@ const Table: React.FC<TableProps> = ({
   rows,
   hasHeaders = true,
   borderStyle = 'all',
+  headerBgColor = '#F3F4F6',
+  borderColor = '#D1D5DB',
+  cellPadding = 10,
+  fontSize = 13,
+  textAlign = 'left',
   isSelected = false,
   onEdit,
   onFocus,
@@ -30,6 +46,8 @@ const Table: React.FC<TableProps> = ({
   const [editingCell, setEditingCell] = useState<{ row: number; col: number; isHeader: boolean } | null>(null);
   const [localHeaders, setLocalHeaders] = useState<string[]>(headers);
   const [localRows, setLocalRows] = useState<string[][]>(rows);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [hoveredCol, setHoveredCol] = useState<number | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,7 +93,7 @@ const Table: React.FC<TableProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleBlur();
     }
@@ -85,10 +103,56 @@ const Table: React.FC<TableProps> = ({
       setLocalHeaders(headers);
       setLocalRows(rows);
     }
+    // Tab navigation between cells
+    if (e.key === 'Tab' && editingCell) {
+      e.preventDefault();
+      handleBlur();
+      
+      const { row, col, isHeader } = editingCell;
+      
+      if (e.shiftKey) {
+        // Shift+Tab - move backwards
+        if (isHeader) {
+          if (col > 0) {
+            setEditingCell({ row: 0, col: col - 1, isHeader: true });
+          }
+        } else {
+          if (col > 0) {
+            setEditingCell({ row, col: col - 1, isHeader: false });
+          } else if (row > 0) {
+            setEditingCell({ row: row - 1, col: localHeaders.length - 1, isHeader: false });
+          } else if (hasHeaders) {
+            setEditingCell({ row: 0, col: localHeaders.length - 1, isHeader: true });
+          }
+        }
+      } else {
+        // Tab - move forward
+        if (isHeader) {
+          if (col < localHeaders.length - 1) {
+            setEditingCell({ row: 0, col: col + 1, isHeader: true });
+          } else if (localRows.length > 0) {
+            setEditingCell({ row: 0, col: 0, isHeader: false });
+          }
+        } else {
+          if (col < localHeaders.length - 1) {
+            setEditingCell({ row, col: col + 1, isHeader: false });
+          } else if (row < localRows.length - 1) {
+            setEditingCell({ row: row + 1, col: 0, isHeader: false });
+          }
+        }
+      }
+    }
   };
 
   const handleDoubleClick = (row: number, col: number, isHeader: boolean) => {
+    if (onEdit) {
+      setEditingCell({ row, col, isHeader });
+    }
+  };
+
+  const handleSingleClick = (row: number, col: number, isHeader: boolean) => {
     if (isSelected && onEdit) {
+      // Single click when table is already selected - start editing
       setEditingCell({ row, col, isHeader });
     }
   };
@@ -103,13 +167,19 @@ const Table: React.FC<TableProps> = ({
     switch (borderStyle) {
       case 'all':
         return {
-          border: '1px solid #D1D5DB',
+          border: `1px solid ${borderColor}`,
           borderCollapse: 'collapse' as const,
         };
       case 'horizontal':
         return {
-          borderTop: '1px solid #D1D5DB',
-          borderBottom: '1px solid #D1D5DB',
+          borderTop: `1px solid ${borderColor}`,
+          borderBottom: `1px solid ${borderColor}`,
+          borderCollapse: 'collapse' as const,
+        };
+      case 'vertical':
+        return {
+          borderLeft: `1px solid ${borderColor}`,
+          borderRight: `1px solid ${borderColor}`,
           borderCollapse: 'collapse' as const,
         };
       case 'none':
@@ -119,7 +189,7 @@ const Table: React.FC<TableProps> = ({
         };
       default:
         return {
-          border: '1px solid #D1D5DB',
+          border: `1px solid ${borderColor}`,
           borderCollapse: 'collapse' as const,
         };
     }
@@ -129,23 +199,58 @@ const Table: React.FC<TableProps> = ({
     switch (borderStyle) {
       case 'all':
         return {
-          border: '1px solid #D1D5DB',
+          border: `1px solid ${borderColor}`,
         };
       case 'horizontal':
         return {
-          borderBottom: '1px solid #D1D5DB',
+          borderBottom: `1px solid ${borderColor}`,
+        };
+      case 'vertical':
+        return {
+          borderRight: `1px solid ${borderColor}`,
+          borderLeft: `1px solid ${borderColor}`,
         };
       case 'none':
         return {};
       default:
         return {
-          border: '1px solid #D1D5DB',
+          border: `1px solid ${borderColor}`,
         };
     }
   };
 
   return (
-    <Box onClick={handleClick} sx={{ overflowX: 'auto' }}>
+    <Box onClick={handleClick} sx={{ overflowX: 'auto', position: 'relative' }}>
+      {/* Editing hint when table is selected */}
+      {isSelected && onEdit && !editingCell && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: -32,
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            zIndex: 10,
+          }}
+        >
+          <Box
+            sx={{
+              display: 'inline-block',
+              px: 2,
+              py: 0.5,
+              borderRadius: '6px',
+              backgroundColor: 'rgba(37, 99, 235, 0.9)',
+              color: 'white',
+              fontSize: '11px',
+              fontWeight: 500,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            }}
+          >
+            💡 Click any cell to edit • Tab to navigate • Enter to save
+          </Box>
+        </Box>
+      )}
+      
       <Box
         component="table"
         sx={{
@@ -161,14 +266,16 @@ const Table: React.FC<TableProps> = ({
                 <Box
                   key={colIndex}
                   component="th"
+                  onMouseEnter={() => setHoveredCol(colIndex)}
+                  onMouseLeave={() => setHoveredCol(null)}
                   sx={{
                     ...getCellBorderStyle(),
-                    padding: '10px 12px',
-                    backgroundColor: '#F3F4F6',
+                    padding: `${cellPadding}px ${cellPadding + 2}px`,
+                    backgroundColor: headerBgColor,
                     fontWeight: 600,
-                    fontSize: '13px',
+                    fontSize: `${fontSize}px`,
                     color: '#374151',
-                    textAlign: 'left',
+                    textAlign: textAlign,
                     position: 'relative',
                   }}
                 >
@@ -181,26 +288,37 @@ const Table: React.FC<TableProps> = ({
                       onKeyDown={handleKeyDown}
                       sx={{
                         outline: 'none',
-                        border: '1px solid #2563EB',
+                        border: '2px solid #2563EB',
                         borderRadius: '4px',
-                        padding: '2px 4px',
+                        padding: '4px 6px',
                         backgroundColor: '#FFFFFF',
+                        minHeight: '20px',
                       }}
                     >
                       {header}
                     </Box>
                   ) : (
                     <Typography
+                      onClick={() => handleSingleClick(0, colIndex, true)}
                       onDoubleClick={() => handleDoubleClick(0, colIndex, true)}
                       sx={{
-                        fontSize: '13px',
+                        fontSize: `${fontSize}px`,
                         fontWeight: 600,
-                        cursor: isSelected && onEdit ? 'text' : 'default',
-                        '&:hover': isSelected && onEdit ? {
-                          backgroundColor: '#E5E7EB',
+                        cursor: onEdit ? 'text' : 'default',
+                        position: 'relative',
+                        '&:hover': onEdit ? {
+                          backgroundColor: 'rgba(37, 99, 235, 0.1)',
                           borderRadius: '4px',
                           padding: '2px 4px',
                           margin: '-2px -4px',
+                          '&::after': isSelected ? {
+                            content: '"✏️"',
+                            position: 'absolute',
+                            right: -2,
+                            top: -2,
+                            fontSize: '10px',
+                            opacity: 0.6,
+                          } : {},
                         } : {},
                       }}
                     >
@@ -214,17 +332,30 @@ const Table: React.FC<TableProps> = ({
         )}
         <Box component="tbody">
           {localRows.map((row, rowIndex) => (
-            <Box key={rowIndex} component="tr">
+            <Box 
+              key={rowIndex} 
+              component="tr"
+              onMouseEnter={() => setHoveredRow(rowIndex)}
+              onMouseLeave={() => setHoveredRow(null)}
+              sx={{
+                position: 'relative',
+                '&:hover': isSelected ? {
+                  backgroundColor: 'rgba(249, 250, 251, 0.8)',
+                } : {},
+              }}
+            >
               {row.map((cell, colIndex) => (
                 <Box
                   key={colIndex}
                   component="td"
                   sx={{
                     ...getCellBorderStyle(),
-                    padding: '10px 12px',
-                    fontSize: '13px',
+                    padding: `${cellPadding}px ${cellPadding + 2}px`,
+                    fontSize: `${fontSize}px`,
                     color: '#374151',
                     verticalAlign: 'top',
+                    textAlign: textAlign,
+                    position: 'relative',
                   }}
                 >
                   {editingCell && !editingCell.isHeader && editingCell.row === rowIndex && editingCell.col === colIndex ? (
@@ -236,9 +367,9 @@ const Table: React.FC<TableProps> = ({
                       onKeyDown={handleKeyDown}
                       sx={{
                         outline: 'none',
-                        border: '1px solid #2563EB',
+                        border: '2px solid #2563EB',
                         borderRadius: '4px',
-                        padding: '2px 4px',
+                        padding: '4px 6px',
                         backgroundColor: '#FFFFFF',
                         minHeight: '20px',
                       }}
@@ -247,16 +378,26 @@ const Table: React.FC<TableProps> = ({
                     </Box>
                   ) : (
                     <Typography
+                      onClick={() => handleSingleClick(rowIndex, colIndex, false)}
                       onDoubleClick={() => handleDoubleClick(rowIndex, colIndex, false)}
                       sx={{
-                        fontSize: '13px',
-                        cursor: isSelected && onEdit ? 'text' : 'default',
+                        fontSize: `${fontSize}px`,
+                        cursor: onEdit ? 'text' : 'default',
                         minHeight: '20px',
-                        '&:hover': isSelected && onEdit ? {
-                          backgroundColor: '#F9FAFB',
+                        position: 'relative',
+                        '&:hover': onEdit ? {
+                          backgroundColor: 'rgba(37, 99, 235, 0.05)',
                           borderRadius: '4px',
                           padding: '2px 4px',
                           margin: '-2px -4px',
+                          '&::after': isSelected ? {
+                            content: '"✏️"',
+                            position: 'absolute',
+                            right: -2,
+                            top: -2,
+                            fontSize: '10px',
+                            opacity: 0.4,
+                          } : {},
                         } : {},
                       }}
                     >
