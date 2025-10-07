@@ -238,7 +238,7 @@ const WorksheetEditor: React.FC = () => {
                       ✨ AI is Creating Your Worksheet
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                      Generating content about "{parameters?.topic}"... (auto-paginating)
+                      Generating content about "{parameters?.topic}"...
                     </Typography>
                     
                     {/* Progress Bar */}
