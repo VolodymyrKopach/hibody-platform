@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       generationRequest,
       {
         temperature: body.temperature || 0.7,
-        maxTokens: body.maxTokens || 8000,
+        maxTokens: body.maxTokens || 32000, // Increased from 8000 to allow longer responses
       }
     );
 

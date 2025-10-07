@@ -509,7 +509,7 @@ Now generate the worksheet as pure JSON:`;
   }
 
   /**
-   * Call Gemini API
+   * Call Gemini API with retry logic
    */
   private async callGeminiAPI(
     prompt: string,
@@ -517,7 +517,7 @@ Now generate the worksheet as pure JSON:`;
   ): Promise<string> {
     const {
       temperature = 0.7,
-      maxTokens = 16000, // FIXED: Increased from 8000 to handle complex worksheets
+      maxTokens = 32000,
       model = 'gemini-2.5-flash',
     } = options;
 
@@ -528,33 +528,52 @@ Now generate the worksheet as pure JSON:`;
       promptLength: prompt.length,
     });
 
-    try {
-      const response = await this.client.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          temperature,
-          maxOutputTokens: maxTokens,
-          topP: 0.9,
-          topK: 40,
-        },
-      });
+    const maxRetries = 2;
+    let lastError: Error | null = null;
 
-      const content = response.text;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 [GEMINI_API] Attempt ${attempt}/${maxRetries}`);
+        
+        const response = await this.client.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            temperature,
+            maxOutputTokens: maxTokens,
+            topP: 0.9,
+            topK: 40,
+          },
+        });
 
-      if (!content) {
-        throw new Error('Empty response from Gemini API');
+        const content = response.text;
+
+        if (!content) {
+          throw new Error('Empty response from Gemini API');
+        }
+
+        console.log('✅ [GEMINI_API] Response received:', {
+          responseLength: content.length,
+          attempt,
+        });
+
+        return content;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        console.error(`❌ [GEMINI_API] Attempt ${attempt} failed:`, lastError.message);
+        
+        if (attempt < maxRetries) {
+          // Wait before retrying (exponential backoff)
+          const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s
+          console.log(`⏳ [GEMINI_API] Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
       }
-
-      console.log('✅ [GEMINI_API] Response received:', {
-        responseLength: content.length,
-      });
-
-      return content;
-    } catch (error) {
-      console.error('❌ [GEMINI_API] API call failed:', error);
-      throw error;
     }
+
+    // All retries failed
+    console.error('❌ [GEMINI_API] All retry attempts failed');
+    throw lastError || new Error('Failed to generate content after retries');
   }
 
   /**
@@ -576,26 +595,10 @@ Now generate the worksheet as pure JSON:`;
         cleanedResponse = cleanedResponse.replace(/^```\s*\n/, '').replace(/\n```$/, '');
       }
 
-
-      // Try to fix incomplete JSON by adding closing brackets
+      // Try to fix incomplete JSON
       if (!cleanedResponse.endsWith('}')) {
         console.warn('⚠️ [PARSER] Response appears incomplete, attempting to fix...');
-        
-        // Count opening and closing brackets
-        const openBraces = (cleanedResponse.match(/{/g) || []).length;
-        const closeBraces = (cleanedResponse.match(/}/g) || []).length;
-        const openBrackets = (cleanedResponse.match(/\[/g) || []).length;
-        const closeBrackets = (cleanedResponse.match(/\]/g) || []).length;
-        
-        // Add missing closing brackets
-        const missingBrackets = openBrackets - closeBrackets;
-        const missingBraces = openBraces - closeBraces;
-        
-        if (missingBrackets > 0 || missingBraces > 0) {
-          console.log(`🔧 [PARSER] Adding ${missingBrackets} brackets and ${missingBraces} braces`);
-          cleanedResponse += ']'.repeat(Math.max(0, missingBrackets));
-          cleanedResponse += '}'.repeat(Math.max(0, missingBraces));
-        }
+        cleanedResponse = this.repairIncompleteJSON(cleanedResponse);
       }
 
       // Parse JSON
@@ -613,9 +616,85 @@ Now generate the worksheet as pure JSON:`;
       return parsed.elements;
     } catch (error) {
       console.error('❌ [PARSER] Parsing failed:', error);
-      console.error('Response was:', response.substring(0, 500));
+      console.error('Response length:', response.length);
+      console.error('Response preview (first 500):', response.substring(0, 500));
+      console.error('Response preview (last 500):', response.substring(Math.max(0, response.length - 500)));
       throw new Error(`Failed to parse Gemini response: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  /**
+   * Repair incomplete JSON response from LLM
+   * Handles unterminated strings, missing brackets, and incomplete objects
+   */
+  private repairIncompleteJSON(json: string): string {
+    console.log('🔧 [PARSER] Attempting to repair incomplete JSON...');
+    
+    let repaired = json;
+    
+    // Step 1: Fix unterminated strings
+    // Find the last quote and check if it's properly closed
+    const lastQuoteIndex = repaired.lastIndexOf('"');
+    if (lastQuoteIndex !== -1) {
+      // Count quotes before this position
+      const quotesBeforeCount = (repaired.substring(0, lastQuoteIndex).match(/"/g) || []).length;
+      
+      // If odd number of quotes, we have an unterminated string
+      if (quotesBeforeCount % 2 === 0) {
+        console.log('🔧 [PARSER] Detected unterminated string, closing it');
+        // Find where the unterminated string likely ends
+        // Look for common JSON delimiters after the last quote
+        const afterLastQuote = repaired.substring(lastQuoteIndex + 1);
+        const truncateMatch = afterLastQuote.match(/^[^,\]\}]*/);
+        
+        if (truncateMatch) {
+          // Remove incomplete text after last quote and close the string
+          repaired = repaired.substring(0, lastQuoteIndex + 1 + truncateMatch[0].length) + '"';
+        }
+      }
+    }
+    
+    // Step 2: Count opening and closing brackets/braces
+    const openBraces = (repaired.match(/{/g) || []).length;
+    const closeBraces = (repaired.match(/}/g) || []).length;
+    const openBrackets = (repaired.match(/\[/g) || []).length;
+    const closeBrackets = (repaired.match(/\]/g) || []).length;
+    
+    // Step 3: Remove trailing commas before adding closing brackets
+    repaired = repaired.replace(/,(\s*)$/, '$1');
+    
+    // Step 4: Add missing closing brackets and braces
+    const missingBrackets = openBrackets - closeBrackets;
+    const missingBraces = openBraces - closeBraces;
+    
+    if (missingBrackets > 0 || missingBraces > 0) {
+      console.log(`🔧 [PARSER] Adding ${missingBrackets} brackets and ${missingBraces} braces`);
+      
+      // Close arrays first, then objects
+      repaired += ']'.repeat(Math.max(0, missingBrackets));
+      repaired += '}'.repeat(Math.max(0, missingBraces));
+    }
+    
+    // Step 5: Validate the structure makes sense
+    // If we have elements array, ensure it's properly closed
+    if (repaired.includes('"elements"') && !repaired.includes('"elements":[]')) {
+      // Make sure elements array is closed
+      const elementsIndex = repaired.indexOf('"elements"');
+      const arrayStartIndex = repaired.indexOf('[', elementsIndex);
+      
+      if (arrayStartIndex !== -1) {
+        const afterArrayStart = repaired.substring(arrayStartIndex);
+        const arrayOpenCount = (afterArrayStart.match(/\[/g) || []).length;
+        const arrayCloseCount = (afterArrayStart.match(/\]/g) || []).length;
+        
+        if (arrayOpenCount > arrayCloseCount) {
+          console.log('🔧 [PARSER] Elements array not properly closed');
+        }
+      }
+    }
+    
+    console.log('✅ [PARSER] JSON repair completed');
+    return repaired;
   }
 
   /**
@@ -664,6 +743,7 @@ Now generate the worksheet as pure JSON:`;
           generatedAt: new Date().toISOString(),
           componentsUsed: Array.from(componentsUsed),
           estimatedDuration: this.estimateDuration(parsed.pages),
+          autoPaginated: false, // LEGACY format - pages were manually structured
         },
       };
 
