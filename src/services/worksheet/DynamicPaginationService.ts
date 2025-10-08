@@ -330,12 +330,26 @@ export class DynamicPaginationService {
   /**
    * Determine if element should be moved to next page for better logical grouping
    * 
-   * SMART RULES:
-   * 1. If current page ends with only title/divider - move them
-   * 2. If next element is exercise and current ends with title - keep together
-   * 3. If next element is instruction and current ends with title - keep together
-   * 4. Smart lookahead - if ALL content moves, move title too
-   * 5. Title group detection - move entire structural group
+   * ENHANCED SMART RULES (Priority Order):
+   * 
+   * PRIORITY 1 - Prevent Orphan Structural Elements:
+   *   1.1. Title alone would be orphaned → Move title
+   *   1.2. Divider + Title would be orphaned → Move both
+   *   1.3. Divider alone would be orphaned → Move divider
+   * 
+   * PRIORITY 2 - Keep Logical Pairs Together:
+   *   2.1. Instructions + Exercise → Keep together
+   *   2.2. Title + Instructions → Keep together (if exercise follows)
+   *   2.3. Title + Content (first paragraph) → Keep together
+   * 
+   * PRIORITY 3 - Smart Lookahead (Multi-Element):
+   *   3.1. If title's ALL content moves → Move title too
+   *   3.2. If next 2+ elements are related → Check grouping
+   *   3.3. If section starts (title + structural) → Move whole section start
+   * 
+   * PRIORITY 4 - Activity Block Detection:
+   *   4.1. Title + Instructions + Exercise = atomic activity → Keep together
+   *   4.2. Multiple exercises under one title → Keep at least first exercise with title
    */
   private shouldMoveElementToNextPage(
     currentPage: GeneratedElement[],
@@ -347,35 +361,66 @@ export class DynamicPaginationService {
 
     const lastElement = currentPage[currentPage.length - 1];
     const secondLastElement = currentPage.length > 1 ? currentPage[currentPage.length - 2] : null;
+    const thirdLastElement = currentPage.length > 2 ? currentPage[currentPage.length - 3] : null;
 
-    // Rule 1: Orphan title prevention
-    // If last element is a title and next is content, move title to next page
+    // === PRIORITY 1: Prevent Orphan Structural Elements ===
+    
+    // Rule 1.1: Orphan title prevention
     if (this.isTitleElement(lastElement) && this.isContentElement(nextElement)) {
-      console.log(`  🧠 Orphan prevention: Title would be alone, moving to next page`);
+      console.log(`  🧠 [P1.1] Orphan prevention: Title would be alone, moving to next page`);
       return true;
     }
 
-    // Rule 2: Divider + Title orphan prevention
-    // If last 2 elements are divider + title, move both
+    // Rule 1.2: Divider + Title orphan prevention
     if (
       secondLastElement &&
       this.isDividerElement(secondLastElement) &&
       this.isTitleElement(lastElement) &&
       this.isContentElement(nextElement)
     ) {
-      console.log(`  🧠 Orphan prevention: Divider + Title would be alone, moving both`);
+      console.log(`  🧠 [P1.2] Orphan prevention: Divider + Title would be alone, moving both`);
       return true;
     }
 
-    // Rule 3: Instructions orphan prevention
-    // If last element is instructions and next is exercise, keep together
+    // Rule 1.3: Orphan divider prevention
+    if (this.isDividerElement(lastElement) && 
+        (this.isTitleElement(nextElement) || this.isContentElement(nextElement))) {
+      console.log(`  🧠 [P1.3] Orphan prevention: Divider would be alone`);
+      return true;
+    }
+
+    // === PRIORITY 2: Keep Logical Pairs Together ===
+    
+    // Rule 2.1: Instructions + Exercise should stay together
     if (this.isInstructionsElement(lastElement) && this.isExerciseElement(nextElement)) {
-      console.log(`  🧠 Keep together: Instructions + Exercise should not be split`);
+      console.log(`  🧠 [P2.1] Keep together: Instructions + Exercise should not be split`);
       return true;
     }
 
-    // Rule 4: Smart lookahead - Check if there's a title earlier on page
-    // and ALL its related content is moving to next page
+    // Rule 2.2: Title + Instructions should stay together (if exercise follows)
+    if (
+      this.isTitleElement(secondLastElement) &&
+      this.isInstructionsElement(lastElement) &&
+      this.isExerciseElement(nextElement)
+    ) {
+      console.log(`  🧠 [P2.2] Keep together: Title + Instructions (exercise follows)`);
+      return true;
+    }
+
+    // Rule 2.3: Title + First Content paragraph should stay together
+    if (
+      this.isTitleElement(lastElement) &&
+      this.isContentElement(nextElement) &&
+      remainingElements.length > 0 &&
+      !this.isTitleElement(remainingElements[0])
+    ) {
+      console.log(`  🧠 [P2.3] Keep together: Title + First Content`);
+      return true;
+    }
+
+    // === PRIORITY 3: Smart Lookahead (Multi-Element) ===
+    
+    // Rule 3.1: If title's ALL content is moving to next page, move title too
     const titleIndex = this.findLastTitleInPage(currentPage);
     if (titleIndex !== -1 && titleIndex < currentPage.length - 1) {
       const elementsAfterTitle = currentPage.slice(titleIndex + 1);
@@ -384,12 +429,26 @@ export class DynamicPaginationService {
       );
 
       if (!hasContentAfterTitle && (this.isContentElement(nextElement) || this.isExerciseElement(nextElement))) {
-        console.log(`  🧠 Smart lookahead: Title's content is all moving to next page`);
+        console.log(`  🧠 [P3.1] Smart lookahead: Title's content is all moving to next page`);
         return true;
       }
     }
 
-    // Rule 5: Title group detection
+    // Rule 3.2: Lookahead 2 elements
+    if (remainingElements.length >= 1) {
+      const elementAfterNext = remainingElements[0];
+      
+      if (
+        this.isTitleElement(lastElement) &&
+        this.isInstructionsElement(nextElement) &&
+        this.isExerciseElement(elementAfterNext)
+      ) {
+        console.log(`  🧠 [P3.2] Lookahead detected: Title → Instructions → Exercise group`);
+        return true;
+      }
+    }
+
+    // Rule 3.3: Title group detection - if last few elements are title + non-content
     if (currentPage.length >= 2) {
       const lastThreeElements = currentPage.slice(-3);
       const hasTitleInGroup = lastThreeElements.some(el => this.isTitleElement(el));
@@ -400,9 +459,35 @@ export class DynamicPaginationService {
       );
 
       if (hasTitleInGroup && hasOnlyStructuralElements && this.isExerciseElement(nextElement)) {
-        console.log(`  🧠 Group detection: Title group without content, exercise coming`);
+        console.log(`  🧠 [P3.3] Group detection: Title group without content, exercise coming`);
         return true;
       }
+    }
+
+    // === PRIORITY 4: Activity Block Detection ===
+    
+    // Rule 4.1: Detect complete activity block
+    if (
+      thirdLastElement &&
+      secondLastElement &&
+      this.isTitleElement(thirdLastElement) &&
+      this.isInstructionsElement(secondLastElement) &&
+      this.isExerciseElement(lastElement) &&
+      this.isExerciseElement(nextElement)
+    ) {
+      console.log(`  🧠 [P4.1] Activity block complete: Don't move (multiple exercises)`);
+      return false;
+    }
+
+    // Rule 4.2: Incomplete activity block
+    if (
+      secondLastElement &&
+      this.isTitleElement(secondLastElement) &&
+      this.isInstructionsElement(lastElement) &&
+      this.isExerciseElement(nextElement)
+    ) {
+      console.log(`  🧠 [P4.2] Activity block: Title + Instructions incomplete, exercise coming`);
+      return true;
     }
 
     return false;
@@ -423,10 +508,13 @@ export class DynamicPaginationService {
   /**
    * Find which elements should be moved to next page
    * 
-   * This method implements smart detection of logical groups:
-   * - Find title in current page
-   * - Include all structural elements after title (dividers, instructions)
-   * - Move entire group to keep it with content
+   * ENHANCED STRATEGIES (Priority Order):
+   * 
+   * Strategy 1: Activity Block (Title + Instructions + partial content)
+   * Strategy 2: Title Group (Title + all structural elements after it)
+   * Strategy 3: Structural Pairs (Divider + Title, Title + Instructions, etc.)
+   * Strategy 4: Single Structural Element (Title alone, Divider alone, Instructions alone)
+   * Strategy 5: Extended Lookahead (Last 3-4 elements with title)
    */
   private findElementsToMove(
     currentPage: GeneratedElement[],
@@ -436,8 +524,39 @@ export class DynamicPaginationService {
 
     const lastElement = currentPage[currentPage.length - 1];
     const secondLastElement = currentPage.length > 1 ? currentPage[currentPage.length - 2] : null;
+    const thirdLastElement = currentPage.length > 2 ? currentPage[currentPage.length - 3] : null;
 
-    // Strategy 1: Find title group (title + structural elements)
+    // === STRATEGY 1: Activity Block Detection ===
+    // Pattern: Divider + Title + Instructions (incomplete activity)
+    if (
+      thirdLastElement &&
+      secondLastElement &&
+      this.isDividerElement(thirdLastElement) &&
+      this.isTitleElement(secondLastElement) &&
+      this.isInstructionsElement(lastElement) &&
+      this.isExerciseElement(nextElement)
+    ) {
+      console.log(`  📦 [S1] Moving activity block start: Divider + Title + Instructions`);
+      return [thirdLastElement, secondLastElement, lastElement];
+    }
+
+    // Pattern: Title + Instructions (incomplete activity)
+    if (
+      secondLastElement &&
+      this.isTitleElement(secondLastElement) &&
+      this.isInstructionsElement(lastElement) &&
+      this.isExerciseElement(nextElement)
+    ) {
+      // Check if there's a divider before title
+      if (thirdLastElement && this.isDividerElement(thirdLastElement)) {
+        console.log(`  📦 [S1] Moving activity block start: Divider + Title + Instructions`);
+        return [thirdLastElement, secondLastElement, lastElement];
+      }
+      console.log(`  📦 [S1] Moving activity block start: Title + Instructions`);
+      return [secondLastElement, lastElement];
+    }
+
+    // === STRATEGY 2: Title Group (Title + Structural Elements) ===
     const titleIndex = this.findLastTitleInPage(currentPage);
     if (titleIndex !== -1) {
       const elementsAfterTitle = currentPage.slice(titleIndex + 1);
@@ -447,12 +566,14 @@ export class DynamicPaginationService {
 
       if (allStructural && (this.isContentElement(nextElement) || this.isExerciseElement(nextElement))) {
         const groupToMove = currentPage.slice(titleIndex);
-        console.log(`  📦 Moving title group: ${groupToMove.length} elements (title + structural)`);
+        console.log(`  📦 [S2] Moving title group: ${groupToMove.length} elements (title + structural)`);
         return groupToMove;
       }
     }
 
-    // Strategy 2: Check for divider + title pattern at end
+    // === STRATEGY 3: Structural Pairs ===
+    
+    // Pair 3.1: Divider + Title
     if (
       secondLastElement &&
       this.isDividerElement(secondLastElement) &&
@@ -461,30 +582,40 @@ export class DynamicPaginationService {
       return [secondLastElement, lastElement];
     }
 
-    // Strategy 3: Check for title alone at end
-    if (this.isTitleElement(lastElement)) {
-      return [lastElement];
-    }
-
-    // Strategy 4: Check for title + instructions pattern
+    // Pair 3.2: Title + Instructions
     if (
       this.isInstructionsElement(lastElement) &&
       secondLastElement &&
       this.isTitleElement(secondLastElement)
     ) {
-      const thirdLastElement = currentPage.length > 2 ? currentPage[currentPage.length - 3] : null;
-      if (thirdLastElement && this.isDividerElement(thirdLastElement)) {
-        return [thirdLastElement, secondLastElement, lastElement];
+      // Look for divider before title
+      const thirdLast = currentPage.length > 2 ? currentPage[currentPage.length - 3] : null;
+      if (thirdLast && this.isDividerElement(thirdLast)) {
+        return [thirdLast, secondLastElement, lastElement];
       }
       return [secondLastElement, lastElement];
     }
 
-    // Strategy 5: Check for instructions alone
+    // === STRATEGY 4: Single Structural Elements ===
+    
+    // Single 4.1: Title alone at end
+    if (this.isTitleElement(lastElement)) {
+      return [lastElement];
+    }
+
+    // Single 4.2: Divider alone
+    if (this.isDividerElement(lastElement)) {
+      return [lastElement];
+    }
+
+    // Single 4.3: Instructions alone
     if (this.isInstructionsElement(lastElement)) {
       return [lastElement];
     }
 
-    // Strategy 6: Last resort - check last 3 elements for any title
+    // === STRATEGY 5: Extended Lookahead (Last Resort) ===
+    // Look at last 3-4 elements for any title, move everything from title to end
+    
     if (currentPage.length >= 3) {
       const lastThree = currentPage.slice(-3);
       const titleInLastThree = lastThree.findIndex(el => this.isTitleElement(el));

@@ -1954,38 +1954,19 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   <RichTextEditor
                     content={(() => {
                       const text = elementData.properties?.text ?? '<p></p>';
-                      console.log('🔵 [BodyText] Initial content:', {
-                        raw: elementData.properties?.text,
-                        type: typeof elementData.properties?.text,
-                        isUndefined: elementData.properties?.text === undefined,
-                        isNull: elementData.properties?.text === null,
-                        final: text
-                      });
                       return text;
                     })()}
                     onChange={(html) => {
-                      console.log('🟢 [BodyText] onChange called:', {
-                        received: html,
-                        type: typeof html,
-                        isUndefined: html === undefined,
-                        isStringUndefined: html === 'undefined',
-                        length: html?.length
-                      });
-                      
                       // Санітизація та валідація HTML
                       if (!html || html === 'undefined' || html === 'null') {
-                        console.log('⚠️ [BodyText] Invalid value detected, setting default');
                         onUpdate?.({ text: '<p></p>' });
                         return;
                       }
                       
-                      console.log('✅ [BodyText] Updating with:', html);
-                      console.log('🔼 [BodyText] Calling onUpdate callback');
                       onUpdate?.({ text: html });
-                      console.log('✔️ [BodyText] onUpdate callback completed');
                     }}
                     onFinishEditing={() => {
-                      console.log('🔴 [BodyText] onFinishEditing called');
+                      // onFinishEditing callback
                     }} 
                     isEditing={true}
                     showToolbar={true}

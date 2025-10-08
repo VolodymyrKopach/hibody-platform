@@ -210,12 +210,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       if (contentRef.current) {
         const finalHtml = contentRef.current.innerHTML;
         
-        console.log('👋 [RichTextEditor] Click away detected, saving final content:', {
-          finalHtml,
-          currentHtmlRef: htmlRef.current,
-          areEqual: finalHtml === htmlRef.current
-        });
-        
         // Якщо є нові зміни, що не були збережені через onChange
         if (finalHtml && finalHtml !== htmlRef.current && finalHtml !== 'undefined') {
           htmlRef.current = finalHtml;

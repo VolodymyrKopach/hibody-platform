@@ -743,6 +743,31 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     };
   }, []);
 
+  // BUG #6 FIX: Global cleanup for cross-page drag state on cancel/ESC
+  useEffect(() => {
+    const handleGlobalDragEnd = () => {
+      if (crossPageDrag) {
+        setCrossPageDrag(null);
+        console.log('🚫 Cross-page drag cancelled (global dragend)');
+      }
+    };
+    
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && crossPageDrag) {
+        setCrossPageDrag(null);
+        console.log('🚫 Cross-page drag cancelled by ESC key');
+      }
+    };
+    
+    document.addEventListener('dragend', handleGlobalDragEnd);
+    document.addEventListener('keydown', handleEscapeKey);
+    
+    return () => {
+      document.removeEventListener('dragend', handleGlobalDragEnd);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [crossPageDrag]);
+
   // Prevent browser back button navigation
   useEffect(() => {
     // Push a dummy state to history to intercept back button
@@ -940,20 +965,43 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   };
 
   const handleElementReorder = (pageId: string, fromIndex: number, toIndex: number) => {
+    console.log('🔄 [handleElementReorder] Called with:', { pageId, fromIndex, toIndex });
+    
+    // BUG #2 FIX: Skip if same position (no-op)
+    if (fromIndex === toIndex) {
+      console.log('⚠️ [handleElementReorder] Same position reorder, skipping');
+      return;
+    }
+    
     setPageContents(prev => {
       const newMap = new Map(prev);
       const pageContent = newMap.get(pageId);
       
-      if (!pageContent) return prev;
+      if (!pageContent) {
+        console.error('❌ [handleElementReorder] Page content not found for pageId:', pageId);
+        return prev;
+      }
+      
+      console.log('📋 [handleElementReorder] Current elements count:', pageContent.elements.length);
       
       const elements = [...pageContent.elements];
       const [movedElement] = elements.splice(fromIndex, 1);
+      
+      console.log('🎯 [handleElementReorder] Moved element:', {
+        id: movedElement.id,
+        type: movedElement.type,
+        fromIndex,
+        toIndex
+      });
+      
       elements.splice(toIndex, 0, movedElement);
       
       newMap.set(pageId, {
         ...pageContent,
         elements,
       });
+      
+      console.log('✅ [handleElementReorder] Elements reordered successfully');
       
       saveToHistory(newMap);
       return newMap;
@@ -1603,15 +1651,13 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     if (!element) return;
     
     setCrossPageDrag({ sourcePageId, elementId, element });
-    console.log('🔄 Cross-page drag started:', { sourcePageId, elementId });
   };
 
   const handleCrossPageDragEnd = () => {
     setCrossPageDrag(null);
-    console.log('✅ Cross-page drag ended');
   };
 
-  const handleCrossPageDrop = (targetPageId: string) => {
+  const handleCrossPageDrop = (targetPageId: string, dropIndex?: number) => {
     if (!crossPageDrag) return;
     
     const { sourcePageId, elementId, element } = crossPageDrag;
@@ -1621,6 +1667,19 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       setCrossPageDrag(null);
       return;
     }
+
+    console.log('📥 Handling cross-page drop:', {
+      from: sourcePageId,
+      to: targetPageId,
+      elementId,
+      dropIndex: dropIndex ?? 'end'
+    });
+
+    // BUG #1 FIX: Track if this element is currently selected
+    const isSelectedElement = selectedElementId === elementId;
+    
+    // BUG #1 FIX: Generate new ID before state update
+    const movedElementNewId = `element-${Date.now()}-${Math.random()}`;
 
     setPageContents(prev => {
       const newMap = new Map(prev);
@@ -1638,13 +1697,32 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       // Add to target page with new ID to avoid conflicts
       const movedElement: CanvasElement = {
         ...element,
-        id: `element-${Date.now()}-${Math.random()}`,
+        id: movedElementNewId,
         zIndex: targetContent.elements.length,
       };
       
+      // Insert at specific position or add to end
+      const targetElements = [...targetContent.elements];
+      
+      // BUG #3 FIX: Validate dropIndex range
+      if (dropIndex !== undefined && dropIndex !== null) {
+        if (dropIndex < 0 || dropIndex > targetElements.length) {
+          console.warn(`⚠️ Invalid dropIndex ${dropIndex} for array length ${targetElements.length}, inserting at end`);
+          targetElements.push(movedElement);
+        } else {
+          // Valid dropIndex - insert at position
+          targetElements.splice(dropIndex, 0, movedElement);
+          console.log(`✅ Inserted element at position ${dropIndex}`);
+        }
+      } else {
+        // No dropIndex specified - add to end
+        targetElements.push(movedElement);
+        console.log(`✅ Added element to end`);
+      }
+      
       newMap.set(targetPageId, {
         ...targetContent,
-        elements: [...targetContent.elements, movedElement],
+        elements: targetElements,
       });
       
       saveToHistory(newMap);
@@ -1653,10 +1731,31 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     
     console.log(`✅ Element moved from page ${sourcePageId} to ${targetPageId} via drag`);
     
+    // BUG #1 FIX: Update selection to point to new element ID
+    if (isSelectedElement) {
+      setSelectedElementId(movedElementNewId);
+      
+      // Update selection state with new element data
+      const targetPage = pages.find(p => p.id === targetPageId);
+      if (targetPage) {
+        setSelection({
+          type: 'element',
+          pageData: targetPage,
+          elementData: {
+            ...element,
+            id: movedElementNewId,
+          },
+        });
+        console.log('✅ Selection updated to follow moved element');
+      }
+    } else {
+      // Clear selection if it wasn't the moved element
+      setSelectedElementId(null);
+      setSelection(null);
+    }
+    
     // Clear cross-page drag state
     setCrossPageDrag(null);
-    setSelectedElementId(null);
-    setSelection(null);
   };
 
   // Context menu handlers
@@ -2349,10 +2448,19 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
           }}
         >
           {/* Floating Pages - Canva Style */}
-          {pages.map((page) => {
+          {pages
+            .filter(page => {
+              // Hide cut pages instead of showing them grayed out
+              if (clipboard?.type === 'page' && 
+                  clipboard.operation === 'cut' && 
+                  clipboard.page.id === page.id) {
+                return false; // Don't render cut pages
+              }
+              return true;
+            })
+            .map((page) => {
             const pageContent = pageContents.get(page.id);
             const isSelected = selection?.type === 'page' && selection.data.id === page.id;
-            const isCut = clipboard?.type === 'page' && clipboard.operation === 'cut' && clipboard.page.id === page.id;
             
             return (
             <Box
@@ -2364,13 +2472,10 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 top: page.y,
                 border: isSelected 
                   ? `3px solid ${theme.palette.primary.main}` 
-                  : isCut
-                  ? `3px dashed ${alpha(theme.palette.warning.main, 0.7)}`
                   : '3px solid transparent',
                 borderRadius: '8px',
-                transition: 'border-color 0.2s, opacity 0.2s',
+                transition: 'border-color 0.2s',
                 boxShadow: isSelected ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}` : 'none',
-                opacity: isCut ? 0.5 : 1,
               }}
             >
               <CanvasPage
@@ -2390,7 +2495,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 onElementReorder={(fromIndex, toIndex) => handleElementReorder(page.id, fromIndex, toIndex)}
                 onCrossPageDragStart={(elementId) => handleCrossPageDragStart(page.id, elementId)}
                 onCrossPageDragEnd={handleCrossPageDragEnd}
-                onCrossPageDrop={() => handleCrossPageDrop(page.id)}
+                onCrossPageDrop={(dropIndex) => handleCrossPageDrop(page.id, dropIndex)}
                 onElementContextMenu={(e: React.MouseEvent, elementId: string) => handleContextMenu(e, page.id, elementId)}
                 onPageContextMenu={(e: React.MouseEvent) => handleContextMenu(e, page.id)}
               />
