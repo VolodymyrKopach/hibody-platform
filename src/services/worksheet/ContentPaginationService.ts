@@ -35,7 +35,14 @@ export interface PaginationResult {
   pages: GeneratedPage[];
   totalPages: number;
   elementsPerPage: number[];
-  overflowElements: number; // Elements that couldn't fit
+  overflowElements: number; // Count of elements with overflow warnings
+  overflowWarnings?: Array<{
+    element: string;
+    expectedHeight: number;
+    availableHeight: number;
+    overflow: number;
+    pageNumber: number;
+  }>; // Detailed overflow warnings if any
 }
 
 // === SOLID: ISP - Interface for element with position and size ===
@@ -81,6 +88,28 @@ export const PAGE_CONFIGS: Record<string, PageConfig> = {
 export class ContentPaginationService {
   private pageConfig: PageConfig;
   private ageRange?: string; // For age-based size adjustments
+  
+  // Track overflow warnings for elements that exceed page height
+  private overflowWarnings: Array<{
+    element: string;
+    expectedHeight: number;
+    availableHeight: number;
+    overflow: number;
+    pageNumber: number;
+  }> = [];
+
+  // === ADVANCED PAGINATION: Safety buffers for accurate height estimation ===
+  private static readonly SAFETY_BUFFERS: Record<string, number> = {
+    'fill-blank': 1.15,        // +15% for margins
+    'multiple-choice': 1.12,   // +12%
+    'title-block': 1.20,       // +20% for large margins
+    'instructions-box': 1.15,  // +15%
+    'divider': 1.10,           // +10%
+    'default': 1.12            // +12% default
+  };
+
+  private static readonly INTER_ELEMENT_SPACING = 40; // px between elements
+  private static readonly PAGE_BOTTOM_MARGIN = 50; // px reserve at bottom
 
   constructor(pageConfig: PageConfig = PAGE_CONFIGS.A4) {
     this.pageConfig = pageConfig;
@@ -93,121 +122,297 @@ export class ContentPaginationService {
     this.ageRange = ageRange;
   }
 
-  // === SOLID: SRP - Main pagination method ===
+  // === ADVANCED PAGINATION: Pre-calculation Phase ===
   /**
-   * Automatically paginate content based on element sizes
-   * Elements are placed on pages intelligently:
-   * 1. Try to fit element on current page
-   * 2. If it doesn't fit and is atomic (not splittable), move to next page
-   * 3. Track cumulative height to know when page is full
+   * Pre-calculate heights for all elements with safety buffers
+   * This phase ensures we have accurate height estimates before distribution
+   */
+  private precalculateHeights(elements: GeneratedElement[]): Array<{
+    element: GeneratedElement;
+    estimatedHeight: number;
+    isStructural: boolean;
+    isTitle: boolean;
+    isDivider: boolean;
+    isContent: boolean;
+  }> {
+    return elements.map(el => {
+      const baseHeight = this.estimateElementHeight(el);
+      const buffer = ContentPaginationService.SAFETY_BUFFERS[el.type] || 
+                     ContentPaginationService.SAFETY_BUFFERS['default'];
+      
+      return {
+        element: el,
+        estimatedHeight: Math.ceil(baseHeight * buffer),
+        isStructural: this.isTitleElement(el) || this.isDividerElement(el) || this.isInstructionsElement(el),
+        isTitle: this.isTitleElement(el),
+        isDivider: this.isDividerElement(el),
+        isContent: this.isContentElement(el) || this.isExerciseElement(el)
+      };
+    });
+  }
+
+  // === ADVANCED PAGINATION: Orphan Detection ===
+  /**
+   * Check if adding element would create orphan situation
+   * Orphan = structural element (title/divider) alone without its related content
+   */
+  private wouldCreateOrphan(
+    currentPage: Array<{element: GeneratedElement; estimatedHeight: number; isStructural: boolean}>,
+    currentElement: {element: GeneratedElement; estimatedHeight: number; isStructural: boolean; isTitle: boolean; isDivider: boolean},
+    nextElement: {element: GeneratedElement; estimatedHeight: number; isContent: boolean} | null,
+    availableHeight: number,
+    currentPageHeight: number
+  ): boolean {
+    // If no next element - not an orphan
+    if (!nextElement) return false;
+    
+    // If current element is NOT structural - not an orphan
+    if (!currentElement.isStructural) return false;
+    
+    // If next element is NOT content - not an orphan
+    if (!nextElement.isContent) return false;
+    
+    // Check if there's space for next element
+    const heightAfterCurrent = currentPageHeight + currentElement.estimatedHeight;
+    const spaceLeft = availableHeight - heightAfterCurrent - ContentPaginationService.INTER_ELEMENT_SPACING;
+    
+    // If next content won't fit - this is an orphan
+    return spaceLeft < nextElement.estimatedHeight;
+  }
+
+  /**
+   * Extract orphan structural elements from end of page
+   * Returns elements that should move to next page
+   */
+  private extractOrphanElements(currentPage: GeneratedElement[]): GeneratedElement[] {
+    if (currentPage.length === 0) return [];
+    
+    const lastElement = currentPage[currentPage.length - 1];
+    const secondLast = currentPage.length > 1 ? currentPage[currentPage.length - 2] : null;
+    
+    // Case 1: Title alone at end
+    if (this.isTitleElement(lastElement)) {
+      return [lastElement];
+    }
+    
+    // Case 2: Divider alone at end
+    if (this.isDividerElement(lastElement)) {
+      return [lastElement];
+    }
+    
+    // Case 3: Divider + Title at end
+    if (secondLast && 
+        this.isDividerElement(secondLast) && 
+        this.isTitleElement(lastElement)) {
+      return [secondLast, lastElement];
+    }
+    
+    // Case 4: Instructions alone at end (soft rule)
+    if (this.isInstructionsElement(lastElement)) {
+      return [lastElement];
+    }
+    
+    return [];
+  }
+
+  /**
+   * Clean page before saving - remove orphan structural elements from the end
+   * Returns: { cleanedPage, orphansToMove }
+   */
+  private cleanPageBeforeSave(page: GeneratedElement[]): {
+    cleanedPage: GeneratedElement[];
+    orphansToMove: GeneratedElement[];
+  } {
+    if (page.length === 0) {
+      return { cleanedPage: [], orphansToMove: [] };
+    }
+
+    const orphans = this.extractOrphanElements(page);
+    
+    if (orphans.length > 0) {
+      const cleanedPage = page.slice(0, page.length - orphans.length);
+      console.log(`  🧹 Cleaning page: removing ${orphans.length} orphan(s) from end`);
+      return { cleanedPage, orphansToMove: orphans };
+    }
+    
+    return { cleanedPage: page, orphansToMove: [] };
+  }
+
+  /**
+   * Validate all pages after distribution
+   * Check for overflow and log warnings
+   */
+  private postValidatePages(pages: GeneratedPage[], availableHeight: number): void {
+    pages.forEach((page, idx) => {
+      const pageHeight = page.elements.reduce((sum, el) => {
+        const elHeight = this.estimateElementHeight(el);
+        const spacing = ContentPaginationService.INTER_ELEMENT_SPACING;
+        return sum + elHeight + spacing;
+      }, 0);
+      
+      if (pageHeight > availableHeight) {
+        const overflow = pageHeight - availableHeight;
+        console.warn(`⚠️ Page ${page.pageNumber} overflow: ${pageHeight}px > ${availableHeight}px (${overflow}px over)`);
+        
+        this.overflowWarnings.push({
+          element: `page-${page.pageNumber}`,
+          expectedHeight: pageHeight,
+          availableHeight,
+          overflow,
+          pageNumber: page.pageNumber
+        });
+      } else {
+        console.log(`✅ Page ${page.pageNumber} validated: ${pageHeight}/${availableHeight}px`);
+      }
+    });
+  }
+
+  // === ADVANCED PAGINATION: Main Method with Pre-calculation ===
+  /**
+   * Advanced pagination with pre-calculation, orphan prevention, and post-validation
+   * 
+   * PHASE 1: Pre-calculate all heights with safety buffers
+   * PHASE 2: Smart distribution with orphan prevention
+   * PHASE 3: Post-validation to detect any overflows
    */
   public paginateContent(
     elements: GeneratedElement[],
     pageTitle?: string
   ): PaginationResult {
-    console.log('📄 PAGINATION: Starting smart pagination...');
-    console.log(`📄 PAGINATION: Total elements to paginate: ${elements.length}`);
+    this.overflowWarnings = [];
     
+    console.log('📊 PHASE 1: Pre-calculating heights...');
+    const precalculated = this.precalculateHeights(elements);
+    
+    console.log('📄 PHASE 2: Smart distribution...');
     const pages: GeneratedPage[] = [];
     const elementsPerPage: number[] = [];
     let currentPage: GeneratedElement[] = [];
     let currentPageHeight = 0;
     let pageNumber = 1;
-
-    // === SOLID: SRP - Calculate available height ===
-    const availableHeight = this.getAvailableHeight();
+    let pendingOrphans: GeneratedElement[] = []; // Track orphans from previous page
+    const availableHeight = this.getAvailableHeight() - ContentPaginationService.PAGE_BOTTOM_MARGIN;
     
-    console.log(`📄 PAGINATION: Available height per page: ${availableHeight}px`);
-
-    // === SOLID: SRP - Enhance elements with metadata ===
-    const positionedElements = this.enhanceElementsWithMetadata(elements);
-
-    // === SOLID: SRP - Distribute elements across pages ===
-    for (let i = 0; i < positionedElements.length; i++) {
-      const element = positionedElements[i];
-      const elementHeight = this.getElementHeight(element);
+    console.log(`📄 Available height per page: ${availableHeight}px`);
+    
+    for (let i = 0; i < precalculated.length; i++) {
+      const current = precalculated[i];
+      const next = i < precalculated.length - 1 ? precalculated[i + 1] : null;
       
-      console.log(`📄 PAGINATION: Processing element ${i + 1}/${positionedElements.length} (${element.type}), height: ${elementHeight}px, current page height: ${currentPageHeight}px`);
-
-      // === SOLID: SRP - Check if element fits on current page ===
-      if (currentPageHeight + elementHeight <= availableHeight) {
-        // Element fits on current page
-        currentPage.push(element);
-        currentPageHeight += elementHeight;
-        console.log(`  ✅ Element fits on page ${pageNumber}, new height: ${currentPageHeight}px`);
-      } else {
-        // Element doesn't fit
-        console.log(`  ⚠️ Element doesn't fit on page ${pageNumber}`);
-        
-        // === SMART LOGIC: Check if we should move some elements for better grouping ===
-        const shouldApplySmartLogic = this.shouldMoveElementsForBetterGrouping(
-          currentPage,
-          element,
-          positionedElements.slice(i + 1)
+      // Add pending orphans from previous page at the start
+      if (pendingOrphans.length > 0 && currentPage.length === 0) {
+        console.log(`  📥 Adding ${pendingOrphans.length} orphan(s) from previous page`);
+        currentPage = [...pendingOrphans];
+        currentPageHeight = pendingOrphans.reduce((sum, el) => 
+          sum + this.estimateElementHeight(el) + ContentPaginationService.INTER_ELEMENT_SPACING, 0
         );
-
-        if (shouldApplySmartLogic) {
-          console.log(`  🧠 Smart logic: Applying orphan prevention`);
+        pendingOrphans = [];
+      }
+      
+      // Calculate total height with spacing
+      const heightWithSpacing = current.estimatedHeight + 
+        (currentPage.length > 0 ? ContentPaginationService.INTER_ELEMENT_SPACING : 0);
+      
+      console.log(`  Processing ${i + 1}/${precalculated.length}: ${current.element.type} (${current.estimatedHeight}px)`);
+      
+      // Check if fits on current page
+      if (currentPageHeight + heightWithSpacing <= availableHeight) {
+        // Check for orphan situation
+        const wouldBeOrphan = this.wouldCreateOrphan(
+          precalculated.slice(0, i),
+          current,
+          next,
+          availableHeight,
+          currentPageHeight
+        );
+        
+        if (wouldBeOrphan) {
+          console.log(`  🚫 Orphan prevention: Moving ${current.element.type} to next page`);
           
-          const elementsToMove = this.findElementsToMoveToNextPage(currentPage, element);
-          
-          if (elementsToMove.length > 0) {
-            console.log(`  📦 Moving ${elementsToMove.length} element(s) to next page for better grouping`);
+          // Clean and save current page
+          if (currentPage.length > 0) {
+            const { cleanedPage, orphansToMove } = this.cleanPageBeforeSave(currentPage);
             
-            // Remove elements to move from current page
-            const remainingElements = currentPage.slice(0, currentPage.length - elementsToMove.length);
-            
-            // Save current page (without moved elements)
-            if (remainingElements.length > 0) {
-              pages.push(this.createPage(remainingElements, pageNumber, pageTitle));
-              elementsPerPage.push(remainingElements.length);
-              console.log(`  📝 Created page ${pageNumber} with ${remainingElements.length} elements`);
+            if (cleanedPage.length > 0) {
+              pages.push(this.createPage(cleanedPage, pageNumber, pageTitle));
+              elementsPerPage.push(cleanedPage.length);
+              console.log(`  ✅ Page ${pageNumber}: ${cleanedPage.length} elements`);
               pageNumber++;
             }
             
-            // Calculate height of moved elements
-            const movedElementsHeight = elementsToMove.reduce((sum, el) => 
-              sum + this.getElementHeight(el as PositionedElement), 0
-            );
-            
-            // Start new page with moved elements + current element
-            currentPage = [...elementsToMove, element];
-            currentPageHeight = movedElementsHeight + elementHeight;
-            console.log(`  📄 Started new page ${pageNumber} with moved elements + current element`);
-            continue;
+            // Track orphans for next page
+            pendingOrphans = orphansToMove;
           }
+          
+          // Start new page with this element
+          currentPage = [current.element];
+          currentPageHeight = current.estimatedHeight;
+        } else {
+          // Add to current page
+          currentPage.push(current.element);
+          currentPageHeight += heightWithSpacing;
+          console.log(`  ✅ Added ${current.element.type} (${currentPageHeight}/${availableHeight}px)`);
         }
+      } else {
+        // Doesn't fit - new page
+        console.log(`  ⚠️ ${current.element.type} doesn't fit, new page`);
         
-        // === SOLID: SRP - Save current page if it has elements ===
+        // Clean and save current page
         if (currentPage.length > 0) {
-          pages.push(this.createPage(currentPage, pageNumber, pageTitle));
-          elementsPerPage.push(currentPage.length);
-          console.log(`  📝 Created page ${pageNumber} with ${currentPage.length} elements`);
-          pageNumber++;
+          const { cleanedPage, orphansToMove } = this.cleanPageBeforeSave(currentPage);
+          
+          if (cleanedPage.length > 0) {
+            pages.push(this.createPage(cleanedPage, pageNumber, pageTitle));
+            elementsPerPage.push(cleanedPage.length);
+            console.log(`  ✅ Page ${pageNumber}: ${cleanedPage.length} elements`);
+            pageNumber++;
+          }
+          
+          // Start new page with orphans + current element
+          currentPage = [...orphansToMove, current.element];
+          currentPageHeight = orphansToMove.reduce((sum, el) => 
+            sum + this.estimateElementHeight(el) + ContentPaginationService.INTER_ELEMENT_SPACING, 0
+          ) + current.estimatedHeight;
+        } else {
+          // Empty page - just start with current element
+          currentPage = [current.element];
+          currentPageHeight = current.estimatedHeight;
         }
-        
-        // === SOLID: SRP - Start new page with current element ===
-        currentPage = [element];
-        currentPageHeight = elementHeight;
-        console.log(`  📄 Started new page ${pageNumber} with element height: ${elementHeight}px`);
       }
     }
-
-    // === SOLID: SRP - Add last page if it has elements ===
+    
+    // Add last page
     if (currentPage.length > 0) {
-      pages.push(this.createPage(currentPage, pageNumber, pageTitle));
-      elementsPerPage.push(currentPage.length);
-      console.log(`📝 Created final page ${pageNumber} with ${currentPage.length} elements`);
+      // Clean last page too
+      const { cleanedPage, orphansToMove } = this.cleanPageBeforeSave(currentPage);
+      
+      if (cleanedPage.length > 0) {
+        pages.push(this.createPage(cleanedPage, pageNumber, pageTitle));
+        elementsPerPage.push(cleanedPage.length);
+        console.log(`  ✅ Final page ${pageNumber}: ${cleanedPage.length} elements`);
+        pageNumber++;
+      }
+      
+      // If there are orphans at the very end, create one more page
+      if (orphansToMove.length > 0) {
+        console.log(`  ⚠️ Warning: ${orphansToMove.length} orphan(s) at end - creating extra page`);
+        pages.push(this.createPage(orphansToMove, pageNumber, pageTitle));
+        elementsPerPage.push(orphansToMove.length);
+        console.log(`  ✅ Extra page ${pageNumber}: ${orphansToMove.length} elements`);
+      }
     }
-
-    console.log(`✅ PAGINATION: Complete! Created ${pages.length} pages`);
-    console.log(`📊 PAGINATION: Elements per page: ${elementsPerPage.join(', ')}`);
-
+    
+    console.log('✅ PHASE 3: Post-validation...');
+    this.postValidatePages(pages, availableHeight);
+    
+    console.log(`✅ PAGINATION COMPLETE: ${pages.length} pages created`);
+    
     return {
       pages,
       totalPages: pages.length,
       elementsPerPage,
-      overflowElements: 0, // We don't have overflow in this implementation
+      overflowElements: this.overflowWarnings.length,
+      overflowWarnings: this.overflowWarnings.length > 0 ? [...this.overflowWarnings] : undefined
     };
   }
 
@@ -227,17 +432,6 @@ export class ContentPaginationService {
       this.pageConfig.padding.left -
       this.pageConfig.padding.right
     );
-  }
-
-  // === SOLID: SRP - Enhance elements with metadata ===
-  private enhanceElementsWithMetadata(
-    elements: GeneratedElement[]
-  ): PositionedElement[] {
-    return elements.map((element) => ({
-      ...element,
-      calculatedHeight: this.estimateElementHeight(element),
-      isSplittable: this.isElementSplittable(element),
-    }));
   }
 
   // === SOLID: SRP - Estimate element height based on type ===
@@ -338,50 +532,159 @@ export class ContentPaginationService {
     return baseHeight * contentMultiplier;
   }
 
+  /**
+   * Safely get string length from any value type
+   * Handles null, undefined, numbers, objects, etc.
+   * 
+   * @param value - Value to get length from
+   * @returns Length of string representation
+   */
+  private safeStringLength(value: any): number {
+    if (value === null || value === undefined) return 0;
+    
+    if (typeof value === 'string') return value.length;
+    if (typeof value === 'number') return String(value).length;
+    if (typeof value === 'boolean') return String(value).length;
+    
+    if (typeof value === 'object') {
+      try {
+        return JSON.stringify(value).length;
+      } catch {
+        return 0;
+      }
+    }
+    
+    return String(value).length;
+  }
+
+  /**
+   * Safely extract text from option object
+   * Handles various option formats (string, number, object with text/label/value)
+   * 
+   * @param opt - Option to extract text from
+   * @returns Text representation of option
+   */
+  private getOptionText(opt: any): string {
+    if (!opt) return '';
+    if (typeof opt === 'string') return opt;
+    if (typeof opt === 'number') return String(opt);
+    
+    if (typeof opt === 'object') {
+      // Try different common property names
+      const text = opt.text || opt.label || opt.value || opt.content;
+      if (text) return String(text);
+    }
+    
+    return '';
+  }
+
   // === SOLID: SRP - Get content length from element ===
   private getContentLength(element: GeneratedElement): number {
     const props = element.properties || {};
     let length = 0;
     
-    // Check various content properties
-    if (props.text) length += props.text.length;
-    if (props.content) length += props.content.length;
-    if (props.question) length += props.question.length;
+    // ✅ Safe property access with type checking
+    length += this.safeStringLength(props.text);
+    length += this.safeStringLength(props.content);
+    length += this.safeStringLength(props.question);
+    length += this.safeStringLength(props.instruction);
+    length += this.safeStringLength(props.description);
+    
+    // ✅ Safe options handling
     if (props.options && Array.isArray(props.options)) {
       length += props.options.reduce((sum: number, opt: any) => {
-        return sum + (typeof opt === 'string' ? opt.length : opt.text?.length || 0);
+        return sum + this.safeStringLength(this.getOptionText(opt));
+      }, 0);
+    }
+    
+    // ✅ Safe items handling (for exercises)
+    if (props.items && Array.isArray(props.items)) {
+      length += props.items.reduce((sum: number, item: any) => {
+        if (!item) return sum;
+        
+        let itemLength = 0;
+        itemLength += this.safeStringLength(item.text);
+        itemLength += this.safeStringLength(item.question);
+        itemLength += this.safeStringLength(item.answer);
+        
+        return sum + itemLength;
       }, 0);
     }
     
     return length;
   }
 
-  // === SOLID: SRP - Check if element can be split across pages ===
-  private isElementSplittable(element: GeneratedElement): boolean {
-    // Most atomic components should NOT be split
-    const nonSplittableTypes = [
-      'fill-blank',
-      'multiple-choice',
-      'match-pairs',
-      'true-false',
-      'short-answer',
-      'word-bank',
-      'image-block',
-      'image-with-caption',
-      'box',
-      'title-block',
-      'subtitle-block',
-    ];
-    
-    // Only long text blocks might be splittable in the future
-    const splittableTypes = ['paragraph-block'];
-    
-    return splittableTypes.includes(element.type);
-  }
 
-  // === SOLID: SRP - Get element height (from metadata or estimate) ===
-  private getElementHeight(element: PositionedElement): number {
-    return element.calculatedHeight || this.estimateElementHeight(element);
+  /**
+   * Scale down element to fit within maxHeight
+   * Reduces content while maintaining structure
+   * 
+   * @param element - Element to scale
+   * @param maxHeight - Maximum allowed height
+   * @returns Scaled element or original if cannot scale
+   */
+  private scaleDownElement(
+    element: GeneratedElement,
+    maxHeight: number
+  ): GeneratedElement {
+    const elementHeight = this.estimateElementHeight(element);
+    
+    if (element.type === 'fill-blank') {
+      const props = element.properties || {};
+      const items = props.items || [];
+      const baseHeight = 80; // Base height
+      const wordBankHeight = props.wordBank && props.wordBank.length > 0 ? 80 : 0;
+      const availableForItems = maxHeight - baseHeight - wordBankHeight;
+      const maxItems = Math.floor(availableForItems / 50); // 50px per item
+      
+      if (items.length > maxItems && maxItems > 0) {
+        console.warn(
+          `⚠️ Scaling fill-blank from ${items.length} to ${maxItems} items to fit page`
+        );
+        
+        return {
+          ...element,
+          properties: {
+            ...props,
+            items: items.slice(0, maxItems),
+            _truncated: true,
+            _originalItemCount: items.length,
+            _truncatedItems: items.slice(maxItems)
+          }
+        };
+      }
+    }
+    
+    if (element.type === 'multiple-choice') {
+      const props = element.properties || {};
+      const items = props.items || [];
+      const maxItems = Math.floor((maxHeight - 60) / 80); // Base 60 + 80 per item
+      
+      if (items.length > maxItems && maxItems > 0) {
+        console.warn(
+          `⚠️ Scaling multiple-choice from ${items.length} to ${maxItems} items`
+        );
+        
+        return {
+          ...element,
+          properties: {
+            ...props,
+            items: items.slice(0, maxItems),
+            _truncated: true,
+            _originalItemCount: items.length
+          }
+        };
+      }
+    }
+    
+    // For other types, return as-is with warning
+    if (elementHeight > maxHeight) {
+      console.warn(
+        `⚠️ Element type ${element.type} with height ${elementHeight}px cannot be scaled`
+      );
+    }
+    
+    return element;
   }
 
   // === SOLID: SRP - Create page object ===
@@ -422,362 +725,6 @@ export class ContentPaginationService {
     return strategy(elements, this.pageConfig);
   }
 
-  // === SMART PAGINATION LOGIC ===
-  // These methods implement intelligent grouping to prevent orphans and keep related content together
-
-  /**
-   * Check if we should move elements for better logical grouping
-   * 
-   * ENHANCED SMART RULES (Priority Order):
-   * 
-   * PRIORITY 1 - Prevent Orphan Structural Elements:
-   *   1.1. Title alone would be orphaned → Move title
-   *   1.2. Divider + Title would be orphaned → Move both
-   *   1.3. Divider alone would be orphaned → Move divider
-   * 
-   * PRIORITY 2 - Keep Logical Pairs Together:
-   *   2.1. Instructions + Exercise → Keep together
-   *   2.2. Title + Instructions → Keep together (if exercise follows)
-   *   2.3. Title + Content (first paragraph) → Keep together
-   * 
-   * PRIORITY 3 - Smart Lookahead (Multi-Element):
-   *   3.1. If title's ALL content moves → Move title too
-   *   3.2. If next 2+ elements are related → Check grouping
-   *   3.3. If section starts (title + structural) → Move whole section start
-   * 
-   * PRIORITY 4 - Activity Block Detection:
-   *   4.1. Title + Instructions + Exercise = atomic activity → Keep together
-   *   4.2. Multiple exercises under one title → Keep at least first exercise with title
-   */
-  private shouldMoveElementsForBetterGrouping(
-    currentPage: GeneratedElement[],
-    nextElement: GeneratedElement,
-    remainingElements: GeneratedElement[]
-  ): boolean {
-    if (currentPage.length === 0) return false;
-
-    const lastElement = currentPage[currentPage.length - 1];
-    const secondLastElement = currentPage.length > 1 ? currentPage[currentPage.length - 2] : null;
-    const thirdLastElement = currentPage.length > 2 ? currentPage[currentPage.length - 3] : null;
-
-    // === PRIORITY 1: Prevent Orphan Structural Elements ===
-    
-    // Rule 1.1: Orphan title prevention
-    if (this.isTitleElement(lastElement) && this.isContentOrExerciseElement(nextElement)) {
-      console.log(`  🧠 [P1.1] Orphan prevention: Title would be alone`);
-      return true;
-    }
-
-    // Rule 1.2: Divider + Title orphan prevention
-    if (
-      secondLastElement &&
-      this.isDividerElement(secondLastElement) &&
-      this.isTitleElement(lastElement) &&
-      this.isContentOrExerciseElement(nextElement)
-    ) {
-      console.log(`  🧠 [P1.2] Orphan prevention: Divider + Title would be alone`);
-      return true;
-    }
-
-    // Rule 1.3: Orphan divider prevention
-    // If divider is last element and next is title or content, move divider
-    if (this.isDividerElement(lastElement) && 
-        (this.isTitleElement(nextElement) || this.isContentOrExerciseElement(nextElement))) {
-      console.log(`  🧠 [P1.3] Orphan prevention: Divider would be alone`);
-      return true;
-    }
-
-    // === PRIORITY 2: Keep Logical Pairs Together ===
-    
-    // Rule 2.1: Instructions + Exercise should stay together
-    if (this.isInstructionsElement(lastElement) && this.isExerciseElement(nextElement)) {
-      console.log(`  🧠 [P2.1] Keep together: Instructions + Exercise`);
-      return true;
-    }
-
-    // Rule 2.2: Title + Instructions should stay together (if exercise follows)
-    if (
-      this.isTitleElement(secondLastElement) &&
-      this.isInstructionsElement(lastElement) &&
-      this.isExerciseElement(nextElement)
-    ) {
-      console.log(`  🧠 [P2.2] Keep together: Title + Instructions (exercise follows)`);
-      return true;
-    }
-
-    // Rule 2.3: Title + First Content paragraph should stay together
-    // This is a softer rule - only if next element is very related
-    if (
-      this.isTitleElement(lastElement) &&
-      this.isContentElement(nextElement) &&
-      remainingElements.length > 0 &&
-      !this.isTitleElement(remainingElements[0])
-    ) {
-      // Title + content, and more content follows = keep first content with title
-      console.log(`  🧠 [P2.3] Keep together: Title + First Content`);
-      return true;
-    }
-
-    // === PRIORITY 3: Smart Lookahead (Multi-Element) ===
-    
-    // Rule 3.1: If title's ALL content moves to next page, move title too
-    const titleIndex = this.findLastTitleInPage(currentPage);
-    if (titleIndex !== -1 && titleIndex < currentPage.length - 1) {
-      const elementsAfterTitle = currentPage.slice(titleIndex + 1);
-      const hasContentAfterTitle = elementsAfterTitle.some(el => 
-        this.isContentElement(el) || this.isExerciseElement(el)
-      );
-
-      if (!hasContentAfterTitle && this.isContentOrExerciseElement(nextElement)) {
-        console.log(`  🧠 [P3.1] Smart lookahead: Title's content is all moving to next page`);
-        return true;
-      }
-    }
-
-    // Rule 3.2: Lookahead 2 elements - check if next 2 elements form a logical group
-    if (remainingElements.length >= 1) {
-      const elementAfterNext = remainingElements[0];
-      
-      // Pattern: Current page ends with title, next is instructions, after that is exercise
-      // → Move title to start the logical group on next page
-      if (
-        this.isTitleElement(lastElement) &&
-        this.isInstructionsElement(nextElement) &&
-        this.isExerciseElement(elementAfterNext)
-      ) {
-        console.log(`  🧠 [P3.2] Lookahead detected: Title → Instructions → Exercise group`);
-        return true;
-      }
-    }
-
-    // Rule 3.3: Section start detection (title + multiple structural elements)
-    // If last few elements are all structural and next is structural/exercise,
-    // it means a new section is starting - move the whole section start
-    if (currentPage.length >= 2) {
-      const lastThreeElements = currentPage.slice(-3);
-      const hasTitleInGroup = lastThreeElements.some(el => this.isTitleElement(el));
-      const hasOnlyStructuralElements = lastThreeElements.every(el => 
-        this.isTitleElement(el) || 
-        this.isDividerElement(el) || 
-        this.isInstructionsElement(el)
-      );
-
-      if (hasTitleInGroup && hasOnlyStructuralElements && 
-          (this.isExerciseElement(nextElement) || this.isContentElement(nextElement))) {
-        console.log(`  🧠 [P3.3] Section start detection: Structural group starting new section`);
-        return true;
-      }
-    }
-
-    // === PRIORITY 4: Activity Block Detection ===
-    
-    // Rule 4.1: Detect complete activity block structure
-    // Pattern: Title + Instructions + Exercise = one atomic activity
-    if (
-      thirdLastElement &&
-      secondLastElement &&
-      this.isTitleElement(thirdLastElement) &&
-      this.isInstructionsElement(secondLastElement) &&
-      this.isExerciseElement(lastElement) &&
-      this.isExerciseElement(nextElement)
-    ) {
-      // Multiple exercises under one title - the group is already complete on current page
-      // Don't move, let next exercise start new page
-      console.log(`  🧠 [P4.1] Activity block complete: Don't move (multiple exercises)`);
-      return false;
-    }
-
-    // Rule 4.2: If we have title + instructions at end, and exercise coming,
-    // this is an incomplete activity block - keep it together
-    if (
-      secondLastElement &&
-      this.isTitleElement(secondLastElement) &&
-      this.isInstructionsElement(lastElement) &&
-      this.isExerciseElement(nextElement)
-    ) {
-      console.log(`  🧠 [P4.2] Activity block: Title + Instructions incomplete, exercise coming`);
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Find last title element in current page
-   */
-  private findLastTitleInPage(currentPage: GeneratedElement[]): number {
-    for (let i = currentPage.length - 1; i >= 0; i--) {
-      if (this.isTitleElement(currentPage[i])) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  /**
-   * Find which elements should be moved to next page
-   * 
-   * ENHANCED STRATEGIES (Priority Order):
-   * 
-   * Strategy 1: Activity Block (Title + Instructions + partial content)
-   * Strategy 2: Title Group (Title + all structural elements after it)
-   * Strategy 3: Structural Pairs (Divider + Title, Title + Instructions, etc.)
-   * Strategy 4: Single Structural Element (Title alone, Divider alone, Instructions alone)
-   * Strategy 5: Extended Lookahead (Last 3-4 elements with title)
-   */
-  private findElementsToMoveToNextPage(
-    currentPage: GeneratedElement[],
-    nextElement: GeneratedElement
-  ): GeneratedElement[] {
-    if (currentPage.length === 0) return [];
-
-    const lastElement = currentPage[currentPage.length - 1];
-    const secondLastElement = currentPage.length > 1 ? currentPage[currentPage.length - 2] : null;
-    const thirdLastElement = currentPage.length > 2 ? currentPage[currentPage.length - 3] : null;
-    const fourthLastElement = currentPage.length > 3 ? currentPage[currentPage.length - 4] : null;
-
-    // === STRATEGY 1: Activity Block Detection ===
-    // Pattern: Divider + Title + Instructions (incomplete activity)
-    if (
-      thirdLastElement &&
-      secondLastElement &&
-      this.isDividerElement(thirdLastElement) &&
-      this.isTitleElement(secondLastElement) &&
-      this.isInstructionsElement(lastElement) &&
-      this.isExerciseElement(nextElement)
-    ) {
-      console.log(`  📦 [S1] Moving activity block start: Divider + Title + Instructions`);
-      return [thirdLastElement, secondLastElement, lastElement];
-    }
-
-    // Pattern: Title + Instructions (incomplete activity)
-    if (
-      secondLastElement &&
-      this.isTitleElement(secondLastElement) &&
-      this.isInstructionsElement(lastElement) &&
-      this.isExerciseElement(nextElement)
-    ) {
-      // Check if there's a divider before title
-      if (thirdLastElement && this.isDividerElement(thirdLastElement)) {
-        console.log(`  📦 [S1] Moving activity block start: Divider + Title + Instructions`);
-        return [thirdLastElement, secondLastElement, lastElement];
-      }
-      console.log(`  📦 [S1] Moving activity block start: Title + Instructions`);
-      return [secondLastElement, lastElement];
-    }
-
-    // === STRATEGY 2: Title Group (Title + Structural Elements) ===
-    const titleIndex = this.findLastTitleInPage(currentPage);
-    if (titleIndex !== -1) {
-      const elementsAfterTitle = currentPage.slice(titleIndex + 1);
-      
-      // Check if everything after title is structural (no content/exercises yet)
-      const allStructural = elementsAfterTitle.every(el =>
-        this.isDividerElement(el) || this.isInstructionsElement(el)
-      );
-
-      // If next element is content/exercise, move entire title group
-      if (allStructural && this.isContentOrExerciseElement(nextElement)) {
-        const groupToMove = currentPage.slice(titleIndex);
-        console.log(`  📦 [S2] Moving title group: ${groupToMove.length} elements (title + structural)`);
-        return groupToMove;
-      }
-    }
-
-    // === STRATEGY 3: Structural Pairs ===
-    
-    // Pair 3.1: Divider + Title
-    if (
-      secondLastElement &&
-      this.isDividerElement(secondLastElement) &&
-      this.isTitleElement(lastElement) &&
-      this.isContentOrExerciseElement(nextElement)
-    ) {
-      console.log(`  📦 [S3.1] Moving pair: Divider + Title`);
-      return [secondLastElement, lastElement];
-    }
-
-    // Pair 3.2: Title + Instructions (when next is not exercise - softer rule)
-    if (
-      secondLastElement &&
-      this.isTitleElement(secondLastElement) &&
-      this.isInstructionsElement(lastElement) &&
-      this.isContentElement(nextElement)
-    ) {
-      console.log(`  📦 [S3.2] Moving pair: Title + Instructions`);
-      return [secondLastElement, lastElement];
-    }
-
-    // Pair 3.3: Instructions + Content (first paragraph after instructions)
-    // This is a very soft rule - only if instructions are very short
-    if (
-      secondLastElement &&
-      this.isInstructionsElement(secondLastElement) &&
-      this.isContentElement(lastElement) &&
-      this.isExerciseElement(nextElement)
-    ) {
-      // Only move if the content is likely a short intro, not a full paragraph
-      // We'll assume if it's the only content between instructions and exercise
-      console.log(`  📦 [S3.3] Moving pair: Instructions + Short Content`);
-      return [secondLastElement, lastElement];
-    }
-
-    // === STRATEGY 4: Single Structural Elements ===
-    
-    // Single 4.1: Title alone
-    if (this.isTitleElement(lastElement) && this.isContentOrExerciseElement(nextElement)) {
-      console.log(`  📦 [S4.1] Moving single: Title`);
-      return [lastElement];
-    }
-
-    // Single 4.2: Divider alone
-    if (this.isDividerElement(lastElement) && 
-        (this.isTitleElement(nextElement) || this.isContentOrExerciseElement(nextElement))) {
-      console.log(`  📦 [S4.2] Moving single: Divider`);
-      return [lastElement];
-    }
-
-    // Single 4.3: Instructions alone
-    if (this.isInstructionsElement(lastElement) && this.isExerciseElement(nextElement)) {
-      console.log(`  📦 [S4.3] Moving single: Instructions`);
-      return [lastElement];
-    }
-
-    // === STRATEGY 5: Extended Lookahead (Last Resort) ===
-    // Look at last 3-4 elements for any title, move everything from title to end
-    
-    if (currentPage.length >= 4) {
-      const lastFour = currentPage.slice(-4);
-      const titleInLastFour = lastFour.findIndex(el => this.isTitleElement(el));
-      
-      if (titleInLastFour !== -1) {
-        const startIndex = currentPage.length - 4 + titleInLastFour;
-        const groupToMove = currentPage.slice(startIndex);
-        
-        // Only move if group doesn't contain complete content/exercises
-        const hasCompleteContent = groupToMove.some(el => this.isExerciseElement(el));
-        if (!hasCompleteContent) {
-          console.log(`  📦 [S5] Moving extended group: ${groupToMove.length} elements from title`);
-          return groupToMove;
-        }
-      }
-    }
-
-    if (currentPage.length >= 3) {
-      const lastThree = currentPage.slice(-3);
-      const titleInLastThree = lastThree.findIndex(el => this.isTitleElement(el));
-      
-      if (titleInLastThree !== -1) {
-        const startIndex = currentPage.length - 3 + titleInLastThree;
-        const groupToMove = currentPage.slice(startIndex);
-        console.log(`  📦 [S5] Moving extended group: ${groupToMove.length} elements from title`);
-        return groupToMove;
-      }
-    }
-
-    // No strategy matched
-    return [];
-  }
 
   /**
    * Helper: Check if element is a title
