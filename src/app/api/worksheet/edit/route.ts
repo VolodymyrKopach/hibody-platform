@@ -4,10 +4,113 @@ import {
   WorksheetEditResponse,
 } from '@/types/worksheet-generation';
 import { geminiWorksheetEditingService } from '@/services/worksheet/GeminiWorksheetEditingService';
+import { CanvasElement } from '@/types/canvas-element';
+import { 
+  generateImages,
+  type ImageGenerationRequest,
+  type ImageGenerationResult
+} from '@/services/worksheet/ImageGenerationHelper';
+
+/**
+ * Collect image generation requests from patched elements
+ */
+function collectImageRequests(patch: any, targetType: 'component' | 'page'): ImageGenerationRequest[] {
+  const requests: ImageGenerationRequest[] = [];
+
+  if (targetType === 'component') {
+    // Single component edit
+    const properties = patch.properties;
+    if (properties?.imagePrompt && !properties.url) {
+      requests.push({
+        id: 'component',
+        prompt: properties.imagePrompt,
+        width: properties.width || 512,
+        height: properties.height || 512,
+      });
+    }
+  } else if (targetType === 'page') {
+    // Page edit - check all elements
+    const elements = patch.elements as CanvasElement[] | undefined;
+    if (elements && Array.isArray(elements)) {
+      elements.forEach((element, index) => {
+        if (element.type === 'image-placeholder' && 
+            element.properties?.imagePrompt && 
+            !element.properties.url) {
+          requests.push({
+            id: `element-${index}-${element.id}`,
+            prompt: element.properties.imagePrompt,
+            width: element.properties.width || 512,
+            height: element.properties.height || 512,
+          });
+        }
+      });
+    }
+  }
+
+  return requests;
+}
+
+/**
+ * Apply generated images to patch
+ */
+function applyGeneratedImages(
+  patch: any,
+  targetType: 'component' | 'page',
+  results: ImageGenerationResult[]
+): any {
+  if (results.length === 0) {
+    return patch;
+  }
+
+  const updatedPatch = { ...patch };
+
+  if (targetType === 'component') {
+    // Single component - apply first result
+    const result = results[0];
+    if (result.success && result.image) {
+      updatedPatch.properties = {
+        ...updatedPatch.properties,
+        url: `data:image/png;base64,${result.image}`,
+      };
+      console.log('✅ Image generated for component');
+    } else {
+      console.warn('⚠️ Image generation failed for component:', result.error);
+    }
+  } else if (targetType === 'page') {
+    // Page edit - map results back to elements
+    const elements = [...(updatedPatch.elements || [])];
+    
+    results.forEach(result => {
+      if (result.id && result.success && result.image) {
+        // Extract element index from ID: "element-{index}-{elementId}"
+        const match = result.id.match(/^element-(\d+)-/);
+        if (match) {
+          const index = parseInt(match[1], 10);
+          if (elements[index]) {
+            elements[index] = {
+              ...elements[index],
+              properties: {
+                ...elements[index].properties,
+                url: `data:image/png;base64,${result.image}`,
+              },
+            };
+            console.log(`✅ Image generated for element ${index}`);
+          }
+        }
+      } else if (result.id) {
+        console.warn(`⚠️ Image generation failed for ${result.id}:`, result.error);
+      }
+    });
+
+    updatedPatch.elements = elements;
+  }
+
+  return updatedPatch;
+}
 
 /**
  * POST /api/worksheet/edit
- * Edit worksheet component or page using AI
+ * Edit worksheet component or page using AI with automatic image generation
  */
 export async function POST(request: NextRequest) {
   const requestId = Math.random().toString(36).substr(2, 9);
@@ -40,7 +143,7 @@ export async function POST(request: NextRequest) {
     
     console.log(`[${requestId}] 🤖 Calling Gemini service...`);
     
-    // Use Gemini service to edit worksheet
+    // STEP 1: Use Gemini service to edit worksheet
     const result = await geminiWorksheetEditingService.editWorksheet(
       body.editTarget,
       body.instruction,
@@ -53,6 +156,24 @@ export async function POST(request: NextRequest) {
       changesCount: result.changes.length,
       hasImagePrompt: !!result.imagePrompt
     });
+
+    // STEP 2: Check for new images that need generation
+    const imageRequests = collectImageRequests(result.patch, body.editTarget.type);
+    
+    if (imageRequests.length > 0) {
+      console.log(`[${requestId}] 🎨 Found ${imageRequests.length} new images to generate`);
+      
+      // STEP 3: Generate images using helper (server-side, no fetch needed)
+      const imageResults = await generateImages(imageRequests);
+      
+      // STEP 4: Apply generated images to patch
+      result.patch = applyGeneratedImages(result.patch, body.editTarget.type, imageResults);
+      
+      const successCount = imageResults.filter(r => r.success).length;
+      console.log(`[${requestId}] ✅ Generated ${successCount}/${imageRequests.length} images successfully`);
+    } else {
+      console.log(`[${requestId}] ℹ️ No new images to generate`);
+    }
     
     // Return successful response
     const editResponse: WorksheetEditResponse = {
@@ -60,12 +181,6 @@ export async function POST(request: NextRequest) {
       patch: result.patch,
       changes: result.changes
     };
-    
-    // Add imagePrompt to response if present (for image components)
-    if (result.imagePrompt) {
-      console.log(`[${requestId}] 🎨 Returning new image prompt for client-side generation`);
-      (editResponse as any).imagePrompt = result.imagePrompt;
-    }
     
     return NextResponse.json(editResponse);
     
