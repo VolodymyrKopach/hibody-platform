@@ -97,10 +97,16 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
 }) => {
   const theme = useTheme();
   const pageRef = useRef<HTMLDivElement>(null);
+  const dragPreviewsRef = useRef<Set<HTMLElement>>(new Set());
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
   const [isDropTarget, setIsDropTarget] = useState(false);
-  const [crossPageDropIndex, setCrossPageDropIndex] = useState<number | null>(null); // For cross-page drop indicator
+  const [crossPageDropIndex, setCrossPageDropIndex] = useState<number | null>(null);
+
+  // Helper: Validate drop index within bounds
+  const validateDropIndex = (index: number, arrayLength: number): number => {
+    return Math.max(0, Math.min(index, arrayLength));
+  };
 
   // Generate background CSS based on type
   const getBackgroundStyle = (): React.CSSProperties => {
@@ -124,8 +130,6 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
           // Convert direction format: 'to-bottom-right' -> 'to bottom right'
           const cssDirection = direction.replace(/-/g, ' ');
           const gradientCss = `linear-gradient(${cssDirection}, ${gradientColors.join(', ')})`;
-          
-          console.log('🌈 Gradient CSS:', { from, to, colors, direction, cssDirection, gradientColors, gradientCss });
           
           return {
             background: gradientCss,
@@ -203,13 +207,13 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   // Handle element reorder drag start
   const handleElementDragStart = (e: React.DragEvent, index: number) => {
     e.stopPropagation(); // Prevent parent drag handlers
+    
+    const element = elements[index];
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', 'reorder'); // Mark as reorder operation
     e.dataTransfer.setData('cross-page-drag', 'true'); // Mark for cross-page capability
     
-    // Notify parent about cross-page drag
-    const element = elements[index];
     if (element && onCrossPageDragStart) {
       onCrossPageDragStart(element.id);
     }
@@ -261,6 +265,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     dragPreview.style.boxShadow = '0 12px 48px rgba(0, 0, 0, 0.25)';
     
     document.body.appendChild(dragPreview);
+    dragPreviewsRef.current.add(dragPreview);
     
     // Calculate the offset from where user clicked within the element
     const offsetX = e.clientX - rect.left;
@@ -269,16 +274,13 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     // Set the drag image with correct offset
     e.dataTransfer.setDragImage(dragPreview, offsetX, offsetY);
     
-    // BUG #8 FIX: Clean up the drag preview with error handling
-    setTimeout(() => {
-      try {
-        if (dragPreview && document.body.contains(dragPreview)) {
-          document.body.removeChild(dragPreview);
-        }
-      } catch (error) {
-        console.warn('Failed to cleanup drag preview:', error);
+    // Clean up preview after drag image is captured
+    requestAnimationFrame(() => {
+      if (dragPreview && document.body.contains(dragPreview)) {
+        document.body.removeChild(dragPreview);
+        dragPreviewsRef.current.delete(dragPreview);
       }
-    }, 0);
+    });
   };
 
   // Handle element drag over (show drop indicator)
@@ -286,33 +288,30 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
+    // Validate index bounds
+    const validIndex = validateDropIndex(index, elements.length);
+    
     // Check if it's a cross-page drag
     const isCrossPageDrag = e.dataTransfer.types.includes('cross-page-drag');
     
-    console.log('🔍 [handleElementDragOver]', {
-      pageId,
-      index,
-      isCrossPageDrag,
-      draggedIndex,
-      crossPageDrag: crossPageDrag ? {
-        sourcePageId: crossPageDrag.sourcePageId,
-        elementId: crossPageDrag.elementId
-      } : null
-    });
+    // Check if this is truly a cross-page drag (from different page)
+    const isTrueCrossPageDrag = isCrossPageDrag && crossPageDrag && crossPageDrag.sourcePageId !== pageId;
     
-    if (isCrossPageDrag && crossPageDrag && crossPageDrag.sourcePageId !== pageId) {
+    // Check if this is within-page drag
+    const isWithinPageDrag = isCrossPageDrag && crossPageDrag && crossPageDrag.sourcePageId === pageId;
+    
+    if (isTrueCrossPageDrag) {
       // Cross-page drag: show drop indicator at target position
-      console.log('✅ [handleElementDragOver] Cross-page drag detected, showing indicator at index:', index);
-      setCrossPageDropIndex(index);
+      setCrossPageDropIndex(validIndex);
       setIsDropTarget(true);
       return;
     }
     
     // Within-page drag: show drop indicator for reorder operations
-    const dragType = e.dataTransfer.types.includes('text/plain');
-    if (dragType && draggedIndex !== null && draggedIndex !== index) {
-      console.log('✅ [handleElementDragOver] Within-page drag, showing indicator at index:', index);
-      setDropIndicatorIndex(index);
+    if (isWithinPageDrag || (draggedIndex !== null)) {
+      if (draggedIndex !== null && draggedIndex !== validIndex) {
+        setDropIndicatorIndex(validIndex);
+      }
     }
   };
 
@@ -321,27 +320,15 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     e.preventDefault();
     e.stopPropagation();
 
-    console.log('📦 [handleElementDrop] Drop event triggered', {
-      pageId,
-      dropIndex,
-      draggedIndex,
-      crossPageDrag: crossPageDrag ? {
-        sourcePageId: crossPageDrag.sourcePageId,
-        elementId: crossPageDrag.elementId
-      } : null
-    });
+    // Validate drop index
+    const validDropIndex = validateDropIndex(dropIndex, elements.length);
 
     // Check if it's a cross-page drag
     const isCrossPageDrag = e.dataTransfer.getData('cross-page-drag') === 'true';
     
-    console.log('🔍 [handleElementDrop] isCrossPageDrag:', isCrossPageDrag);
-    
     if (isCrossPageDrag && crossPageDrag && crossPageDrag.sourcePageId !== pageId && onCrossPageDrop) {
       // Cross-page drop with specific position
-      console.log('📥 [handleElementDrop] Cross-page drop at index:', dropIndex);
-      
-      // Call parent handler with drop position
-      onCrossPageDrop(dropIndex);
+      onCrossPageDrop(validDropIndex);
       
       // Reset states
       setCrossPageDropIndex(null);
@@ -350,21 +337,8 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     }
 
     // Within-page reorder
-    console.log('🔄 [handleElementDrop] Attempting within-page reorder', {
-      draggedIndex,
-      dropIndex,
-      hasReorderCallback: !!onElementReorder
-    });
-    
-    if (draggedIndex !== null && draggedIndex !== dropIndex && onElementReorder) {
-      console.log('✅ [handleElementDrop] Calling onElementReorder:', { from: draggedIndex, to: dropIndex });
-      onElementReorder(draggedIndex, dropIndex);
-    } else {
-      console.warn('⚠️ [handleElementDrop] Reorder skipped:', {
-        draggedIndexNull: draggedIndex === null,
-        samePosition: draggedIndex === dropIndex,
-        noCallback: !onElementReorder
-      });
+    if (draggedIndex !== null && draggedIndex !== validDropIndex && onElementReorder) {
+      onElementReorder(draggedIndex, validDropIndex);
     }
 
     // Reset drag state
@@ -376,7 +350,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   const handleElementDragEnd = () => {
     setDraggedIndex(null);
     setDropIndicatorIndex(null);
-    setCrossPageDropIndex(null); // Clean up cross-page drop indicator
+    setCrossPageDropIndex(null);
     setIsDropTarget(false);
     
     // Notify parent about drag end
@@ -384,6 +358,22 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
       onCrossPageDragEnd();
     }
   };
+
+  // Cleanup drag previews on unmount
+  useEffect(() => {
+    return () => {
+      dragPreviewsRef.current.forEach(preview => {
+        try {
+          if (document.body.contains(preview)) {
+            document.body.removeChild(preview);
+          }
+        } catch (error) {
+          console.warn('Failed to cleanup drag preview on unmount:', error);
+        }
+      });
+      dragPreviewsRef.current.clear();
+    };
+  }, []);
 
   // Prevent browser gestures on page (touchpad swipe navigation)
   useEffect(() => {
@@ -424,20 +414,31 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Capture the drop index before clearing it
+    const targetDropIndex = crossPageDropIndex !== null ? crossPageDropIndex : elements.length;
+    
     setIsDropTarget(false);
-    setCrossPageDropIndex(null); // Clear drop indicator
+    setCrossPageDropIndex(null);
 
     // Check if it's a cross-page drag
     const isCrossPageDrag = e.dataTransfer.getData('cross-page-drag') === 'true';
     
     if (isCrossPageDrag && crossPageDrag && crossPageDrag.sourcePageId !== pageId) {
       // Handle cross-page drop (dropped on page, not on specific element)
-      console.log('📥 Cross-page drop detected on page:', pageId);
       if (onCrossPageDrop) {
-        // Drop at end if no specific position
-        onCrossPageDrop(elements.length);
+        onCrossPageDrop(targetDropIndex);
       }
       return;
+    }
+
+    // Handle within-page reorder (dropped on page, not on specific element)
+    if (isCrossPageDrag && crossPageDrag && crossPageDrag.sourcePageId === pageId) {
+      if (dropIndicatorIndex !== null && draggedIndex !== null && onElementReorder) {
+        onElementReorder(draggedIndex, dropIndicatorIndex);
+        setDropIndicatorIndex(null);
+        return;
+      }
     }
 
     // Handle sidebar component drop
@@ -480,7 +481,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     const relatedTarget = e.relatedTarget as HTMLElement;
     if (!pageRef.current?.contains(relatedTarget)) {
       setIsDropTarget(false);
-      setCrossPageDropIndex(null); // Clear drop indicator when leaving page
+      setCrossPageDropIndex(null);
     }
   };
 
@@ -601,7 +602,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
             return true;
           })
           .map((element, visualIndex) => {
-          // BUG #7 FIX: Get real index from original array to handle filtered elements correctly
+          // Get real index from original array for state operations
           const realIndex = elements.indexOf(element);
           
           return (
@@ -611,20 +612,21 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
               <Box
                 data-drop-indicator // For export filtering
                 sx={{
+                  position: 'relative',
                   height: '4px',
                   width: '100%',
                   backgroundColor: crossPageDropIndex === realIndex 
                     ? theme.palette.success.main  // Green for cross-page
                     : theme.palette.primary.main, // Blue for within-page
                   borderRadius: '2px',
-                  my: -1.5, // Overlap with gap
+                  mb: 1,
                   boxShadow: crossPageDropIndex === realIndex
                     ? `0 0 8px ${alpha(theme.palette.success.main, 0.6)}`
                     : 'none',
                   animation: crossPageDropIndex === realIndex
                     ? 'pulse 1.5s ease-in-out infinite'
                     : 'none',
-                  pointerEvents: 'none', // CRITICAL: Don't block drop events
+                  pointerEvents: 'none',
                   '@keyframes pulse': {
                     '0%, 100%': {
                       opacity: 1,
@@ -684,22 +686,12 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
                   ? `2px solid ${theme.palette.primary.main}`
                   : '2px solid transparent',
                 borderRadius: '4px',
-                transition: 'border 0.2s, opacity 0.2s, background-color 0.2s, transform 0.3s ease, margin 0.3s ease',
-                opacity: draggedIndex === realIndex 
-                  ? 0.3 
-                  : crossPageDrag?.elementId === element.id && crossPageDrag?.sourcePageId === pageId
-                  ? 0.6
-                  : 1,
-                backgroundColor: draggedIndex === realIndex 
-                  ? alpha(theme.palette.grey[200], 0.5) 
-                  : crossPageDrag?.elementId === element.id && crossPageDrag?.sourcePageId === pageId
-                  ? alpha(theme.palette.info.main, 0.08)
-                  : 'transparent',
-                // ✨ Space expansion effect when drop indicator is above
-                ...(((dropIndicatorIndex === realIndex && draggedIndex !== null) || crossPageDropIndex === realIndex) && {
-                  marginTop: '40px', // Create space above
-                }),
-                transform: 'none', // Prevent any transforms during drag
+                transition: 'border 0.2s, transform 0.3s ease, margin 0.3s ease',
+                // Smooth space expansion effect when drop indicator is above
+                transform: ((dropIndicatorIndex === realIndex && draggedIndex !== null) || crossPageDropIndex === realIndex)
+                  ? 'translateY(20px)'
+                  : 'translateY(0)',
+                willChange: 'transform',
                 '&:hover': element.locked ? {} : {
                   border: `2px solid ${alpha(theme.palette.primary.main, 0.5)}`,
                   '& .drag-handle': {

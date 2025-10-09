@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -195,6 +195,7 @@ function formatTimeSince(date: Date): string {
 const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, generatedWorksheet, onOpenGenerateDialog }) => {
   const theme = useTheme();
   const router = useRouter();
+  const cleanupInProgressRef = useRef(false);
   
   // Initialize pages from generated worksheet or empty canvas
   const PAGE_GAP = 45; // Gap between pages (30% of original 150px for tighter PDF-like appearance)
@@ -265,8 +266,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   // Update pages and contents when generatedWorksheet changes
   useEffect(() => {
     if (generatedWorksheet && generatedWorksheet.pages.length > 0) {
-      console.log('📄 Updating canvas with generated worksheet:', generatedWorksheet);
-      
       const newPages = generatedWorksheet.pages.map((page, index) => ({
         id: page.pageId,
         title: page.title,
@@ -289,8 +288,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
 
       setPages(newPages);
       setPageContents(newPageContents);
-      
-      console.log(`✅ Canvas updated with ${newPages.length} pages`);
     }
   }, [generatedWorksheet]);
   const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null);
@@ -307,8 +304,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   const handleResetZoom = () => setZoom(1);
 
   const handlePageBackgroundUpdate = (pageId: string, background: PageBackground) => {
-    console.log('🎨 Background Update:', { pageId, background });
-    
     setPages(prev => prev.map(page =>
       page.id === pageId ? { ...page, background } : page
     ));
@@ -340,8 +335,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         alert(result.error || 'Failed to upload image');
         return;
       }
-
-      console.log('✅ Image uploaded:', result);
 
       // Apply as background
       const newBackground: PageBackground = {
@@ -464,7 +457,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   const handleBackClick = async () => {
     const confirmed = await showExitConfirmation();
     if (confirmed) {
-      console.log('🧹 Cleaning up storage on back button...');
       clearAllWorksheets();
       await clearAllImages();
       router.push('/');
@@ -485,8 +477,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     setIsExporting(true);
 
     try {
-      console.log('📄 Starting PDF export...', { currentPageOnly, pagesCount: pages.length });
-      
       let pageElements: HTMLElement[];
       let filename = 'worksheet';
 
@@ -516,26 +506,19 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         filename = `worksheet_page_${selection.pageData.pageNumber}`;
       } else {
         // Export all pages
-        console.log('🔍 Looking for page elements with [data-page-id]...');
         pageElements = Array.from(
           document.querySelectorAll('[data-page-id]')
         ) as HTMLElement[];
-
-        console.log(`📋 Found ${pageElements.length} page elements`);
 
         if (pageElements.length === 0) {
           throw new Error('No pages found to export. Please make sure you have created pages.');
         }
       }
-
-      console.log('📤 Exporting to PDF...', { elementsCount: pageElements.length });
       
       await exportToPDF(pageElements, {
         filename,
         format: 'a4',
       });
-
-      console.log('✅ PDF export successful!');
     } catch (error) {
       console.error('❌ Export PDF failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -663,14 +646,12 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   useEffect(() => {
     // Cleanup on page unload (closing tab/window)
     const handleBeforeUnload = () => {
-      console.log('🧹 Cleaning up storage on page close...');
       clearAllWorksheets();
       clearAllImages(); // Note: this is synchronous cleanup
     };
 
     // Cleanup on component unmount (navigation away)
     const handleUnmount = async () => {
-      console.log('🧹 Cleaning up storage on navigation...');
       clearAllWorksheets();
       await clearAllImages();
     };
@@ -743,19 +724,31 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     };
   }, []);
 
-  // BUG #6 FIX: Global cleanup for cross-page drag state on cancel/ESC
+  // Global cleanup for cross-page drag state with race condition prevention
   useEffect(() => {
     const handleGlobalDragEnd = () => {
-      if (crossPageDrag) {
+      if (crossPageDrag && !cleanupInProgressRef.current) {
+        console.log('🌍 [GlobalDragEnd] Global dragend event detected, cleaning up');
+        cleanupInProgressRef.current = true;
         setCrossPageDrag(null);
-        console.log('🚫 Cross-page drag cancelled (global dragend)');
+        // Reset flag after state update completes
+        setTimeout(() => {
+          cleanupInProgressRef.current = false;
+          console.log('✅ [GlobalDragEnd] Cleanup flag reset');
+        }, 0);
       }
     };
     
     const handleEscapeKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && crossPageDrag) {
+      if (e.key === 'Escape' && crossPageDrag && !cleanupInProgressRef.current) {
+        console.log('⌨️ [GlobalEscape] ESC key pressed, cancelling cross-page drag');
+        cleanupInProgressRef.current = true;
         setCrossPageDrag(null);
-        console.log('🚫 Cross-page drag cancelled by ESC key');
+        // Reset flag after state update completes
+        setTimeout(() => {
+          cleanupInProgressRef.current = false;
+          console.log('✅ [GlobalEscape] Cleanup flag reset');
+        }, 0);
       }
     };
     
@@ -897,18 +890,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     const pageContent = pageContents.get(pageId);
     const element = pageContent?.elements.find(el => el.id === elementId);
     
-    console.log('✏️ [handleElementEdit] Editing element:', {
-      pageId,
-      elementId,
-      elementType: element?.type,
-      properties,
-      textValue: properties?.text,
-      textType: typeof properties?.text,
-      textIsUndefined: properties?.text === undefined,
-      textIsNull: properties?.text === null,
-      textIsStringUndefined: properties?.text === 'undefined'
-    });
-    
     // Захист від undefined/null значень ТІЛЬКИ для текстових елементів
     // Елементи, які НЕ потребують text: image-placeholder, table, divider, bullet-list, numbered-list
     const nonTextElements = ['image-placeholder', 'table', 'divider', 'bullet-list', 'numbered-list'];
@@ -916,7 +897,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     
     if (isTextElement && 'text' in properties) {
       if (properties.text === undefined || properties.text === null || properties.text === 'undefined') {
-        console.warn('⚠️ [handleElementEdit] Received undefined/null/string-undefined text for text element, ignoring update');
+        console.warn('Received invalid text value for text element, ignoring update');
         return;
       }
     }
@@ -926,18 +907,12 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       const pageContent = newMap.get(pageId);
       
       if (!pageContent) {
-        console.warn('⚠️ [handleElementEdit] Page content not found for pageId:', pageId);
+        console.warn('Page content not found for pageId:', pageId);
         return prev;
       }
       
       const updatedElements = pageContent.elements.map(el => {
         if (el.id === elementId) {
-          console.log('✅ [handleElementEdit] Updating element:', {
-            elementId: el.id,
-            elementType: el.type,
-            oldProperties: el.properties,
-            newProperties: properties
-          });
           return { ...el, properties };
         }
         return el;
@@ -965,11 +940,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   };
 
   const handleElementReorder = (pageId: string, fromIndex: number, toIndex: number) => {
-    console.log('🔄 [handleElementReorder] Called with:', { pageId, fromIndex, toIndex });
-    
-    // BUG #2 FIX: Skip if same position (no-op)
+    // Skip if same position (no-op)
     if (fromIndex === toIndex) {
-      console.log('⚠️ [handleElementReorder] Same position reorder, skipping');
       return;
     }
     
@@ -978,30 +950,18 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       const pageContent = newMap.get(pageId);
       
       if (!pageContent) {
-        console.error('❌ [handleElementReorder] Page content not found for pageId:', pageId);
+        console.error('❌ Page content not found for pageId:', pageId);
         return prev;
       }
       
-      console.log('📋 [handleElementReorder] Current elements count:', pageContent.elements.length);
-      
       const elements = [...pageContent.elements];
       const [movedElement] = elements.splice(fromIndex, 1);
-      
-      console.log('🎯 [handleElementReorder] Moved element:', {
-        id: movedElement.id,
-        type: movedElement.type,
-        fromIndex,
-        toIndex
-      });
-      
       elements.splice(toIndex, 0, movedElement);
       
       newMap.set(pageId, {
         ...pageContent,
         elements,
       });
-      
-      console.log('✅ [handleElementReorder] Elements reordered successfully');
       
       saveToHistory(newMap);
       return newMap;
@@ -1076,10 +1036,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
 
       // Check if imagePrompt changed
       if (newPrompt && oldPrompt !== newPrompt) {
-        console.log(`🎨 Detected imagePrompt change for ${updatedEl.id}:`, {
-          old: oldPrompt.substring(0, 50) + '...',
-          new: newPrompt.substring(0, 50) + '...'
-        });
         changes.push({
           element: updatedEl,
           newPrompt,
@@ -1098,7 +1054,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   ): Promise<void> => {
     if (changes.length === 0) return;
 
-    console.log(`🎨 Regenerating ${changes.length} images for page ${pageId}...`);
     setIsGeneratingImage(true);
     
     const imageService = new WorksheetImageGenerationService();
@@ -1108,8 +1063,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     for (const change of changes) {
       try {
         setImageGenerationProgress(`Генерація зображення ${successCount + failureCount + 1}/${changes.length}...`);
-        
-        console.log(`🎨 Generating image for element ${change.element.id}`);
         
         const newImageUrl = await imageService.generateSingleImage(
           change.newPrompt,
@@ -1129,19 +1082,15 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         );
 
         successCount++;
-        console.log(`✅ Image generated successfully for ${change.element.id}`);
-        
       } catch (error) {
         failureCount++;
-        console.error(`❌ Failed to generate image for ${change.element.id}:`, error);
+        console.error(`Failed to generate image for ${change.element.id}:`, error);
         // Continue with other images even if one fails
       }
     }
 
     setIsGeneratingImage(false);
     setImageGenerationProgress('');
-    
-    console.log(`🎨 Image regeneration complete: ${successCount} succeeded, ${failureCount} failed`);
   };
 
   // Get edit history for current selection
@@ -1175,11 +1124,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     setEditError(null);
 
     try {
-      console.log('🤖 AI Edit requested:', instruction);
-
       // SPECIAL CASE: Direct regenerate for image components
       if (instruction === '__REGENERATE__' && selection.type === 'element' && selection.elementData.type === 'image-placeholder') {
-        console.log('🎨 Direct image regeneration requested');
         
         const currentPrompt = selection.elementData.properties?.imagePrompt;
         if (!currentPrompt) {
@@ -1260,11 +1206,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
             updatedProperties
           );
 
-          console.log('✅ Component updated via AI');
-
           // SPECIAL: If it's an image component and we got a new imagePrompt, generate the image
           if (selection.elementData.type === 'image-placeholder' && (result as any).imagePrompt) {
-            console.log('🎨 Generating new image with updated prompt...');
             
             const newPrompt = (result as any).imagePrompt;
             const imageService = new WorksheetImageGenerationService();
@@ -1293,8 +1236,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                   imagePrompt: newPrompt // Save the new prompt for future regenerations
                 }
               );
-
-              console.log('✅ Image generated successfully with new prompt');
             } catch (imgError) {
               console.error('❌ Image generation failed:', imgError);
               setIsGeneratingImage(false);
@@ -1351,8 +1292,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
 
             // Regenerate images if imagePrompt changed
             if (imagePromptChanges.length > 0) {
-              console.log(`🎨 Found ${imagePromptChanges.length} image prompt changes, regenerating...`);
-              
               // Run regeneration asynchronously (don't block UI)
               regenerateImagesForPageElements(selection.data.id, imagePromptChanges)
                 .catch(error => {
@@ -1362,7 +1301,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
             }
           }
 
-          console.log('✅ Page updated via AI');
         }
       }
 
@@ -1453,8 +1391,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     
     // Select the new page
     setSelection({ type: 'page', data: newPage });
-    
-    console.log(`✅ New page ${newPageNumber} added at position (${newPage.x}, ${newY})`);
   };
 
   const handleElementDuplicate = (pageId: string, elementId: string) => {
@@ -1505,7 +1441,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     if (!element) return;
     
     setClipboard({ type: 'element', pageId, element, operation: 'copy' });
-    console.log('📋 Element copied to clipboard');
   };
 
   const handleCutElement = (pageId: string, elementId: string) => {
@@ -1516,7 +1451,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     if (!element) return;
     
     setClipboard({ type: 'element', pageId, element, operation: 'cut' });
-    console.log('✂️ Element cut to clipboard');
   };
 
   const handleCopyPage = (pageId: string) => {
@@ -1525,7 +1459,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     if (!page || !pageContent) return;
     
     setClipboard({ type: 'page', page, pageContent, operation: 'copy' });
-    console.log('📋 Page copied to clipboard');
   };
 
   const handleCutPage = (pageId: string) => {
@@ -1534,7 +1467,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     if (!page || !pageContent) return;
     
     setClipboard({ type: 'page', page, pageContent, operation: 'cut' });
-    console.log('✂️ Page cut to clipboard');
   };
 
   const handleDuplicatePage = (pageId: string) => {
@@ -1578,8 +1510,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     
     // Select the new page
     setSelection({ type: 'page', data: duplicatedPage });
-    
-    console.log(`✅ Page ${page.pageNumber} duplicated as page ${newPageNumber}`);
   };
 
   const handlePasteElement = (targetPageId: string) => {
@@ -1627,9 +1557,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     // Clear clipboard if it was a cut operation
     if (clipboard.operation === 'cut') {
       setClipboard(null);
-      console.log('✅ Element moved to page');
-    } else {
-      console.log('✅ Element pasted to page');
     }
     
     // Select the pasted element
@@ -1654,31 +1581,31 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   };
 
   const handleCrossPageDragEnd = () => {
-    setCrossPageDrag(null);
+    if (!cleanupInProgressRef.current) {
+      cleanupInProgressRef.current = true;
+      setCrossPageDrag(null);
+      setTimeout(() => {
+        cleanupInProgressRef.current = false;
+      }, 0);
+    }
   };
 
   const handleCrossPageDrop = (targetPageId: string, dropIndex?: number) => {
-    if (!crossPageDrag) return;
+    if (!crossPageDrag) {
+      return;
+    }
     
     const { sourcePageId, elementId, element } = crossPageDrag;
     
     if (sourcePageId === targetPageId) {
-      console.log('⚠️ Cannot drop on same page (use reorder instead)');
       setCrossPageDrag(null);
       return;
     }
 
-    console.log('📥 Handling cross-page drop:', {
-      from: sourcePageId,
-      to: targetPageId,
-      elementId,
-      dropIndex: dropIndex ?? 'end'
-    });
-
-    // BUG #1 FIX: Track if this element is currently selected
+    // Track if this element is currently selected
     const isSelectedElement = selectedElementId === elementId;
     
-    // BUG #1 FIX: Generate new ID before state update
+    // Generate new ID before state update to avoid conflicts
     const movedElementNewId = `element-${Date.now()}-${Math.random()}`;
 
     setPageContents(prev => {
@@ -1686,12 +1613,16 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       const sourceContent = newMap.get(sourcePageId);
       const targetContent = newMap.get(targetPageId);
       
-      if (!sourceContent || !targetContent) return prev;
+      if (!sourceContent || !targetContent) {
+        console.error('❌ [CrossPageDrop] Source or target content not found');
+        return prev;
+      }
       
       // Remove from source page
+      const newSourceElements = sourceContent.elements.filter(el => el.id !== elementId);
       newMap.set(sourcePageId, {
         ...sourceContent,
-        elements: sourceContent.elements.filter(el => el.id !== elementId),
+        elements: newSourceElements,
       });
       
       // Add to target page with new ID to avoid conflicts
@@ -1704,20 +1635,15 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       // Insert at specific position or add to end
       const targetElements = [...targetContent.elements];
       
-      // BUG #3 FIX: Validate dropIndex range
+      // Validate dropIndex range
       if (dropIndex !== undefined && dropIndex !== null) {
-        if (dropIndex < 0 || dropIndex > targetElements.length) {
-          console.warn(`⚠️ Invalid dropIndex ${dropIndex} for array length ${targetElements.length}, inserting at end`);
-          targetElements.push(movedElement);
-        } else {
-          // Valid dropIndex - insert at position
+        if (dropIndex >= 0 && dropIndex <= targetElements.length) {
           targetElements.splice(dropIndex, 0, movedElement);
-          console.log(`✅ Inserted element at position ${dropIndex}`);
+        } else {
+          targetElements.push(movedElement);
         }
       } else {
-        // No dropIndex specified - add to end
         targetElements.push(movedElement);
-        console.log(`✅ Added element to end`);
       }
       
       newMap.set(targetPageId, {
@@ -1729,9 +1655,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       return newMap;
     });
     
-    console.log(`✅ Element moved from page ${sourcePageId} to ${targetPageId} via drag`);
-    
-    // BUG #1 FIX: Update selection to point to new element ID
+    // Update selection to point to new element ID
     if (isSelectedElement) {
       setSelectedElementId(movedElementNewId);
       
@@ -1746,10 +1670,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
             id: movedElementNewId,
           },
         });
-        console.log('✅ Selection updated to follow moved element');
       }
     } else {
-      // Clear selection if it wasn't the moved element
       setSelectedElementId(null);
       setSelection(null);
     }
@@ -1869,7 +1791,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
               return newMap;
             });
             setSelection(null);
-            console.log(`🗑️ Page ${selection.data.pageNumber} deleted`);
             break;
         }
       }
@@ -1928,7 +1849,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         return newMap;
       });
       setClipboard(null);
-      console.log('✅ Page moved to canvas');
     } else {
       setPageContents(prev => {
         const newMap = new Map(prev);
@@ -1936,7 +1856,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         saveToHistory(newMap);
         return newMap;
       });
-      console.log('✅ Page pasted to canvas');
     }
     
     setPages(prev => [...prev, pastedPage]);
@@ -2105,7 +2024,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
               return newMap;
             });
             setSelection(null);
-            console.log(`🗑️ Page ${selection.data.pageNumber} deleted`);
           }
         }
       }
@@ -2410,7 +2328,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         <LeftSidebar 
           isOpen={isLeftPanelVisible}
           onToggle={() => setIsLeftPanelVisible(!isLeftPanelVisible)}
-          onComponentDragStart={(comp) => console.log('Dragging:', comp)}
+          onComponentDragStart={() => {}}
         />
 
         {/* Infinite Canvas */}
