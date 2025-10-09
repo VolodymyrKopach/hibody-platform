@@ -62,7 +62,7 @@ interface CanvasPageProps {
     | null;
   crossPageDrag?: { sourcePageId: string; elementId: string; element: CanvasElement } | null;
   onElementSelect: (elementId: string | null) => void;
-  onElementAdd: (element: Omit<CanvasElement, 'id' | 'zIndex'>) => void;
+  onElementAdd: (element: Omit<CanvasElement, 'id' | 'zIndex'>, insertIndex?: number) => void;
   onElementEdit: (elementId: string, properties: any) => void;
   onElementReorder?: (fromIndex: number, toIndex: number) => void;
   onCrossPageDragStart?: (elementId: string) => void;
@@ -294,6 +294,9 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     // Check if it's a cross-page drag
     const isCrossPageDrag = e.dataTransfer.types.includes('cross-page-drag');
     
+    // Check if it's a sidebar component drag
+    const isSidebarDrag = e.dataTransfer.types.includes('componenttype');
+    
     // Check if this is truly a cross-page drag (from different page)
     const isTrueCrossPageDrag = isCrossPageDrag && crossPageDrag && crossPageDrag.sourcePageId !== pageId;
     
@@ -312,6 +315,13 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
       if (draggedIndex !== null && draggedIndex !== validIndex) {
         setDropIndicatorIndex(validIndex);
       }
+      return;
+    }
+    
+    // Sidebar component drag: show drop indicator
+    if (isSidebarDrag) {
+      setCrossPageDropIndex(validIndex);
+      setIsDropTarget(true);
     }
   };
 
@@ -456,7 +466,16 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         visible: true,
       };
 
-      onElementAdd(newElement);
+      // Use drop indicator index if available, otherwise add to end
+      const insertIndex = crossPageDropIndex !== null ? crossPageDropIndex : 
+                          dropIndicatorIndex !== null ? dropIndicatorIndex : 
+                          undefined;
+      
+      onElementAdd(newElement, insertIndex);
+      
+      // Clear indicators
+      setDropIndicatorIndex(null);
+      setCrossPageDropIndex(null);
     }
   };
 
@@ -467,6 +486,12 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     // Check if it's a cross-page drag from another page
     const isCrossPageDrag = e.dataTransfer.types.includes('cross-page-drag');
     if (isCrossPageDrag && crossPageDrag && crossPageDrag.sourcePageId !== pageId) {
+      setIsDropTarget(true);
+    }
+    
+    // Check if it's a sidebar component drag
+    const isSidebarDrag = e.dataTransfer.types.includes('componenttype');
+    if (isSidebarDrag) {
       setIsDropTarget(true);
     }
     

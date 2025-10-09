@@ -863,7 +863,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   };
 
   // Handle element operations
-  const handleElementAdd = (pageId: string, element: Omit<CanvasElement, 'id' | 'zIndex'>) => {
+  const handleElementAdd = (pageId: string, element: Omit<CanvasElement, 'id' | 'zIndex'>, insertIndex?: number) => {
     setPageContents(prev => {
       const newMap = new Map(prev);
       const pageContent = newMap.get(pageId) || { id: `content-${pageId}`, pageId, elements: [] };
@@ -874,9 +874,17 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         zIndex: pageContent.elements.length,
       };
       
+      // Insert at specific index or add to end
+      const updatedElements = [...pageContent.elements];
+      if (insertIndex !== undefined && insertIndex >= 0 && insertIndex <= updatedElements.length) {
+        updatedElements.splice(insertIndex, 0, newElement);
+      } else {
+        updatedElements.push(newElement);
+      }
+      
       newMap.set(pageId, {
         ...pageContent,
-        elements: [...pageContent.elements, newElement],
+        elements: updatedElements,
       });
       
       saveToHistory(newMap);
@@ -2408,7 +2416,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 clipboard={clipboard}
                 crossPageDrag={crossPageDrag}
                 onElementSelect={handleElementSelect}
-                onElementAdd={(element) => handleElementAdd(page.id, element)}
+                onElementAdd={(element, insertIndex) => handleElementAdd(page.id, element, insertIndex)}
                 onElementEdit={(elementId, properties) => handleElementEdit(page.id, elementId, properties)}
                 onElementReorder={(fromIndex, toIndex) => handleElementReorder(page.id, fromIndex, toIndex)}
                 onCrossPageDragStart={(elementId) => handleCrossPageDragStart(page.id, elementId)}
