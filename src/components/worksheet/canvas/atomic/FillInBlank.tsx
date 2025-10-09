@@ -119,26 +119,6 @@ const FillInBlank: React.FC<FillInBlankProps> = ({
         } : {},
       }}
     >
-      {isSelected && onEdit && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: -8,
-            right: -8,
-            px: 1,
-            py: 0.5,
-            borderRadius: '4px',
-            background: alpha(theme.palette.primary.main, 0.1),
-            border: `1px solid ${theme.palette.primary.main}`,
-            zIndex: 10,
-          }}
-        >
-          <Typography sx={{ fontSize: '10px', fontWeight: 600, color: theme.palette.primary.main }}>
-            Edit in Properties →
-          </Typography>
-        </Box>
-      )}
-
       {/* Word Bank */}
       {(localWordBank.length > 0 || isSelected) && (
         <Box
