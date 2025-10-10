@@ -440,43 +440,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           <>
             {mainTab === 'properties' ? (
               <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
-              {/* Selection Type Badge */}
-              <Chip 
-                label="📄 Page"
-                size="small"
-                sx={{ 
-                  mb: 2, 
-                  fontWeight: 600,
-                  background: alpha(theme.palette.primary.main, 0.1),
-                  color: theme.palette.primary.main,
-                }}
-              />
-
-          {/* Page Info */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              borderRadius: '12px',
-              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-              mb: 3,
-            }}
-          >
-            <Stack direction="row" alignItems="center" spacing={2}>
-              <Typography sx={{ fontSize: '2rem' }}>{pageData.thumbnail}</Typography>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                  Page {pageData.pageNumber}
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {pageData.title}
-                </Typography>
-              </Box>
-            </Stack>
-          </Paper>
-
-          <Divider sx={{ mb: 3 }} />
 
           {/* Page Settings */}
           <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
@@ -1549,82 +1512,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             </Box>
           </Stack>
 
-          <Divider sx={{ mb: 3 }} />
-
-          {/* Layers - Click to edit */}
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-              Layers ({mockLayers.length})
-            </Typography>
-            <Chip label="Add Element" size="small" onClick={() => console.log('Add')} />
-          </Stack>
-
-          <Typography variant="caption" color="text.secondary" sx={{ mb: 1.5, display: 'block' }}>
-            Click on a layer to edit its properties
-          </Typography>
-
-          <Stack spacing={0.5} sx={{ mb: 3 }}>
-            {mockLayers.map((layer) => (
-              <Paper
-                key={layer.id}
-                elevation={0}
-                onClick={() => handleLayerSelect(layer)}
-                sx={{
-                  p: 1.5,
-                  borderRadius: '10px',
-                  border: `2px solid ${alpha(theme.palette.divider, 0.1)}`,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    borderColor: theme.palette.primary.main,
-                    background: alpha(theme.palette.primary.main, 0.03),
-                  },
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <IconButton size="small" sx={{ p: 0.5 }}>
-                    {layer.visible ? <Eye size={14} /> : <EyeOff size={14} />}
-                  </IconButton>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" sx={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                      {layer.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                      {layer.type}
-                    </Typography>
-                  </Box>
-                  <IconButton size="small" sx={{ p: 0.5 }}>
-                    {layer.locked ? <Lock size={14} /> : <Unlock size={14} />}
-                  </IconButton>
-                </Stack>
-              </Paper>
-            ))}
-          </Stack>
-
-          <Divider sx={{ my: 3 }} />
-
-          {/* Actions */}
-          <Stack spacing={1}>
-            <Button
-              fullWidth
-              size="small"
-              startIcon={<Copy size={14} />}
-              variant="outlined"
-              sx={{ borderRadius: '10px', textTransform: 'none', justifyContent: 'flex-start' }}
-            >
-              Duplicate Page
-            </Button>
-            <Button
-              fullWidth
-              size="small"
-              startIcon={<Trash2 size={14} />}
-              variant="outlined"
-              color="error"
-              sx={{ borderRadius: '10px', textTransform: 'none', justifyContent: 'flex-start' }}
-            >
-              Delete Page
-            </Button>
-          </Stack>
           </Box>
         ) : (
           <Box sx={{ flex: 1, p: 2, overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>
