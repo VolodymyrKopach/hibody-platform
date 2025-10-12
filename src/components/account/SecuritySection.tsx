@@ -15,7 +15,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
-import { Shield, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { Shield, Eye, EyeOff, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTranslation } from 'react-i18next';
 
@@ -58,8 +58,20 @@ const SecuritySection: React.FC = () => {
       return t('auth:validation.passwordTooShort');
     }
     
-    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-      return t('account:security.recommendations.passwordComplexity');
+    if (!/[a-z]/.test(password)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    
+    if (!/[0-9]/.test(password)) {
+      return 'Password must contain at least one number';
+    }
+    
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      return 'Password must contain at least one special character (!@#$%^&*...)';
     }
     
     return null;
@@ -122,7 +134,9 @@ const SecuritySection: React.FC = () => {
           confirmPassword: '',
         });
       } else {
-        setErrorMessage(data.message || t('account:security.passwordError'));
+        // Display server error message
+        const errorMsg = data.message || data.error?.message || t('account:security.passwordError');
+        setErrorMessage(errorMsg);
       }
     } catch (error) {
       console.error('Password change error:', error);
@@ -281,6 +295,73 @@ const SecuritySection: React.FC = () => {
                           transition: 'all 0.3s ease',
                         }}
                       />
+                    </Box>
+                    
+                    {/* Password Requirements */}
+                    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                        Password must contain:
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+                          {passwordForm.newPassword.length >= 8 ? (
+                            <CheckCircle size={14} color={theme.palette.success.main} />
+                          ) : (
+                            <XCircle size={14} color={theme.palette.grey[400]} />
+                          )}
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          At least 8 characters
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+                          {/[a-z]/.test(passwordForm.newPassword) ? (
+                            <CheckCircle size={14} color={theme.palette.success.main} />
+                          ) : (
+                            <XCircle size={14} color={theme.palette.grey[400]} />
+                          )}
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Lowercase letter (a-z)
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+                          {/[A-Z]/.test(passwordForm.newPassword) ? (
+                            <CheckCircle size={14} color={theme.palette.success.main} />
+                          ) : (
+                            <XCircle size={14} color={theme.palette.grey[400]} />
+                          )}
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Uppercase letter (A-Z)
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+                          {/[0-9]/.test(passwordForm.newPassword) ? (
+                            <CheckCircle size={14} color={theme.palette.success.main} />
+                          ) : (
+                            <XCircle size={14} color={theme.palette.grey[400]} />
+                          )}
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Number (0-9)
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+                          {/[^A-Za-z0-9]/.test(passwordForm.newPassword) ? (
+                            <CheckCircle size={14} color={theme.palette.success.main} />
+                          ) : (
+                            <XCircle size={14} color={theme.palette.grey[400]} />
+                          )}
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Special character (!@#$%^&*...)
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
                 )}

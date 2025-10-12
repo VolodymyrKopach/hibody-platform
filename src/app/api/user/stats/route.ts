@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     // Get profile information for registration date
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('created_at, subscription_type')
+      .select('created_at, subscription_type, generation_count, subscription_expires_at')
       .eq('id', user.id)
       .single();
 
@@ -101,6 +101,8 @@ export async function GET(request: NextRequest) {
       monthlyLessons: monthlyLessonsCount || 0,
       joinedAt: profile?.created_at || user.created_at,
       subscriptionType: profile?.subscription_type || 'free',
+      generationCount: profile?.generation_count || 0,
+      subscriptionExpiresAt: profile?.subscription_expires_at || null,
       lastSignIn: user.last_sign_in_at,
     };
 

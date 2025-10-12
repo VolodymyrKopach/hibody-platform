@@ -1,10 +1,20 @@
 {
   "title": "Security",
   "changePassword": "Change Password",
+  "form": {
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving..."
+  },
   "recommendations": {
     "title": "Security Recommendations",
     "uniquePassword": "Use a unique password that you don't use on other sites",
     "passwordComplexity": "Create a complex password with a combination of letters, numbers and symbols",
-    "dontShare": "Never share your password with other people"
+    "dontShare": "Never share your password with other people",
+    "updateRegularly": "Regularly update your password for maximum security"
   }
 } 

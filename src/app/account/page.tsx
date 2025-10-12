@@ -19,13 +19,15 @@ import {
   User, 
   Settings, 
   Shield, 
-  BarChart3 
+  BarChart3,
+  Crown 
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import Layout from '@/components/layout/Layout';
 import ProfileSection from '@/components/account/ProfileSection';
 import StatsSection from '@/components/account/StatsSection';
 import SecuritySection from '@/components/account/SecuritySection';
+import SubscriptionSection from '@/components/account/SubscriptionSection';
 import { useTranslation } from 'react-i18next';
 
 interface TabPanelProps {
@@ -86,6 +88,8 @@ const AccountPage: React.FC = () => {
 
   const getSubscriptionColor = (subscription: string) => {
     switch (subscription) {
+      case 'pro':
+        return '#FFD700';
       case 'premium':
         return '#FFD700';
       case 'professional':
@@ -189,16 +193,22 @@ const AccountPage: React.FC = () => {
                   {...a11yProps(0)}
                 />
                 <Tab
+                  icon={<Crown size={20} />}
+                  label={t('account:tabs.subscription')}
+                  iconPosition="start"
+                  {...a11yProps(1)}
+                />
+                <Tab
                   icon={<BarChart3 size={20} />}
                   label={t('account:tabs.stats')}
                   iconPosition="start"
-                  {...a11yProps(1)}
+                  {...a11yProps(2)}
                 />
                 <Tab
                   icon={<Shield size={20} />}
                   label={t('account:tabs.security')}
                   iconPosition="start"
-                  {...a11yProps(2)}
+                  {...a11yProps(3)}
                 />
               </Tabs>
             </Box>
@@ -209,10 +219,14 @@ const AccountPage: React.FC = () => {
               </TabPanel>
               
               <TabPanel value={tabValue} index={1}>
-                <StatsSection />
+                <SubscriptionSection />
               </TabPanel>
               
               <TabPanel value={tabValue} index={2}>
+                <StatsSection />
+              </TabPanel>
+              
+              <TabPanel value={tabValue} index={3}>
                 <SecuritySection />
               </TabPanel>
             </Box>

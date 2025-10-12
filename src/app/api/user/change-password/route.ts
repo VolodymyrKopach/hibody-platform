@@ -33,12 +33,58 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    if (newPassword.length < 6) {
+    // Validate password complexity
+    if (newPassword.length < 8) {
       return NextResponse.json({
         success: false,
+        message: 'Password must be at least 8 characters long',
         error: { 
-          message: 'Password must be at least 6 characters long',
+          message: 'Password must be at least 8 characters long',
           code: 'PASSWORD_TOO_SHORT'
+        }
+      }, { status: 400 });
+    }
+
+    if (!/[a-z]/.test(newPassword)) {
+      return NextResponse.json({
+        success: false,
+        message: 'Password must contain at least one lowercase letter',
+        error: { 
+          message: 'Password must contain at least one lowercase letter',
+          code: 'PASSWORD_MISSING_LOWERCASE'
+        }
+      }, { status: 400 });
+    }
+
+    if (!/[A-Z]/.test(newPassword)) {
+      return NextResponse.json({
+        success: false,
+        message: 'Password must contain at least one uppercase letter',
+        error: { 
+          message: 'Password must contain at least one uppercase letter',
+          code: 'PASSWORD_MISSING_UPPERCASE'
+        }
+      }, { status: 400 });
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+      return NextResponse.json({
+        success: false,
+        message: 'Password must contain at least one number',
+        error: { 
+          message: 'Password must contain at least one number',
+          code: 'PASSWORD_MISSING_NUMBER'
+        }
+      }, { status: 400 });
+    }
+
+    if (!/[^A-Za-z0-9]/.test(newPassword)) {
+      return NextResponse.json({
+        success: false,
+        message: 'Password must contain at least one special character',
+        error: { 
+          message: 'Password must contain at least one special character (!@#$%^&*...)',
+          code: 'PASSWORD_MISSING_SPECIAL'
         }
       }, { status: 400 });
     }

@@ -28,6 +28,8 @@ interface UserStats {
   monthlyLessons: number;
   joinedAt: string;
   subscriptionType: string;
+  generationCount: number;
+  subscriptionExpiresAt: string | null;
   lastSignIn: string | null;
 }
 
@@ -153,11 +155,24 @@ const StatsSection: React.FC = () => {
   };
 
   const getSubscriptionLabel = (type: string) => {
-    return t(`common:subscriptionTypes.${type}`, { defaultValue: t('account:stats.unknown') });
+    switch (type) {
+      case 'pro':
+        return 'Pro';
+      case 'premium':
+        return 'Premium';
+      case 'professional':
+        return 'Professional';
+      case 'free':
+        return 'Free';
+      default:
+        return 'Free';
+    }
   };
 
   const getSubscriptionColor = (type: string) => {
     switch (type) {
+      case 'pro':
+        return '#FFD700';
       case 'premium':
         return '#FFD700';
       case 'professional':
@@ -210,7 +225,7 @@ const StatsSection: React.FC = () => {
         gridTemplateColumns: {
           xs: '1fr',
           sm: '1fr 1fr',
-          md: '1fr 1fr 1fr'
+          md: '1fr 1fr 1fr 1fr'
         },
         gap: 3,
         mb: 4
@@ -228,6 +243,13 @@ const StatsSection: React.FC = () => {
           value={stats.totalSlides}
           subtitle={t('account:stats.totalGenerated')}
           color={theme.palette.secondary.main}
+        />
+        <StatCard
+          icon={<TrendingUp size={24} />}
+          title={t('account:stats.generations')}
+          value={stats.generationCount}
+          subtitle={t('account:stats.used')}
+          color={theme.palette.warning.main}
         />
         <StatCard
           icon={<Calendar size={24} />}
