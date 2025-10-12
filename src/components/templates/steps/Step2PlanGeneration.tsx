@@ -30,12 +30,15 @@ import { ArrowLeft } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/markdown';
 import { StructuredLessonPlan } from '@/components/templates/lesson-plan';
 import { RegenerationConfirmDialog } from '@/components/dialogs';
+import { PaywallModal } from '@/components/dialogs/PaywallModal';
 import { CommentDialog } from '@/components/templates/plan-editing';
 // Updated to include planChanges prop
 import { StandardCommentButton } from '@/components/ui';
 import { lessonPlanService, LessonPlanServiceError } from '@/services/templates/LessonPlanService';
 import { TemplateData, GeneratedPlanResponse, GenerationState, PlanComment } from '@/types/templates';
 import { useLessonCreation } from '@/providers/LessonCreationProvider';
+import { useGenerationLimit } from '@/hooks/useGenerationLimit';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface Step2Props {
   data: TemplateData;
@@ -79,9 +82,26 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
   const [showCommentDialog, setShowCommentDialog] = useState(false);
   const [showSuccessSnackbar, setShowSuccessSnackbar] = useState(false);
   const [showCommentResults, setShowCommentResults] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const hasInitialized = useRef(false);
+  
+  // Generation limit hook
+  const { count, canGenerate, incrementCount, isPro, isLoading: isLoadingLimit } = useGenerationLimit();
+  
+  // Analytics
+  const { trackGenerateLesson, trackPaywallOpened, trackUpgradeClicked } = useAnalytics();
 
   const handleGeneratePlan = useCallback(async () => {
+    // Check if user can generate
+    if (!canGenerate && !isPro) {
+      trackPaywallOpened(count, 'limit_reached');
+      setShowPaywall(true);
+      return;
+    }
+
+    // Track generation attempt
+    trackGenerateLesson(count + 1, isPro);
+
     try {
       setGenerationState('generating');
       setError(null);
@@ -108,12 +128,26 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
       setGenerationState('success');
       onPlanGenerated(response);
 
+      // Increment generation count after successful generation
+      try {
+        await incrementCount();
+        
+        // Show paywall after 3rd generation
+        if (count + 1 >= 3 && !isPro) {
+          trackPaywallOpened(count + 1, 'limit_reached');
+          setShowPaywall(true);
+        }
+      } catch (countError) {
+        console.error('Failed to increment count:', countError);
+        // Don't block the user experience if count fails
+      }
+
     } catch (error) {
       console.error('Error generating lesson plan:', error);
       setGenerationState('error');
       setError(error instanceof LessonPlanServiceError ? error.message : 'Failed to generate lesson plan');
     }
-  }, [data.ageGroup, data.topic, data.slideCount, data.additionalInfo, onPlanGenerated]);
+  }, [data.ageGroup, data.topic, data.slideCount, data.additionalInfo, onPlanGenerated, canGenerate, isPro, incrementCount, count, trackGenerateLesson, trackPaywallOpened]);
 
   // Set initial state based on existing plan
   useEffect(() => {
@@ -427,6 +461,7 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
             variant="contained"
             startIcon={<PlanIcon />}
             onClick={handleGeneratePlan}
+            disabled={isLoadingLimit}
           >
             {t('createLesson.step2.generatePlan')}
           </Button>
@@ -434,6 +469,14 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
       </CardContent>
     </Card>
   );
+
+  const handleUpgrade = () => {
+    // Track upgrade click
+    trackUpgradeClicked('paywall');
+    
+    // Navigate to payment page (will be implemented with WayForPay)
+    window.location.href = '/payment';
+  };
 
   // Render based on current state
   if (generationState === 'idle') {
@@ -461,6 +504,13 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
           hasSlides={hasSlides}
         />
         
+        <PaywallModal
+          open={showPaywall}
+          onClose={() => setShowPaywall(false)}
+          onUpgrade={handleUpgrade}
+          generationCount={count}
+        />
+        
         <Snackbar
           open={showSuccessSnackbar}
           autoHideDuration={4000}
@@ -484,6 +534,13 @@ const Step2PlanGeneration: React.FC<Step2Props> = ({
         onConfirm={performRegeneration}
         type="plan"
         hasSlides={hasSlides}
+      />
+      
+      <PaywallModal
+        open={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        onUpgrade={handleUpgrade}
+        generationCount={count}
       />
       
       <Snackbar

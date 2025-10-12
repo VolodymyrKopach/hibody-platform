@@ -187,6 +187,40 @@ export const useAnalytics = () => {
     })
   }, [track])
 
+  // Monetization Events
+  const trackGenerateLesson = useCallback((generationNumber: number, isPro: boolean = false) => {
+    track('generate_lesson', {
+      generation_number: generationNumber,
+      is_pro: isPro
+    })
+  }, [track])
+
+  const trackPaywallOpened = useCallback((generationCount: number, trigger: 'limit_reached' | 'manual') => {
+    track('open_paywall', {
+      generation_count: generationCount,
+      trigger: trigger
+    })
+  }, [track])
+
+  const trackUpgradeClicked = useCallback((source: 'paywall' | 'settings' | 'banner') => {
+    track('click_upgrade', {
+      source: source
+    })
+  }, [track])
+
+  const trackPaymentCompleted = useCallback((amount: number, currency: string = 'USD') => {
+    track('complete_payment', {
+      amount: amount,
+      currency: currency
+    })
+  }, [track])
+
+  const trackGenerateAfterPaywall = useCallback((dismissed: boolean) => {
+    track('generate_after_paywall', {
+      dismissed_paywall: dismissed
+    })
+  }, [track])
+
   // Return all methods
   return {
     // Base methods
@@ -219,6 +253,13 @@ export const useAnalytics = () => {
     // Session
     trackSessionStart,
     trackSessionEnd,
+
+    // Monetization
+    trackGenerateLesson,
+    trackPaywallOpened,
+    trackUpgradeClicked,
+    trackPaymentCompleted,
+    trackGenerateAfterPaywall,
 
     // Utility
     isReady: (() => {
