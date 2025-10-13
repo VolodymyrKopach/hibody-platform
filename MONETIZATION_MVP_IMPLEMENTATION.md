@@ -119,7 +119,7 @@ Users can now view their subscription status and usage in `/account`:
 **For Pro Users:**
 - "TeachSpark Pro 🎉" badge
 - Days remaining until expiration
-- Total generations count (unlimited)
+- Total generations count (20 per month)
 - Payment history table
 
 **Both:**
@@ -175,7 +175,7 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 
 4. **Pro User**
    ```
-   Unlimited generations → No paywall → Analytics tracked
+   20 generations per month → Paywall at 20th → Analytics tracked
    ```
 
 ### Analytics Events

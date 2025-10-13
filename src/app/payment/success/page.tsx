@@ -39,7 +39,7 @@ export default function PaymentSuccessPage() {
           </Typography>
 
           <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Ваша підписка TeachSpark Pro активована. Тепер ви можете створювати необмежену кількість уроків!
+            Ваша підписка TeachSpark Pro активована. Тепер ви можете створювати до 20 уроків на місяць!
           </Typography>
 
           <Box sx={{ 

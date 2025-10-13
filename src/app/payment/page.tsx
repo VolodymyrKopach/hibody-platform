@@ -152,7 +152,7 @@ export default function PaymentPage() {
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {[
-                'Необмежена генерація уроків',
+                '20 уроків на місяць',
                 'Повний експорт презентацій',
                 'Кастомізація шаблонів',
                 'Пріоритетна підтримка',

@@ -70,7 +70,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {[
-              'Необмежена генерація уроків',
+              '20 уроків на місяць',
               'Повний експорт презентацій',
               'Кастомізація шаблонів',
               'Пріоритетна підтримка',

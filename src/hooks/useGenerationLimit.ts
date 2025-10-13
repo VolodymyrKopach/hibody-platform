@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 const FREE_GENERATION_LIMIT = 3;
+const PRO_GENERATION_LIMIT = 20;
 
 interface GenerationLimitStatus {
   count: number;
@@ -47,11 +48,12 @@ export const useGenerationLimit = () => {
         (!data?.subscription_expires_at || new Date(data.subscription_expires_at) > new Date());
 
       const count = data?.generation_count || 0;
-      const canGenerate = isPro || count < FREE_GENERATION_LIMIT;
+      const limit = isPro ? PRO_GENERATION_LIMIT : FREE_GENERATION_LIMIT;
+      const canGenerate = count < limit;
 
       setStatus({
         count,
-        limit: FREE_GENERATION_LIMIT,
+        limit,
         isPro,
         canGenerate,
         isLoading: false,

@@ -7,7 +7,7 @@ export interface UserProfile {
   full_name?: string
   avatar_url?: string
   role: 'teacher' | 'admin' | 'student'
-  subscription_type: 'free' | 'professional' | 'premium'
+  subscription_type: 'free' | 'pro' | 'professional' | 'premium'
   created_at: string
   updated_at: string
 }
@@ -52,13 +52,22 @@ export interface SubscriptionLimits {
 // Limits map by subscription type
 export const SUBSCRIPTION_LIMITS: Record<UserProfile['subscription_type'], SubscriptionLimits> = {
   free: {
-    maxLessons: 5,
+    maxLessons: 3,
     maxSlidesPerLesson: 10,
     aiRequestsPerMonth: 50,
     imageGenerationsPerMonth: 20,
     canExport: false,
     canShare: false,
     canCreatePublicLessons: false,
+  },
+  pro: {
+    maxLessons: 20, // 20 lessons per month ($9/month)
+    maxSlidesPerLesson: 30,
+    aiRequestsPerMonth: 300,
+    imageGenerationsPerMonth: 100,
+    canExport: true,
+    canShare: true,
+    canCreatePublicLessons: true,
   },
   professional: {
     maxLessons: 50,
