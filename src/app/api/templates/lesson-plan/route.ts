@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GeminiContentService } from '@/services/content/GeminiContentService';
 import { createClient } from '@/lib/supabase/server';
+import { checkGenerationLimit, incrementGenerationCount } from '@/middleware/generationLimit';
 
 interface LessonPlanRequest {
   ageGroup: string;
@@ -36,7 +37,37 @@ export async function POST(request: NextRequest) {
   try {
     console.log(`📝 LESSON PLAN API: POST request received [${requestId}]`);
     
-    // Authenticate user
+    // ✅ STEP 1: Check generation limit (server-side validation)
+    console.log(`🔒 LESSON PLAN API: Checking generation limit [${requestId}]`);
+    const limitCheck = await checkGenerationLimit(request);
+    
+    if (!limitCheck.allowed) {
+      console.error(`❌ LESSON PLAN API: Generation limit reached [${requestId}]`, {
+        current: limitCheck.current,
+        limit: limitCheck.limit,
+        isPro: limitCheck.isPro
+      });
+      return NextResponse.json({
+        success: false,
+        error: {
+          message: limitCheck.error || 'Generation limit reached',
+          code: 'GENERATION_LIMIT_REACHED',
+          limit: limitCheck.limit,
+          current: limitCheck.current,
+          remaining: limitCheck.remaining,
+          isPro: limitCheck.isPro
+        }
+      }, { status: limitCheck.status || 403 });
+    }
+    
+    console.log(`✅ LESSON PLAN API: Generation limit check passed [${requestId}]`, {
+      current: limitCheck.current,
+      limit: limitCheck.limit,
+      remaining: limitCheck.remaining,
+      isPro: limitCheck.isPro
+    });
+    
+    // ✅ STEP 2: Authenticate user
     const user = await getAuthenticatedUser(request);
     console.log(`👤 LESSON PLAN API: User authenticated [${requestId}]:`, { id: user.id, email: user.email });
     
@@ -128,11 +159,22 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
+    // ✅ STEP 3: Increment generation count (after successful generation)
+    console.log(`📊 LESSON PLAN API: Incrementing generation count [${requestId}]`);
+    try {
+      await incrementGenerationCount(user.id);
+      console.log(`✅ LESSON PLAN API: Generation count incremented [${requestId}]`);
+    } catch (incrementError) {
+      // Log error but don't fail the request - user already got their plan
+      console.error(`⚠️ LESSON PLAN API: Failed to increment count [${requestId}]:`, incrementError);
+    }
+
     const response: LessonPlanResponse = {
       success: true,
       plan: parsedPlan // Now returning parsed object instead of string
     };
 
+    console.log(`🎉 LESSON PLAN API: Request completed successfully [${requestId}]`);
     return NextResponse.json(response, { status: 200 });
 
   } catch (error) {

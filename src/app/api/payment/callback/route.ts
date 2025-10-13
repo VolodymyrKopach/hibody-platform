@@ -101,17 +101,23 @@ export async function POST(request: NextRequest) {
       const proExpiresAt = new Date();
       proExpiresAt.setMonth(proExpiresAt.getMonth() + 1); // 1 month subscription
 
+      const now = new Date();
+
       const { error: userError } = await supabase
         .from('user_profiles')
         .update({
           subscription_type: 'pro',
           subscription_expires_at: proExpiresAt.toISOString(),
-          updated_at: new Date().toISOString(),
+          generation_count: 0,  // ✅ Reset generation counter on payment
+          last_generation_reset: now.toISOString(),  // ✅ Track reset date
+          updated_at: now.toISOString(),
         })
         .eq('id', payment.user_id);
 
       if (userError) {
         console.error('Failed to activate Pro:', userError);
+      } else {
+        console.log(`✅ Pro subscription activated for user ${payment.user_id}, generation counter reset to 0`);
       }
     }
 
