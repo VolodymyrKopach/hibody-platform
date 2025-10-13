@@ -20,7 +20,8 @@ import {
   Divider,
   Avatar,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  alpha
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -113,17 +114,30 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       <Toolbar
         sx={{
           px: 3,
-          py: 2,
-          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`
+          py: 3,
+          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'radial-gradient(circle at top right, rgba(255,255,255,0.1) 0%, transparent 70%)',
+            pointerEvents: 'none'
+          }
         }}
       >
-        <Box>
+        <Box sx={{ position: 'relative', zIndex: 1 }}>
           <Typography
-            variant="h6"
+            variant="h5"
             sx={{
               color: 'white',
-              fontWeight: 700,
-              letterSpacing: 0.5
+              fontWeight: 800,
+              letterSpacing: 0.5,
+              textShadow: '0 2px 4px rgba(0,0,0,0.2)'
             }}
           >
             TeachSpark
@@ -131,11 +145,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           <Typography
             variant="caption"
             sx={{
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: '0.75rem'
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              letterSpacing: 1
             }}
           >
-            Admin Panel
+            ADMIN PANEL
           </Typography>
         </Box>
       </Toolbar>
@@ -145,13 +161,17 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       {/* Admin User Info */}
       {adminUser && (
         <>
-          <Box sx={{ p: 2 }}>
+          <Box sx={{ p: 2.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <Avatar
                 sx={{
-                  bgcolor: theme.palette.primary.main,
-                  width: 48,
-                  height: 48
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                  width: 52,
+                  height: 52,
+                  fontWeight: 700,
+                  fontSize: '1.25rem',
+                  boxShadow: `0 4px 12px ${theme.palette.primary.main}40`,
+                  border: `2px solid ${theme.palette.background.paper}`
                 }}
               >
                 {adminUser.email?.[0]?.toUpperCase() || 'A'}
@@ -160,10 +180,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 <Typography
                   variant="subtitle2"
                   sx={{
-                    fontWeight: 600,
+                    fontWeight: 700,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
+                    whiteSpace: 'nowrap',
+                    fontSize: '0.95rem'
                   }}
                 >
                   {adminUser.full_name || 'Admin User'}
@@ -175,68 +196,97 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    display: 'block'
+                    display: 'block',
+                    fontSize: '0.75rem'
                   }}
                 >
                   {adminUser.email}
                 </Typography>
                 <Box
                   sx={{
-                    display: 'inline-block',
-                    px: 1,
-                    py: 0.25,
-                    mt: 0.5,
-                    borderRadius: 1,
-                    bgcolor:
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    px: 1.5,
+                    py: 0.5,
+                    mt: 0.75,
+                    borderRadius: 1.5,
+                    background:
                       adminUser.role === 'super_admin'
-                        ? 'error.main'
-                        : 'primary.main',
-                    color: 'white'
+                        ? 'linear-gradient(135deg, #10b981, #059669)'
+                        : `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                    color: 'white',
+                    boxShadow:
+                      adminUser.role === 'super_admin'
+                        ? '0 2px 8px rgba(16, 185, 129, 0.4)'
+                        : `0 2px 8px ${theme.palette.primary.main}40`
                   }}
                 >
-                  <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>
-                    {adminUser.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                  <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: 0.5 }}>
+                    {adminUser.role === 'super_admin' ? 'SUPER ADMIN' : 'ADMIN'}
                   </Typography>
                 </Box>
               </Box>
             </Box>
           </Box>
-          <Divider />
+          <Divider sx={{ borderColor: theme.palette.divider, opacity: 0.3 }} />
         </>
       )}
 
       {/* Navigation Menu */}
-      <List sx={{ flex: 1, py: 2, px: 1 }}>
+      <List sx={{ flex: 1, py: 2, px: 1.5 }}>
         {MENU_ITEMS.map((item) => {
           const isActive = pathname === item.path;
 
           return (
-            <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
+            <ListItem key={item.id} disablePadding sx={{ mb: 1 }}>
               <ListItemButton
                 onClick={() => handleNavigation(item.path)}
                 selected={isActive}
                 sx={{
-                  borderRadius: 2,
-                  mx: 1,
+                  borderRadius: 2.5,
+                  py: 1.25,
+                  px: 2,
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  position: 'relative',
+                  overflow: 'hidden',
                   '&.Mui-selected': {
-                    bgcolor: theme.palette.primary.main,
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
                     color: 'white',
+                    boxShadow: `0 4px 12px ${theme.palette.primary.main}40`,
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '4px',
+                      height: '100%',
+                      bgcolor: 'white',
+                      borderRadius: '0 4px 4px 0'
+                    },
                     '&:hover': {
-                      bgcolor: theme.palette.primary.dark
+                      background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                      transform: 'translateX(4px)'
                     },
                     '& .MuiListItemIcon-root': {
-                      color: 'white'
+                      color: 'white',
+                      transform: 'scale(1.1)'
                     }
                   },
                   '&:hover': {
-                    bgcolor: theme.palette.action.hover
+                    bgcolor: theme.palette.action.hover,
+                    transform: 'translateX(4px)',
+                    '& .MuiListItemIcon-root': {
+                      transform: 'scale(1.1)',
+                      color: theme.palette.primary.main
+                    }
                   }
                 }}
               >
                 <ListItemIcon
                   sx={{
                     minWidth: 40,
-                    color: isActive ? 'white' : 'text.secondary'
+                    color: isActive ? 'white' : 'text.secondary',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                 >
                   {item.icon}
@@ -245,7 +295,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   primary={item.label}
                   primaryTypographyProps={{
                     fontSize: '0.95rem',
-                    fontWeight: isActive ? 600 : 500
+                    fontWeight: isActive ? 700 : 500,
+                    letterSpacing: isActive ? 0.3 : 0
                   }}
                 />
               </ListItemButton>
@@ -257,7 +308,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       <Divider />
 
       {/* Back to Platform */}
-      <Box sx={{ p: 1 }}>
+      <Box sx={{ p: 1.5 }}>
         <ListItemButton
           onClick={() => {
             router.push('/');
@@ -266,22 +317,35 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             }
           }}
           sx={{
-            borderRadius: 2,
-            mx: 1,
+            borderRadius: 2.5,
+            py: 1.25,
+            px: 2,
+            border: `1.5px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             '&:hover': {
-              bgcolor: theme.palette.primary.light,
-              color: theme.palette.primary.contrastText
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              borderColor: theme.palette.primary.main,
+              transform: 'translateX(-4px)',
+              '& .MuiListItemIcon-root': {
+                transform: 'translateX(-4px)',
+                color: theme.palette.primary.dark
+              }
             }
           }}
         >
-          <ListItemIcon sx={{ minWidth: 40 }}>
+          <ListItemIcon 
+            sx={{ 
+              minWidth: 40,
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
             <ArrowBackIcon color="primary" />
           </ListItemIcon>
           <ListItemText
             primary="Back to Platform"
             primaryTypographyProps={{
               fontSize: '0.95rem',
-              fontWeight: 500,
+              fontWeight: 600,
               color: theme.palette.primary.main
             }}
           />
@@ -291,23 +355,37 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <ListItemButton
           onClick={onLogout}
           sx={{
-            borderRadius: 2,
-            mx: 1,
+            borderRadius: 2.5,
+            py: 1.25,
+            px: 2,
             mt: 1,
+            border: `1.5px solid ${alpha(theme.palette.error.main, 0.3)}`,
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             '&:hover': {
-              bgcolor: theme.palette.error.light,
-              color: theme.palette.error.contrastText
+              bgcolor: alpha(theme.palette.error.main, 0.1),
+              borderColor: theme.palette.error.main,
+              '& .MuiListItemIcon-root': {
+                transform: 'rotate(-10deg)',
+                color: theme.palette.error.dark
+              }
             }
           }}
         >
-          <ListItemIcon sx={{ minWidth: 40 }}>
+          <ListItemIcon 
+            sx={{ 
+              minWidth: 40,
+              color: theme.palette.error.main,
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
             <LogoutIcon />
           </ListItemIcon>
           <ListItemText
             primary="Logout"
             primaryTypographyProps={{
               fontSize: '0.95rem',
-              fontWeight: 500
+              fontWeight: 600,
+              color: theme.palette.error.main
             }}
           />
         </ListItemButton>

@@ -171,7 +171,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                       user.admin_role === 'super_admin' ? 'Super Admin' : 'Admin'
                     }
                     size="small"
-                    color={user.admin_role === 'super_admin' ? 'error' : 'primary'}
+                    color={user.admin_role === 'super_admin' ? 'success' : 'primary'}
                   />
                 ) : (
                   <Chip label="User" size="small" variant="outlined" />
