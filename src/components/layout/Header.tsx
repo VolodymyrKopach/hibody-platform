@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Menu, 
@@ -12,7 +12,8 @@ import {
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
-  Languages
+  Languages,
+  Shield
 } from 'lucide-react';
 import {
   AppBar,
@@ -37,6 +38,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useUnsavedChangesContext } from '@/providers/UnsavedChangesProvider';
 import { AuthModal } from '@/components/auth';
 import { Logo } from '@/components/ui';
+import { adminAuthService } from '@/services/admin/adminAuthService';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -69,6 +71,33 @@ const Header: React.FC<HeaderProps> = ({
   // }, [loading])
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user) {
+        console.log('🔍 Header: Checking admin status for user:', {
+          email: user.email,
+          id: user.id
+        });
+        
+        const adminStatus = await adminAuthService.isAdmin();
+        
+        console.log('✅ Header: Admin status result:', {
+          email: user.email,
+          isAdmin: adminStatus
+        });
+        
+        setIsAdmin(adminStatus);
+      } else {
+        console.log('❌ Header: No user logged in');
+        setIsAdmin(false);
+      }
+    };
+    
+    checkAdminStatus();
+  }, [user]);
 
   // Languages configuration
   const languages = [
@@ -320,6 +349,28 @@ const Header: React.FC<HeaderProps> = ({
             </ListItemIcon>
             {t('buttons.profile')}
           </MenuItem>
+
+          {/* Admin Panel - Show only for admins */}
+          {isAdmin && (
+            <MenuItem onClick={async () => {
+              handleUserMenuClose();
+              await navigateWithConfirmation('/admin');
+            }} sx={{ 
+              borderRadius: '8px', 
+              mb: 0.5,
+              background: alpha(theme.palette.primary.main, 0.08),
+              '&:hover': {
+                background: alpha(theme.palette.primary.main, 0.12),
+              },
+            }}>
+              <ListItemIcon>
+                <Shield size={18} color={theme.palette.primary.main} />
+              </ListItemIcon>
+              <Typography variant="body2" sx={{ color: theme.palette.primary.main, fontWeight: 600 }}>
+                Admin Panel
+              </Typography>
+            </MenuItem>
+          )}
 
           {/* Language Selector */}
           <MenuItem 

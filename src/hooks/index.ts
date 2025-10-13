@@ -8,3 +8,4 @@ export * from './useGenerationConstructor';
 export * from './useBreakpoint';
 export * from './useFormWithHistory';
 export * from './useUnsavedChanges';
+export * from './useAdminAuth';
