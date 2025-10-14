@@ -73,92 +73,18 @@ class UsersService {
    * Get detailed information about a specific user
    */
   async getUserDetail(userId: string): Promise<UserDetail | null> {
-    const supabase = createClient();
-
     try {
-      const { data: user, error } = await supabase
-        .from('users')
-        .select(`
-          *,
-          admin_users!left(role),
-          subscriptions!left(*),
-          generation_limits!left(*)
-        `)
-        .eq('id', userId)
-        .single();
+      const response = await fetch(`/api/admin/users/${userId}`);
 
-      if (error || !user) {
-        console.error('Error fetching user detail:', error);
-        return null;
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error(`Failed to fetch user detail: ${response.statusText}`);
       }
 
-      // Get counts
-      const [lessonsCount, slidesCount, worksheetsCount, aiRequestsCount] = await Promise.all([
-        this.getCount('lessons', userId),
-        this.getCount('slides', userId),
-        this.getCount('worksheets', userId),
-        this.getCount('activity_log', userId, { action: ['lesson_created', 'slide_generated'] })
-      ]);
-
-      // Get recent activities
-      const { data: activities } = await supabase
-        .from('activity_log')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      // Get payment info
-      const { data: payments } = await supabase
-        .from('activity_log')
-        .select('metadata')
-        .eq('user_id', userId)
-        .eq('action', 'payment_succeeded');
-
-      const totalPaid = payments?.reduce((sum, p) => {
-        return sum + (p.metadata?.amount || 0);
-      }, 0) || 0;
-
-      const lastPayment = payments?.[0]?.metadata?.created_at || null;
-
-      // Get generation limits
-      const generationLimit = (user as any).generation_limits?.[0];
-
-      // Get subscription info
-      const subscription = (user as any).subscriptions?.[0];
-
-      // Get last activity
-      const { data: lastActivity } = await supabase
-        .from('activity_log')
-        .select('created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      return {
-        id: user.id,
-        email: user.email || '',
-        full_name: (user as any).full_name || null,
-        phone: (user as any).phone || null,
-        avatar_url: (user as any).avatar_url || null,
-        created_at: user.created_at,
-        last_sign_in_at: (user as any).last_sign_in_at || null,
-        is_admin: !!(user as any).admin_users?.role,
-        admin_role: (user as any).admin_users?.role || null,
-        lessons_count: lessonsCount,
-        slides_count: slidesCount,
-        worksheets_count: worksheetsCount,
-        last_activity_at: lastActivity?.created_at || null,
-        subscription_status: subscription?.status || 'free',
-        subscription_plan: subscription?.plan || null,
-        total_ai_requests: aiRequestsCount,
-        generation_limit_used: generationLimit?.used || 0,
-        generation_limit_total: generationLimit?.total || 0,
-        recent_activities: activities || [],
-        total_paid: totalPaid,
-        last_payment_at: lastPayment
-      };
+      const userDetail = await response.json();
+      return userDetail;
     } catch (error) {
       console.error('Error fetching user detail:', error);
       throw error;

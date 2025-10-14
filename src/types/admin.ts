@@ -294,3 +294,389 @@ export interface ActivityLogTableProps {
   onRefresh?: () => void;
 }
 
+// =====================================================
+// Lessons Management Types
+// =====================================================
+
+export type LessonStatus = 'draft' | 'published' | 'archived';
+export type LessonDifficulty = 'easy' | 'medium' | 'hard';
+
+export interface LessonListItem {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  subject: string;
+  age_group: string;
+  duration: number;
+  status: LessonStatus;
+  thumbnail_url: string | null;
+  tags: string[];
+  difficulty: LessonDifficulty;
+  views: number;
+  rating: number;
+  completion_rate: number;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  
+  // Joined data
+  user_email?: string;
+  user_full_name?: string;
+  slides_count?: number;
+  worksheets_count?: number;
+}
+
+export interface LessonDetail extends LessonListItem {
+  metadata: Record<string, any>;
+  lesson_plan: Record<string, any> | null;
+  plan_metadata: Record<string, any> | null;
+  
+  // Stats
+  total_views: number;
+  unique_viewers: number;
+  downloads_count: number;
+  copies_count: number;
+  shares_count: number;
+  
+  // Slides info
+  slides: LessonSlideInfo[];
+}
+
+export interface LessonSlideInfo {
+  id: string;
+  slide_number: number;
+  title: string;
+  content: string | null;
+  layout_type: string;
+  created_at: string;
+}
+
+export interface LessonFilters {
+  search?: string;
+  user_id?: string;
+  status?: LessonStatus | 'all';
+  subject?: string;
+  age_group?: string;
+  difficulty?: LessonDifficulty | 'all';
+  is_public?: boolean;
+  date_from?: string;
+  date_to?: string;
+  min_rating?: number;
+  tags?: string[];
+  sort_by?: 'created_at' | 'updated_at' | 'views' | 'rating' | 'title';
+  sort_order?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
+export interface UpdateLessonRequest {
+  title?: string;
+  description?: string;
+  subject?: string;
+  age_group?: string;
+  duration?: number;
+  status?: LessonStatus;
+  thumbnail_url?: string;
+  tags?: string[];
+  difficulty?: LessonDifficulty;
+  is_public?: boolean;
+}
+
+export interface LessonStats {
+  total_lessons: number;
+  published_lessons: number;
+  draft_lessons: number;
+  archived_lessons: number;
+  total_views: number;
+  average_rating: number;
+  most_popular_subjects: { subject: string; count: number }[];
+  most_popular_age_groups: { age_group: string; count: number }[];
+  lessons_by_status: { status: string; count: number }[];
+}
+
+// =====================================================
+// Worksheets Management Types
+// =====================================================
+
+export type WorksheetType = 
+  | 'coloring'
+  | 'writing'
+  | 'math'
+  | 'reading'
+  | 'puzzle'
+  | 'drawing'
+  | 'other';
+
+export interface WorksheetListItem {
+  id: string;
+  lesson_id: string | null;
+  user_id: string;
+  title: string;
+  type: WorksheetType;
+  age_group: string;
+  thumbnail_url: string | null;
+  file_url: string;
+  file_size: number;
+  created_at: string;
+  updated_at: string;
+  
+  // Joined data
+  user_email?: string;
+  user_full_name?: string;
+  lesson_title?: string;
+  downloads_count?: number;
+}
+
+export interface WorksheetDetail extends WorksheetListItem {
+  description: string | null;
+  metadata: Record<string, any>;
+  
+  // Stats
+  total_downloads: number;
+  views_count: number;
+}
+
+export interface WorksheetFilters {
+  search?: string;
+  user_id?: string;
+  lesson_id?: string;
+  type?: WorksheetType | 'all';
+  age_group?: string;
+  date_from?: string;
+  date_to?: string;
+  sort_by?: 'created_at' | 'updated_at' | 'downloads_count' | 'title';
+  sort_order?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
+export interface WorksheetStats {
+  total_worksheets: number;
+  by_type: { type: string; count: number }[];
+  by_age_group: { age_group: string; count: number }[];
+  total_downloads: number;
+  most_downloaded: WorksheetListItem[];
+}
+
+// =====================================================
+// Finance & Revenue Types
+// =====================================================
+
+export interface RevenueMetrics {
+  mrr: number; // Monthly Recurring Revenue
+  arr: number; // Annual Recurring Revenue
+  total_revenue_30d: number;
+  total_revenue_7d: number;
+  revenue_today: number;
+  
+  // Growth
+  mrr_growth_rate: number;
+  revenue_growth_rate_30d: number;
+  
+  // By plan
+  revenue_by_plan: { plan: string; revenue: number }[];
+  
+  // Forecasts
+  projected_mrr: number;
+  projected_arr: number;
+}
+
+export interface ChurnMetrics {
+  churn_rate_30d: number;
+  churn_rate_7d: number;
+  churned_customers_30d: number;
+  revenue_lost_30d: number;
+  
+  // Reasons
+  churn_by_reason: { reason: string; count: number }[];
+}
+
+export interface ConversionMetrics {
+  trial_to_paid_rate: number;
+  free_to_trial_rate: number;
+  free_to_paid_rate: number;
+  
+  // Counts
+  trial_conversions_30d: number;
+  trial_conversions_7d: number;
+  
+  // By plan
+  conversions_by_plan: { plan: string; conversions: number }[];
+}
+
+export interface SubscriptionMetrics {
+  total_active: number;
+  total_trial: number;
+  total_cancelled: number;
+  total_past_due: number;
+  
+  // By plan
+  by_plan: { plan: string; count: number; mrr: number }[];
+  
+  // Upcoming events
+  upcoming_renewals: SubscriptionRenewal[];
+  expiring_trials: SubscriptionTrial[];
+}
+
+export interface SubscriptionRenewal {
+  subscription_id: string;
+  user_email: string;
+  plan: string;
+  renewal_date: string;
+  amount: number;
+}
+
+export interface SubscriptionTrial {
+  subscription_id: string;
+  user_email: string;
+  trial_end_date: string;
+  days_remaining: number;
+}
+
+export interface FailedPayment {
+  id: string;
+  user_id: string;
+  user_email: string;
+  subscription_id: string;
+  amount: number;
+  currency: string;
+  failure_reason: string;
+  failed_at: string;
+  retry_count: number;
+  next_retry_at: string | null;
+  status: 'pending_retry' | 'failed' | 'resolved';
+}
+
+export interface FinancialTrend {
+  date: string;
+  mrr: number;
+  revenue: number;
+  new_subscriptions: number;
+  cancelled_subscriptions: number;
+  net_revenue: number;
+}
+
+// =====================================================
+// Analytics Types
+// =====================================================
+
+export interface EngagementMetrics {
+  dau: number; // Daily Active Users
+  wau: number; // Weekly Active Users
+  mau: number; // Monthly Active Users
+  
+  dau_wau_ratio: number;
+  wau_mau_ratio: number;
+  
+  // Trends
+  dau_trend: MetricTrend[];
+  wau_trend: MetricTrend[];
+  mau_trend: MetricTrend[];
+}
+
+export interface CohortData {
+  cohort_date: string;
+  cohort_size: number;
+  retention_rates: {
+    day_1: number;
+    day_7: number;
+    day_14: number;
+    day_30: number;
+    day_60: number;
+    day_90: number;
+  };
+}
+
+export interface UserSegment {
+  segment_name: string;
+  user_count: number;
+  percentage: number;
+  avg_revenue: number;
+  characteristics: Record<string, any>;
+}
+
+export interface FeatureUsageData {
+  feature_name: string;
+  usage_count: number;
+  unique_users: number;
+  avg_time_spent: number;
+  adoption_rate: number;
+}
+
+export interface FunnelStep {
+  step_name: string;
+  step_order: number;
+  users_entered: number;
+  users_completed: number;
+  drop_off_rate: number;
+  avg_time_to_complete: number;
+}
+
+export interface ContentPopularity {
+  // Subjects
+  popular_subjects: { subject: string; count: number; growth_rate: number }[];
+  
+  // Age groups
+  popular_age_groups: { age_group: string; count: number; growth_rate: number }[];
+  
+  // Templates
+  popular_templates: { template_name: string; usage_count: number }[];
+  
+  // Peak times
+  peak_usage_hours: { hour: number; usage_count: number }[];
+  peak_usage_days: { day: string; usage_count: number }[];
+}
+
+// =====================================================
+// Settings Types
+// =====================================================
+
+export interface PlatformSettings {
+  maintenance_mode: boolean;
+  registration_enabled: boolean;
+  ai_generation_enabled: boolean;
+  default_generation_limit: number;
+  max_generation_limit: number;
+  
+  // AI Models
+  default_ai_model: string;
+  available_ai_models: string[];
+  
+  // Features
+  feature_flags: Record<string, boolean>;
+}
+
+export interface GenerationLimitConfig {
+  plan: string;
+  daily_limit: number;
+  monthly_limit: number;
+  slide_generation_cost: number;
+  worksheet_generation_cost: number;
+}
+
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
+  variables: string[];
+  category: 'welcome' | 'trial' | 'subscription' | 'notification' | 'marketing';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PromoCode {
+  id: string;
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  valid_from: string;
+  valid_until: string;
+  max_uses: number;
+  current_uses: number;
+  applicable_plans: string[];
+  is_active: boolean;
+  created_at: string;
+}
+

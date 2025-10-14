@@ -31,7 +31,9 @@ import {
   Timeline as TimelineIcon,
   Settings as SettingsIcon,
   ExitToApp as LogoutIcon,
-  ArrowBack as ArrowBackIcon
+  ArrowBack as ArrowBackIcon,
+  AttachMoney as AttachMoneyIcon,
+  Assessment as AssessmentIcon
 } from '@mui/icons-material';
 import type { AdminUser } from '@/types/admin';
 
@@ -68,6 +70,18 @@ const MENU_ITEMS: MenuItem[] = [
     label: 'Worksheets',
     path: '/admin/worksheets',
     icon: <AssignmentIcon />
+  },
+  {
+    id: 'finance',
+    label: 'Finance',
+    path: '/admin/finance',
+    icon: <AttachMoneyIcon />
+  },
+  {
+    id: 'analytics',
+    label: 'Analytics',
+    path: '/admin/analytics',
+    icon: <AssessmentIcon />
   },
   {
     id: 'activity',
