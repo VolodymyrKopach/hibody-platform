@@ -55,9 +55,11 @@ export async function GET(request: NextRequest) {
 
     const totalActive = totalProfessional + totalPremium;
 
-    // Calculate MRR by plan ($9 per professional user)
-    const professionalMrr = totalProfessional * 9;
-    const premiumMrr = totalPremium * 0; // Premium pricing TBD
+    // Calculate MRR by plan (using pricing constants)
+    const PROFESSIONAL_PRICE = 9; // From SUBSCRIPTION_PRICES
+    const PREMIUM_PRICE = 19; // From SUBSCRIPTION_PRICES - TBD
+    const professionalMrr = totalProfessional * PROFESSIONAL_PRICE;
+    const premiumMrr = totalPremium * PREMIUM_PRICE;
 
     // Get cancelled subscriptions
     const { data: cancelledSubs } = await supabase

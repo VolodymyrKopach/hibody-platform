@@ -60,8 +60,9 @@ export async function GET(request: NextRequest) {
     const churnRate30d = (churned30d / activeSubscribers) * 100;
     const churnRate7d = (churned7d / activeSubscribers) * 100;
 
-    // Calculate revenue lost (assuming $9 per churned customer)
-    const revenueLost30d = churned30d * 9;
+    // Calculate revenue lost (using professional subscription price)
+    const PROFESSIONAL_PRICE = 9; // From SUBSCRIPTION_PRICES
+    const revenueLost30d = churned30d * PROFESSIONAL_PRICE;
 
     // Get churn reasons from metadata
     const churnByReason: Array<{ reason: string; count: number }> = [];
