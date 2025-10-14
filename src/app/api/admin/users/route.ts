@@ -83,8 +83,8 @@ export async function GET(request: NextRequest) {
         slides_count: slidesCount.get(user.id) || 0,
         worksheets_count: worksheetsCount.get(user.id) || 0,
         last_activity_at: user.last_sign_in_at,
-        subscription_status: 'free', // TODO: get from subscriptions table
-        subscription_plan: null
+        subscription_status: user.user_metadata?.subscription_type || 'free',
+        subscription_plan: user.user_metadata?.subscription_type || null
       };
     });
 

@@ -57,45 +57,49 @@ class MetricsService {
     const thirtyDaysAgo = new Date(today);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // Total users
+    // Total users (using user_profiles instead of users)
     const { count: total_users } = await supabase
-      .from('users')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true });
 
-    // Active users (7 days)
-    const { count: active_users_7d } = await supabase
+    // Active users (7 days) - get unique user_ids
+    const { data: activity7d } = await supabase
       .from('activity_log')
-      .select('user_id', { count: 'exact', head: true })
+      .select('user_id')
       .gte('created_at', sevenDaysAgo.toISOString())
       .not('user_id', 'is', null);
 
-    // Active users (30 days)
-    const { count: active_users_30d } = await supabase
+    const active_users_7d = new Set(activity7d?.map(a => a.user_id)).size;
+
+    // Active users (30 days) - get unique user_ids
+    const { data: activity30d } = await supabase
       .from('activity_log')
-      .select('user_id', { count: 'exact', head: true })
+      .select('user_id')
       .gte('created_at', thirtyDaysAgo.toISOString())
       .not('user_id', 'is', null);
 
-    // New registrations
+    const active_users_30d = new Set(activity30d?.map(a => a.user_id)).size;
+
+    // New registrations (using user_profiles)
     const { count: new_registrations_today } = await supabase
-      .from('users')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', today.toISOString());
 
     const { count: new_registrations_7d } = await supabase
-      .from('users')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', sevenDaysAgo.toISOString());
 
     const { count: new_registrations_30d } = await supabase
-      .from('users')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', thirtyDaysAgo.toISOString());
 
     return {
       total_users: total_users || 0,
-      active_users_7d: active_users_7d || 0,
-      active_users_30d: active_users_30d || 0,
+      active_users_7d,
+      active_users_30d,
       new_registrations_today: new_registrations_today || 0,
       new_registrations_7d: new_registrations_7d || 0,
       new_registrations_30d: new_registrations_30d || 0
@@ -230,38 +234,48 @@ class MetricsService {
     const thirtyDaysAgo = new Date(today);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // Get payment events from activity log
-    const { data: payments } = await supabase
-      .from('activity_log')
-      .select('metadata')
-      .eq('action', 'payment_succeeded');
+    // Get payment events from payments table
+    const { data: paymentsAll } = await supabase
+      .from('payments')
+      .select('amount, created_at')
+      .eq('status', 'completed');
 
-    const total_revenue = payments?.reduce((sum, p) => {
-      return sum + (p.metadata?.amount || 0);
+    const total_revenue = paymentsAll?.reduce((sum, p) => {
+      return sum + Number(p.amount || 0);
     }, 0) || 0;
 
-    const revenue_today = payments?.filter(p => {
-      const date = new Date(p.metadata?.created_at);
+    const revenue_today = paymentsAll?.filter(p => {
+      const date = new Date(p.created_at);
       return date >= today;
-    }).reduce((sum, p) => sum + (p.metadata?.amount || 0), 0) || 0;
+    }).reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
 
-    const revenue_7d = payments?.filter(p => {
-      const date = new Date(p.metadata?.created_at);
+    const revenue_7d = paymentsAll?.filter(p => {
+      const date = new Date(p.created_at);
       return date >= sevenDaysAgo;
-    }).reduce((sum, p) => sum + (p.metadata?.amount || 0), 0) || 0;
+    }).reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
 
-    const revenue_30d = payments?.filter(p => {
-      const date = new Date(p.metadata?.created_at);
+    const revenue_30d = paymentsAll?.filter(p => {
+      const date = new Date(p.created_at);
       return date >= thirtyDaysAgo;
-    }).reduce((sum, p) => sum + (p.metadata?.amount || 0), 0) || 0;
+    }).reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
 
-    // Calculate MRR (Monthly Recurring Revenue)
+    // Calculate MRR (Monthly Recurring Revenue) from active subscriptions
+    // Using user_profiles with subscription_type
+    const SUBSCRIPTION_PRICES = {
+      free: 0,
+      professional: 9,
+      premium: 19
+    };
+
     const { data: activeSubscriptions } = await supabase
-      .from('subscriptions')
-      .select('price')
-      .eq('status', 'active');
+      .from('user_profiles')
+      .select('subscription_type')
+      .in('subscription_type', ['professional', 'premium']);
 
-    const mrr = activeSubscriptions?.reduce((sum, s) => sum + (s.price || 0), 0) || 0;
+    const mrr = activeSubscriptions?.reduce((sum, user) => {
+      const price = SUBSCRIPTION_PRICES[user.subscription_type as keyof typeof SUBSCRIPTION_PRICES] || 0;
+      return sum + price;
+    }, 0) || 0;
 
     return {
       total_revenue,
@@ -278,31 +292,30 @@ class MetricsService {
   private async getSubscriptionMetrics() {
     const supabase = createClient();
 
-    const { count: total_subscriptions } = await supabase
-      .from('subscriptions')
-      .select('*', { count: 'exact', head: true });
+    // Get subscription counts from user_profiles
+    const { data: allUsers } = await supabase
+      .from('user_profiles')
+      .select('subscription_type');
 
-    const { count: active_subscriptions } = await supabase
-      .from('subscriptions')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'active');
+    const total_subscriptions = allUsers?.length || 0;
+    const active_subscriptions = allUsers?.filter(u => 
+      u.subscription_type === 'professional' || u.subscription_type === 'premium'
+    ).length || 0;
 
+    // Trial users - from activity log (if tracked)
     const { count: trial_users } = await supabase
-      .from('subscriptions')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'trialing');
+      .from('activity_log')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('action', 'trial_started');
 
-    const { count: paid_users } = await supabase
-      .from('subscriptions')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'active')
-      .not('trial_end', 'is', null);
+    // Paid users are those with professional or premium subscription
+    const paid_users = active_subscriptions;
 
     return {
-      total_subscriptions: total_subscriptions || 0,
-      active_subscriptions: active_subscriptions || 0,
+      total_subscriptions,
+      active_subscriptions,
       trial_users: trial_users || 0,
-      paid_users: paid_users || 0
+      paid_users
     };
   }
 
@@ -322,14 +335,14 @@ class MetricsService {
     const sixtyDaysAgo = new Date(now);
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-    // User growth
+    // User growth (using user_profiles)
     const { count: users_7d } = await supabase
-      .from('users')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', sevenDaysAgo.toISOString());
 
     const { count: users_prev_7d } = await supabase
-      .from('users')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', fourteenDaysAgo.toISOString())
       .lt('created_at', sevenDaysAgo.toISOString());
@@ -339,12 +352,12 @@ class MetricsService {
       : 0;
 
     const { count: users_30d } = await supabase
-      .from('users')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', thirtyDaysAgo.toISOString());
 
     const { count: users_prev_30d } = await supabase
-      .from('users')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', sixtyDaysAgo.toISOString())
       .lt('created_at', thirtyDaysAgo.toISOString());
@@ -353,8 +366,26 @@ class MetricsService {
       ? ((users_30d || 0) - (users_prev_30d || 0)) / users_prev_30d * 100
       : 0;
 
-    // Revenue growth (placeholder - implement based on actual payment data)
-    const revenue_growth_rate_30d = 0;
+    // Revenue growth - calculate from payments table
+    const { data: revenue30d } = await supabase
+      .from('payments')
+      .select('amount')
+      .eq('status', 'completed')
+      .gte('created_at', thirtyDaysAgo.toISOString());
+
+    const { data: revenuePrev30d } = await supabase
+      .from('payments')
+      .select('amount')
+      .eq('status', 'completed')
+      .gte('created_at', sixtyDaysAgo.toISOString())
+      .lt('created_at', thirtyDaysAgo.toISOString());
+
+    const total30d = revenue30d?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
+    const totalPrev30d = revenuePrev30d?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
+
+    const revenue_growth_rate_30d = totalPrev30d
+      ? ((total30d - totalPrev30d) / totalPrev30d) * 100
+      : 0;
 
     return {
       user_growth_rate_7d,
@@ -405,7 +436,7 @@ class MetricsService {
     const supabase = createClient();
     
     const { data } = await supabase
-      .from('users')
+      .from('user_profiles')
       .select('created_at')
       .gte('created_at', startDate.toISOString())
       .lte('created_at', endDate.toISOString())
