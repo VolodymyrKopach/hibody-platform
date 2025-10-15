@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Box,
   Container,
@@ -27,6 +27,7 @@ import {
   People as PeopleIcon
 } from '@mui/icons-material';
 import { UsersTable } from '@/components/admin/users/UsersTable';
+import { MakeAdminDialog } from '@/components/admin/users/MakeAdminDialog';
 import { usersService } from '@/services/admin/usersService';
 import type { UserListItem, UserFilters } from '@/types/admin';
 
@@ -46,30 +47,38 @@ export default function AdminUsersPage() {
   const [totalUsers, setTotalUsers] = useState(0);
   const limit = 20;
 
-  useEffect(() => {
-    loadUsers();
-  }, [page, roleFilter, subscriptionFilter]);
+  // Make admin dialog
+  const [makeAdminDialog, setMakeAdminDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{id: string, email: string, name?: string | null} | null>(null);
 
-  // Debounce search
+  // Debounce search term
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+  const prevFiltersRef = useRef({ roleFilter, subscriptionFilter, debouncedSearch });
+  const loadingRef = useRef(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (page === 1) {
-        loadUsers();
-      } else {
-        setPage(1);
-      }
+      setDebouncedSearch(searchTerm);
     }, 500);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const loadUsers = async () => {
+  // Extracted load function (no useCallback to avoid re-renders)
+  const fetchUsers = async () => {
+    // Prevent duplicate requests
+    if (loadingRef.current) {
+      console.log('Skipping duplicate request - already loading');
+      return;
+    }
+
     try {
+      loadingRef.current = true;
       setLoading(true);
       setError(null);
 
       const filters: UserFilters = {
-        search: searchTerm || undefined,
+        search: debouncedSearch || undefined,
         role: roleFilter !== 'all' ? roleFilter : undefined,
         subscription_status: subscriptionFilter !== 'all' ? subscriptionFilter : undefined,
         limit,
@@ -88,15 +97,56 @@ export default function AdminUsersPage() {
       setError('Failed to load users. Please try again.');
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   };
 
+  // Single effect: handle filter changes and pagination
+  useEffect(() => {
+    const prevFilters = prevFiltersRef.current;
+    const filtersChanged = 
+      prevFilters.roleFilter !== roleFilter ||
+      prevFilters.subscriptionFilter !== subscriptionFilter ||
+      prevFilters.debouncedSearch !== debouncedSearch;
+
+    if (filtersChanged) {
+      // Update ref
+      prevFiltersRef.current = { roleFilter, subscriptionFilter, debouncedSearch };
+      
+      // Reset to page 1 if filters changed
+      if (page !== 1) {
+        setPage(1);
+        // Don't load here, the page change will trigger load
+        return;
+      }
+    }
+
+    // Load users
+    fetchUsers();
+  }, [page, roleFilter, subscriptionFilter, debouncedSearch]);
+
   const handleRefresh = () => {
-    loadUsers();
+    fetchUsers();
   };
 
   const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
+  };
+
+  const handleMakeAdminClick = (userId: string, userEmail: string, userName?: string | null) => {
+    setSelectedUser({ id: userId, email: userEmail, name: userName });
+    setMakeAdminDialog(true);
+  };
+
+  const handleMakeAdmin = async (role: 'admin' | 'super_admin') => {
+    if (!selectedUser) return;
+    
+    const success = await usersService.makeAdmin(selectedUser.id, role);
+    if (success) {
+      setMakeAdminDialog(false);
+      setSelectedUser(null);
+      fetchUsers(); // Refresh the list
+    }
   };
 
   return (
@@ -335,7 +385,11 @@ export default function AdminUsersPage() {
         </Paper>
       ) : (
         <>
-          <UsersTable users={users} loading={loading} />
+          <UsersTable 
+            users={users} 
+            loading={loading} 
+            onMakeAdmin={handleMakeAdminClick}
+          />
 
           {/* Pagination */}
           {!loading && totalPages > 1 && (
@@ -350,6 +404,21 @@ export default function AdminUsersPage() {
             </Box>
           )}
         </>
+      )}
+
+      {/* Make Admin Dialog */}
+      {selectedUser && (
+        <MakeAdminDialog
+          open={makeAdminDialog}
+          userId={selectedUser.id}
+          userEmail={selectedUser.email}
+          userName={selectedUser.name}
+          onClose={() => {
+            setMakeAdminDialog(false);
+            setSelectedUser(null);
+          }}
+          onConfirm={handleMakeAdmin}
+        />
       )}
     </Container>
   );

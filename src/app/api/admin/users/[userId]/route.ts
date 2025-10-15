@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET(
   request: NextRequest,
@@ -35,6 +36,17 @@ export async function GET(
 
     const userId = params.userId;
 
+    // Use admin client to get auth data
+    const adminSupabase = createAdminClient();
+
+    // Get user from auth.users (for last_sign_in_at)
+    const { data: { user: authUser }, error: authError } = await adminSupabase.auth.admin.getUserById(userId);
+
+    if (authError || !authUser) {
+      console.error('Error fetching auth user:', authError);
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
@@ -54,18 +66,26 @@ export async function GET(
       .eq('user_id', userId)
       .single();
 
-    // Get counts
+    // Get generation limit data
+    const { data: genLimit } = await supabase
+      .from('generation_limits')
+      .select('used, total, reset_at')
+      .eq('user_id', userId)
+      .single();
+
+    // Get counts in parallel
     const [
       { count: lessonsCount },
       { count: slidesCount },
       { count: worksheetsCount },
+      { count: aiRequestsCount }
     ] = await Promise.all([
       supabase.from('lessons').select('*', { count: 'exact', head: true }).eq('user_id', userId),
       supabase.from('slides').select('*', { count: 'exact', head: true }).eq('user_id', userId),
-      supabase
-        .from('worksheets')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId),
+      supabase.from('worksheets').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+      supabase.from('activity_log').select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .in('action', ['slide_generated', 'worksheet_created', 'ai_request_completed'])
     ]);
 
     // Get recent activities
@@ -100,14 +120,22 @@ export async function GET(
       .limit(1)
       .single();
 
+    // Get token usage stats
+    const { data: tokenUsageData } = await supabase
+      .from('token_usage')
+      .select('total_tokens, total_cost')
+      .eq('user_id', userId);
+
+    const totalTokens = tokenUsageData?.reduce((sum, row) => sum + (row.total_tokens || 0), 0) || 0;
+    const totalCost = tokenUsageData?.reduce((sum, row) => sum + (row.total_cost || 0), 0) || 0;
+
     const userDetail = {
       id: profile.id,
       email: profile.email,
       full_name: profile.full_name || null,
-      phone: null, // TODO: Add phone field to user_profiles if needed
       avatar_url: profile.avatar_url || null,
       created_at: profile.created_at,
-      last_sign_in_at: null, // TODO: Track last sign in
+      last_sign_in_at: authUser?.last_sign_in_at || null,
       is_admin: !!targetAdminData,
       admin_role: targetAdminData?.role || null,
       lessons_count: lessonsCount || 0,
@@ -116,9 +144,11 @@ export async function GET(
       last_activity_at: lastActivity?.created_at || null,
       subscription_status: profile.subscription_type || 'free',
       subscription_plan: profile.subscription_type || null,
-      total_ai_requests: 0, // TODO: Implement tracking
-      generation_limit_used: 0, // TODO: Get from generation_limits table
-      generation_limit_total: 10, // TODO: Get from generation_limits table or config
+      total_ai_requests: aiRequestsCount || 0,
+      generation_limit_used: genLimit?.used || 0,
+      generation_limit_total: genLimit?.total || 10,
+      total_tokens_used: totalTokens,
+      total_tokens_cost: totalCost,
       recent_activities: activities || [],
       total_paid: totalPaid,
       last_payment_at: lastPayment,

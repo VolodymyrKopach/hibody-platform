@@ -172,6 +172,7 @@ export interface WorksheetEditContext {
   ageGroup: string;
   difficulty: 'easy' | 'medium' | 'hard';
   language: string;
+  userId?: string; // For token tracking
 }
 
 /**

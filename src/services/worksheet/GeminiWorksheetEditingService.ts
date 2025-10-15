@@ -14,6 +14,7 @@ import {
 } from '@/types/worksheet-generation';
 import { CanvasElement } from '@/types/canvas-element';
 import { worksheetComponentSchemaService } from './WorksheetComponentSchemaService';
+import { tokenTrackingService } from '@/services/tokenTrackingService';
 
 /**
  * Result of AI worksheet editing
@@ -63,7 +64,7 @@ export class GeminiWorksheetEditingService {
 
       // Call Gemini API with appropriate token limit based on target type
       const maxTokens = target.type === 'page' ? 8192 : 4096;
-      const response = await this.callGeminiAPI(prompt, maxTokens);
+      const response = await this.callGeminiAPI(prompt, maxTokens, context.userId);
 
       console.log('✅ [GEMINI_WORKSHEET_EDITING] AI response received');
 
@@ -362,7 +363,7 @@ Return ONLY valid JSON. No explanations, no markdown formatting.`;
   /**
    * Call Gemini API - following GeminiWorksheetGenerationService pattern
    */
-  private async callGeminiAPI(prompt: string, maxTokens: number = 4096): Promise<string> {
+  private async callGeminiAPI(prompt: string, maxTokens: number = 4096, userId?: string): Promise<string> {
     const temperature = 0.7;
     const model = 'gemini-2.5-flash';
 
@@ -392,7 +393,23 @@ Return ONLY valid JSON. No explanations, no markdown formatting.`;
         throw new Error('Empty response from Gemini API');
       }
 
-      console.log('✅ [GEMINI_EDIT_API] Response received, length:', content.length);
+      console.log('✅ [GEMINI_EDIT_API] Response received, length:', content.length, {
+        hasUsageMetadata: !!response.usageMetadata
+      });
+
+      // Track token usage if userId is provided
+      if (userId && response.usageMetadata) {
+        await tokenTrackingService.trackTokenUsage({
+          userId,
+          serviceName: 'worksheet_editing',
+          model,
+          inputTokens: response.usageMetadata.promptTokenCount || 0,
+          outputTokens: response.usageMetadata.candidatesTokenCount || 0,
+          metadata: {
+            operation: 'edit'
+          }
+        });
+      }
 
       return content;
 

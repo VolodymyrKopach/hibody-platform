@@ -4,6 +4,7 @@ import { processSlideWithTempImages, type ProcessedSlideDataWithTemp } from '@/u
 import { ageComponentTemplatesService } from '@/services/templates/AgeComponentTemplatesService';
 import { componentMappingService } from './ComponentMappingService';
 import { AgeGroup } from '@/types/generation';
+import { tokenTrackingService } from '@/services/tokenTrackingService';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export class GeminiContentService {
@@ -127,7 +128,8 @@ export class GeminiContentService {
     age: string, 
     language: string = 'en', 
     conversationContext?: string,
-    slideCount: number = 5
+    slideCount: number = 5,
+    userId?: string
   ): Promise<string> {
     const prompt = this.buildLessonPlanJSONPrompt(topic, age, language, conversationContext, slideCount);
 
@@ -157,7 +159,25 @@ export class GeminiContentService {
       }
 
       console.log('✅ Gemini JSON response received');
-      console.log('📏 JSON Response length:', content.length);
+      console.log('📏 JSON Response length:', content.length, {
+        hasUsageMetadata: !!response.usageMetadata
+      });
+
+      // Track token usage if userId is provided
+      if (userId && response.usageMetadata) {
+        await tokenTrackingService.trackTokenUsage({
+          userId,
+          serviceName: 'lesson_plan_generation',
+          model: 'gemini-2.5-flash',
+          inputTokens: response.usageMetadata.promptTokenCount || 0,
+          outputTokens: response.usageMetadata.candidatesTokenCount || 0,
+          metadata: {
+            topic,
+            ageGroup: age,
+            slideCount
+          }
+        });
+      }
 
       // Try to parse JSON to validate structure
       try {

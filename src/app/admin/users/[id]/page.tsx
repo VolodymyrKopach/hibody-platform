@@ -284,6 +284,56 @@ export default function UserDetailPage() {
         </Grid>
       </Grid>
 
+      {/* Token Usage Stats */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+          Token Usage & Cost
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6} md={4}>
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Total Tokens Used
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
+                {user.total_tokens_used ? (user.total_tokens_used / 1000).toFixed(1) : '0'}K
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {user.total_tokens_used?.toLocaleString() || '0'} tokens
+              </Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Total Cost
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5, color: 'primary.main' }}>
+                ${user.total_tokens_cost ? user.total_tokens_cost.toFixed(4) : '0.0000'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                USD spent on AI
+              </Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Average Cost per Request
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
+                ${user.total_ai_requests > 0 
+                  ? ((user.total_tokens_cost || 0) / user.total_ai_requests).toFixed(4)
+                  : '0.0000'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Per AI request
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
+      </Paper>
+
       {/* Generation Limit */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>

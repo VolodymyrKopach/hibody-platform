@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GeminiIntentService } from '@/services/intent/GeminiIntentService';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
+    // Get user for token tracking
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const body = await request.json();
     const { message, conversationHistory } = body;
 
@@ -15,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Use Gemini Intent Service for intent detection
     const geminiService = new GeminiIntentService();
-    const result = await geminiService.detectIntent(message, conversationHistory);
+    const result = await geminiService.detectIntent(message, conversationHistory, user?.id);
 
     return NextResponse.json({
       success: true,

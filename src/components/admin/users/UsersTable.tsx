@@ -25,7 +25,8 @@ import {
 } from '@mui/material';
 import {
   Visibility as ViewIcon,
-  AdminPanelSettings as AdminIcon
+  AdminPanelSettings as AdminIcon,
+  PersonAdd as MakeAdminIcon
 } from '@mui/icons-material';
 import type { UserListItem } from '@/types/admin';
 
@@ -33,12 +34,14 @@ interface UsersTableProps {
   users: UserListItem[];
   loading?: boolean;
   onUserClick?: (userId: string) => void;
+  onMakeAdmin?: (userId: string, userEmail: string, userName?: string | null) => void;
 }
 
 export const UsersTable: React.FC<UsersTableProps> = ({
   users,
   loading = false,
-  onUserClick
+  onUserClick,
+  onMakeAdmin
 }) => {
   const router = useRouter();
 
@@ -216,17 +219,32 @@ export const UsersTable: React.FC<UsersTableProps> = ({
 
               {/* Actions */}
               <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                <Tooltip title="View Details">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleUserClick(user.id);
-                    }}
-                  >
-                    <ViewIcon />
-                  </IconButton>
-                </Tooltip>
+                <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                  {!user.is_admin && onMakeAdmin && (
+                    <Tooltip title="Make Admin">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onMakeAdmin(user.id, user.email, user.full_name);
+                        }}
+                      >
+                        <MakeAdminIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  <Tooltip title="View Details">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUserClick(user.id);
+                      }}
+                    >
+                      <ViewIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               </TableCell>
             </TableRow>
           ))}

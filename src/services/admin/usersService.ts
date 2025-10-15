@@ -113,65 +113,47 @@ class UsersService {
   }
 
   /**
-   * Block/unblock user
+   * Make user an admin
    */
-  async toggleUserBlock(userId: string, block: boolean): Promise<boolean> {
-    const supabase = createClient();
-
+  async makeAdmin(userId: string, role: 'admin' | 'super_admin'): Promise<boolean> {
     try {
-      // In Supabase, you'd typically use auth.admin.updateUserById
-      // This is a placeholder - implement based on your auth setup
-      const { error } = await supabase
-        .from('users')
-        .update({ blocked: block })
-        .eq('id', userId);
+      const response = await fetch('/api/admin/users/make-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, role })
+      });
 
-      if (error) throw error;
-
-      // Log the action
-      await supabase
-        .from('activity_log')
-        .insert({
-          action: block ? 'user_blocked' : 'user_unblocked',
-          entity_type: 'user',
-          entity_id: userId,
-          metadata: { blocked: block }
-        });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to make user admin');
+      }
 
       return true;
     } catch (error) {
-      console.error('Error toggling user block:', error);
+      console.error('Error making user admin:', error);
       return false;
     }
   }
 
   /**
-   * Delete user account
+   * Remove admin role from user
    */
-  async deleteUser(userId: string): Promise<boolean> {
-    const supabase = createClient();
-
+  async removeAdmin(userId: string): Promise<boolean> {
     try {
-      // This should use auth.admin.deleteUser in production
-      const { error } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', userId);
+      const response = await fetch('/api/admin/users/remove-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
 
-      if (error) throw error;
-
-      // Log the action
-      await supabase
-        .from('activity_log')
-        .insert({
-          action: 'user_deleted',
-          entity_type: 'user',
-          entity_id: userId
-        });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to remove admin');
+      }
 
       return true;
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('Error removing admin:', error);
       return false;
     }
   }

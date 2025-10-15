@@ -10,6 +10,7 @@ import {
   type ImageGenerationRequest,
   type ImageGenerationResult
 } from '@/services/worksheet/ImageGenerationHelper';
+import { createClient } from '@/lib/supabase/server';
 
 /**
  * Collect image generation requests from patched elements
@@ -118,6 +119,10 @@ export async function POST(request: NextRequest) {
   console.log(`[${requestId}] 🎯 Worksheet edit request received`);
   
   try {
+    // Get user for token tracking
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
     // Parse request body
     const body: WorksheetEditRequest = await request.json();
     
@@ -143,11 +148,17 @@ export async function POST(request: NextRequest) {
     
     console.log(`[${requestId}] 🤖 Calling Gemini service...`);
     
+    // Add userId to context for token tracking
+    const contextWithUserId = {
+      ...body.context,
+      userId: user?.id
+    };
+    
     // STEP 1: Use Gemini service to edit worksheet
     const result = await geminiWorksheetEditingService.editWorksheet(
       body.editTarget,
       body.instruction,
-      body.context
+      contextWithUserId
     );
     
     console.log(`[${requestId}] ✅ Edit completed successfully`);

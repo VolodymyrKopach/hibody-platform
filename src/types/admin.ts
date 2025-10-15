@@ -209,13 +209,16 @@ export interface UserListItem {
 
 export interface UserDetail extends UserListItem {
   // Additional profile info
-  phone: string | null;
   avatar_url: string | null;
   
   // Detailed stats
   total_ai_requests: number;
   generation_limit_used: number;
   generation_limit_total: number;
+  
+  // Token usage stats
+  total_tokens_used: number;
+  total_tokens_cost: number;
   
   // Recent activity
   recent_activities: ActivityLog[];

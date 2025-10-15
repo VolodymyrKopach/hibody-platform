@@ -136,7 +136,8 @@ export async function POST(request: NextRequest) {
       body.ageGroup,
       body.language || 'en',
       conversationContext,
-      body.slideCount
+      body.slideCount,
+      user.id // Pass userId for token tracking
     );
 
     console.log(`✅ LESSON PLAN API: Lesson plan generated successfully [${requestId}]`);

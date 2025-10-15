@@ -1,79 +1,165 @@
+/**
+ * Run database migrations by category
+ * Usage: node scripts/run-migrations.js [category]
+ */
+
 const fs = require('fs');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config({ path: '.env.local' });
 
-// Читаємо SQL файли міграцій
-const migrationsDir = path.join(__dirname, '..', 'database', 'migrations');
+const MIGRATIONS_DIR = path.join(__dirname, '..', 'supabase', 'migrations');
 
-console.log('🚀 Запуск міграцій Supabase...\n');
-
-// Список файлів міграцій у правильному порядку
-const migrationFiles = [
-  '001_initial_schema.sql',
-  '002_rls_policies.sql'
+const CATEGORIES = [
+  '01_initial_setup',
+  '02_storage',
+  '03_payments',
+  '04_generation_limits',
+  '05_admin_panel',
+  '06_token_tracking',
+  '07_features',
+  '08_rls_fixes'
 ];
 
-console.log('📋 Файли для виконання:');
-migrationFiles.forEach((file, index) => {
-  console.log(`${index + 1}. ${file}`);
-});
+// Check environment
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-console.log('\n📝 Інструкції для запуску:');
-console.log('1. Відкрийте Supabase Dashboard: https://app.supabase.com');
-console.log('2. Перейдіть до вашого проекту');
-console.log('3. Відкрийте SQL Editor');
-console.log('4. Виконайте файли в наступному порядку:\n');
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('❌ Missing Supabase credentials in .env.local');
+  console.error('Required: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY');
+  process.exit(1);
+}
 
-migrationFiles.forEach((file, index) => {
-  const filePath = path.join(migrationsDir, file);
-  
-  if (fs.existsSync(filePath)) {
-    console.log(`\n=== ${index + 1}. ${file} ===`);
-    console.log(`Файл: ${filePath}`);
-    console.log('Статус: ✅ Готовий до виконання');
-    
-    // Читаємо перші кілька рядків для перевірки
-    const content = fs.readFileSync(filePath, 'utf8');
-    const firstLines = content.split('\n').slice(0, 5).join('\n');
-    console.log('Початок файлу:');
-    console.log('```sql');
-    console.log(firstLines);
-    console.log('```');
-  } else {
-    console.log(`\n=== ${index + 1}. ${file} ===`);
-    console.log('Статус: ❌ Файл не знайдено');
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
   }
 });
 
-console.log('\n🔧 Альтернативний спосіб через Supabase CLI:');
-console.log('Якщо у вас встановлений Supabase CLI, виконайте:');
-console.log('```bash');
-console.log('supabase db reset');
-console.log('supabase db push');
-console.log('```');
+// Execute SQL file
+async function runSqlFile(filePath) {
+  const fileName = path.basename(filePath);
+  console.log(`  📄 Running: ${fileName}`);
+  
+  try {
+    const sql = fs.readFileSync(filePath, 'utf8');
+    
+    // Split by ; and execute each statement
+    const statements = sql
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => s.length > 0 && !s.startsWith('--'));
+    
+    for (const statement of statements) {
+      const { error } = await supabase.rpc('exec_sql', { query: statement });
+      if (error) {
+        // If exec_sql function doesn't exist, try direct query
+        const { error: directError } = await supabase.from('_').select('*').limit(0);
+        if (directError && directError.message.includes('does not exist')) {
+          console.error(`  ⚠️  Cannot execute via Supabase client. Use psql or Dashboard SQL Editor.`);
+          console.error(`  💡 Or run: ./scripts/run-migrations.sh ${path.basename(path.dirname(filePath))}`);
+          return false;
+        }
+        throw error;
+      }
+    }
+    
+    console.log(`  ✅ Success\n`);
+    return true;
+  } catch (error) {
+    console.error(`  ❌ Error: ${error.message}\n`);
+    return false;
+  }
+}
 
-console.log('\n✅ Після виконання міграцій:');
-console.log('1. Перевірте, що всі таблиці створені');
-console.log('2. Перевірте RLS політики');
-console.log('3. Запустіть npm run dev для тестування');
+// Run all files in a category
+async function runCategory(category) {
+  const categoryPath = path.join(MIGRATIONS_DIR, category);
+  
+  if (!fs.existsSync(categoryPath)) {
+    console.error(`❌ Category not found: ${category}`);
+    process.exit(1);
+  }
+  
+  console.log(`🚀 Running migrations for: ${category}\n`);
+  
+  const files = fs.readdirSync(categoryPath)
+    .filter(f => f.endsWith('.sql'))
+    .sort();
+  
+  let successCount = 0;
+  
+  for (const file of files) {
+    const filePath = path.join(categoryPath, file);
+    const success = await runSqlFile(filePath);
+    if (success) successCount++;
+  }
+  
+  console.log(`✅ Completed ${successCount}/${files.length} migration(s) for ${category}\n`);
+}
 
-console.log('\n📊 Очікувані таблиці:');
-const expectedTables = [
-  'user_profiles',
-  'lessons', 
-  'slides',
-  'slide_images',
-  'chat_sessions',
-  'chat_messages',
-  'subscription_usage',
-  'lesson_shares',
-  'lesson_ratings'
-];
+// Run all migrations in order
+async function runAll() {
+  console.log('🚀 Running ALL migrations in order...\n');
+  
+  for (const category of CATEGORIES) {
+    const categoryPath = path.join(MIGRATIONS_DIR, category);
+    if (fs.existsSync(categoryPath)) {
+      await runCategory(category);
+    }
+  }
+  
+  console.log('✅ All migrations completed!');
+}
 
-expectedTables.forEach(table => {
-  console.log(`- ${table}`);
+// List available categories
+function listCategories() {
+  console.log('📋 Available migration categories:\n');
+  
+  const dirs = fs.readdirSync(MIGRATIONS_DIR)
+    .filter(d => fs.statSync(path.join(MIGRATIONS_DIR, d)).isDirectory())
+    .filter(d => !d.startsWith('.'));
+  
+  for (const dir of dirs) {
+    const files = fs.readdirSync(path.join(MIGRATIONS_DIR, dir))
+      .filter(f => f.endsWith('.sql'));
+    console.log(`  ${dir} (${files.length} files)`);
+  }
+  console.log('');
+}
+
+// Main
+async function main() {
+  const arg = process.argv[2];
+  
+  if (!arg) {
+    console.log('Usage:');
+    console.log('  node scripts/run-migrations.js all        - Run all migrations');
+    console.log('  node scripts/run-migrations.js list       - List categories');
+    console.log('  node scripts/run-migrations.js [category] - Run specific category');
+    console.log('');
+    listCategories();
+    console.log('⚠️  Note: This script uses Supabase client which has limitations.');
+    console.log('💡 For production, use: ./scripts/run-migrations.sh or Supabase Dashboard.');
+    return;
+  }
+  
+  switch (arg) {
+    case 'all':
+      await runAll();
+      break;
+    case 'list':
+      listCategories();
+      break;
+    default:
+      await runCategory(arg);
+      break;
+  }
+}
+
+main().catch(error => {
+  console.error('❌ Unexpected error:', error);
+  process.exit(1);
 });
-
-console.log('\n🔐 Очікувані RLS політики:');
-console.log('- Користувачі можуть читати/писати тільки свої дані');
-console.log('- Публічні уроки доступні всім для читання');
-console.log('- Адміни мають повний доступ'); 

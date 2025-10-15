@@ -14,6 +14,7 @@ import {
 import { worksheetComponentSchemaService } from './WorksheetComponentSchemaService';
 import { ContentPaginationService, PAGE_CONFIGS } from './ContentPaginationService';
 import { ageBasedContentService, type Duration as AgeDuration } from './AgeBasedContentService';
+import { tokenTrackingService } from '@/services/tokenTrackingService';
 
 export class GeminiWorksheetGenerationService {
   private client: GoogleGenAI;
@@ -33,7 +34,8 @@ export class GeminiWorksheetGenerationService {
    */
   async generateWorksheet(
     request: WorksheetGenerationRequest,
-    options: AIGenerationOptions = {}
+    options: AIGenerationOptions = {},
+    userId?: string
   ): Promise<WorksheetGenerationResponse> {
     console.log('🎯 [WORKSHEET_GEN] Starting worksheet generation (AUTO-PAGINATION):', {
       topic: request.topic,
@@ -47,7 +49,7 @@ export class GeminiWorksheetGenerationService {
       const prompt = this.buildGenerationPrompt(request);
 
       // Call Gemini API - AI generates one big content list
-      const response = await this.callGeminiAPI(prompt, options);
+      const response = await this.callGeminiAPI(prompt, options, userId);
 
       // Parse response to get all elements
       const allElements = this.parseGeminiResponseToElements(response, request);
@@ -513,7 +515,8 @@ Now generate the worksheet as pure JSON:`;
    */
   private async callGeminiAPI(
     prompt: string,
-    options: AIGenerationOptions = {}
+    options: AIGenerationOptions = {},
+    userId?: string
   ): Promise<string> {
     const {
       temperature = 0.7,
@@ -555,7 +558,22 @@ Now generate the worksheet as pure JSON:`;
         console.log('✅ [GEMINI_API] Response received:', {
           responseLength: content.length,
           attempt,
+          hasUsageMetadata: !!response.usageMetadata
         });
+
+        // Track token usage if userId is provided
+        if (userId && response.usageMetadata) {
+          await tokenTrackingService.trackTokenUsage({
+            userId,
+            serviceName: 'worksheet_generation',
+            model,
+            inputTokens: response.usageMetadata.promptTokenCount || 0,
+            outputTokens: response.usageMetadata.candidatesTokenCount || 0,
+            metadata: {
+              operation: 'generate'
+            }
+          });
+        }
 
         return content;
       } catch (error) {

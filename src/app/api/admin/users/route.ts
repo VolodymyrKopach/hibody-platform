@@ -30,11 +30,9 @@ export async function GET(request: NextRequest) {
     // Use regular client for other operations
     const supabase = await createClient();
 
-    // Get all users from auth.users (requires service role)
-    const { data: { users: authUsers }, error: authError } = await adminSupabase.auth.admin.listUsers({
-      page: Math.floor(offset / limit) + 1,
-      perPage: limit
-    });
+    // FIXED APPROACH: Get ALL users first, then filter, then paginate
+    // This ensures correct pagination with filters
+    const { data: { users: allAuthUsers }, error: authError } = await adminSupabase.auth.admin.listUsers();
 
     if (authError) {
       console.error('Error fetching auth users:', authError);
@@ -58,17 +56,17 @@ export async function GET(request: NextRequest) {
       (adminUsers || []).map(admin => [admin.user_id, admin.role])
     );
 
-    // Get user stats (lessons, slides, worksheets counts)
-    const userIds = authUsers?.map(u => u.id) || [];
+    // Get user stats for ALL users (we'll need this for filtering/sorting)
+    const allUserIds = allAuthUsers?.map(u => u.id) || [];
     
     const [lessonsCount, slidesCount, worksheetsCount] = await Promise.all([
-      getCountsByUser(supabase, 'lessons', userIds),
-      getCountsByUser(supabase, 'slides', userIds),
-      getCountsByUser(supabase, 'worksheets', userIds)
+      getCountsByUser(supabase, 'lessons', allUserIds),
+      getCountsByUser(supabase, 'slides', allUserIds),
+      getCountsByUser(supabase, 'worksheets', allUserIds)
     ]);
 
-    // Transform users data
-    const users = (authUsers || []).map(user => {
+    // Transform ALL users data
+    let allUsers = (allAuthUsers || []).map(user => {
       const adminRole = adminRolesMap.get(user.id);
       
       return {
@@ -88,8 +86,8 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Apply filters
-    let filteredUsers = users;
+    // STEP 1: Apply filters first
+    let filteredUsers = allUsers;
 
     // Search filter
     if (search) {
@@ -109,15 +107,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get total count
+    // STEP 2: Get total count AFTER filtering
     const total = filteredUsers.length;
+    const totalPages = Math.ceil(total / limit);
+
+    // STEP 3: Apply pagination to filtered results
+    const paginatedUsers = filteredUsers.slice(offset, offset + limit);
 
     return NextResponse.json({
-      data: filteredUsers,
+      data: paginatedUsers,
       total,
       page: Math.floor(offset / limit) + 1,
       limit,
-      total_pages: Math.ceil(total / limit)
+      total_pages: totalPages
     });
 
   } catch (error) {

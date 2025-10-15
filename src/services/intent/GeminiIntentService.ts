@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { IIntentDetectionService, IntentDetectionResult, UserIntent, IntentParameters } from './IIntentDetectionService';
+import { tokenTrackingService } from '@/services/tokenTrackingService';
 
 // Extended interface for enhanced intent detection with data validation
 export interface EnhancedIntentDetectionResult extends IntentDetectionResult {
@@ -21,7 +22,7 @@ export class GeminiIntentService implements IIntentDetectionService {
     this.client = new GoogleGenAI({ apiKey });
   }
 
-  async detectIntent(message: string, conversationHistory?: any): Promise<EnhancedIntentDetectionResult> {
+  async detectIntent(message: string, conversationHistory?: any, userId?: string): Promise<EnhancedIntentDetectionResult> {
     // Debug: Check if lesson plan exists
     const hasLessonPlan = conversationHistory?.planningResult ? true : false;
     const isInPlanningStep = conversationHistory?.step === 'planning';
@@ -60,6 +61,20 @@ export class GeminiIntentService implements IIntentDetectionService {
       const content = response.text;
       if (!content) {
         throw new Error('No content in Gemini response');
+      }
+
+      // Track token usage if userId is provided
+      if (userId && response.usageMetadata) {
+        await tokenTrackingService.trackTokenUsage({
+          userId,
+          serviceName: 'intent_detection',
+          model: 'gemini-2.5-flash-lite-preview-06-17',
+          inputTokens: response.usageMetadata.promptTokenCount || 0,
+          outputTokens: response.usageMetadata.candidatesTokenCount || 0,
+          metadata: {
+            messageLength: message.length
+          }
+        });
       }
 
       return this.parseGeminiResponse(content, message);

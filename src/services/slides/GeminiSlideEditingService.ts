@@ -5,6 +5,7 @@ import { processSlideWithTempImages } from '@/utils/slideImageProcessor';
 import { minifyForAI, calculateTokenSavings } from '@/utils/htmlMinifier';
 import { safeEditWithImageProtection } from '@/utils/imageUrlProtection';
 import { replaceBase64WithMetadata, restoreOriginalImages, type ImageMetadataInfo } from '@/utils/imageMetadataProcessor';
+import { tokenTrackingService } from '@/services/tokenTrackingService';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface SlideEditingResult {
@@ -37,6 +38,7 @@ export interface SlideEditingContext {
   lessonObjectives?: string[];
   slidePosition?: number;
   totalSlides?: number;
+  userId?: string; // For token tracking
 }
 
 /**
@@ -118,7 +120,7 @@ export class GeminiSlideEditingService {
         });
 
         // Call Gemini AI with maximum token limit
-        const response = await this.callGeminiAPI(prompt);
+        const response = await this.callGeminiAPI(prompt, context.userId, slide.id);
         
         console.log('🎯 [GEMINI_SLIDE_EDITING] Received AI response', {
           responseLength: response.length,
@@ -308,7 +310,7 @@ Generate pure JSON now:`;
   /**
    * Call Gemini API with the editing prompt (with retry logic)
    */
-  private async callGeminiAPI(prompt: string, retryCount = 0): Promise<string> {
+  private async callGeminiAPI(prompt: string, userId?: string, slideId?: string, retryCount = 0): Promise<string> {
     const maxRetries = 3;
     
     console.log('🚀 [GEMINI_API] Calling Gemini with maximum token limits', {
@@ -340,8 +342,24 @@ Generate pure JSON now:`;
         approximateTokens: Math.ceil(content.length / 3.5),
         endsWithHtml: content.includes('</html>'),
         endsWithBrace: content.trim().endsWith('}'),
-        attempt: retryCount + 1
+        attempt: retryCount + 1,
+        hasUsageMetadata: !!response.usageMetadata
       });
+
+      // Track token usage if userId is provided
+      if (userId && response.usageMetadata) {
+        await tokenTrackingService.trackTokenUsage({
+          userId,
+          serviceName: 'slide_editing',
+          model: 'gemini-2.5-flash',
+          inputTokens: response.usageMetadata.promptTokenCount || 0,
+          outputTokens: response.usageMetadata.candidatesTokenCount || 0,
+          metadata: {
+            slideId,
+            operation: 'edit'
+          }
+        });
+      }
 
       return content.trim();
 
@@ -365,7 +383,7 @@ Generate pure JSON now:`;
         console.log(`⏳ [GEMINI_API] Retrying in ${delay}ms (attempt ${retryCount + 2}/${maxRetries + 1})`);
         
         await new Promise(resolve => setTimeout(resolve, delay));
-        return this.callGeminiAPI(prompt, retryCount + 1);
+        return this.callGeminiAPI(prompt, userId, slideId, retryCount + 1);
       }
 
       // If not retryable or max retries reached, throw the error

@@ -7,11 +7,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { geminiWorksheetGenerationService } from '@/services/worksheet/GeminiWorksheetGenerationService';
 import { worksheetGenerationParser } from '@/services/worksheet/WorksheetGenerationParser';
 import { WorksheetGenerationRequest } from '@/types/worksheet-generation';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   console.log('📝 [API] Worksheet generation request received');
 
   try {
+    // Get user for token tracking
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
     // Parse request body
     const body = await request.json();
 
@@ -50,7 +55,8 @@ export async function POST(request: NextRequest) {
       {
         temperature: body.temperature || 0.7,
         maxTokens: body.maxTokens || 32000, // Increased from 8000 to allow longer responses
-      }
+      },
+      user?.id // Pass userId for token tracking
     );
 
     console.log('✅ [API] AI generation completed:', {
