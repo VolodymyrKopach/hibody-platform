@@ -5,7 +5,7 @@
  * Prevents bypassing frontend checks through direct API calls.
  * 
  * Limits:
- * - Free users: 3 lessons total (no reset)
+ * - Free users: 5 lessons total (no reset)
  * - Pro users: 20 lessons per month (resets monthly)
  * 
  * Usage:
@@ -21,7 +21,7 @@ import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 // Generation limits
-const FREE_GENERATION_LIMIT = 3;
+const FREE_GENERATION_LIMIT = 5;
 const PRO_GENERATION_LIMIT = 20;
 
 /**

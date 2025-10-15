@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-const FREE_GENERATION_LIMIT = 3;
+const FREE_GENERATION_LIMIT = 5;
 const PRO_GENERATION_LIMIT = 20;
 
 interface GenerationLimitStatus {
