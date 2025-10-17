@@ -1,5 +1,8 @@
 import { User } from '@supabase/supabase-js'
 
+// OAuth providers
+export type OAuthProvider = 'google' | 'github' | 'facebook'
+
 // Extended user profile
 export interface UserProfile {
   id: string
@@ -20,6 +23,7 @@ export interface AuthContextType {
   sessionSynced: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>
+  signInWithOAuth: (provider: OAuthProvider) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: Error | null }>
   refreshSession: () => Promise<boolean>

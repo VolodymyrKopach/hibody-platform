@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { User } from '@supabase/supabase-js'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import { AuthContextType, UserProfile } from '@/types/auth'
+import { AuthContextType, UserProfile, OAuthProvider } from '@/types/auth'
 import { useAuthAnalytics } from '@/hooks/useAuthAnalytics'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -55,8 +55,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted && !initializationComplete) {
           if (session?.user) {
             setUser(session.user)
-            // Load profile asynchronously without blocking
-            fetchUserProfile(session.user.id).catch(() => {})
+            
+            // Check if user signed in via OAuth
+            const isOAuthUser = session.user.app_metadata?.provider && 
+                               session.user.app_metadata?.provider !== 'email'
+            
+            if (isOAuthUser) {
+              // Ensure profile exists for OAuth users
+              ensureUserProfile(session.user).catch(() => {})
+            } else {
+              // Load profile asynchronously for email users
+              fetchUserProfile(session.user.id).catch(() => {})
+            }
           } else {
             setUser(null)
             setProfile(null)
@@ -96,8 +106,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             if (userChanged) {
               if (newUser) {
-                // Load profile asynchronously only for new user
-                fetchUserProfile(newUser.id).catch(() => {})
+                // Check if user signed in via OAuth
+                const isOAuthUser = newUser.app_metadata?.provider && 
+                                   newUser.app_metadata?.provider !== 'email'
+                
+                if (isOAuthUser) {
+                  // Ensure profile exists for OAuth users
+                  ensureUserProfile(newUser).catch(() => {})
+                } else {
+                  // Load profile asynchronously for email users
+                  fetchUserProfile(newUser.id).catch(() => {})
+                }
               } else {
                 setProfile(null)
               }
@@ -139,6 +158,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Handle error silently
     }
   }, [])
+
+  // Ensure user profile exists, create if missing (for OAuth users)
+  const ensureUserProfile = useCallback(async (user: User) => {
+    try {
+      // Check if profile exists
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (existingProfile) {
+        setProfile(existingProfile)
+        return { data: existingProfile, error: null }
+      }
+
+      // Profile doesn't exist, create it
+      const fullName = user.user_metadata?.full_name || 
+                       user.user_metadata?.name || 
+                       user.user_metadata?.display_name || 
+                       user.email?.split('@')[0]
+
+      const avatarUrl = user.user_metadata?.avatar_url || 
+                       user.user_metadata?.picture
+
+      const newProfile = {
+        id: user.id,
+        email: user.email!,
+        full_name: fullName,
+        avatar_url: avatarUrl,
+        role: 'teacher' as const,
+        subscription_type: 'free' as const,
+      }
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert([newProfile])
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Failed to create user profile:', error)
+        return { data: null, error }
+      }
+
+      setProfile(data)
+      
+      // Track profile creation
+      analytics.trackProfileCreated(user.id, {
+        user_id: user.id,
+        user_email: user.email,
+        full_name: fullName,
+        role: 'teacher',
+        subscription_type: 'free',
+        oauth_provider: user.app_metadata?.provider,
+      })
+
+      return { data, error: null }
+    } catch (error) {
+      console.error('Error ensuring user profile:', error)
+      return { data: null, error: error as Error }
+    }
+  }, [analytics])
 
   // Check session synchronization with server
   const checkSessionSync = useCallback(async () => {
@@ -296,6 +378,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const signInWithOAuth = async (provider: OAuthProvider) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      })
+
+      if (error) {
+        console.error(`OAuth ${provider} error:`, error)
+        return { error }
+      }
+
+      // Track OAuth login attempt
+      analytics.trackLogin(provider, {
+        oauth_provider: provider,
+        redirect_url: window.location.origin,
+      })
+
+      return { error: null }
+    } catch (error) {
+      console.error(`OAuth ${provider} error:`, error)
+      return { error: error as Error }
+    }
+  }
+
   const signOut = async () => {
         try {
           // Track logout before clearing user data with real user info
@@ -353,6 +466,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sessionSynced,
     signIn,
     signUp,
+    signInWithOAuth,
     signOut,
     updateProfile,
     refreshSession,

@@ -33,6 +33,7 @@ export async function updateSession(request: NextRequest) {
     '/auth/register',
     '/auth/forgot-password',
     '/auth/reset-password',
+    '/auth/callback',
     '/test',
     '/api',
     '/_next',

@@ -17,7 +17,10 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
   // Public routes - accessible without authentication
   const publicRoutes = [
     '/auth/login',
-    '/auth/register', 
+    '/auth/register',
+    '/auth/callback',
+    '/auth/forgot-password',
+    '/auth/reset-password',
     '/test',
     '/not-found'  // 404 page is accessible to all
   ];

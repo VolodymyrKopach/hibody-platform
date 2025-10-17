@@ -19,6 +19,7 @@ import { alpha, useTheme } from '@mui/material/styles'
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTranslation } from 'react-i18next'
+import OAuthButtons from './OAuthButtons'
 
 interface RegisterFormProps {
   onSwitchToLogin?: () => void
@@ -274,6 +275,10 @@ const RegisterFormContent: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onS
             {t('auth:register.or')}
           </Typography>
         </Divider>
+
+        <OAuthButtons onSuccess={onSuccess} />
+
+        <Divider sx={{ my: 2 }} />
 
         <Box sx={{ textAlign: 'center' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>

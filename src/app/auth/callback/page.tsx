@@ -10,31 +10,28 @@ function AuthCallbackContent() {
 
   useEffect(() => {
     const handleCallback = () => {
-      // Get URL parameters
       const accessToken = searchParams?.get('access_token')
       const refreshToken = searchParams?.get('refresh_token')
       const type = searchParams?.get('type')
-      const tokenHash = searchParams?.get('token') // For old Supabase links
-      
-      console.log('Auth callback params:', {
-        accessToken: accessToken ? 'present' : 'missing',
-        refreshToken: refreshToken ? 'present' : 'missing',
-        type,
-        tokenHash: tokenHash ? 'present' : 'missing'
-      })
+      const tokenHash = searchParams?.get('token')
+      const error = searchParams?.get('error')
+      const errorDescription = searchParams?.get('error_description')
+
+      // Handle OAuth errors
+      if (error) {
+        console.error('OAuth error:', error, errorDescription)
+        router.replace(`/auth/login?error=${encodeURIComponent(errorDescription || error)}`)
+        return
+      }
 
       // Handle password recovery
       if (type === 'recovery') {
         if (accessToken && refreshToken) {
-          // New format - redirect to reset password with tokens
           const resetUrl = `/auth/reset-password?access_token=${accessToken}&refresh_token=${refreshToken}&type=recovery`
-          console.log('Redirecting to reset password with tokens')
           router.replace(resetUrl)
           return
         } else if (tokenHash) {
-          // Old format - redirect to reset password with token
           const resetUrl = `/auth/reset-password?token=${tokenHash}&type=recovery`
-          console.log('Redirecting to reset password with legacy token')
           router.replace(resetUrl)
           return
         }
@@ -43,17 +40,29 @@ function AuthCallbackContent() {
       // Handle email confirmation
       if (type === 'signup') {
         if (accessToken && refreshToken) {
-          // Set session and redirect to home
           const homeUrl = `/?access_token=${accessToken}&refresh_token=${refreshToken}&type=signup`
-          console.log('Redirecting to home after signup confirmation')
           router.replace(homeUrl)
           return
         }
       }
 
-      // Default fallback - redirect to login
-      console.log('No valid callback parameters, redirecting to login')
-      router.replace('/auth/login?error=invalid-callback')
+      // Handle OAuth callback (implicit flow with hash fragment)
+      // Supabase client with detectSessionInUrl will automatically handle tokens in URL hash
+      if (typeof window !== 'undefined' && window.location.hash) {
+        setTimeout(() => {
+          router.replace('/')
+        }, 1000)
+        return
+      }
+
+      // If we have access_token in query params (OAuth callback)
+      if (accessToken) {
+        router.replace('/')
+        return
+      }
+
+      // Default fallback - redirect to home
+      router.replace('/')
     }
 
     handleCallback()
