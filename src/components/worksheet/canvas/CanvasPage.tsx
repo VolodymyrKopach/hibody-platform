@@ -79,6 +79,7 @@ interface CanvasPageProps {
   crossPageDrag?: { sourcePageId: string; elementId: string; element: CanvasElement } | null;
   pageType?: 'pdf' | 'interactive'; // Type of page
   isPlayMode?: boolean; // Whether in play/preview mode
+  ageGroup?: string; // Age group for age-appropriate styling
   onElementSelect: (elementId: string | null) => void;
   onElementAdd: (element: Omit<CanvasElement, 'id' | 'zIndex'>, insertIndex?: number) => void;
   onElementEdit: (elementId: string, properties: any) => void;
@@ -98,6 +99,7 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   width,
   height,
   background,
+  ageGroup,
   elements,
   selectedElementId,
   clipboard,
@@ -899,7 +901,8 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
                 element, 
                 selectedElementId === element.id,
                 onElementEdit,
-                onElementSelect
+                onElementSelect,
+                ageGroup
               )}
             </Box>
 
@@ -931,7 +934,8 @@ function renderElement(
   element: CanvasElement, 
   isSelected: boolean,
   onEdit: (elementId: string, properties: any) => void,
-  onSelect: (elementId: string) => void
+  onSelect: (elementId: string) => void,
+  ageGroup?: string
 ) {
   switch (element.type) {
     case 'title-block':
@@ -1132,6 +1136,7 @@ function renderElement(
           size={element.properties.size || 'medium'}
           animation={element.properties.animation || 'bounce'}
           showHint={element.properties.showHint}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1147,6 +1152,7 @@ function renderElement(
           layout={element.properties.layout || 'horizontal'}
           difficulty={element.properties.difficulty || 'easy'}
           snapDistance={element.properties.snapDistance || 80}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1161,6 +1167,7 @@ function renderElement(
           mode={element.properties.mode || 'single'}
           showNames={element.properties.showNames ?? true}
           autoVoice={element.properties.autoVoice ?? true}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1175,6 +1182,7 @@ function renderElement(
           voiceEnabled={element.properties.voiceEnabled ?? true}
           celebrationAtEnd={element.properties.celebrationAtEnd ?? true}
           showProgress={element.properties.showProgress ?? true}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1189,6 +1197,7 @@ function renderElement(
           gridSize={element.properties.gridSize || '2x2'}
           cardBackImage={element.properties.cardBackImage}
           difficulty={element.properties.difficulty || 'easy'}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1203,6 +1212,7 @@ function renderElement(
           categories={element.properties.categories || []}
           sortBy={element.properties.sortBy || 'type'}
           layout={element.properties.layout || 'horizontal'}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1217,6 +1227,7 @@ function renderElement(
           showNumbers={element.properties.showNumbers ?? true}
           difficulty={element.properties.difficulty || 'easy'}
           instruction={element.properties.instruction}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1233,6 +1244,7 @@ function renderElement(
           strokeWidth={element.properties.strokeWidth || 8}
           guideColor={element.properties.guideColor || '#3B82F6'}
           traceColor={element.properties.traceColor || '#10B981'}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1247,6 +1259,7 @@ function renderElement(
           mode={element.properties.mode || 'identify'}
           showDescriptions={element.properties.showDescriptions ?? true}
           voiceEnabled={element.properties.voiceEnabled ?? true}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1260,6 +1273,7 @@ function renderElement(
           items={element.properties.items || []}
           mode={element.properties.mode || 'identify'}
           autoPlayFirst={element.properties.autoPlayFirst ?? true}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1274,6 +1288,7 @@ function renderElement(
           pieces={element.properties.pieces || 4}
           difficulty={element.properties.difficulty || 'easy'}
           showOutline={element.properties.showOutline ?? true}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1288,6 +1303,7 @@ function renderElement(
           patternType={element.properties.patternType || 'color'}
           difficulty={element.properties.difficulty || 'easy'}
           repetitions={element.properties.repetitions || 2}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1301,6 +1317,7 @@ function renderElement(
           pairs={element.properties.pairs || []}
           showText={element.properties.showText ?? true}
           voiceEnabled={element.properties.voiceEnabled ?? true}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1315,6 +1332,7 @@ function renderElement(
           rewardTitle={element.properties.rewardTitle || 'Great Job!'}
           rewardEmoji={element.properties.rewardEmoji || '🎁'}
           starsPerTask={element.properties.starsPerTask || 1}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1329,6 +1347,7 @@ function renderElement(
           maxDuration={element.properties.maxDuration || 30}
           showPlayback={element.properties.showPlayback ?? true}
           autoPlay={element.properties.autoPlay ?? false}
+          ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });

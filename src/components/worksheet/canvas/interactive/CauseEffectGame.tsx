@@ -26,6 +26,7 @@ interface CauseEffectGameProps {
   pairs: CausePair[];
   showText?: boolean;
   voiceEnabled?: boolean;
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

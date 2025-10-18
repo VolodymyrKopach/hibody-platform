@@ -20,6 +20,7 @@ interface RewardCollectorProps {
   rewardTitle?: string;
   rewardEmoji?: string;
   starsPerTask?: number;
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

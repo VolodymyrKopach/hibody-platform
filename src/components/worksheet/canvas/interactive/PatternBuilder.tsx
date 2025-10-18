@@ -21,6 +21,7 @@ interface PatternBuilderProps {
   patternType?: 'color' | 'shape' | 'image' | 'emoji';
   difficulty?: 'easy' | 'medium'; // easy: 2-element pattern, medium: 3-element pattern
   repetitions?: number; // How many times to show the pattern before asking
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

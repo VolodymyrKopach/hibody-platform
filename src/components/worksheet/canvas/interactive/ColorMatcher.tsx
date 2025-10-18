@@ -19,6 +19,7 @@ interface ColorMatcherProps {
   mode?: 'single' | 'multiple';
   showNames?: boolean;
   autoVoice?: boolean; // Automatically speak color name
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

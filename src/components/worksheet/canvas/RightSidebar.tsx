@@ -60,6 +60,8 @@ import {
 import { RichTextEditor } from './shared/RichTextEditor';
 import { WorksheetEdit, WorksheetEditContext } from '@/types/worksheet-generation';
 import AIAssistantPanel from './ai/AIAssistantPanel';
+import PropertiesPanel from '../properties/PropertiesPanel';
+import { isInteractiveComponent } from '@/constants/interactive-properties-schema';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -1644,8 +1646,17 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             {mainTab === 'properties' ? (
               <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
 
-          {/* Element Properties */}
-          {elementData.type === 'title-block' ? (
+          {/* Check if interactive component - use Properties Panel */}
+          {isInteractiveComponent(elementData.type) && aiContext ? (
+            <PropertiesPanel
+              element={elementData}
+              pageId={pageData.id}
+              context={aiContext}
+              onPropertiesChange={(elementId, newProperties) => {
+                onUpdate?.(newProperties);
+              }}
+            />
+          ) : elementData.type === 'title-block' ? (
             <Stack spacing={2.5}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 Title Properties

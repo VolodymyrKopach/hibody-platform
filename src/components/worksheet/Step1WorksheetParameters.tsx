@@ -80,6 +80,7 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showTopicGenerator, setShowTopicGenerator] = useState(false);
 
   // Age groups - reordered to show youngest first
   const levels = [
@@ -221,32 +222,55 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
 
             {/* 2. Topic - Prominent */}
             <Box>
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-                <BookOpen size={18} color={theme.palette.primary.main} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  What's your topic?
-                </Typography>
-                <Typography variant="caption" color="error.main">*</Typography>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <BookOpen size={18} color={theme.palette.primary.main} />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    What's your topic?
+                  </Typography>
+                  <Typography variant="caption" color="error.main">*</Typography>
+                </Stack>
+                <Button
+                  size="small"
+                  startIcon={<Sparkles size={16} />}
+                  onClick={() => setShowTopicGenerator(true)}
+                  disabled={!parameters.level || !parameters.contentMode}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    px: 2,
+                  }}
+                >
+                  Generate with AI
+                </Button>
               </Stack>
               <TextField
                 fullWidth
-                placeholder="Present Simple, Travel Vocabulary, Daily Routines..."
+                multiline
+                rows={4}
+                placeholder="Present Simple, Travel Vocabulary, Daily Routines...&#10;&#10;You can also describe your topic in detail or generate it with AI!"
                 value={parameters.topic}
                 onChange={(e) => setParameters({ ...parameters, topic: e.target.value })}
                 autoFocus
-                inputProps={{
-                  style: { whiteSpace: 'normal' }
-                }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: '12px',
-                    fontSize: '1.1rem',
-                    '& input': {
+                    fontSize: '1rem',
+                    '& textarea': {
                       py: 1.5,
+                      px: 2,
+                      maxHeight: '200px',
+                      overflowY: 'auto !important',
                     },
                   },
                 }}
               />
+              {!parameters.level && (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  💡 Select age group first to enable AI generation
+                </Typography>
+              )}
             </Box>
 
             {/* Mode Selection - Show after topic is filled */}

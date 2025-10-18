@@ -15,6 +15,7 @@ interface TapImageProps {
   size?: 'small' | 'medium' | 'large';
   animation?: 'bounce' | 'scale' | 'shake' | 'spin';
   showHint?: boolean;
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

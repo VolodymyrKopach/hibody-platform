@@ -20,6 +20,7 @@ interface SequenceBuilderProps {
   showNumbers?: boolean;
   difficulty?: 'easy' | 'medium';
   instruction?: string;
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

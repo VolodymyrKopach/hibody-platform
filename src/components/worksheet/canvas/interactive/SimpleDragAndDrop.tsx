@@ -28,6 +28,7 @@ interface SimpleDragAndDropProps {
   layout?: 'horizontal' | 'vertical' | 'grid';
   difficulty?: 'easy' | 'medium';
   snapDistance?: number; // px
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

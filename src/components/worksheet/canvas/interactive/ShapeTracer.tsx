@@ -20,6 +20,7 @@ interface ShapeTracerProps {
   strokeWidth?: number;
   guideColor?: string;
   traceColor?: string;
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

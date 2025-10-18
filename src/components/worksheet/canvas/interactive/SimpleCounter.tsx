@@ -18,6 +18,7 @@ interface SimpleCounterProps {
   voiceEnabled?: boolean;
   celebrationAtEnd?: boolean;
   showProgress?: boolean;
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

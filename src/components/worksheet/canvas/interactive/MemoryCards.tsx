@@ -19,6 +19,7 @@ interface MemoryCardsProps {
   gridSize?: '2x2' | '2x3' | '3x3';
   cardBackImage?: string;
   difficulty?: 'easy' | 'hard';
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

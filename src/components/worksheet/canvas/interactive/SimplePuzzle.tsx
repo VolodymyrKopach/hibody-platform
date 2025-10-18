@@ -20,6 +20,7 @@ interface SimplePuzzleProps {
   pieces?: 2 | 4 | 6; // Number of pieces
   difficulty?: 'easy' | 'medium';
   showOutline?: boolean;
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

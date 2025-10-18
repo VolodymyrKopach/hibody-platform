@@ -27,6 +27,7 @@ interface SortingGameProps {
   categories: SortCategory[];
   sortBy?: 'color' | 'size' | 'type' | 'custom';
   layout?: 'horizontal' | 'vertical';
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

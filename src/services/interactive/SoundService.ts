@@ -119,7 +119,12 @@ class SoundService {
       // Play
       await audio.play();
     } catch (error) {
-      console.error(`❌ [SoundService] Failed to play ${soundId}:`, error);
+      // Gracefully handle missing sound files (common in development)
+      if (error instanceof DOMException && (error.name === 'NotSupportedError' || error.name === 'NotAllowedError')) {
+        console.warn(`⚠️ [SoundService] Sound file not available: ${soundId} (${this.presets[soundId as SoundEffect] || 'unknown path'})`);
+      } else {
+        console.error(`❌ [SoundService] Failed to play ${soundId}:`, error);
+      }
     }
   }
 

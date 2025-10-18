@@ -15,6 +15,7 @@ interface VoiceRecorderProps {
   maxDuration?: number; // in seconds
   showPlayback?: boolean;
   autoPlay?: boolean;
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

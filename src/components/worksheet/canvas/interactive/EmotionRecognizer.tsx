@@ -21,6 +21,7 @@ interface EmotionRecognizerProps {
   mode?: 'match' | 'identify';
   showDescriptions?: boolean;
   voiceEnabled?: boolean;
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

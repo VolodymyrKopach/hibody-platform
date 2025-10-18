@@ -20,6 +20,7 @@ interface SoundMatcherProps {
   items: SoundItem[];
   mode?: 'identify' | 'match';
   autoPlayFirst?: boolean;
+  ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;

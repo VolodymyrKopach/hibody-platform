@@ -2645,6 +2645,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 height={page.height}
                 background={page.background}
                 pageType={page.pageType}
+                ageGroup={generatedWorksheet?.metadata?.ageGroup || parameters?.level}
                 elements={pageContent?.elements || []}
                 selectedElementId={selectedElementId}
                 clipboard={clipboard}
@@ -2946,124 +2947,129 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
               />
             </MenuItem>
           )
-        ) : (
+        ) : [
           /* Page/Element context menu */
-          <>
+          <MenuItem 
+            key="copy"
+            onClick={() => handleContextMenuAction('copy')}
+            disabled={!contextMenu?.elementId && !selection}
+            sx={{ py: 0.75, px: 2 }}
+          >
+            <ListItemIcon sx={{ minWidth: 32 }}>
+              <Copy size={16} />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Копіювати"
+              primaryTypographyProps={{ fontSize: '0.875rem' }}
+            />
+          </MenuItem>,
+          <MenuItem 
+            key="cut"
+            onClick={() => handleContextMenuAction('cut')}
+            disabled={!contextMenu?.elementId && !selection}
+            sx={{ py: 0.75, px: 2 }}
+          >
+            <ListItemIcon sx={{ minWidth: 32 }}>
+              <Scissors size={16} />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Вирізати"
+              primaryTypographyProps={{ fontSize: '0.875rem' }}
+            />
+          </MenuItem>,
+          clipboard?.type === 'element' ? (
             <MenuItem 
-              onClick={() => handleContextMenuAction('copy')}
-              disabled={!contextMenu?.elementId && !selection}
+              key="paste"
+              onClick={() => handleContextMenuAction('paste')}
               sx={{ py: 0.75, px: 2 }}
             >
               <ListItemIcon sx={{ minWidth: 32 }}>
-                <Copy size={16} />
+                <ClipboardPaste size={16} />
               </ListItemIcon>
               <ListItemText 
-                primary="Копіювати"
+                primary="Вставити"
                 primaryTypographyProps={{ fontSize: '0.875rem' }}
               />
             </MenuItem>
+          ) : (
             <MenuItem 
-              onClick={() => handleContextMenuAction('cut')}
-              disabled={!contextMenu?.elementId && !selection}
+              key="paste"
+              disabled
               sx={{ py: 0.75, px: 2 }}
             >
               <ListItemIcon sx={{ minWidth: 32 }}>
-                <Scissors size={16} />
+                <ClipboardPaste size={16} />
               </ListItemIcon>
               <ListItemText 
-                primary="Вирізати"
+                primary={clipboard?.type === 'page' ? 'Вставити (тільки на canvas)' : 'Нічого вставити'}
                 primaryTypographyProps={{ fontSize: '0.875rem' }}
               />
             </MenuItem>
-            {clipboard?.type === 'element' ? (
+          ),
+          <MenuItem 
+            key="duplicate"
+            onClick={() => handleContextMenuAction('duplicate')}
+            disabled={!contextMenu?.elementId && !selection}
+            sx={{ py: 0.75, px: 2 }}
+          >
+            <ListItemIcon sx={{ minWidth: 32 }}>
+              <CopyPlus size={16} />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Дублювати"
+              primaryTypographyProps={{ fontSize: '0.875rem' }}
+            />
+          </MenuItem>,
+          
+          // Convert Page Type - only for pages (not elements)
+          ...(contextMenu?.pageId && !contextMenu?.elementId ? (() => {
+            const page = pages.find(p => p.id === contextMenu.pageId);
+            const isInteractive = page?.pageType === 'interactive';
+            return [
               <MenuItem 
-                onClick={() => handleContextMenuAction('paste')}
-                sx={{ py: 0.75, px: 2 }}
-              >
-                <ListItemIcon sx={{ minWidth: 32 }}>
-                  <ClipboardPaste size={16} />
-                </ListItemIcon>
-                <ListItemText 
-                  primary="Вставити"
-                  primaryTypographyProps={{ fontSize: '0.875rem' }}
-                />
-              </MenuItem>
-            ) : (
-              <MenuItem 
-                disabled
-                sx={{ py: 0.75, px: 2 }}
-              >
-                <ListItemIcon sx={{ minWidth: 32 }}>
-                  <ClipboardPaste size={16} />
-                </ListItemIcon>
-                <ListItemText 
-                  primary={clipboard?.type === 'page' ? 'Вставити (тільки на canvas)' : 'Нічого вставити'}
-                  primaryTypographyProps={{ fontSize: '0.875rem' }}
-                />
-              </MenuItem>
-            )}
-            <MenuItem 
-              onClick={() => handleContextMenuAction('duplicate')}
-              disabled={!contextMenu?.elementId && !selection}
-              sx={{ py: 0.75, px: 2 }}
-            >
-              <ListItemIcon sx={{ minWidth: 32 }}>
-                <CopyPlus size={16} />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Дублювати"
-                primaryTypographyProps={{ fontSize: '0.875rem' }}
-              />
-            </MenuItem>
-            
-            {/* Convert Page Type - only for pages (not elements) */}
-            {contextMenu?.pageId && !contextMenu?.elementId && (() => {
-              const page = pages.find(p => p.id === contextMenu.pageId);
-              const isInteractive = page?.pageType === 'interactive';
-              return (
-                <MenuItem 
-                  onClick={() => {
-                    if (page) {
-                      handlePageTypeChange(page.id, isInteractive ? 'pdf' : 'interactive');
-                      handleContextMenuClose();
-                    }
-                  }}
-                  sx={{ py: 0.75, px: 2 }}
-                >
-                  <ListItemIcon sx={{ minWidth: 32 }}>
-                    {isInteractive ? (
-                      <FileText size={16} color={theme.palette.primary.main} />
-                    ) : (
-                      <Zap size={16} color={theme.palette.success.main} />
-                    )}
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={isInteractive ? "Конвертувати в PDF" : "Конвертувати в Interactive"}
-                    primaryTypographyProps={{ fontSize: '0.875rem' }}
-                  />
-                </MenuItem>
-              );
-            })()}
-            
-            <Divider sx={{ my: 0.5 }} />
-            <MenuItem 
-              onClick={() => handleContextMenuAction('delete')}
-              disabled={!contextMenu?.elementId && !selection}
-              sx={{ py: 0.75, px: 2 }}
-            >
-              <ListItemIcon sx={{ minWidth: 32 }}>
-                <Trash2 size={16} color={theme.palette.error.main} />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Видалити"
-                primaryTypographyProps={{ 
-                  fontSize: '0.875rem',
-                  color: theme.palette.error.main,
+                key="convert"
+                onClick={() => {
+                  if (page) {
+                    handlePageTypeChange(page.id, isInteractive ? 'pdf' : 'interactive');
+                    handleContextMenuClose();
+                  }
                 }}
-              />
-            </MenuItem>
-          </>
-        )}
+                sx={{ py: 0.75, px: 2 }}
+              >
+                <ListItemIcon sx={{ minWidth: 32 }}>
+                  {isInteractive ? (
+                    <FileText size={16} color={theme.palette.primary.main} />
+                  ) : (
+                    <Zap size={16} color={theme.palette.success.main} />
+                  )}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={isInteractive ? "Конвертувати в PDF" : "Конвертувати в Interactive"}
+                  primaryTypographyProps={{ fontSize: '0.875rem' }}
+                />
+              </MenuItem>
+            ];
+          })() : []),
+          
+          <Divider key="divider" sx={{ my: 0.5 }} />,
+          <MenuItem 
+            key="delete"
+            onClick={() => handleContextMenuAction('delete')}
+            disabled={!contextMenu?.elementId && !selection}
+            sx={{ py: 0.75, px: 2 }}
+          >
+            <ListItemIcon sx={{ minWidth: 32 }}>
+              <Trash2 size={16} color={theme.palette.error.main} />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Видалити"
+              primaryTypographyProps={{ 
+                fontSize: '0.875rem',
+                color: theme.palette.error.main,
+              }}
+            />
+          </MenuItem>
+        ]}
       </Menu>
 
       {/* Exit Confirmation Dialog */}
