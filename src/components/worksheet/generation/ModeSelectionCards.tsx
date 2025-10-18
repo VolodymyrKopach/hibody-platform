@@ -26,46 +26,30 @@ const ModeSelectionCards: React.FC<ModeSelectionCardsProps> = ({
       icon: FileText,
       title: 'PDF Worksheet',
       subtitle: 'For printing',
-      description: 'Create printable worksheets with exercises, coloring activities, and more. Perfect for offline learning.',
-      features: ['Print-ready', 'Coloring pages', 'Exercises', 'Works offline'],
+      features: ['Print-ready', 'Exercises', 'Works offline'],
       color: theme.palette.primary.main,
       available: true,
     },
     {
       id: 'interactive' as const,
       icon: Zap,
-      title: 'Interactive Worksheet',
-      subtitle: 'With animations & sounds',
-      description: 'Engaging activities with animations, sounds, and instant feedback. Perfect for tablets and online learning.',
-      features: ['Animations', 'Sound effects', 'Instant feedback', 'Progress tracking'],
+      title: 'Interactive',
+      subtitle: 'With animations',
+      features: ['Animations', 'Sounds', 'Feedback'],
       color: theme.palette.secondary.main,
       available: isInteractiveAvailable,
     },
   ];
 
   return (
-    <Box sx={{ py: 2 }}>
-      <Typography
-        variant="h6"
-        sx={{
-          mb: 3,
-          fontWeight: 600,
-          textAlign: 'center',
-          color: theme.palette.text.primary,
-        }}
-      >
-        Choose worksheet type
-      </Typography>
+    <Box>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: theme.palette.text.secondary }}>
+          Worksheet Type
+        </Typography>
+      </Stack>
 
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        spacing={3}
-        sx={{
-          '& > *': {
-            flex: 1,
-          },
-        }}
-      >
+      <Stack direction="row" spacing={2}>
         {modes.map((mode) => {
           const Icon = mode.icon;
           const isSelected = selectedMode === mode.id;
@@ -76,8 +60,9 @@ const ModeSelectionCards: React.FC<ModeSelectionCardsProps> = ({
               onClick={() => !isDisabled && onModeSelect(mode.id)}
               sx={{
                 position: 'relative',
-                p: 3,
-                borderRadius: '20px',
+                flex: 1,
+                p: 2,
+                borderRadius: '12px',
                 cursor: isDisabled ? 'not-allowed' : 'pointer',
                 border: `2px solid ${
                   isSelected
@@ -85,15 +70,15 @@ const ModeSelectionCards: React.FC<ModeSelectionCardsProps> = ({
                     : alpha(theme.palette.divider, 0.1)
                 }`,
                 background: isSelected
-                  ? `linear-gradient(135deg, ${alpha(mode.color, 0.1)} 0%, ${alpha(mode.color, 0.05)} 100%)`
+                  ? `linear-gradient(135deg, ${alpha(mode.color, 0.08)} 0%, ${alpha(mode.color, 0.03)} 100%)`
                   : theme.palette.background.paper,
-                opacity: isDisabled ? 0.6 : 1,
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: isDisabled ? 0.5 : 1,
+                transition: 'all 0.2s',
                 '&:hover': isDisabled
                   ? {}
                   : {
-                      transform: 'translateY(-8px)',
-                      boxShadow: `0 12px 32px ${alpha(mode.color, 0.25)}`,
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 4px 12px ${alpha(mode.color, 0.15)}`,
                       border: `2px solid ${mode.color}`,
                     },
               }}
@@ -103,99 +88,72 @@ const ModeSelectionCards: React.FC<ModeSelectionCardsProps> = ({
                 <Box
                   sx={{
                     position: 'absolute',
-                    top: 16,
-                    right: 16,
-                    background: alpha(theme.palette.grey[500], 0.1),
-                    borderRadius: '50%',
-                    p: 1,
+                    top: 8,
+                    right: 8,
                   }}
                 >
-                  <Lock size={20} color={theme.palette.grey[500]} />
+                  <Lock size={14} color={theme.palette.grey[400]} />
                 </Box>
               )}
 
-              {/* Icon */}
-              <Box
-                sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '20px',
-                  background: `linear-gradient(135deg, ${alpha(mode.color, 0.2)} 0%, ${alpha(mode.color, 0.1)} 100%)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 2,
-                }}
-              >
-                <Icon size={40} color={mode.color} />
-              </Box>
+              {/* Icon and Title Row */}
+              <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1 }}>
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '8px',
+                    background: `linear-gradient(135deg, ${alpha(mode.color, 0.15)} 0%, ${alpha(mode.color, 0.08)} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon size={20} color={mode.color} />
+                </Box>
 
-              {/* Title */}
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 700,
-                  color: theme.palette.text.primary,
-                  mb: 0.5,
-                }}
-              >
-                {mode.title}
-              </Typography>
-
-              {/* Subtitle */}
-              <Typography
-                variant="caption"
-                sx={{
-                  color: mode.color,
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  mb: 2,
-                  display: 'block',
-                }}
-              >
-                {mode.subtitle}
-              </Typography>
-
-              {/* Description */}
-              <Typography
-                variant="body2"
-                sx={{
-                  color: theme.palette.text.secondary,
-                  mb: 3,
-                  lineHeight: 1.6,
-                }}
-              >
-                {mode.description}
-              </Typography>
-
-              {/* Features */}
-              <Stack spacing={1}>
-                {mode.features.map((feature, index) => (
-                  <Stack
-                    key={index}
-                    direction="row"
-                    alignItems="center"
-                    spacing={1}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                      color: theme.palette.text.primary,
+                      mb: 0.25,
+                    }}
                   >
-                    <Box
-                      sx={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: '50%',
-                        background: mode.color,
-                      }}
-                    />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: theme.palette.text.secondary,
-                        fontSize: '0.75rem',
-                      }}
-                    >
-                      {feature}
-                    </Typography>
-                  </Stack>
+                    {mode.title}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: theme.palette.text.secondary,
+                      display: 'block',
+                      fontSize: '0.7rem',
+                    }}
+                  >
+                    {mode.subtitle}
+                  </Typography>
+                </Box>
+              </Stack>
+
+              {/* Features - compact list */}
+              <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                {mode.features.slice(0, 3).map((feature, index) => (
+                  <Typography
+                    key={index}
+                    variant="caption"
+                    sx={{
+                      color: alpha(theme.palette.text.secondary, 0.7),
+                      fontSize: '0.65rem',
+                      '&:not(:last-child)::after': {
+                        content: '"•"',
+                        mx: 0.5,
+                      },
+                    }}
+                  >
+                    {feature}
+                  </Typography>
                 ))}
               </Stack>
 
@@ -204,18 +162,18 @@ const ModeSelectionCards: React.FC<ModeSelectionCardsProps> = ({
                 <Box
                   sx={{
                     position: 'absolute',
-                    top: -2,
-                    right: -2,
-                    width: 32,
-                    height: 32,
-                    borderRadius: '0 18px 0 12px',
+                    top: -1,
+                    right: -1,
+                    width: 20,
+                    height: 20,
+                    borderRadius: '0 10px 0 8px',
                     background: mode.color,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <Typography sx={{ color: 'white', fontSize: '1.2rem' }}>
+                  <Typography sx={{ color: 'white', fontSize: '0.75rem', lineHeight: 1 }}>
                     ✓
                   </Typography>
                 </Box>
@@ -230,14 +188,13 @@ const ModeSelectionCards: React.FC<ModeSelectionCardsProps> = ({
                 key={mode.id}
                 title="Coming soon for this age group"
                 arrow
-                placement="top"
               >
-                <Box>{card}</Box>
+                <Box sx={{ flex: 1 }}>{card}</Box>
               </Tooltip>
             );
           }
 
-          return <Box key={mode.id}>{card}</Box>;
+          return <React.Fragment key={mode.id}>{card}</React.Fragment>;
         })}
       </Stack>
     </Box>

@@ -39,12 +39,13 @@ export async function POST(request: NextRequest) {
     const generationRequest: WorksheetGenerationRequest = {
       topic: body.topic,
       ageGroup: body.ageGroup,
-      exerciseTypes: body.exerciseTypes || [],
+      learningObjectives: body.learningObjectives,
       difficulty: body.difficulty || 'medium',
       language: body.language || 'en',
       duration: body.duration || 'standard', // Duration affects content amount, not page count
       includeImages: body.includeImages !== false, // Default true
       additionalInstructions: body.additionalInstructions || '',
+      contentMode: body.contentMode,
     };
 
     console.log('🎯 [API] Generation request:', generationRequest);

@@ -63,12 +63,13 @@ const WorksheetEditor: React.FC = () => {
       const requestBody = {
         topic: params.topic,
         ageGroup: params.level, // Convert level to ageGroup format
-        exerciseTypes: params.exerciseTypes || [],
+        learningObjectives: params.learningObjectives,
         difficulty: getDifficultyFromLevel(params.level),
         language: params.language || 'en',
         duration: params.duration || 'standard', // Duration affects content amount, not page count
         includeImages: params.includeImages !== false,
         additionalInstructions: params.additionalNotes || '',
+        contentMode: params.contentMode,
       };
 
       console.log('📡 Sending request to API:', requestBody);

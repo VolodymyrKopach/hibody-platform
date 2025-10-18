@@ -44,9 +44,9 @@ export interface ComponentExample {
  * NOTE: pageCount is removed - content will be auto-paginated based on actual content
  */
 export interface WorksheetGenerationRequest {
-  topic: string; // Main topic (e.g., "Present Simple Tense", "Animals")
+  topic: string; // Main topic (e.g., "Animals", "Counting", "Colors")
   ageGroup: string; // Age group (e.g., "3-5", "6-7", "8-9")
-  exerciseTypes?: string[]; // Preferred exercise types
+  learningObjectives?: string; // Optional custom learning goals
   difficulty?: 'easy' | 'medium' | 'hard';
   language?: string; // Content language (default: 'en')
   includeImages?: boolean; // Whether to include images
@@ -73,6 +73,7 @@ export interface GeneratedPage {
   title: string;
   background?: PageBackgroundConfig;
   elements: GeneratedElement[]; // Elements without id and zIndex
+  ageGroup?: string; // Age group for age-appropriate styling
 }
 
 /**
@@ -144,6 +145,7 @@ export interface ParsedPage {
   background?: PageBackgroundConfig;
   elements: CanvasElement[]; // Full elements with id, zIndex, etc.
   pageType?: 'pdf' | 'interactive'; // PDF = fixed A4, Interactive = scrollable
+  ageGroup?: string; // Age group for age-appropriate styling
 }
 
 /**

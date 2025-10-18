@@ -41,8 +41,7 @@ import ModeSelectionCards from './generation/ModeSelectionCards';
 interface WorksheetParameters {
   topic: string;
   level: string;
-  focusAreas: string[];
-  exerciseTypes: string[];
+  learningObjectives?: string;
   duration: string;
   purpose: string;
   additionalNotes: string;
@@ -69,8 +68,7 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
   const [parameters, setParameters] = useState<WorksheetParameters>({
     topic: '',
     level: '2-3', // Default to youngest age group for new features
-    focusAreas: ['grammar', 'vocabulary'],
-    exerciseTypes: ['fill-blanks', 'multiple-choice'],
+    learningObjectives: '',
     duration: 'standard',
     purpose: 'general',
     additionalNotes: '',
@@ -82,7 +80,6 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [autoExerciseTypes, setAutoExerciseTypes] = useState(false);
 
   // Age groups - reordered to show youngest first
   const levels = [
@@ -100,23 +97,6 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
     { value: '50+', label: '50+ years', emoji: '⭐', description: 'Старші дорослі', ageRange: '50+ years' },
   ];
 
-  const focusAreas = [
-    { value: 'grammar', label: 'Grammar', icon: '📖', popular: true },
-    { value: 'vocabulary', label: 'Vocabulary', icon: '📝', popular: true },
-    { value: 'reading', label: 'Reading', icon: '📚', popular: false },
-    { value: 'writing', label: 'Writing', icon: '✍️', popular: false },
-    { value: 'speaking', label: 'Speaking', icon: '💬', popular: false },
-    { value: 'listening', label: 'Listening', icon: '👂', popular: false },
-  ];
-
-  const exerciseTypes = [
-    { value: 'fill-blanks', label: 'Fill in the Blanks', icon: '✏️', popular: true },
-    { value: 'multiple-choice', label: 'Multiple Choice', icon: '☑️', popular: true },
-    { value: 'match-pairs', label: 'Match Pairs', icon: '🔗', popular: true },
-    { value: 'true-false', label: 'True/False', icon: '✓✗', popular: false },
-    { value: 'short-answer', label: 'Short Answer', icon: '💭', popular: false },
-    { value: 'word-bank', label: 'Word Bank', icon: '📦', popular: false },
-  ];
 
   const durations = [
     { value: 'quick', label: '10-15 min', description: 'Quick practice' },
@@ -139,23 +119,6 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
     { value: 'de', label: 'German', flag: '🇩🇪' },
   ];
 
-  const toggleFocusArea = (value: string) => {
-    setParameters(prev => ({
-      ...prev,
-      focusAreas: prev.focusAreas.includes(value)
-        ? prev.focusAreas.filter(v => v !== value)
-        : [...prev.focusAreas, value],
-    }));
-  };
-
-  const toggleExerciseType = (value: string) => {
-    setParameters(prev => ({
-      ...prev,
-      exerciseTypes: prev.exerciseTypes.includes(value)
-        ? prev.exerciseTypes.filter(v => v !== value)
-        : [...prev.exerciseTypes, value],
-    }));
-  };
 
   const isValid = () => {
     // Basic validation
@@ -164,26 +127,12 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
     // Mode must be selected
     const hasModeSelected = !!parameters.contentMode;
     
-    // Additional validation only after mode is selected
-    if (!hasModeSelected) {
-      return hasBasicInfo;
-    }
-    
-    return (
-      hasBasicInfo &&
-      hasModeSelected &&
-      parameters.focusAreas.length > 0 &&
-      (autoExerciseTypes || parameters.exerciseTypes.length > 0)
-    );
+    return hasBasicInfo && hasModeSelected;
   };
 
   const handleGenerate = () => {
     if (isValid()) {
-      const finalParams = {
-        ...parameters,
-        exerciseTypes: autoExerciseTypes ? [] : parameters.exerciseTypes,
-      };
-      onGenerate(finalParams);
+      onGenerate(parameters);
     }
   };
 
@@ -312,123 +261,39 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
             {/* Show rest of form only after mode is selected */}
             {parameters.contentMode && (
               <>
-            {/* 3. Focus Areas - With Smart Defaults */}
+            {/* 3. Learning Objectives (Optional) */}
             <Box>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-                <FileEdit size={18} color={theme.palette.primary.main} />
+                <Target size={18} color={theme.palette.primary.main} />
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Focus Areas
+                  Learning Objectives
                 </Typography>
-                <Tooltip title="Select what skills to practice">
+                <Typography variant="caption" color="text.secondary">
+                  (Optional)
+                </Typography>
+                <Tooltip title="What should students learn from this worksheet?">
                   <IconButton size="small" sx={{ ml: 0.5 }}>
                     <Info size={14} />
                   </IconButton>
                 </Tooltip>
               </Stack>
-              <Stack direction="row" flexWrap="wrap" gap={1}>
-                {focusAreas.map((area) => (
-                  <Chip
-                    key={area.value}
-                    label={`${area.icon} ${area.label}`}
-                    onClick={() => toggleFocusArea(area.value)}
-                    size="medium"
-                    sx={{
-                      px: 1.5,
-                      py: 2.5,
-                      fontSize: '0.875rem',
-                      fontWeight: 500,
-                      borderRadius: '12px',
-                      background: parameters.focusAreas.includes(area.value)
-                        ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`
-                        : alpha(theme.palette.grey[400], 0.1),
-                      color: parameters.focusAreas.includes(area.value) ? 'white' : theme.palette.text.primary,
-                      border: 'none',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        background: parameters.focusAreas.includes(area.value)
-                          ? `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`
-                          : alpha(theme.palette.primary.main, 0.15),
-                        transform: 'translateY(-2px)',
-                      },
-                    }}
-                  />
-                ))}
-              </Stack>
-            </Box>
-
-            {/* 4. Exercise Types - WITH AUTO-SELECT TOGGLE */}
-            <Box>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <FileEdit size={18} color={theme.palette.primary.main} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    Exercise Types
-                  </Typography>
-                  <Tooltip title="Choose types or let AI decide">
-                    <IconButton size="small">
-                      <Info size={14} />
-                    </IconButton>
-                  </Tooltip>
-                </Stack>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={autoExerciseTypes}
-                      onChange={(e) => setAutoExerciseTypes(e.target.checked)}
-                      size="small"
-                    />
-                  }
-                  label={
-                    <Typography variant="caption" sx={{ fontWeight: 500, fontSize: '0.75rem' }}>
-                      Let AI choose
-                    </Typography>
-                  }
-                />
-              </Stack>
-              
-              {autoExerciseTypes ? (
-                <Alert 
-                  severity="info"
-                  sx={{ 
+              <TextField
+                fullWidth
+                multiline
+                rows={2}
+                placeholder="e.g., Learn basic counting from 1-10, Recognize animal sounds, Practice color matching..."
+                value={parameters.learningObjectives}
+                onChange={(e) => setParameters({ ...parameters, learningObjectives: e.target.value })}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
                     borderRadius: '12px',
-                    '& .MuiAlert-message': {
-                      fontSize: '0.875rem',
-                    },
-                  }}
-                >
-                  🤖 AI will automatically select the best exercise types for your topic and level
-                </Alert>
-              ) : (
-                <Stack direction="row" flexWrap="wrap" gap={1}>
-                  {exerciseTypes.map((type) => (
-                    <Chip
-                      key={type.value}
-                      label={`${type.icon} ${type.label}`}
-                      onClick={() => toggleExerciseType(type.value)}
-                      size="medium"
-                      sx={{
-                        px: 1.5,
-                        py: 2.5,
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        borderRadius: '12px',
-                        background: parameters.exerciseTypes.includes(type.value)
-                          ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`
-                          : alpha(theme.palette.grey[400], 0.1),
-                        color: parameters.exerciseTypes.includes(type.value) ? 'white' : theme.palette.text.primary,
-                        border: 'none',
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          background: parameters.exerciseTypes.includes(type.value)
-                            ? `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`
-                            : alpha(theme.palette.primary.main, 0.15),
-                          transform: 'translateY(-2px)',
-                        },
-                      }}
-                    />
-                  ))}
-                </Stack>
-              )}
+                    fontSize: '0.9rem',
+                  },
+                }}
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                💡 AI will automatically choose appropriate exercises. Add custom goals here if needed.
+              </Typography>
             </Box>
               </>
             )}

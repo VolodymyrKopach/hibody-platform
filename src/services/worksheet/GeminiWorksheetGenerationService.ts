@@ -78,8 +78,14 @@ export class GeminiWorksheetGenerationService {
       );
 
       // Build final response with paginated content
+      // Add ageGroup to each page for age-appropriate styling
+      const pagesWithAgeGroup = paginationResult.pages.map(page => ({
+        ...page,
+        ageGroup: request.ageGroup,
+      }));
+      
       const finalResponse: WorksheetGenerationResponse = {
-        pages: paginationResult.pages,
+        pages: pagesWithAgeGroup,
         metadata: {
           topic: request.topic,
           ageGroup: request.ageGroup,
@@ -441,7 +447,7 @@ export class GeminiWorksheetGenerationService {
     const {
       topic,
       ageGroup,
-      exerciseTypes = [],
+      learningObjectives = '',
       difficulty = 'medium',
       language = 'en',
       duration = 'standard',
@@ -517,7 +523,7 @@ Focus on:
 - **Duration:** ${duration} - ${durationGuidance}
 - **Include Images:** ${includeImages ? 'Yes' : 'No'}
 - **Attention Span:** ~${ageGuidelines.attentionSpan} minutes
-${exerciseTypes.length > 0 ? `- **Preferred Exercise Types:** ${exerciseTypes.join(', ')} (prioritize these, but you can include others if beneficial)` : '- **Exercise Types:** Use any appropriate types based on topic and age'}
+${learningObjectives ? `- **Learning Objectives:** ${learningObjectives}` : ''}
 ${additionalInstructions ? `- **Additional Instructions:** ${additionalInstructions}` : ''}
 
 # EDUCATIONAL GUIDELINES FOR AGE ${ageGroup}
@@ -533,7 +539,6 @@ ${ageSpecificGuidelines}
 ## Complexity Level
 - **Complexity:** ${ageGuidelines.complexity}
 - **Visual Importance:** ${ageGuidelines.visualImportance}
-- **Recommended Exercises:** ${ageGuidelines.recommendedExerciseTypes.join(', ')}
 
 ## Content Principles
 1. **Age-Appropriate Language:** Use simple, clear vocabulary suitable for ${ageGuidelines.readingLevel}
@@ -541,7 +546,7 @@ ${ageSpecificGuidelines}
 3. **Visual Support:** ${ageGuidelines.visualImportance === 'critical' || ageGuidelines.visualImportance === 'high' ? 'Use images and visual elements frequently' : 'Use images when helpful'}
 4. **Progressive Difficulty:** Start easy, gradually increase challenge
 5. **Clear Instructions:** Be explicit and step-by-step
-6. **Balanced Mix:** ${exerciseTypes.length > 0 ? `Focus on preferred exercise types but include variety. You can use other types if they better fit the content.` : 'Combine different exercise types for engagement and choose the most appropriate for the topic.'}
+6. **Smart Exercise Selection:** Analyze the topic and choose exercise types that best teach the concept. Consider what activities would be most effective for this specific subject and age group.
 
 ${componentLibrary}
 
@@ -591,9 +596,16 @@ Distribute your ${contentAmount.targetCount} components as follows:
 - **1 Main Title** (title-block with level 'main')
 - **1-2 Instructions** (instructions-box)
 - **${Math.ceil(contentAmount.targetCount * 0.3)} Text/Explanation Blocks** (body-text, bullet-list, numbered-list)
-- **${Math.ceil(contentAmount.targetCount * 0.5)} Exercise Components** (use age-appropriate types listed above)
+- **${Math.ceil(contentAmount.targetCount * 0.5)} Exercise Components** (choose the most appropriate exercise types for the topic: fill-blank, multiple-choice, true-false, match-pairs, short-answer, word-bank, etc.)
 - **${Math.ceil(contentAmount.targetCount * 0.1)} Helper Elements** (tip-box, warning-box, dividers)
 - **${includeImages ? Math.ceil(contentAmount.targetCount * 0.1) : 0} Images** (if includeImages is true)
+
+**Exercise Selection Guidance:**
+- For facts/knowledge: use multiple-choice or true-false
+- For vocabulary/spelling: use fill-blank or word-bank
+- For matching concepts: use match-pairs
+- For understanding: use short-answer
+- Mix different types for variety and engagement
 `}
 
 **CRITICAL:** Aim for exactly ${contentAmount.targetCount} components. Quality matters - ensure each component is engaging and age-appropriate.
