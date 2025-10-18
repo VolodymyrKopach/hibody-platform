@@ -48,11 +48,15 @@ import {
   Files,
   Palette,
   Sparkles,
+  Zap,
+  FileText,
   Copy,
   Scissors,
   Trash2,
   CopyPlus,
   ClipboardPaste,
+  Play,
+  Edit,
 } from 'lucide-react';
 import { exportToPDF, exportToPNG, printWorksheet } from '@/utils/pdfExportSnapdom';
 import { autoSaveWorksheet, getCurrentWorksheetId, SavedWorksheet, clearAllWorksheets } from '@/utils/worksheetStorage';
@@ -67,6 +71,7 @@ import FillInBlank from './canvas/atomic/FillInBlank';
 import MultipleChoice from './canvas/atomic/MultipleChoice';
 import TipBox from './canvas/atomic/TipBox';
 import CanvasPage from './canvas/CanvasPage';
+import InteractivePlayDialog from './canvas/InteractivePlayDialog';
 import { CanvasElement, PageContent } from '@/types/canvas-element';
 import { ParsedWorksheet, WorksheetEdit, WorksheetEditContext } from '@/types/worksheet-generation';
 import { WorksheetEditingService } from '@/services/worksheet/WorksheetEditingService';
@@ -111,11 +116,16 @@ interface WorksheetPage {
   content: string[];
   thumbnail: string;
   background?: PageBackground;
+  pageType?: 'pdf' | 'interactive'; // PDF = fixed A4, Interactive = scrollable
 }
 
 // A4 format: 210mm x 297mm = 794px x 1123px at 96 DPI
 const A4_WIDTH = 794;
 const A4_HEIGHT = 1123;
+
+// Interactive page format: wider for better interactive content display
+const INTERACTIVE_WIDTH = 1200;
+const INTERACTIVE_MIN_HEIGHT = 800;
 
 // Mock data - A4 pages розкидані в просторі як в Miro
 const MOCK_CANVAS_PAGES: WorksheetPage[] = [
@@ -200,18 +210,25 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   // Initialize pages from generated worksheet or empty canvas
   const PAGE_GAP = 45; // Gap between pages (30% of original 150px for tighter PDF-like appearance)
   const initialPages = generatedWorksheet 
-    ? generatedWorksheet.pages.map((page, index) => ({
-        id: page.pageId,
-        title: page.title,
-        pageNumber: page.pageNumber,
-        x: 100, // All pages start at x: 100
-        y: 100 + (A4_HEIGHT + PAGE_GAP) * index, // Stack vertically
-        width: A4_WIDTH,
-        height: A4_HEIGHT,
-        content: [`worksheet-page-${page.pageNumber}`],
-        thumbnail: '📄',
-        background: page.background || { type: 'solid' as const, color: '#FFFFFF' },
-      }))
+    ? generatedWorksheet.pages.map((page, index) => {
+        const isInteractive = page.pageType === 'interactive';
+        const pageWidth = isInteractive ? INTERACTIVE_WIDTH : A4_WIDTH;
+        const pageHeight = isInteractive ? INTERACTIVE_MIN_HEIGHT : A4_HEIGHT;
+        
+        return {
+          id: page.pageId,
+          title: page.title,
+          pageNumber: page.pageNumber,
+          x: 100, // All pages start at x: 100
+          y: 100 + (pageHeight + PAGE_GAP) * index, // Stack vertically with correct height
+          width: pageWidth,
+          height: pageHeight,
+          content: [`worksheet-page-${page.pageNumber}`],
+          thumbnail: isInteractive ? '⚡' : '📄',
+          background: page.background || { type: 'solid' as const, color: '#FFFFFF' },
+          pageType: page.pageType || 'pdf', // Use pageType from generation or default to PDF
+        };
+      })
     : []; // Start with empty canvas
 
   const [pages, setPages] = useState<WorksheetPage[]>(initialPages);
@@ -293,11 +310,115 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [addPageMenuAnchor, setAddPageMenuAnchor] = useState<null | HTMLElement>(null);
   const [isSaving, setIsSaving] = useState(false);
   
   // Panel visibility state
   const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true);
   const [isRightPanelVisible, setIsRightPanelVisible] = useState(true);
+
+  // Play Mode state for interactive components
+  const [isPlayMode, setIsPlayMode] = useState(false);
+  const [playDialogOpen, setPlayDialogOpen] = useState(false);
+  const [playDialogPage, setPlayDialogPage] = useState<WorksheetPage | null>(null);
+
+  // Interactive component types
+  const INTERACTIVE_COMPONENT_TYPES = [
+    'tap-image', 'simple-drag-drop', 'color-matcher', 'simple-counter', 
+    'memory-cards', 'sorting-game', 'sequence-builder', 'shape-tracer', 
+    'emotion-recognizer', 'sound-matcher', 'simple-puzzle', 'pattern-builder', 
+    'cause-effect', 'reward-collector', 'voice-recorder'
+  ];
+
+  // PDF component types (worksheet elements)
+  const PDF_COMPONENT_TYPES = [
+    'title-block', 'body-text', 'instructions-box', 'fill-blank', 
+    'multiple-choice', 'tip-box', 'warning-box', 'image-placeholder', 
+    'bullet-list', 'numbered-list', 'true-false', 'short-answer', 
+    'table', 'divider'
+  ];
+
+  // Helper: Check if component is interactive
+  const isInteractiveComponent = (componentType: string): boolean => {
+    return INTERACTIVE_COMPONENT_TYPES.includes(componentType);
+  };
+
+  // Helper: Check if component is PDF
+  const isPDFComponent = (componentType: string): boolean => {
+    return PDF_COMPONENT_TYPES.includes(componentType);
+  };
+
+  // Helper: Check if component can be dropped on page
+  const canDropComponentOnPage = (componentType: string, pageType: 'pdf' | 'interactive'): boolean => {
+    const isInteractive = isInteractiveComponent(componentType);
+    const isPDF = isPDFComponent(componentType);
+
+    // Interactive components only on interactive pages
+    if (isInteractive && pageType !== 'interactive') {
+      return false;
+    }
+
+    // PDF components only on PDF pages
+    if (isPDF && pageType !== 'pdf') {
+      return false;
+    }
+
+    return true;
+  };
+
+  // Check if worksheet has interactive components
+  const hasInteractiveComponents = () => {
+    for (const [, content] of pageContents) {
+      if (content.elements.some(el => INTERACTIVE_COMPONENT_TYPES.includes(el.type))) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Handle Play Mode button click
+  const handlePlayModeClick = () => {
+    // Find selected page or first interactive page
+    let pageToPlay: WorksheetPage | null = null;
+
+    if (selection?.type === 'page') {
+      const page = pages.find(p => p.id === selection.data.id);
+      if (page && page.pageType === 'interactive') {
+        pageToPlay = page;
+      }
+    } else if (selection?.type === 'element') {
+      const page = pages.find(p => p.id === selection.pageData.id);
+      if (page && page.pageType === 'interactive') {
+        pageToPlay = page;
+      }
+    }
+
+    // If no page selected or selected page is not interactive, find first interactive page
+    if (!pageToPlay) {
+      pageToPlay = pages.find(p => p.pageType === 'interactive') || null;
+    }
+
+    if (pageToPlay) {
+      setPlayDialogPage(pageToPlay);
+      setPlayDialogOpen(true);
+    } else {
+      // No interactive pages, just toggle play mode for inline play
+      setIsPlayMode(!isPlayMode);
+    }
+  };
+
+  // Handle Play Mode changes
+  useEffect(() => {
+    if (isPlayMode) {
+      // Clear selection when entering Play Mode
+      setSelectedElementId(null);
+      // Optionally hide right panel in Play Mode
+      setIsRightPanelVisible(false);
+    } else {
+      // Restore right panel when exiting Play Mode
+      setIsRightPanelVisible(true);
+    }
+  }, [isPlayMode]);
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
@@ -316,6 +437,39 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
           data: {
             ...prevSelection.data,
             background,
+          },
+        };
+      }
+      return prevSelection;
+    });
+  };
+
+  const handlePageTypeChange = (pageId: string, pageType: 'pdf' | 'interactive') => {
+    const thumbnail = pageType === 'interactive' ? '⚡' : '📄';
+    const pageWidth = pageType === 'interactive' ? INTERACTIVE_WIDTH : A4_WIDTH;
+    const pageHeight = pageType === 'interactive' ? INTERACTIVE_MIN_HEIGHT : A4_HEIGHT;
+    
+    setPages(prev => prev.map(page =>
+      page.id === pageId ? { 
+        ...page, 
+        pageType, 
+        thumbnail,
+        width: pageWidth,
+        height: pageHeight,
+      } : page
+    ));
+    
+    // Update selection if the modified page is currently selected
+    setSelection(prevSelection => {
+      if (prevSelection?.type === 'page' && prevSelection.data.id === pageId) {
+        return {
+          type: 'page',
+          data: {
+            ...prevSelection.data,
+            pageType,
+            thumbnail,
+            width: pageWidth,
+            height: pageHeight,
           },
         };
       }
@@ -864,6 +1018,21 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
 
   // Handle element operations
   const handleElementAdd = (pageId: string, element: Omit<CanvasElement, 'id' | 'zIndex'>, insertIndex?: number) => {
+    // Find target page
+    const targetPage = pages.find(p => p.id === pageId);
+    if (!targetPage) {
+      console.error('❌ [ElementAdd] Target page not found');
+      return;
+    }
+
+    // Validate component type compatibility with target page type
+    const targetPageType = targetPage.pageType || 'pdf';
+    if (!canDropComponentOnPage(element.type, targetPageType)) {
+      // Silently ignore invalid drop - no harsh feedback
+      console.log(`ℹ️ [ElementAdd] Skipping ${element.type} on ${targetPageType} page (incompatible types)`);
+      return;
+    }
+
     setPageContents(prev => {
       const newMap = new Map(prev);
       const pageContent = newMap.get(pageId) || { id: `content-${pageId}`, pageId, elements: [] };
@@ -977,6 +1146,11 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   };
 
   const handleElementSelect = (elementId: string | null) => {
+    // Disable element selection in Play Mode
+    if (isPlayMode) {
+      return;
+    }
+    
     setSelectedElementId(elementId);
     
     if (elementId) {
@@ -1357,7 +1531,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     return 'medium';
   };
 
-  const handleAddNewPage = () => {
+  const handleAddNewPage = (pageType: 'pdf' | 'interactive' = 'pdf') => {
     const newPageNumber = pages.length + 1;
     const newPageId = `page-${Date.now()}-${Math.random()}`;
     
@@ -1365,21 +1539,26 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     const lastPage = pages.length > 0 ? pages[pages.length - 1] : null;
     const newY = lastPage ? lastPage.y + lastPage.height + PAGE_GAP : 100;
     
+    // Use different dimensions for interactive pages
+    const pageWidth = pageType === 'interactive' ? INTERACTIVE_WIDTH : A4_WIDTH;
+    const pageHeight = pageType === 'interactive' ? INTERACTIVE_MIN_HEIGHT : A4_HEIGHT;
+    
     const newPage: WorksheetPage = {
       id: newPageId,
       pageNumber: newPageNumber,
       title: `Page ${newPageNumber}`,
       x: 100,
       y: newY,
-      width: A4_WIDTH,
-      height: A4_HEIGHT,
+      width: pageWidth,
+      height: pageHeight,
       content: [`worksheet-page-${newPageNumber}`],
-      thumbnail: '📄',
+      thumbnail: pageType === 'interactive' ? '⚡' : '📄',
       background: {
         type: 'solid',
         color: '#FFFFFF',
         opacity: 100,
       },
+      pageType,
     };
     
     // Add page to pages array
@@ -1606,6 +1785,23 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     const { sourcePageId, elementId, element } = crossPageDrag;
     
     if (sourcePageId === targetPageId) {
+      setCrossPageDrag(null);
+      return;
+    }
+
+    // Find target page
+    const targetPage = pages.find(p => p.id === targetPageId);
+    if (!targetPage) {
+      console.error('❌ [CrossPageDrop] Target page not found');
+      setCrossPageDrag(null);
+      return;
+    }
+
+    // Validate component type compatibility with target page type
+    const targetPageType = targetPage.pageType || 'pdf';
+    if (!canDropComponentOnPage(element.type, targetPageType)) {
+      // Silently ignore invalid drop - no harsh feedback
+      console.log(`ℹ️ [CrossPageDrop] Skipping ${element.type} on ${targetPageType} page (incompatible types)`);
       setCrossPageDrag(null);
       return;
     }
@@ -2227,6 +2423,43 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
               </IconButton>
             </Tooltip>
 
+            {/* Play/Edit Mode Toggle - Show only if worksheet has interactive components */}
+            {hasInteractiveComponents() && (
+              <>
+                <Box sx={{ width: 1, height: 32, background: alpha(theme.palette.divider, 0.2), mx: 1 }} />
+                
+                <Tooltip title="Play Mode (Test interactions in fullscreen)">
+                  <IconButton
+                    size="small"
+                    onClick={handlePlayModeClick}
+                    sx={{
+                      background: alpha(theme.palette.success.main, 0.1),
+                      color: theme.palette.success.main,
+                      border: '1.5px solid',
+                      borderColor: theme.palette.success.main,
+                      '&:hover': {
+                        background: alpha(theme.palette.success.main, 0.2),
+                      }
+                    }}
+                  >
+                    <Play size={18} fill="currentColor" />
+                  </IconButton>
+                </Tooltip>
+
+                <Chip
+                  label="▶ Play Interactive"
+                  size="small"
+                  color="success"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '0.7rem',
+                    height: 28,
+                    ml: 1,
+                  }}
+                />
+              </>
+            )}
+
             <Box sx={{ width: 1, height: 32, background: alpha(theme.palette.divider, 0.2), mx: 1 }} />
 
             <Tooltip title="Zoom In">
@@ -2411,10 +2644,12 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 width={page.width}
                 height={page.height}
                 background={page.background}
+                pageType={page.pageType}
                 elements={pageContent?.elements || []}
                 selectedElementId={selectedElementId}
                 clipboard={clipboard}
                 crossPageDrag={crossPageDrag}
+                isPlayMode={isPlayMode}
                 onElementSelect={handleElementSelect}
                 onElementAdd={(element, insertIndex) => handleElementAdd(page.id, element, insertIndex)}
                 onElementEdit={(elementId, properties) => handleElementEdit(page.id, elementId, properties)}
@@ -2441,7 +2676,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
           <Tooltip title="Add New Page">
             <IconButton
               size="large"
-              onClick={handleAddNewPage}
+              onClick={(e) => setAddPageMenuAnchor(e.currentTarget)}
               sx={{
                 width: 56,
                 height: 56,
@@ -2458,6 +2693,75 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
               <Plus size={24} />
             </IconButton>
           </Tooltip>
+          
+          {/* Add Page Type Menu */}
+          <Menu
+            anchorEl={addPageMenuAnchor}
+            open={Boolean(addPageMenuAnchor)}
+            onClose={() => setAddPageMenuAnchor(null)}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'left',
+            }}
+            transformOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            PaperProps={{
+              elevation: 8,
+              sx: {
+                minWidth: 200,
+                borderRadius: 2,
+              },
+            }}
+          >
+            <MenuItem
+              onClick={() => {
+                handleAddNewPage('pdf');
+                setAddPageMenuAnchor(null);
+              }}
+              sx={{
+                py: 1.5,
+                px: 2,
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
+              <ListItemIcon>
+                <FileText size={20} color={theme.palette.primary.main} />
+              </ListItemIcon>
+              <ListItemText
+                primary="PDF Page"
+                secondary="For printing"
+                primaryTypographyProps={{ fontWeight: 600 }}
+                secondaryTypographyProps={{ fontSize: '0.75rem' }}
+              />
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleAddNewPage('interactive');
+                setAddPageMenuAnchor(null);
+              }}
+              sx={{
+                py: 1.5,
+                px: 2,
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.success.main, 0.1),
+                },
+              }}
+            >
+              <ListItemIcon>
+                <Zap size={20} color={theme.palette.success.main} />
+              </ListItemIcon>
+              <ListItemText
+                primary="Interactive Page"
+                secondary="With games & activities"
+                primaryTypographyProps={{ fontWeight: 600 }}
+                secondaryTypographyProps={{ fontSize: '0.75rem' }}
+              />
+            </MenuItem>
+          </Menu>
         </Box>
 
         </Box>
@@ -2711,6 +3015,36 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
                 primaryTypographyProps={{ fontSize: '0.875rem' }}
               />
             </MenuItem>
+            
+            {/* Convert Page Type - only for pages (not elements) */}
+            {contextMenu?.pageId && !contextMenu?.elementId && (() => {
+              const page = pages.find(p => p.id === contextMenu.pageId);
+              const isInteractive = page?.pageType === 'interactive';
+              return (
+                <MenuItem 
+                  onClick={() => {
+                    if (page) {
+                      handlePageTypeChange(page.id, isInteractive ? 'pdf' : 'interactive');
+                      handleContextMenuClose();
+                    }
+                  }}
+                  sx={{ py: 0.75, px: 2 }}
+                >
+                  <ListItemIcon sx={{ minWidth: 32 }}>
+                    {isInteractive ? (
+                      <FileText size={16} color={theme.palette.primary.main} />
+                    ) : (
+                      <Zap size={16} color={theme.palette.success.main} />
+                    )}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={isInteractive ? "Конвертувати в PDF" : "Конвертувати в Interactive"}
+                    primaryTypographyProps={{ fontSize: '0.875rem' }}
+                  />
+                </MenuItem>
+              );
+            })()}
+            
             <Divider sx={{ my: 0.5 }} />
             <MenuItem 
               onClick={() => handleContextMenuAction('delete')}
@@ -2786,6 +3120,18 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Interactive Play Dialog */}
+      {playDialogPage && (
+        <InteractivePlayDialog
+          open={playDialogOpen}
+          onClose={() => setPlayDialogOpen(false)}
+          pageTitle={playDialogPage.title}
+          pageNumber={playDialogPage.pageNumber}
+          background={playDialogPage.background}
+          elements={pageContents.get(playDialogPage.id)?.elements || []}
+        />
+      )}
     </Box>
   );
 };

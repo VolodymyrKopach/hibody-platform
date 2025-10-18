@@ -18,6 +18,22 @@ import Divider from './atomic/Divider';
 import BulletList from './atomic/BulletList';
 import NumberedList from './atomic/NumberedList';
 import Table from './atomic/Table';
+// Interactive components
+import TapImage from './interactive/TapImage';
+import SimpleDragAndDrop from './interactive/SimpleDragAndDrop';
+import ColorMatcher from './interactive/ColorMatcher';
+import SimpleCounter from './interactive/SimpleCounter';
+import MemoryCards from './interactive/MemoryCards';
+import SortingGame from './interactive/SortingGame';
+import SequenceBuilder from './interactive/SequenceBuilder';
+import ShapeTracer from './interactive/ShapeTracer';
+import EmotionRecognizer from './interactive/EmotionRecognizer';
+import SoundMatcher from './interactive/SoundMatcher';
+import SimplePuzzle from './interactive/SimplePuzzle';
+import PatternBuilder from './interactive/PatternBuilder';
+import CauseEffectGame from './interactive/CauseEffectGame';
+import RewardCollector from './interactive/RewardCollector';
+import VoiceRecorder from './interactive/VoiceRecorder';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -61,6 +77,8 @@ interface CanvasPageProps {
     | { type: 'page'; page: any; pageContent: any; operation: 'copy' | 'cut' }
     | null;
   crossPageDrag?: { sourcePageId: string; elementId: string; element: CanvasElement } | null;
+  pageType?: 'pdf' | 'interactive'; // Type of page
+  isPlayMode?: boolean; // Whether in play/preview mode
   onElementSelect: (elementId: string | null) => void;
   onElementAdd: (element: Omit<CanvasElement, 'id' | 'zIndex'>, insertIndex?: number) => void;
   onElementEdit: (elementId: string, properties: any) => void;
@@ -84,6 +102,8 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   selectedElementId,
   clipboard,
   crossPageDrag,
+  pageType = 'pdf',
+  isPlayMode = false,
   onElementSelect,
   onElementAdd,
   onElementEdit,
@@ -98,10 +118,46 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   const theme = useTheme();
   const pageRef = useRef<HTMLDivElement>(null);
   const dragPreviewsRef = useRef<Set<HTMLElement>>(new Set());
+  
+  // Interactive page can scroll
+  const isInteractive = pageType === 'interactive';
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [crossPageDropIndex, setCrossPageDropIndex] = useState<number | null>(null);
+
+  // Component type definitions
+  const INTERACTIVE_COMPONENT_TYPES = [
+    'tap-image', 'simple-drag-drop', 'color-matcher', 'simple-counter', 
+    'memory-cards', 'sorting-game', 'sequence-builder', 'shape-tracer', 
+    'emotion-recognizer', 'sound-matcher', 'simple-puzzle', 'pattern-builder', 
+    'cause-effect', 'reward-collector', 'voice-recorder'
+  ];
+
+  const PDF_COMPONENT_TYPES = [
+    'title-block', 'body-text', 'instructions-box', 'fill-blank', 
+    'multiple-choice', 'tip-box', 'warning-box', 'image-placeholder', 
+    'bullet-list', 'numbered-list', 'true-false', 'short-answer', 
+    'table', 'divider'
+  ];
+
+  // Helper: Check if component can be dropped on this page
+  const canDropOnThisPage = (componentType: string): boolean => {
+    const isInteractiveComp = INTERACTIVE_COMPONENT_TYPES.includes(componentType);
+    const isPDFComp = PDF_COMPONENT_TYPES.includes(componentType);
+
+    // Interactive components only on interactive pages
+    if (isInteractiveComp && pageType !== 'interactive') {
+      return false;
+    }
+
+    // PDF components only on PDF pages
+    if (isPDFComp && pageType !== 'pdf') {
+      return false;
+    }
+
+    return true;
+  };
 
   // Helper: Validate drop index within bounds
   const validateDropIndex = (index: number, arrayLength: number): number => {
@@ -483,17 +539,41 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
+    let shouldShowDropTarget = false;
+    
     // Check if it's a cross-page drag from another page
     const isCrossPageDrag = e.dataTransfer.types.includes('cross-page-drag');
     if (isCrossPageDrag && crossPageDrag && crossPageDrag.sourcePageId !== pageId) {
-      setIsDropTarget(true);
+      // Check if element type is compatible with this page type
+      const canDrop = canDropOnThisPage(crossPageDrag.element.type);
+      if (canDrop) {
+        shouldShowDropTarget = true;
+      }
     }
     
     // Check if it's a sidebar component drag
     const isSidebarDrag = e.dataTransfer.types.includes('componenttype');
     if (isSidebarDrag) {
-      setIsDropTarget(true);
+      // Check component category from dataTransfer.types
+      const isInteractiveComp = e.dataTransfer.types.includes('component-category-interactive');
+      const isPDFComp = e.dataTransfer.types.includes('component-category-pdf');
+      
+      let canDrop = true;
+      
+      // Validate based on page type and component category
+      if (isInteractiveComp && pageType !== 'interactive') {
+        canDrop = false; // Interactive component on PDF page
+      } else if (isPDFComp && pageType !== 'pdf') {
+        canDrop = false; // PDF component on interactive page
+      }
+      
+      if (canDrop) {
+        shouldShowDropTarget = true;
+      }
     }
+    
+    // Only show drop target indicator if valid
+    setIsDropTarget(shouldShowDropTarget);
     
     onDragOver?.(e);
   };
@@ -516,20 +596,33 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
       ref={pageRef}
       data-page-id={pageId}
       data-page-number={pageNumber}
+      data-page-type={pageType}
       onDrop={handleDrop}
       onDragOver={handleDragOverPage}
       onDragLeave={handleDragLeave}
-      elevation={4}
+      elevation={isInteractive ? 2 : 4}
       sx={{
         position: 'relative',
-        width,
-        height,
+        width: width, // Use explicit width for both PDF and interactive pages
+        height: isInteractive ? height : height,
+        minHeight: isInteractive ? height : undefined,
+        maxHeight: isInteractive ? height : height,
         ...getBackgroundStyle(),
-        overflow: 'visible', // Content that doesn't fit will be visible outside page bounds
+        // No overflow on Paper - it's on content container below
+        overflow: 'visible',
+        // Different styling for interactive pages
+        ...(isInteractive && {
+          borderRadius: '16px',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.95)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
+          backdropFilter: 'blur(10px)',
+          border: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+          display: 'flex',
+          flexDirection: 'column',
+        }),
         // Ensure proper rendering for export
         WebkitFontSmoothing: 'antialiased',
         MozOsxFontSmoothing: 'grayscale',
-        // Cross-page drop target visual feedback
+        // Cross-page drop target visual feedback (valid drop only)
         ...(isDropTarget && {
           outline: `4px dashed ${theme.palette.success.main}`,
           outlineOffset: '-4px',
@@ -574,20 +667,38 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
       <Box
         data-page-header // For export filtering
         sx={{
-          position: 'absolute',
+          position: 'sticky',
           top: 0,
           left: 0,
           right: 0,
           p: 1,
-          background: alpha(theme.palette.grey[100], 0.8),
+          background: alpha(theme.palette.grey[100], 0.95),
+          backdropFilter: 'blur(8px)',
           borderBottom: `1px solid ${theme.palette.divider}`,
           fontSize: '0.75rem',
           color: 'text.secondary',
           fontWeight: 600,
-          zIndex: 1,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
         }}
       >
-        Page {pageNumber} - {title}
+        <span>Page {pageNumber}{title && title !== `Page ${pageNumber}` ? ` - ${title}` : ''}</span>
+        {pageType === 'interactive' && (
+          <span
+            style={{
+              fontSize: '10px',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              backgroundColor: '#10B981',
+              color: 'white',
+              fontWeight: 700,
+            }}
+          >
+            ⚡ Interactive
+          </span>
+        )}
       </Box>
 
       {/* Canvas Elements - Linear Layout */}
@@ -607,12 +718,33 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         }}
         sx={{ 
           width: '100%', 
-          height: '100%', 
+          flex: isInteractive ? 1 : 'none',
+          height: isInteractive ? 'auto' : '100%',
           pt: 5,
           px: 4, // Page padding
           display: 'flex',
           flexDirection: 'column',
           gap: 3, // Spacing between elements
+          // Scrollbar only for content on interactive pages
+          ...(isInteractive && {
+            overflowX: 'hidden',
+            overflowY: 'auto',
+            // Custom scrollbar styles
+            '&::-webkit-scrollbar': {
+              width: 14,
+            },
+            '&::-webkit-scrollbar-track': {
+              background: alpha(theme.palette.action.hover, 0.05),
+              borderRadius: '0 16px 16px 0',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: alpha(theme.palette.primary.main, 0.3),
+              borderRadius: 6,
+              '&:hover': {
+                background: alpha(theme.palette.primary.main, 0.6),
+              },
+            },
+          }),
         }}
       >
         {elements
@@ -989,6 +1121,221 @@ function renderElement(
           onFocus={() => onSelect(element.id)}
         />
       );
+    // Interactive components
+    case 'tap-image':
+      return (
+        <TapImage
+          imageUrl={element.properties.imageUrl || '/placeholder-image.png'}
+          soundEffect={element.properties.soundEffect}
+          customSound={element.properties.customSound}
+          caption={element.properties.caption}
+          size={element.properties.size || 'medium'}
+          animation={element.properties.animation || 'bounce'}
+          showHint={element.properties.showHint}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'simple-drag-drop':
+      return (
+        <SimpleDragAndDrop
+          items={element.properties.items || []}
+          targets={element.properties.targets || []}
+          layout={element.properties.layout || 'horizontal'}
+          difficulty={element.properties.difficulty || 'easy'}
+          snapDistance={element.properties.snapDistance || 80}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'color-matcher':
+      return (
+        <ColorMatcher
+          colors={element.properties.colors || []}
+          mode={element.properties.mode || 'single'}
+          showNames={element.properties.showNames ?? true}
+          autoVoice={element.properties.autoVoice ?? true}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'simple-counter':
+      return (
+        <SimpleCounter
+          objects={element.properties.objects || []}
+          voiceEnabled={element.properties.voiceEnabled ?? true}
+          celebrationAtEnd={element.properties.celebrationAtEnd ?? true}
+          showProgress={element.properties.showProgress ?? true}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'memory-cards':
+      return (
+        <MemoryCards
+          pairs={element.properties.pairs || []}
+          gridSize={element.properties.gridSize || '2x2'}
+          cardBackImage={element.properties.cardBackImage}
+          difficulty={element.properties.difficulty || 'easy'}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'sorting-game':
+      return (
+        <SortingGame
+          items={element.properties.items || []}
+          categories={element.properties.categories || []}
+          sortBy={element.properties.sortBy || 'type'}
+          layout={element.properties.layout || 'horizontal'}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'sequence-builder':
+      return (
+        <SequenceBuilder
+          steps={element.properties.steps || []}
+          showNumbers={element.properties.showNumbers ?? true}
+          difficulty={element.properties.difficulty || 'easy'}
+          instruction={element.properties.instruction}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'shape-tracer':
+      return (
+        <ShapeTracer
+          shapePath={element.properties.shapePath || 'M 50,50 L 150,50 L 150,150 L 50,150 Z'}
+          shapeName={element.properties.shapeName || 'Shape'}
+          difficulty={element.properties.difficulty || 'easy'}
+          strokeWidth={element.properties.strokeWidth || 8}
+          guideColor={element.properties.guideColor || '#3B82F6'}
+          traceColor={element.properties.traceColor || '#10B981'}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'emotion-recognizer':
+      return (
+        <EmotionRecognizer
+          emotions={element.properties.emotions || []}
+          mode={element.properties.mode || 'identify'}
+          showDescriptions={element.properties.showDescriptions ?? true}
+          voiceEnabled={element.properties.voiceEnabled ?? true}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'sound-matcher':
+      return (
+        <SoundMatcher
+          items={element.properties.items || []}
+          mode={element.properties.mode || 'identify'}
+          autoPlayFirst={element.properties.autoPlayFirst ?? true}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'simple-puzzle':
+      return (
+        <SimplePuzzle
+          imageUrl={element.properties.imageUrl || ''}
+          pieces={element.properties.pieces || 4}
+          difficulty={element.properties.difficulty || 'easy'}
+          showOutline={element.properties.showOutline ?? true}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'pattern-builder':
+      return (
+        <PatternBuilder
+          pattern={element.properties.pattern || []}
+          patternType={element.properties.patternType || 'color'}
+          difficulty={element.properties.difficulty || 'easy'}
+          repetitions={element.properties.repetitions || 2}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'cause-effect':
+      return (
+        <CauseEffectGame
+          pairs={element.properties.pairs || []}
+          showText={element.properties.showText ?? true}
+          voiceEnabled={element.properties.voiceEnabled ?? true}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'reward-collector':
+      return (
+        <RewardCollector
+          tasks={element.properties.tasks || []}
+          rewardTitle={element.properties.rewardTitle || 'Great Job!'}
+          rewardEmoji={element.properties.rewardEmoji || '🎁'}
+          starsPerTask={element.properties.starsPerTask || 1}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'voice-recorder':
+      return (
+        <VoiceRecorder
+          prompt={element.properties.prompt || 'Record your voice!'}
+          maxDuration={element.properties.maxDuration || 30}
+          showPlayback={element.properties.showPlayback ?? true}
+          autoPlay={element.properties.autoPlay ?? false}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
     default:
       return (
         <Box sx={{ p: 2, border: '2px dashed red', borderRadius: '8px' }}>
@@ -1132,6 +1479,200 @@ function getDefaultProperties(type: string) {
         cellPadding: 10,
         fontSize: 13,
         textAlign: 'left',
+      };
+    // Interactive components
+    case 'tap-image':
+      return {
+        imageUrl: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=400',
+        caption: 'Tap me!',
+        size: 'medium',
+        animation: 'bounce',
+        soundEffect: 'praise',
+        showHint: true,
+      };
+    case 'simple-drag-drop':
+      return {
+        items: [
+          {
+            id: 'item-1',
+            imageUrl: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=200',
+            correctTarget: 'target-1',
+            label: 'Cat',
+          },
+          {
+            id: 'item-2',
+            imageUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=200',
+            correctTarget: 'target-2',
+            label: 'Dog',
+          },
+        ],
+        targets: [
+          {
+            id: 'target-1',
+            label: 'Meow',
+            backgroundColor: '#FFF9E6',
+          },
+          {
+            id: 'target-2',
+            label: 'Woof',
+            backgroundColor: '#E6F4FF',
+          },
+        ],
+        layout: 'horizontal',
+        difficulty: 'easy',
+        snapDistance: 80,
+      };
+    case 'color-matcher':
+      return {
+        colors: [
+          { name: 'Red', hex: '#EF4444', voicePrompt: 'Find red!' },
+          { name: 'Blue', hex: '#3B82F6', voicePrompt: 'Find blue!' },
+          { name: 'Yellow', hex: '#FCD34D', voicePrompt: 'Find yellow!' },
+          { name: 'Green', hex: '#10B981', voicePrompt: 'Find green!' },
+        ],
+        mode: 'single',
+        showNames: true,
+        autoVoice: true,
+      };
+    case 'simple-counter':
+      return {
+        objects: [
+          {
+            imageUrl: 'https://images.pexels.com/photos/1661535/pexels-photo-1661535.jpeg?auto=compress&cs=tinysrgb&w=200',
+            count: 3,
+          },
+          {
+            imageUrl: 'https://images.pexels.com/photos/1770809/pexels-photo-1770809.jpeg?auto=compress&cs=tinysrgb&w=200',
+            count: 5,
+          },
+        ],
+        voiceEnabled: true,
+        celebrationAtEnd: true,
+        showProgress: true,
+      };
+    case 'memory-cards':
+      return {
+        pairs: [
+          { id: 'pair-1', imageUrl: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=200' },
+          { id: 'pair-2', imageUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=200' },
+          { id: 'pair-3', imageUrl: 'https://images.pexels.com/photos/1661535/pexels-photo-1661535.jpeg?auto=compress&cs=tinysrgb&w=200' },
+        ],
+        gridSize: '2x3',
+        difficulty: 'easy',
+      };
+    case 'sorting-game':
+      return {
+        items: [
+          { id: 'item-1', imageUrl: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=200', category: 'animals', label: 'Cat' },
+          { id: 'item-2', imageUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=200', category: 'animals', label: 'Dog' },
+          { id: 'item-3', imageUrl: 'https://images.pexels.com/photos/1661535/pexels-photo-1661535.jpeg?auto=compress&cs=tinysrgb&w=200', category: 'food', label: 'Apple' },
+          { id: 'item-4', imageUrl: 'https://images.pexels.com/photos/1770809/pexels-photo-1770809.jpeg?auto=compress&cs=tinysrgb&w=200', category: 'food', label: 'Banana' },
+        ],
+        categories: [
+          { id: 'animals', name: 'Animals', color: '#10B981', icon: '🐾' },
+          { id: 'food', name: 'Food', color: '#F59E0B', icon: '🍎' },
+        ],
+        sortBy: 'type',
+        layout: 'horizontal',
+      };
+    case 'sequence-builder':
+      return {
+        steps: [
+          { id: 'step-1', imageUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=200', order: 1, label: 'First' },
+          { id: 'step-2', imageUrl: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=200', order: 2, label: 'Second' },
+          { id: 'step-3', imageUrl: 'https://images.pexels.com/photos/1661535/pexels-photo-1661535.jpeg?auto=compress&cs=tinysrgb&w=200', order: 3, label: 'Third' },
+        ],
+        showNumbers: true,
+        difficulty: 'easy',
+        instruction: 'Put the pictures in the right order!',
+      };
+    case 'shape-tracer':
+      return {
+        shapePath: 'M 100,50 L 200,50 L 200,150 L 100,150 Z', // Square
+        shapeName: 'Square',
+        difficulty: 'easy',
+        strokeWidth: 8,
+        guideColor: '#3B82F6',
+        traceColor: '#10B981',
+      };
+    case 'emotion-recognizer':
+      return {
+        emotions: [
+          { id: 'happy', name: 'Happy', emoji: '😊', description: 'Smiling and joyful' },
+          { id: 'sad', name: 'Sad', emoji: '😢', description: 'Crying and upset' },
+          { id: 'angry', name: 'Angry', emoji: '😠', description: 'Mad and frustrated' },
+          { id: 'surprised', name: 'Surprised', emoji: '😲', description: 'Amazed and shocked' },
+        ],
+        mode: 'identify',
+        showDescriptions: true,
+        voiceEnabled: true,
+      };
+    case 'sound-matcher':
+      return {
+        items: [
+          { id: 'cat', imageUrl: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=200', soundText: 'Meow meow', label: 'Cat' },
+          { id: 'dog', imageUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=200', soundText: 'Woof woof', label: 'Dog' },
+          { id: 'bird', imageUrl: 'https://images.pexels.com/photos/349758/hummingbird-bird-birds-349758.jpeg?auto=compress&cs=tinysrgb&w=200', soundText: 'Tweet tweet', label: 'Bird' },
+        ],
+        mode: 'identify',
+        autoPlayFirst: true,
+      };
+    case 'simple-puzzle':
+      return {
+        imageUrl: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=400',
+        pieces: 4,
+        difficulty: 'easy',
+        showOutline: true,
+      };
+    case 'pattern-builder':
+      return {
+        pattern: [
+          { id: 'red', color: '#EF4444' },
+          { id: 'blue', color: '#3B82F6' },
+        ],
+        patternType: 'color',
+        difficulty: 'easy',
+        repetitions: 2,
+      };
+    case 'cause-effect':
+      return {
+        pairs: [
+          { 
+            id: 'rain-puddle', 
+            cause: { emoji: '🌧️', text: 'Rain' }, 
+            effect: { emoji: '💧', text: 'Puddles' } 
+          },
+          { 
+            id: 'sun-hot', 
+            cause: { emoji: '☀️', text: 'Sun' }, 
+            effect: { emoji: '🔥', text: 'Hot' } 
+          },
+          { 
+            id: 'sleep-energy', 
+            cause: { emoji: '😴', text: 'Sleep' }, 
+            effect: { emoji: '⚡', text: 'Energy' } 
+          },
+        ],
+        showText: true,
+        voiceEnabled: true,
+      };
+    case 'reward-collector':
+      return {
+        tasks: [
+          { id: 'task1', text: 'Say hello', emoji: '👋', completed: false },
+          { id: 'task2', text: 'Count to 5', emoji: '🔢', completed: false },
+          { id: 'task3', text: 'Name 3 colors', emoji: '🎨', completed: false },
+        ],
+        rewardTitle: 'Great Job!',
+        rewardEmoji: '🎁',
+        starsPerTask: 1,
+      };
+    case 'voice-recorder':
+      return {
+        prompt: 'Tell me about your day!',
+        maxDuration: 30,
+        showPlayback: true,
+        autoPlay: false,
       };
     default:
       return {};

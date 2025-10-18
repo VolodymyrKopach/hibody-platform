@@ -133,17 +133,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
 }) => {
   const theme = useTheme();
   const sidebarWidth = isOpen ? 320 : 72;
-  
-  // Логування onUpdate для відстеження
-  React.useEffect(() => {
-    if (selection?.type === 'element') {
-      console.log('🎯 [RightSidebar] Element selected:', {
-        elementType: (selection as any).elementData?.type,
-        currentText: (selection as any).elementData?.properties?.text,
-        textType: typeof (selection as any).elementData?.properties?.text
-      });
-    }
-  }, [selection]);
   const [customColor, setCustomColor] = useState('#FFFFFF');
   const [patternBgColor, setPatternBgColor] = useState('#FFFFFF');
   const [patternFgColor, setPatternFgColor] = useState('#E5E7EB');
@@ -4094,6 +4083,1461 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                     Double-click any cell to edit its content
                   </Typography>
                 </Stack>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'tap-image' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                ⚡ Tap Image Properties
+              </Typography>
+
+              {/* Image URL */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Image URL
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="https://example.com/image.jpg"
+                  value={elementData.properties?.imageUrl || ''}
+                  onChange={(e) => onUpdate?.({ imageUrl: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              <Divider />
+
+              {/* Caption */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Caption
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="Tap me!"
+                  value={elementData.properties?.caption || ''}
+                  onChange={(e) => onUpdate?.({ caption: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              <Divider />
+
+              {/* Size */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Image Size
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {[
+                    { label: 'Small', value: 'small' },
+                    { label: 'Medium', value: 'medium' },
+                    { label: 'Large', value: 'large' },
+                  ].map((size) => {
+                    const isActive = (elementData.properties?.size || 'medium') === size.value;
+                    return (
+                      <Box
+                        key={size.value}
+                        onClick={() => onUpdate?.({ size: size.value })}
+                        sx={{
+                          flex: 1,
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #8B5CF6' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#F5F3FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          textAlign: 'center',
+                          '&:hover': {
+                            borderColor: '#8B5CF6',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: '13px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#8B5CF6' : '#6B7280',
+                          }}
+                        >
+                          {size.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Animation */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Animation
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {[
+                    { label: 'Bounce', value: 'bounce', emoji: '⬆️' },
+                    { label: 'Scale', value: 'scale', emoji: '🔍' },
+                    { label: 'Shake', value: 'shake', emoji: '🤝' },
+                    { label: 'Spin', value: 'spin', emoji: '🔄' },
+                  ].map((animation) => {
+                    const isActive = (elementData.properties?.animation || 'bounce') === animation.value;
+                    return (
+                      <Box
+                        key={animation.value}
+                        onClick={() => onUpdate?.({ animation: animation.value })}
+                        sx={{
+                          flex: 1,
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #8B5CF6' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#F5F3FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          textAlign: 'center',
+                          '&:hover': {
+                            borderColor: '#8B5CF6',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Typography sx={{ fontSize: '16px', mb: 0.5 }}>{animation.emoji}</Typography>
+                        <Typography
+                          sx={{
+                            fontSize: '11px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#8B5CF6' : '#6B7280',
+                          }}
+                        >
+                          {animation.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Sound Effect */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Sound Effect
+                </Typography>
+                <Stack spacing={1}>
+                  {[
+                    { label: '🎉 Praise', value: 'praise' },
+                    { label: '🐾 Animal', value: 'animal' },
+                    { label: '⚡ Action', value: 'action' },
+                  ].map((sound) => {
+                    const isActive = (elementData.properties?.soundEffect || 'praise') === sound.value;
+                    return (
+                      <Box
+                        key={sound.value}
+                        onClick={() => onUpdate?.({ soundEffect: sound.value })}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #8B5CF6' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#F5F3FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: '#8B5CF6',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: '13px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#8B5CF6' : '#374151',
+                          }}
+                        >
+                          {sound.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Show Hint */}
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={elementData.properties?.showHint ?? true}
+                      onChange={(e) => onUpdate?.({ showHint: e.target.checked })}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#8B5CF6',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#8B5CF6',
+                        },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                      👆 Show hint (animated hand)
+                    </Typography>
+                  }
+                />
+              </Box>
+            </Stack>
+          ) : elementData.type === 'color-matcher' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                ⚡ Color Matcher Properties
+              </Typography>
+
+              {/* Mode */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Game Mode
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {[
+                    { label: 'Single', value: 'single', desc: 'Find one at a time' },
+                    { label: 'Multiple', value: 'multiple', desc: 'Tap all colors' },
+                  ].map((mode) => {
+                    const isActive = (elementData.properties?.mode || 'single') === mode.value;
+                    return (
+                      <Box
+                        key={mode.value}
+                        onClick={() => onUpdate?.({ mode: mode.value })}
+                        sx={{
+                          flex: 1,
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #F59E0B' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#FEF3C7' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: '#F59E0B',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: '13px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#F59E0B' : '#374151',
+                            mb: 0.5,
+                          }}
+                        >
+                          {mode.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: '10px',
+                            color: isActive ? '#D97706' : '#9CA3AF',
+                          }}
+                        >
+                          {mode.desc}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Show Names */}
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={elementData.properties?.showNames ?? true}
+                      onChange={(e) => onUpdate?.({ showNames: e.target.checked })}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#F59E0B',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#F59E0B',
+                        },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                      Show color names
+                    </Typography>
+                  }
+                />
+              </Box>
+
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={elementData.properties?.autoVoice ?? true}
+                      onChange={(e) => onUpdate?.({ autoVoice: e.target.checked })}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#F59E0B',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#F59E0B',
+                        },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                      🔊 Auto voice prompts
+                    </Typography>
+                  }
+                />
+              </Box>
+
+              <Divider />
+
+              {/* Colors List */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Colors ({(elementData.properties?.colors || []).length})
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'block', mb: 1.5 }}>
+                  Currently using default colors. Colors management coming soon.
+                </Typography>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'simple-counter' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                ⚡ Counter Properties
+              </Typography>
+
+              {/* Voice & Celebration */}
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={elementData.properties?.voiceEnabled ?? true}
+                      onChange={(e) => onUpdate?.({ voiceEnabled: e.target.checked })}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#10B981',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#10B981',
+                        },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                      🔊 Voice counting
+                    </Typography>
+                  }
+                />
+              </Box>
+
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={elementData.properties?.celebrationAtEnd ?? true}
+                      onChange={(e) => onUpdate?.({ celebrationAtEnd: e.target.checked })}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#10B981',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#10B981',
+                        },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                      🎉 Celebration at end
+                    </Typography>
+                  }
+                />
+              </Box>
+
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={elementData.properties?.showProgress ?? true}
+                      onChange={(e) => onUpdate?.({ showProgress: e.target.checked })}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#10B981',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#10B981',
+                        },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                      Show progress indicator
+                    </Typography>
+                  }
+                />
+              </Box>
+
+              <Divider />
+
+              {/* Objects */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Objects ({(elementData.properties?.objects || []).length})
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'block', mb: 1.5 }}>
+                  Currently using default objects. Objects management coming soon.
+                </Typography>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'simple-drag-drop' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                ⚡ Drag & Drop Properties
+              </Typography>
+
+              {/* Layout */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Layout
+                </Typography>
+                <Stack spacing={1}>
+                  {[
+                    { label: 'Horizontal', value: 'horizontal' },
+                    { label: 'Vertical', value: 'vertical' },
+                    { label: 'Grid', value: 'grid' },
+                  ].map((layout) => {
+                    const isActive = (elementData.properties?.layout || 'horizontal') === layout.value;
+                    return (
+                      <Box
+                        key={layout.value}
+                        onClick={() => onUpdate?.({ layout: layout.value })}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #EC4899' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#FCE7F3' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: '#EC4899',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: '13px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#EC4899' : '#374151',
+                          }}
+                        >
+                          {layout.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Difficulty */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Difficulty
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {[
+                    { label: 'Easy', value: 'easy', desc: 'With hints' },
+                    { label: 'Medium', value: 'medium', desc: 'No hints' },
+                  ].map((diff) => {
+                    const isActive = (elementData.properties?.difficulty || 'easy') === diff.value;
+                    return (
+                      <Box
+                        key={diff.value}
+                        onClick={() => onUpdate?.({ difficulty: diff.value })}
+                        sx={{
+                          flex: 1,
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #EC4899' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#FCE7F3' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: '#EC4899',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: '13px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#EC4899' : '#374151',
+                            mb: 0.5,
+                          }}
+                        >
+                          {diff.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: '10px',
+                            color: isActive ? '#DB2777' : '#9CA3AF',
+                          }}
+                        >
+                          {diff.desc}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Items */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Items ({(elementData.properties?.items || []).length}) & Targets ({(elementData.properties?.targets || []).length})
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'block' }}>
+                  Items management coming soon. Edit via AI Assistant for now.
+                </Typography>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'simple-puzzle' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                ⚡ Puzzle Properties
+              </Typography>
+
+              {/* Image URL */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Puzzle Image URL
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="https://example.com/image.jpg"
+                  value={elementData.properties?.imageUrl || ''}
+                  onChange={(e) => onUpdate?.({ imageUrl: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              <Divider />
+
+              {/* Pieces */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Number of Pieces
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {[
+                    { label: '4 pieces', value: 4 },
+                    { label: '9 pieces', value: 9 },
+                    { label: '16 pieces', value: 16 },
+                  ].map((option) => {
+                    const isActive = (elementData.properties?.pieces || 4) === option.value;
+                    return (
+                      <Box
+                        key={option.value}
+                        onClick={() => onUpdate?.({ pieces: option.value })}
+                        sx={{
+                          flex: 1,
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #EC4899' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#FCE7F3' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          textAlign: 'center',
+                          '&:hover': {
+                            borderColor: '#EC4899',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: '13px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#EC4899' : '#6B7280',
+                          }}
+                        >
+                          {option.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Difficulty */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                  Difficulty
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {[
+                    { label: 'Easy', value: 'easy' },
+                    { label: 'Hard', value: 'hard' },
+                  ].map((diff) => {
+                    const isActive = (elementData.properties?.difficulty || 'easy') === diff.value;
+                    return (
+                      <Box
+                        key={diff.value}
+                        onClick={() => onUpdate?.({ difficulty: diff.value })}
+                        sx={{
+                          flex: 1,
+                          p: 1.5,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #EC4899' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#FCE7F3' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          textAlign: 'center',
+                          '&:hover': {
+                            borderColor: '#EC4899',
+                            backgroundColor: '#F9FAFB',
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: '13px',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#EC4899' : '#6B7280',
+                          }}
+                        >
+                          {diff.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* Show Outline */}
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={elementData.properties?.showOutline ?? true}
+                      onChange={(e) => onUpdate?.({ showOutline: e.target.checked })}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#EC4899',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#EC4899',
+                        },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                      Show outline guide
+                    </Typography>
+                  }
+                />
+              </Box>
+            </Stack>
+          ) : elementData.type === 'voice-recorder' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                ⚡ Voice Recorder Properties
+              </Typography>
+
+              {/* Prompt */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Recording Prompt
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  placeholder="Tell me about your day!"
+                  value={elementData.properties?.prompt || ''}
+                  onChange={(e) => onUpdate?.({ prompt: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              <Divider />
+
+              {/* Max Duration */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Max Duration: {elementData.properties?.maxDuration || 30} seconds
+                </Typography>
+                <Slider
+                  value={elementData.properties?.maxDuration || 30}
+                  onChange={(_, value) => onUpdate?.({ maxDuration: value as number })}
+                  min={10}
+                  max={60}
+                  step={5}
+                  marks={[
+                    { value: 10, label: '10s' },
+                    { value: 30, label: '30s' },
+                    { value: 60, label: '60s' },
+                  ]}
+                  sx={{
+                    '& .MuiSlider-thumb': {
+                      width: 16,
+                      height: 16,
+                      color: '#EF4444',
+                    },
+                    '& .MuiSlider-track': {
+                      color: '#EF4444',
+                    },
+                    '& .MuiSlider-rail': {
+                      color: '#E5E7EB',
+                    },
+                  }}
+                />
+              </Box>
+
+              <Divider />
+
+              {/* Options */}
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={elementData.properties?.showPlayback ?? true}
+                      onChange={(e) => onUpdate?.({ showPlayback: e.target.checked })}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#EF4444',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#EF4444',
+                        },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                      🔊 Show playback button
+                    </Typography>
+                  }
+                />
+              </Box>
+
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={elementData.properties?.autoPlay ?? false}
+                      onChange={(e) => onUpdate?.({ autoPlay: e.target.checked })}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#EF4444',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#EF4444',
+                        },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                      ▶️ Auto-play after recording
+                    </Typography>
+                  }
+                />
+              </Box>
+            </Stack>
+          ) : elementData.type === 'reward-collector' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                ⚡ Star Rewards Properties
+              </Typography>
+
+              {/* Reward Title */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Reward Title
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="Great Job!"
+                  value={elementData.properties?.rewardTitle || ''}
+                  onChange={(e) => onUpdate?.({ rewardTitle: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              <Divider />
+
+              {/* Reward Emoji */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                  Reward Emoji
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="🎁"
+                  value={elementData.properties?.rewardEmoji || ''}
+                  onChange={(e) => onUpdate?.({ rewardEmoji: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '10px',
+                      fontSize: '1.5rem',
+                    },
+                  }}
+                  inputProps={{ maxLength: 2 }}
+                />
+              </Box>
+
+              <Divider />
+
+              {/* Stars Per Task */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Stars Per Task: {elementData.properties?.starsPerTask || 1} ⭐
+                </Typography>
+                <Slider
+                  value={elementData.properties?.starsPerTask || 1}
+                  onChange={(_, value) => onUpdate?.({ starsPerTask: value as number })}
+                  min={1}
+                  max={5}
+                  step={1}
+                  marks
+                  sx={{
+                    '& .MuiSlider-thumb': {
+                      width: 16,
+                      height: 16,
+                      color: '#FBBF24',
+                    },
+                    '& .MuiSlider-track': {
+                      color: '#FBBF24',
+                    },
+                  }}
+                />
+              </Box>
+
+              <Divider />
+
+              {/* Tasks */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  Tasks ({(elementData.properties?.tasks || []).length})
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'block' }}>
+                  Tasks management coming soon. Edit via AI Assistant for now.
+                </Typography>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'memory-cards' || elementData.type === 'sorting-game' || 
+               elementData.type === 'sequence-builder' || elementData.type === 'shape-tracer' || 
+               elementData.type === 'emotion-recognizer' || elementData.type === 'sound-matcher' || 
+               elementData.type === 'pattern-builder' || elementData.type === 'cause-effect' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                ⚡ {elementData.type.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} Properties
+              </Typography>
+
+              {/* Common difficulty setting for most interactive components */}
+              {(elementData.type === 'memory-cards' || elementData.type === 'sequence-builder' || 
+                elementData.type === 'shape-tracer' || elementData.type === 'pattern-builder') && (
+                <>
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                      Difficulty
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                      {[
+                        { label: 'Easy', value: 'easy' },
+                        { label: 'Medium', value: 'medium' },
+                        { label: 'Hard', value: 'hard' },
+                      ].map((diff) => {
+                        const isActive = (elementData.properties?.difficulty || 'easy') === diff.value;
+                        return (
+                          <Box
+                            key={diff.value}
+                            onClick={() => onUpdate?.({ difficulty: diff.value })}
+                            sx={{
+                              flex: 1,
+                              p: 1.5,
+                              borderRadius: '8px',
+                              border: isActive ? '2px solid #6366F1' : '1px solid #E5E7EB',
+                              backgroundColor: isActive ? '#EEF2FF' : '#FFFFFF',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              textAlign: 'center',
+                              '&:hover': {
+                                borderColor: '#6366F1',
+                                backgroundColor: '#F9FAFB',
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: '13px',
+                                fontWeight: isActive ? 600 : 500,
+                                color: isActive ? '#6366F1' : '#6B7280',
+                              }}
+                            >
+                              {diff.label}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                  <Divider />
+                </>
+              )}
+
+              {/* Memory Cards specific */}
+              {elementData.type === 'memory-cards' && (
+                <>
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                      Grid Size
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                      {[
+                        { label: '2×2', value: '2x2' },
+                        { label: '2×3', value: '2x3' },
+                        { label: '3×4', value: '3x4' },
+                      ].map((size) => {
+                        const isActive = (elementData.properties?.gridSize || '2x2') === size.value;
+                        return (
+                          <Box
+                            key={size.value}
+                            onClick={() => onUpdate?.({ gridSize: size.value })}
+                            sx={{
+                              flex: 1,
+                              p: 1.5,
+                              borderRadius: '8px',
+                              border: isActive ? '2px solid #6366F1' : '1px solid #E5E7EB',
+                              backgroundColor: isActive ? '#EEF2FF' : '#FFFFFF',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              textAlign: 'center',
+                              '&:hover': {
+                                borderColor: '#6366F1',
+                                backgroundColor: '#F9FAFB',
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: '13px',
+                                fontWeight: isActive ? 600 : 500,
+                                color: isActive ? '#6366F1' : '#6B7280',
+                              }}
+                            >
+                              {size.label}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                  <Divider />
+                </>
+              )}
+
+              {/* Sorting Game specific */}
+              {elementData.type === 'sorting-game' && (
+                <>
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                      Sort By
+                    </Typography>
+                    <Stack spacing={1}>
+                      {[
+                        { label: 'Type/Category', value: 'type' },
+                        { label: 'Size', value: 'size' },
+                        { label: 'Color', value: 'color' },
+                      ].map((sort) => {
+                        const isActive = (elementData.properties?.sortBy || 'type') === sort.value;
+                        return (
+                          <Box
+                            key={sort.value}
+                            onClick={() => onUpdate?.({ sortBy: sort.value })}
+                            sx={{
+                              p: 1.5,
+                              borderRadius: '8px',
+                              border: isActive ? '2px solid #14B8A6' : '1px solid #E5E7EB',
+                              backgroundColor: isActive ? '#CCFBF1' : '#FFFFFF',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                borderColor: '#14B8A6',
+                                backgroundColor: '#F9FAFB',
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: '13px',
+                                fontWeight: isActive ? 600 : 500,
+                                color: isActive ? '#14B8A6' : '#374151',
+                              }}
+                            >
+                              {sort.label}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                  <Divider />
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                      Layout
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                      {[
+                        { label: 'Horizontal', value: 'horizontal' },
+                        { label: 'Vertical', value: 'vertical' },
+                      ].map((layout) => {
+                        const isActive = (elementData.properties?.layout || 'horizontal') === layout.value;
+                        return (
+                          <Box
+                            key={layout.value}
+                            onClick={() => onUpdate?.({ layout: layout.value })}
+                            sx={{
+                              flex: 1,
+                              p: 1.5,
+                              borderRadius: '8px',
+                              border: isActive ? '2px solid #14B8A6' : '1px solid #E5E7EB',
+                              backgroundColor: isActive ? '#CCFBF1' : '#FFFFFF',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              textAlign: 'center',
+                              '&:hover': {
+                                borderColor: '#14B8A6',
+                                backgroundColor: '#F9FAFB',
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: '13px',
+                                fontWeight: isActive ? 600 : 500,
+                                color: isActive ? '#14B8A6' : '#6B7280',
+                              }}
+                            >
+                              {layout.label}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                  <Divider />
+                </>
+              )}
+
+              {/* Sequence Builder specific */}
+              {elementData.type === 'sequence-builder' && (
+                <>
+                  <Box>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={elementData.properties?.showNumbers ?? true}
+                          onChange={(e) => onUpdate?.({ showNumbers: e.target.checked })}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: '#A855F7',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              backgroundColor: '#A855F7',
+                            },
+                          }}
+                        />
+                      }
+                      label={
+                        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                          Show numbers
+                        </Typography>
+                      }
+                    />
+                  </Box>
+                  <Divider />
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                      Instruction
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      placeholder="Put the pictures in the right order!"
+                      value={elementData.properties?.instruction || ''}
+                      onChange={(e) => onUpdate?.({ instruction: e.target.value })}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '10px',
+                          fontSize: '0.875rem',
+                        },
+                      }}
+                    />
+                  </Box>
+                  <Divider />
+                </>
+              )}
+
+              {/* Emotion Recognizer / Sound Matcher - Mode */}
+              {(elementData.type === 'emotion-recognizer' || elementData.type === 'sound-matcher') && (
+                <>
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                      Mode
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                      {[
+                        { label: 'Identify', value: 'identify' },
+                        { label: 'Match', value: 'match' },
+                      ].map((mode) => {
+                        const isActive = (elementData.properties?.mode || 'identify') === mode.value;
+                        return (
+                          <Box
+                            key={mode.value}
+                            onClick={() => onUpdate?.({ mode: mode.value })}
+                            sx={{
+                              flex: 1,
+                              p: 1.5,
+                              borderRadius: '8px',
+                              border: isActive ? '2px solid #F97316' : '1px solid #E5E7EB',
+                              backgroundColor: isActive ? '#FFEDD5' : '#FFFFFF',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              textAlign: 'center',
+                              '&:hover': {
+                                borderColor: '#F97316',
+                                backgroundColor: '#F9FAFB',
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: '13px',
+                                fontWeight: isActive ? 600 : 500,
+                                color: isActive ? '#F97316' : '#6B7280',
+                              }}
+                            >
+                              {mode.label}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                  <Divider />
+                </>
+              )}
+
+              {/* Voice-enabled components */}
+              {(elementData.type === 'emotion-recognizer' || elementData.type === 'cause-effect') && (
+                <>
+                  <Box>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={elementData.properties?.voiceEnabled ?? true}
+                          onChange={(e) => onUpdate?.({ voiceEnabled: e.target.checked })}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: '#F97316',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              backgroundColor: '#F97316',
+                            },
+                          }}
+                        />
+                      }
+                      label={
+                        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                          🔊 Voice enabled
+                        </Typography>
+                      }
+                    />
+                  </Box>
+                  <Divider />
+                </>
+              )}
+
+              {/* Emotion Recognizer specific */}
+              {elementData.type === 'emotion-recognizer' && (
+                <>
+                  <Box>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={elementData.properties?.showDescriptions ?? true}
+                          onChange={(e) => onUpdate?.({ showDescriptions: e.target.checked })}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: '#F97316',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              backgroundColor: '#F97316',
+                            },
+                          }}
+                        />
+                      }
+                      label={
+                        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                          Show descriptions
+                        </Typography>
+                      }
+                    />
+                  </Box>
+                  <Divider />
+                </>
+              )}
+
+              {/* Sound Matcher specific */}
+              {elementData.type === 'sound-matcher' && (
+                <>
+                  <Box>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={elementData.properties?.autoPlayFirst ?? true}
+                          onChange={(e) => onUpdate?.({ autoPlayFirst: e.target.checked })}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: '#8B5CF6',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              backgroundColor: '#8B5CF6',
+                            },
+                          }}
+                        />
+                      }
+                      label={
+                        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                          ▶️ Auto-play first sound
+                        </Typography>
+                      }
+                    />
+                  </Box>
+                  <Divider />
+                </>
+              )}
+
+              {/* Cause Effect specific */}
+              {elementData.type === 'cause-effect' && (
+                <>
+                  <Box>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={elementData.properties?.showText ?? true}
+                          onChange={(e) => onUpdate?.({ showText: e.target.checked })}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: '#F59E0B',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              backgroundColor: '#F59E0B',
+                            },
+                          }}
+                        />
+                      }
+                      label={
+                        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
+                          Show text labels
+                        </Typography>
+                      }
+                    />
+                  </Box>
+                  <Divider />
+                </>
+              )}
+
+              {/* Pattern Builder specific */}
+              {elementData.type === 'pattern-builder' && (
+                <>
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
+                      Pattern Type
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                      {[
+                        { label: 'Color', value: 'color' },
+                        { label: 'Shape', value: 'shape' },
+                        { label: 'Size', value: 'size' },
+                      ].map((type) => {
+                        const isActive = (elementData.properties?.patternType || 'color') === type.value;
+                        return (
+                          <Box
+                            key={type.value}
+                            onClick={() => onUpdate?.({ patternType: type.value })}
+                            sx={{
+                              flex: 1,
+                              p: 1.5,
+                              borderRadius: '8px',
+                              border: isActive ? '2px solid #14B8A6' : '1px solid #E5E7EB',
+                              backgroundColor: isActive ? '#CCFBF1' : '#FFFFFF',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              textAlign: 'center',
+                              '&:hover': {
+                                borderColor: '#14B8A6',
+                                backgroundColor: '#F9FAFB',
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: '13px',
+                                fontWeight: isActive ? 600 : 500,
+                                color: isActive ? '#14B8A6' : '#6B7280',
+                              }}
+                            >
+                              {type.label}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                  <Divider />
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                      Repetitions: {elementData.properties?.repetitions || 2}
+                    </Typography>
+                    <Slider
+                      value={elementData.properties?.repetitions || 2}
+                      onChange={(_, value) => onUpdate?.({ repetitions: value as number })}
+                      min={2}
+                      max={5}
+                      step={1}
+                      marks
+                      sx={{
+                        '& .MuiSlider-thumb': {
+                          width: 16,
+                          height: 16,
+                          color: '#14B8A6',
+                        },
+                        '& .MuiSlider-track': {
+                          color: '#14B8A6',
+                        },
+                      }}
+                    />
+                  </Box>
+                  <Divider />
+                </>
+              )}
+
+              {/* Shape Tracer specific */}
+              {elementData.type === 'shape-tracer' && (
+                <>
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                      Shape Name
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      placeholder="Square"
+                      value={elementData.properties?.shapeName || ''}
+                      onChange={(e) => onUpdate?.({ shapeName: e.target.value })}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '10px',
+                          fontSize: '0.875rem',
+                        },
+                      }}
+                    />
+                  </Box>
+                  <Divider />
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                      Stroke Width: {elementData.properties?.strokeWidth || 8}px
+                    </Typography>
+                    <Slider
+                      value={elementData.properties?.strokeWidth || 8}
+                      onChange={(_, value) => onUpdate?.({ strokeWidth: value as number })}
+                      min={4}
+                      max={16}
+                      step={2}
+                      marks
+                      sx={{
+                        '& .MuiSlider-thumb': {
+                          width: 16,
+                          height: 16,
+                          color: '#EF4444',
+                        },
+                        '& .MuiSlider-track': {
+                          color: '#EF4444',
+                        },
+                      }}
+                    />
+                  </Box>
+                  <Divider />
+                </>
+              )}
+
+              {/* Data info for components with arrays */}
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+                  {elementData.type === 'memory-cards' && `Pairs: ${(elementData.properties?.pairs || []).length}`}
+                  {elementData.type === 'sorting-game' && `Items: ${(elementData.properties?.items || []).length}, Categories: ${(elementData.properties?.categories || []).length}`}
+                  {elementData.type === 'sequence-builder' && `Steps: ${(elementData.properties?.steps || []).length}`}
+                  {elementData.type === 'emotion-recognizer' && `Emotions: ${(elementData.properties?.emotions || []).length}`}
+                  {elementData.type === 'sound-matcher' && `Items: ${(elementData.properties?.items || []).length}`}
+                  {elementData.type === 'pattern-builder' && `Pattern items: ${(elementData.properties?.pattern || []).length}`}
+                  {elementData.type === 'cause-effect' && `Pairs: ${(elementData.properties?.pairs || []).length}`}
+                  {elementData.type === 'shape-tracer' && 'Shape path configured'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'block' }}>
+                  Content management coming soon. Edit via AI Assistant for now.
+                </Typography>
               </Box>
             </Stack>
           ) : (

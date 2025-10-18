@@ -35,6 +35,8 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import AgeGroupTooltip from './AgeGroupTooltip';
+import TopicSuggestions from './TopicSuggestions';
+import ModeSelectionCards from './generation/ModeSelectionCards';
 
 interface WorksheetParameters {
   topic: string;
@@ -44,8 +46,11 @@ interface WorksheetParameters {
   duration: string;
   purpose: string;
   additionalNotes: string;
-  language: string;              // NEW
-  includeImages: boolean;        // NEW
+  language: string;
+  includeImages: boolean;
+  contentMode?: 'pdf' | 'interactive';
+  componentSelectionMode?: 'auto' | 'manual';
+  selectedComponents?: string[];
 }
 
 interface Step1WorksheetParametersProps {
@@ -63,7 +68,7 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
 
   const [parameters, setParameters] = useState<WorksheetParameters>({
     topic: '',
-    level: '8-9', // Default to elementary age group
+    level: '2-3', // Default to youngest age group for new features
     focusAreas: ['grammar', 'vocabulary'],
     exerciseTypes: ['fill-blanks', 'multiple-choice'],
     duration: 'standard',
@@ -71,13 +76,18 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
     additionalNotes: '',
     language: 'en',
     includeImages: true,
+    contentMode: undefined,
+    componentSelectionMode: 'auto',
+    selectedComponents: [],
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [autoExerciseTypes, setAutoExerciseTypes] = useState(false); // NEW
+  const [autoExerciseTypes, setAutoExerciseTypes] = useState(false);
 
-  // Age groups
+  // Age groups - reordered to show youngest first
   const levels = [
+    { value: '2-3', label: '2-3 years', emoji: '👶', description: 'Малюки', ageRange: '2-3 years' },
+    { value: '4-6', label: '4-6 years', emoji: '🧒', description: 'Дошкільнята', ageRange: '4-6 years' },
     { value: '3-5', label: '3-5 years', emoji: '🎨', description: 'Дошкільний вік', ageRange: '3-5 years' },
     { value: '6-7', label: '6-7 years', emoji: '📚', description: '1-2 клас', ageRange: '6-7 years' },
     { value: '8-9', label: '8-9 years', emoji: '✏️', description: '3-4 клас', ageRange: '8-9 years' },
@@ -148,8 +158,20 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
   };
 
   const isValid = () => {
+    // Basic validation
+    const hasBasicInfo = parameters.topic.trim() !== '' && parameters.level !== '';
+    
+    // Mode must be selected
+    const hasModeSelected = !!parameters.contentMode;
+    
+    // Additional validation only after mode is selected
+    if (!hasModeSelected) {
+      return hasBasicInfo;
+    }
+    
     return (
-      parameters.topic.trim() !== '' &&
+      hasBasicInfo &&
+      hasModeSelected &&
       parameters.focusAreas.length > 0 &&
       (autoExerciseTypes || parameters.exerciseTypes.length > 0)
     );
@@ -195,7 +217,60 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
           }}
         >
           <Stack spacing={3}>
-            {/* 1. Topic - Prominent */}
+            {/* 1. Age Group - First Step */}
+            <Box>
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+                <Target size={18} color={theme.palette.primary.main} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Вікова група
+                </Typography>
+                <Typography variant="caption" color="error.main">*</Typography>
+              </Stack>
+              <Stack direction="row" flexWrap="wrap" gap={1}>
+                {levels.map((level) => (
+                  <AgeGroupTooltip
+                    key={level.value}
+                    ageGroup={level.value}
+                    duration={parameters.duration as 'quick' | 'standard' | 'extended'}
+                  >
+                    <Chip
+                      label={`${level.emoji} ${level.label}`}
+                      onClick={() => setParameters({ ...parameters, level: level.value, contentMode: undefined })}
+                      sx={{
+                        px: 1.5,
+                        py: 2.5,
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        borderRadius: '12px',
+                        background: parameters.level === level.value
+                          ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`
+                          : alpha(theme.palette.grey[400], 0.1),
+                        color: parameters.level === level.value ? 'white' : theme.palette.text.primary,
+                        border: 'none',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          background: parameters.level === level.value
+                            ? `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`
+                            : alpha(theme.palette.primary.main, 0.15),
+                          transform: 'translateY(-2px)',
+                        },
+                      }}
+                    />
+                  </AgeGroupTooltip>
+                ))}
+              </Stack>
+            </Box>
+
+            {/* Topic Suggestions - Show after age group selected */}
+            {parameters.level && (
+              <TopicSuggestions
+                ageGroup={parameters.level}
+                selectedTopic={parameters.topic}
+                onTopicSelect={(topic) => setParameters({ ...parameters, topic })}
+              />
+            )}
+
+            {/* 2. Topic - Prominent */}
             <Box>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
                 <BookOpen size={18} color={theme.palette.primary.main} />
@@ -225,49 +300,18 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
               />
             </Box>
 
-            {/* 2. Age Group - Compact Chips */}
-            <Box>
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-                <Target size={18} color={theme.palette.primary.main} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Вікова група
-                </Typography>
-              </Stack>
-              <Stack direction="row" flexWrap="wrap" gap={1}>
-                {levels.map((level) => (
-                  <AgeGroupTooltip
-                    key={level.value}
-                    ageGroup={level.value}
-                    duration={parameters.duration as 'quick' | 'standard' | 'extended'}
-                  >
-                    <Chip
-                      label={`${level.emoji} ${level.label}`}
-                      onClick={() => setParameters({ ...parameters, level: level.value })}
-                      sx={{
-                        px: 1.5,
-                        py: 2.5,
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        borderRadius: '12px',
-                        background: parameters.level === level.value
-                          ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`
-                          : alpha(theme.palette.grey[400], 0.1),
-                        color: parameters.level === level.value ? 'white' : theme.palette.text.primary,
-                        border: 'none',
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          background: parameters.level === level.value
-                            ? `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`
-                            : alpha(theme.palette.primary.main, 0.15),
-                          transform: 'translateY(-2px)',
-                        },
-                      }}
-                    />
-                  </AgeGroupTooltip>
-                ))}
-              </Stack>
-            </Box>
+            {/* Mode Selection - Show after topic is filled */}
+            {parameters.topic.trim() && parameters.level && (
+              <ModeSelectionCards
+                ageGroup={parameters.level}
+                selectedMode={parameters.contentMode}
+                onModeSelect={(mode) => setParameters({ ...parameters, contentMode: mode })}
+              />
+            )}
 
+            {/* Show rest of form only after mode is selected */}
+            {parameters.contentMode && (
+              <>
             {/* 3. Focus Areas - With Smart Defaults */}
             <Box>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
@@ -386,6 +430,8 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
                 </Stack>
               )}
             </Box>
+              </>
+            )}
 
             {/* Advanced Options - Collapsible */}
             <Box>

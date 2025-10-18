@@ -12,6 +12,8 @@ import {
   InputAdornment,
   IconButton,
   Tooltip,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   Search,
@@ -30,6 +32,21 @@ import {
   ListOrdered,
   Table as TableIcon,
   ChevronLeft,
+  Zap,
+  Hand,
+  Move,
+  Palette,
+  Hash,
+  Brain,
+  FolderTree,
+  ArrowRightLeft,
+  PenTool,
+  Smile,
+  Music,
+  Puzzle,
+  Grid3x3,
+  Award,
+  Mic,
 } from 'lucide-react';
 
 interface LeftSidebarProps {
@@ -45,9 +62,10 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
 }) => {
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'pdf' | 'interactive'>('pdf');
 
-  // Components Library Data - IDs match CanvasElement types
-  const componentCategories = [
+  // PDF Components
+  const pdfComponentCategories = [
     {
       name: 'Text & Structure',
       items: [
@@ -173,7 +191,131 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
     },
   ];
 
+  // Interactive Components
+  const interactiveComponentCategories = [
+    {
+      name: 'Interactive Games',
+      items: [
+        { 
+          id: 'tap-image', 
+          name: 'Tap Image', 
+          icon: Hand, 
+          color: '#8B5CF6',
+          description: 'Interactive image with sounds' 
+        },
+        { 
+          id: 'simple-drag-drop', 
+          name: 'Drag & Drop', 
+          icon: Move, 
+          color: '#EC4899',
+          description: 'Drag items to matching targets' 
+        },
+        { 
+          id: 'color-matcher', 
+          name: 'Color Match', 
+          icon: Palette, 
+          color: '#F59E0B',
+          description: 'Learn colors with voice' 
+        },
+        { 
+          id: 'simple-counter', 
+          name: 'Counter', 
+          icon: Hash, 
+          color: '#10B981',
+          description: 'Count objects with voice' 
+        },
+        { 
+          id: 'memory-cards', 
+          name: 'Memory Game', 
+          icon: Brain, 
+          color: '#6366F1',
+          description: 'Match pairs memory game' 
+        },
+        { 
+          id: 'sorting-game', 
+          name: 'Sorting', 
+          icon: FolderTree, 
+          color: '#14B8A6',
+          description: 'Sort by color/type/size' 
+        },
+        { 
+          id: 'sequence-builder', 
+          name: 'Sequence', 
+          icon: ArrowRightLeft, 
+          color: '#A855F7',
+          description: 'Put steps in order' 
+        },
+        { 
+          id: 'shape-tracer', 
+          name: 'Trace Shape', 
+          icon: PenTool, 
+          color: '#EF4444',
+          description: 'Trace shapes with finger' 
+        },
+        { 
+          id: 'emotion-recognizer', 
+          name: 'Emotions', 
+          icon: Smile, 
+          color: '#F97316',
+          description: 'Recognize feelings' 
+        },
+        { 
+          id: 'sound-matcher', 
+          name: 'Sounds', 
+          icon: Music, 
+          color: '#8B5CF6',
+          description: 'Match sounds to pictures' 
+        },
+        { 
+          id: 'simple-puzzle', 
+          name: 'Puzzle', 
+          icon: Puzzle, 
+          color: '#EC4899',
+          description: 'Complete picture puzzles' 
+        },
+        { 
+          id: 'pattern-builder', 
+          name: 'Patterns', 
+          icon: Grid3x3, 
+          color: '#14B8A6',
+          description: 'Complete repeating patterns' 
+        },
+        { 
+          id: 'cause-effect', 
+          name: 'Cause & Effect', 
+          icon: Zap, 
+          color: '#F59E0B',
+          description: 'Match causes to effects' 
+        },
+        { 
+          id: 'reward-collector', 
+          name: 'Star Rewards', 
+          icon: Award, 
+          color: '#FBBF24',
+          description: 'Collect stars for tasks' 
+        },
+        { 
+          id: 'voice-recorder', 
+          name: 'Voice Recorder', 
+          icon: Mic, 
+          color: '#EF4444',
+          description: 'Record and play voice' 
+        },
+      ],
+    },
+  ];
+
+  // Get current component categories based on active tab
+  const componentCategories = activeTab === 'pdf' 
+    ? pdfComponentCategories 
+    : interactiveComponentCategories;
+
   const sidebarWidth = isOpen ? 280 : 72;
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: 'pdf' | 'interactive') => {
+    setActiveTab(newValue);
+    setSearchQuery(''); // Reset search when switching tabs
+  };
 
   return (
     <Paper
@@ -231,6 +373,50 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </IconButton>
           </Tooltip>
         </Box>
+
+        {/* Tabs - Only show when expanded */}
+        {isOpen && (
+          <Box sx={{ px: 2, pb: 1, borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              variant="fullWidth"
+              sx={{
+                minHeight: 40,
+                '& .MuiTab-root': {
+                  minHeight: 40,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  py: 1,
+                },
+                '& .MuiTabs-indicator': {
+                  height: 3,
+                  borderRadius: '3px 3px 0 0',
+                },
+              }}
+            >
+              <Tab 
+                value="pdf" 
+                label="📄 PDF" 
+                sx={{
+                  '&.Mui-selected': {
+                    color: 'primary.main',
+                  },
+                }}
+              />
+              <Tab 
+                value="interactive" 
+                label="⚡ Interactive" 
+                sx={{
+                  '&.Mui-selected': {
+                    color: 'success.main',
+                  },
+                }}
+              />
+            </Tabs>
+          </Box>
+        )}
 
       {/* Content */}
       <Box sx={{ flex: 1, overflow: 'auto', p: isOpen ? 2 : 1 }}>
@@ -300,6 +486,8 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                           draggable
                           onDragStart={(e) => {
                             e.dataTransfer.setData('componentType', item.id);
+                            // Add component category for validation
+                            e.dataTransfer.setData('component-category-interactive', 'true');
                             e.dataTransfer.effectAllowed = 'copy';
                             onComponentDragStart?.(item.id);
                           }}
@@ -386,6 +574,11 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.setData('componentType', item.id);
+                        // Add component category for validation - dynamically based on activeTab
+                        e.dataTransfer.setData(
+                          activeTab === 'pdf' ? 'component-category-pdf' : 'component-category-interactive',
+                          'true'
+                        );
                         e.dataTransfer.effectAllowed = 'copy';
                         onComponentDragStart?.(item.id);
                       }}

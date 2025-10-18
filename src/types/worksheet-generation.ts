@@ -52,6 +52,9 @@ export interface WorksheetGenerationRequest {
   includeImages?: boolean; // Whether to include images
   additionalInstructions?: string; // Custom instructions from user
   duration?: string; // Lesson duration (affects content amount, not page count)
+  contentMode?: 'pdf' | 'interactive'; // PDF for print or interactive for online
+  componentSelectionMode?: 'auto' | 'manual'; // AI chooses or user selects components
+  selectedComponents?: string[]; // Manually selected component types (if manual mode)
 }
 
 /**
@@ -140,6 +143,36 @@ export interface ParsedPage {
   pageId: string;
   background?: PageBackgroundConfig;
   elements: CanvasElement[]; // Full elements with id, zIndex, etc.
+  pageType?: 'pdf' | 'interactive'; // PDF = fixed A4, Interactive = scrollable
+}
+
+/**
+ * Interactive page configuration
+ */
+export interface InteractivePage extends ParsedPage {
+  pageType: 'interactive';
+  allowScroll: boolean;
+  maxHeight?: number; // If not set, unlimited scroll
+}
+
+/**
+ * Base interface for interactive components
+ */
+export interface InteractiveComponentBase {
+  type: string;
+  soundEffects?: string[]; // Sound effect IDs
+  animations?: AnimationConfig[];
+  hapticFeedback?: boolean;
+}
+
+/**
+ * Animation configuration for interactive components
+ */
+export interface AnimationConfig {
+  trigger: 'tap' | 'correct' | 'incorrect' | 'complete';
+  type: 'bounce' | 'scale' | 'shake' | 'spin' | 'confetti' | 'pulse';
+  duration?: number; // milliseconds
+  intensity?: 'low' | 'medium' | 'high';
 }
 
 /**
