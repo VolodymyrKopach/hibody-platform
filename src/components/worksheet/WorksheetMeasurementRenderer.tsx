@@ -27,6 +27,7 @@ import FillInBlank from './canvas/atomic/FillInBlank';
 import MultipleChoice from './canvas/atomic/MultipleChoice';
 import TrueFalse from './canvas/atomic/TrueFalse';
 import ShortAnswer from './canvas/atomic/ShortAnswer';
+import MatchPairs from './canvas/atomic/MatchPairs';
 import TipBox from './canvas/atomic/TipBox';
 import WarningBox from './canvas/atomic/WarningBox';
 import ImagePlaceholder from './canvas/atomic/ImagePlaceholder';
@@ -245,6 +246,16 @@ function renderElement(element: CanvasElement) {
         <ShortAnswer
           items={element.properties.items || []}
           lineCount={element.properties.lineCount}
+          isSelected={false}
+          onEdit={noop}
+          onFocus={noop}
+        />
+      );
+
+    case 'match-pairs':
+      return (
+        <MatchPairs
+          items={element.properties.items || []}
           isSelected={false}
           onEdit={noop}
           onFocus={noop}

@@ -60,8 +60,12 @@ import {
 import { RichTextEditor } from './shared/RichTextEditor';
 import { WorksheetEdit, WorksheetEditContext } from '@/types/worksheet-generation';
 import AIAssistantPanel from './ai/AIAssistantPanel';
-import PropertiesPanel from '../properties/PropertiesPanel';
-import { isInteractiveComponent } from '@/constants/interactive-properties-schema';
+import ManualPropertyEditor from '../properties/ManualPropertyEditor';
+import AIPropertyEditor from '../properties/AIPropertyEditor';
+import { 
+  isInteractiveComponent,
+  getComponentPropertySchema,
+} from '@/constants/interactive-properties-schema';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -1646,16 +1650,30 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             {mainTab === 'properties' ? (
               <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
 
-          {/* Check if interactive component - use Properties Panel */}
-          {isInteractiveComponent(elementData.type) && aiContext ? (
-            <PropertiesPanel
-              element={elementData}
-              pageId={pageData.id}
-              context={aiContext}
-              onPropertiesChange={(elementId, newProperties) => {
-                onUpdate?.(newProperties);
-              }}
-            />
+          {/* Check if interactive component - use Manual Property Editor */}
+          {isInteractiveComponent(elementData.type) ? (
+            (() => {
+              const schema = getComponentPropertySchema(elementData.type);
+              return schema ? (
+                <ManualPropertyEditor
+                  schema={schema}
+                  properties={elementData.properties}
+                  onChange={(newProperties) => {
+                    onUpdate?.(newProperties);
+                  }}
+                />
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography sx={{ fontSize: '2rem', mb: 1 }}>🚧</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                    Properties Coming Soon
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Properties for <strong>{elementData.type}</strong> will be available soon
+                  </Typography>
+                </Box>
+              );
+            })()
           ) : elementData.type === 'title-block' ? (
             <Stack spacing={2.5}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
@@ -2925,6 +2943,129 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                           <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', mt: 0.5, display: 'block' }}>
                             Select number of writing lines for this question
                           </Typography>
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
+          ) : elementData.type === 'match-pairs' ? (
+            <Stack spacing={2.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Match Pairs Properties
+              </Typography>
+
+              <Typography variant="caption" color="text.secondary">
+                💡 Tip: Double-click items to edit left and right columns inline
+              </Typography>
+
+              {/* Pairs */}
+              <Box>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
+                    Pairs ({elementData.properties?.items?.length || 0})
+                  </Typography>
+                  <Button
+                    size="small"
+                    startIcon={<Plus size={12} />}
+                    onClick={() => {
+                      const items = elementData.properties?.items || [];
+                      const newItem = {
+                        number: items.length + 1,
+                        left: 'Left item',
+                        right: 'Right match',
+                      };
+                      onUpdate?.({ items: [...items, newItem] });
+                    }}
+                    sx={{ fontSize: '11px', textTransform: 'none' }}
+                  >
+                    Add Pair
+                  </Button>
+                </Stack>
+
+                <Stack spacing={2}>
+                  {(elementData.properties?.items || []).map((item: any, itemIndex: number) => (
+                    <Paper
+                      key={itemIndex}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        borderRadius: '10px',
+                        border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                        background: alpha(theme.palette.grey[50], 0.5),
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                          <Chip
+                            label={`#${item.number}`}
+                            size="small"
+                            sx={{ fontWeight: 600, fontSize: '11px' }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items
+                                .filter((_: any, idx: number) => idx !== itemIndex)
+                                .map((it: any, idx: number) => ({ ...it, number: idx + 1 }));
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            sx={{ p: 0.5 }}
+                          >
+                            <Trash2 size={14} color="#EF4444" />
+                          </IconButton>
+                        </Stack>
+
+                        <Box>
+                          <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                            Left Column
+                          </Typography>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            value={item.left || ''}
+                            onChange={(e) => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items.map((it: any, idx: number) =>
+                                idx === itemIndex ? { ...it, left: e.target.value } : it
+                              );
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            placeholder="Enter left item"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                              },
+                            }}
+                          />
+                        </Box>
+
+                        <Box>
+                          <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
+                            Right Column
+                          </Typography>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            value={item.right || ''}
+                            onChange={(e) => {
+                              const items = elementData.properties?.items || [];
+                              const updatedItems = items.map((it: any, idx: number) =>
+                                idx === itemIndex ? { ...it, right: e.target.value } : it
+                              );
+                              onUpdate?.({ items: updatedItems });
+                            }}
+                            placeholder="Enter right match"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                              },
+                            }}
+                          />
                         </Box>
                       </Stack>
                     </Paper>
@@ -5565,18 +5706,47 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
 
           </Box>
         ) : (
-          <Box sx={{ flex: 1, p: 2, overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            {/* AI Assistant Panel */}
-            {aiContext && onAIEdit ? (
-              <AIAssistantPanel
-                selection={selection}
-                context={aiContext}
-                onEdit={onAIEdit}
-                editHistory={editHistory}
-                isEditing={isAIEditing}
-                error={editError}
-                onClearError={onClearEditError}
-              />
+          <Box sx={{ flex: 1, p: 2, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {/* AI Assistant Panel - Use AIPropertyEditor for interactive components */}
+            {aiContext ? (
+              isInteractiveComponent(elementData.type) ? (
+                (() => {
+                  const schema = getComponentPropertySchema(elementData.type);
+                  return schema ? (
+                    <AIPropertyEditor
+                      element={elementData}
+                      pageId={pageData.id}
+                      schema={schema}
+                      context={aiContext}
+                      onPropertiesChange={(newProperties) => {
+                        onUpdate?.(newProperties);
+                      }}
+                    />
+                  ) : (
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        AI editing schema not available for this component.
+                      </Typography>
+                    </Box>
+                  );
+                })()
+              ) : onAIEdit ? (
+                <AIAssistantPanel
+                  selection={selection}
+                  context={aiContext}
+                  onEdit={onAIEdit}
+                  editHistory={editHistory}
+                  isEditing={isAIEditing}
+                  error={editError}
+                  onClearError={onClearEditError}
+                />
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    AI Assistant не налаштований для цього типу елементів.
+                  </Typography>
+                </Box>
+              )
             ) : (
               <Box sx={{ textAlign: 'center', py: 4 }}>
                 <Typography variant="body2" color="text.secondary">

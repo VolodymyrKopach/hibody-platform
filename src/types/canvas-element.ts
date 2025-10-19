@@ -2,7 +2,38 @@
 
 export interface CanvasElement {
   id: string;
-  type: 'title-block' | 'body-text' | 'instructions-box' | 'fill-blank' | 'multiple-choice' | 'tip-box' | 'warning-box' | 'image-placeholder' | 'bullet-list' | 'numbered-list' | 'true-false' | 'short-answer' | 'table' | 'divider';
+  type: 
+    | 'title-block' 
+    | 'body-text' 
+    | 'instructions-box' 
+    | 'fill-blank' 
+    | 'multiple-choice' 
+    | 'tip-box' 
+    | 'warning-box' 
+    | 'image-placeholder' 
+    | 'bullet-list' 
+    | 'numbered-list' 
+    | 'true-false' 
+    | 'short-answer' 
+    | 'match-pairs'
+    | 'table' 
+    | 'divider'
+    // Interactive components
+    | 'tap-image'
+    | 'simple-drag-drop'
+    | 'color-matcher'
+    | 'simple-counter'
+    | 'memory-cards'
+    | 'sorting-game'
+    | 'sequence-builder'
+    | 'shape-tracer'
+    | 'emotion-recognizer'
+    | 'sound-matcher'
+    | 'simple-puzzle'
+    | 'pattern-builder'
+    | 'cause-effect'
+    | 'reward-collector'
+    | 'voice-recorder';
   position: {
     x: number;
     y: number;

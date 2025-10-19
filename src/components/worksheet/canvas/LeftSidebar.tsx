@@ -137,6 +137,13 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           color: '#0EA5E9',
           description: 'Written response' 
         },
+        { 
+          id: 'match-pairs', 
+          name: 'Match Pairs', 
+          icon: ArrowRightLeft, 
+          color: '#8B5CF6',
+          description: 'Match items' 
+        },
       ],
     },
     {

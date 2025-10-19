@@ -11,6 +11,7 @@ import FillInBlank from './atomic/FillInBlank';
 import MultipleChoice from './atomic/MultipleChoice';
 import TrueFalse from './atomic/TrueFalse';
 import ShortAnswer from './atomic/ShortAnswer';
+import MatchPairs from './atomic/MatchPairs';
 import TipBox from './atomic/TipBox';
 import WarningBox from './atomic/WarningBox';
 import ImagePlaceholder from './atomic/ImagePlaceholder';
@@ -1027,6 +1028,17 @@ function renderElement(
           onFocus={() => onSelect(element.id)}
         />
       );
+    case 'match-pairs':
+      return (
+        <MatchPairs
+          items={element.properties.items || []}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
     case 'tip-box':
       return (
         <TipBox
@@ -1437,6 +1449,26 @@ function getDefaultProperties(type: string) {
             number: 2,
             question: 'Describe your favorite book in a few sentences.',
             lines: 3,
+          },
+        ],
+      };
+    case 'match-pairs':
+      return {
+        items: [
+          {
+            number: 1,
+            left: 'Apple',
+            right: 'Fruit',
+          },
+          {
+            number: 2,
+            left: 'Carrot',
+            right: 'Vegetable',
+          },
+          {
+            number: 3,
+            left: 'Dog',
+            right: 'Animal',
           },
         ],
       };
