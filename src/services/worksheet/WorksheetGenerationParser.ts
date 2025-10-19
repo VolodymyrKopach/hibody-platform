@@ -58,6 +58,8 @@ export class WorksheetGenerationParser {
       pageId: this.generatePageId(pageIndex),
       background: page.background,
       elements: parsedElements,
+      pageType: page.pageType || 'pdf', // ✅ Copy pageType from GeneratedPage
+      ageGroup: page.ageGroup, // ✅ Copy ageGroup for age-appropriate styling
     };
 
     console.log(`✅ [PARSER] Page ${page.pageNumber} parsed:`, {

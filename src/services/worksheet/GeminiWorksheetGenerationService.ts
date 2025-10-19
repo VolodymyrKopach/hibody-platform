@@ -73,7 +73,8 @@ export class GeminiWorksheetGenerationService {
       // Set age range for proper component sizing
       this.paginationService.setAgeRange(request.ageGroup);
       // Set content mode for page type (pdf or interactive)
-      this.paginationService.setContentMode(request.contentMode || 'pdf');
+      const contentMode = request.contentMode || 'pdf';
+      this.paginationService.setContentMode(contentMode);
       const paginationResult = this.paginationService.paginateContent(
         allElements
         // No title passed - pages will be named "Page 1", "Page 2", etc.

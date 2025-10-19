@@ -17,8 +17,8 @@ const ModeSelectionCards: React.FC<ModeSelectionCardsProps> = ({
 }) => {
   const theme = useTheme();
 
-  // Interactive mode only available for 2-3 years for now
-  const isInteractiveAvailable = ageGroup === '2-3';
+  // Interactive mode available for younger age groups (2-6 years)
+  const isInteractiveAvailable = ['2-3', '3-5', '4-6'].includes(ageGroup);
 
   const modes = [
     {

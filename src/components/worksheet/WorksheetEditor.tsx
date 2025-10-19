@@ -70,7 +70,7 @@ const WorksheetEditor: React.FC = () => {
         duration: params.duration || 'standard', // Duration affects content amount, not page count
         includeImages: params.includeImages !== false,
         additionalInstructions: params.additionalNotes || '',
-        contentMode: params.contentMode,
+        contentMode: params.contentMode || 'pdf', // ✅ Ensure contentMode is always set
       };
 
       console.log('📡 Sending request to API:', requestBody);

@@ -283,18 +283,26 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   // Update pages and contents when generatedWorksheet changes
   useEffect(() => {
     if (generatedWorksheet && generatedWorksheet.pages.length > 0) {
-      const newPages = generatedWorksheet.pages.map((page, index) => ({
-        id: page.pageId,
-        title: page.title,
-        pageNumber: page.pageNumber,
-        x: 100,
-        y: 100 + (A4_HEIGHT + PAGE_GAP) * index,
-        width: A4_WIDTH,
-        height: A4_HEIGHT,
-        content: [`worksheet-page-${page.pageNumber}`],
-        thumbnail: '📄',
-        background: page.background || { type: 'solid' as const, color: '#FFFFFF' },
-      }));
+      const newPages = generatedWorksheet.pages.map((page, index) => {
+        // Determine page type and dimensions
+        const isInteractive = page.pageType === 'interactive';
+        const pageWidth = isInteractive ? INTERACTIVE_WIDTH : A4_WIDTH;
+        const pageHeight = isInteractive ? INTERACTIVE_MIN_HEIGHT : A4_HEIGHT;
+        
+        return {
+          id: page.pageId,
+          title: page.title,
+          pageNumber: page.pageNumber,
+          x: 100,
+          y: 100 + (pageHeight + PAGE_GAP) * index,
+          width: pageWidth,
+          height: pageHeight,
+          content: [`worksheet-page-${page.pageNumber}`],
+          thumbnail: isInteractive ? '⚡' : '📄',
+          background: page.background || { type: 'solid' as const, color: '#FFFFFF' },
+          pageType: page.pageType || 'pdf',
+        };
+      });
 
       const newPageContents = new Map<string, PageContent>();
       generatedWorksheet.pages.forEach(page => {
@@ -1531,7 +1539,14 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     return 'medium';
   };
 
-  const handleAddNewPage = (pageType: 'pdf' | 'interactive' = 'pdf') => {
+  const handleAddNewPage = (pageType?: 'pdf' | 'interactive') => {
+    // Determine default page type from parameters or last page
+    const defaultPageType = 
+      pageType || 
+      parameters?.contentMode || 
+      (pages.length > 0 ? pages[pages.length - 1].pageType : undefined) || 
+      'pdf';
+    
     const newPageNumber = pages.length + 1;
     const newPageId = `page-${Date.now()}-${Math.random()}`;
     
@@ -1540,8 +1555,8 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     const newY = lastPage ? lastPage.y + lastPage.height + PAGE_GAP : 100;
     
     // Use different dimensions for interactive pages
-    const pageWidth = pageType === 'interactive' ? INTERACTIVE_WIDTH : A4_WIDTH;
-    const pageHeight = pageType === 'interactive' ? INTERACTIVE_MIN_HEIGHT : A4_HEIGHT;
+    const pageWidth = defaultPageType === 'interactive' ? INTERACTIVE_WIDTH : A4_WIDTH;
+    const pageHeight = defaultPageType === 'interactive' ? INTERACTIVE_MIN_HEIGHT : A4_HEIGHT;
     
     const newPage: WorksheetPage = {
       id: newPageId,
@@ -1552,13 +1567,13 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
       width: pageWidth,
       height: pageHeight,
       content: [`worksheet-page-${newPageNumber}`],
-      thumbnail: pageType === 'interactive' ? '⚡' : '📄',
+      thumbnail: defaultPageType === 'interactive' ? '⚡' : '📄',
       background: {
         type: 'solid',
         color: '#FFFFFF',
         opacity: 100,
       },
-      pageType,
+      pageType: defaultPageType,
     };
     
     // Add page to pages array

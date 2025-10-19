@@ -75,7 +75,7 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
     additionalNotes: '',
     language: 'en',
     includeImages: true,
-    contentMode: undefined,
+    contentMode: 'pdf', // ✅ Default to PDF mode
     componentSelectionMode: 'auto',
     selectedComponents: [],
   });
