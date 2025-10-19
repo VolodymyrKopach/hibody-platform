@@ -18,6 +18,7 @@ export class WorksheetComponentSchemaService {
       this.getMultipleChoiceSchema(),
       this.getTrueFalseSchema(),
       this.getShortAnswerSchema(),
+      this.getMatchPairsSchema(),
       this.getTipBoxSchema(),
       this.getWarningBoxSchema(),
       this.getImagePlaceholderSchema(),
@@ -25,6 +26,22 @@ export class WorksheetComponentSchemaService {
       this.getBulletListSchema(),
       this.getNumberedListSchema(),
       this.getTableSchema(),
+      // Interactive components
+      this.getTapImageSchema(),
+      this.getSimpleDragDropSchema(),
+      this.getColorMatcherSchema(),
+      this.getSimpleCounterSchema(),
+      this.getMemoryCardsSchema(),
+      this.getSortingGameSchema(),
+      this.getSequenceBuilderSchema(),
+      this.getShapeTracerSchema(),
+      this.getEmotionRecognizerSchema(),
+      this.getSoundMatcherSchema(),
+      this.getSimplePuzzleSchema(),
+      this.getPatternBuilderSchema(),
+      this.getCauseEffectSchema(),
+      this.getRewardCollectorSchema(),
+      this.getVoiceRecorderSchema(),
     ];
   }
 
@@ -860,6 +877,235 @@ export class WorksheetComponentSchemaService {
           },
         },
       ],
+    };
+  }
+
+  private getMatchPairsSchema(): ComponentSchema {
+    return {
+      id: 'match-pairs',
+      name: 'Match Pairs',
+      description: 'Matching exercise with two columns to connect',
+      category: 'exercise',
+      useCases: [
+        'Vocabulary matching',
+        'Concept pairing',
+        'Translation exercises',
+        'Association activities',
+      ],
+      properties: {
+        items: {
+          type: 'array',
+          required: true,
+          arrayItemType: 'object',
+          description: 'Pairs to match',
+          examples: [
+            [
+              { number: 1, left: 'Apple', right: 'Fruit' },
+              { number: 2, left: 'Carrot', right: 'Vegetable' },
+            ],
+          ],
+        },
+      },
+      examples: [
+        {
+          description: 'Animals and sounds',
+          ageGroup: '6-7',
+          properties: {
+            items: [
+              { number: 1, left: 'Dog', right: 'Woof!' },
+              { number: 2, left: 'Cat', right: 'Meow!' },
+              { number: 3, left: 'Cow', right: 'Moo!' },
+            ],
+          },
+        },
+      ],
+    };
+  }
+
+  // Interactive Components
+  private getTapImageSchema(): ComponentSchema {
+    return {
+      id: 'tap-image',
+      name: 'Tap Image',
+      description: 'Interactive image that responds to taps',
+      category: 'media',
+      useCases: ['Interactive exploration', 'Discovery activities', 'Recognition games'],
+      properties: {
+        imageUrl: { type: 'string', required: true, description: 'Image URL' },
+        targetObjects: { type: 'array', required: false, description: 'Objects to tap', arrayItemType: 'object' },
+      },
+      examples: [{ description: 'Tap the cat', ageGroup: '3-5', properties: { imageUrl: '', targetObjects: [] } }],
+    };
+  }
+
+  private getSimpleDragDropSchema(): ComponentSchema {
+    return {
+      id: 'simple-drag-drop',
+      name: 'Simple Drag & Drop',
+      description: 'Drag items to correct positions',
+      category: 'exercise',
+      useCases: ['Sorting', 'Categorization', 'Ordering'],
+      properties: {
+        items: { type: 'array', required: true, description: 'Items to drag', arrayItemType: 'object' },
+        zones: { type: 'array', required: true, description: 'Drop zones', arrayItemType: 'object' },
+      },
+      examples: [{ description: 'Sort items', ageGroup: '6-7', properties: { items: [], zones: [] } }],
+    };
+  }
+
+  private getColorMatcherSchema(): ComponentSchema {
+    return {
+      id: 'color-matcher',
+      name: 'Color Matcher',
+      description: 'Match colors or color names',
+      category: 'exercise',
+      useCases: ['Color recognition', 'Learning colors'],
+      properties: { colors: { type: 'array', required: true, description: 'Colors', arrayItemType: 'string' } },
+      examples: [{ description: 'Match colors', ageGroup: '3-5', properties: { colors: [] } }],
+    };
+  }
+
+  private getSimpleCounterSchema(): ComponentSchema {
+    return {
+      id: 'simple-counter',
+      name: 'Simple Counter',
+      description: 'Count objects interactively',
+      category: 'exercise',
+      useCases: ['Counting practice', 'Number recognition'],
+      properties: { maxCount: { type: 'number', required: true, description: 'Max count' } },
+      examples: [{ description: 'Count to 10', ageGroup: '3-5', properties: { maxCount: 10 } }],
+    };
+  }
+
+  private getMemoryCardsSchema(): ComponentSchema {
+    return {
+      id: 'memory-cards',
+      name: 'Memory Cards',
+      description: 'Memory matching game',
+      category: 'exercise',
+      useCases: ['Memory games', 'Vocabulary practice'],
+      properties: { pairs: { type: 'array', required: true, description: 'Card pairs', arrayItemType: 'object' } },
+      examples: [{ description: 'Match pairs', ageGroup: '6-7', properties: { pairs: [] } }],
+    };
+  }
+
+  private getSortingGameSchema(): ComponentSchema {
+    return {
+      id: 'sorting-game',
+      name: 'Sorting Game',
+      description: 'Sort items into categories',
+      category: 'exercise',
+      useCases: ['Classification', 'Categorization'],
+      properties: { categories: { type: 'array', required: true, description: 'Categories', arrayItemType: 'object' } },
+      examples: [{ description: 'Sort items', ageGroup: '6-7', properties: { categories: [] } }],
+    };
+  }
+
+  private getSequenceBuilderSchema(): ComponentSchema {
+    return {
+      id: 'sequence-builder',
+      name: 'Sequence Builder',
+      description: 'Build sequences in correct order',
+      category: 'exercise',
+      useCases: ['Ordering', 'Story sequencing'],
+      properties: { steps: { type: 'array', required: true, description: 'Sequence steps', arrayItemType: 'object' } },
+      examples: [{ description: 'Order steps', ageGroup: '8-9', properties: { steps: [] } }],
+    };
+  }
+
+  private getShapeTracerSchema(): ComponentSchema {
+    return {
+      id: 'shape-tracer',
+      name: 'Shape Tracer',
+      description: 'Trace shapes with finger/mouse',
+      category: 'exercise',
+      useCases: ['Fine motor skills', 'Shape recognition'],
+      properties: { shape: { type: 'string', required: true, description: 'Shape to trace' } },
+      examples: [{ description: 'Trace circle', ageGroup: '3-5', properties: { shape: 'circle' } }],
+    };
+  }
+
+  private getEmotionRecognizerSchema(): ComponentSchema {
+    return {
+      id: 'emotion-recognizer',
+      name: 'Emotion Recognizer',
+      description: 'Identify emotions',
+      category: 'exercise',
+      useCases: ['Emotional intelligence', 'Facial expressions'],
+      properties: { emotions: { type: 'array', required: true, description: 'Emotions', arrayItemType: 'string' } },
+      examples: [{ description: 'Find happy face', ageGroup: '3-5', properties: { emotions: [] } }],
+    };
+  }
+
+  private getSoundMatcherSchema(): ComponentSchema {
+    return {
+      id: 'sound-matcher',
+      name: 'Sound Matcher',
+      description: 'Match sounds to objects',
+      category: 'exercise',
+      useCases: ['Audio recognition', 'Sound association'],
+      properties: { sounds: { type: 'array', required: true, description: 'Sounds', arrayItemType: 'object' } },
+      examples: [{ description: 'Match animal sounds', ageGroup: '3-5', properties: { sounds: [] } }],
+    };
+  }
+
+  private getSimplePuzzleSchema(): ComponentSchema {
+    return {
+      id: 'simple-puzzle',
+      name: 'Simple Puzzle',
+      description: 'Simple jigsaw puzzle',
+      category: 'exercise',
+      useCases: ['Problem solving', 'Spatial reasoning'],
+      properties: { pieces: { type: 'number', required: true, description: 'Number of pieces' } },
+      examples: [{ description: '4-piece puzzle', ageGroup: '3-5', properties: { pieces: 4 } }],
+    };
+  }
+
+  private getPatternBuilderSchema(): ComponentSchema {
+    return {
+      id: 'pattern-builder',
+      name: 'Pattern Builder',
+      description: 'Build patterns with shapes/colors',
+      category: 'exercise',
+      useCases: ['Pattern recognition', 'Logic'],
+      properties: { pattern: { type: 'array', required: true, description: 'Pattern', arrayItemType: 'string' } },
+      examples: [{ description: 'Continue pattern', ageGroup: '6-7', properties: { pattern: [] } }],
+    };
+  }
+
+  private getCauseEffectSchema(): ComponentSchema {
+    return {
+      id: 'cause-effect',
+      name: 'Cause & Effect',
+      description: 'Match causes with effects',
+      category: 'exercise',
+      useCases: ['Logical thinking', 'Reasoning'],
+      properties: { pairs: { type: 'array', required: true, description: 'Cause-effect pairs', arrayItemType: 'object' } },
+      examples: [{ description: 'Match cause to effect', ageGroup: '8-9', properties: { pairs: [] } }],
+    };
+  }
+
+  private getRewardCollectorSchema(): ComponentSchema {
+    return {
+      id: 'reward-collector',
+      name: 'Reward Collector',
+      description: 'Collect rewards/stars for progress',
+      category: 'layout',
+      useCases: ['Motivation', 'Progress tracking'],
+      properties: { rewards: { type: 'number', required: false, description: 'Number of rewards', default: 3 } },
+      examples: [{ description: 'Collect 3 stars', ageGroup: '3-5', properties: { rewards: 3 } }],
+    };
+  }
+
+  private getVoiceRecorderSchema(): ComponentSchema {
+    return {
+      id: 'voice-recorder',
+      name: 'Voice Recorder',
+      description: 'Record voice responses',
+      category: 'exercise',
+      useCases: ['Speaking practice', 'Pronunciation'],
+      properties: { maxDuration: { type: 'number', required: false, description: 'Max duration in seconds', default: 30 } },
+      examples: [{ description: 'Record your answer', ageGroup: '8-9', properties: { maxDuration: 30 } }],
     };
   }
 }
