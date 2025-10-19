@@ -19,6 +19,7 @@ import {
   Backdrop,
 } from '@mui/material';
 import { X, Sparkles } from 'lucide-react';
+import MarkdownRenderer from '@/components/markdown/MarkdownRenderer';
 import Step1WorksheetParameters from './Step1WorksheetParameters';
 import Step3CanvasEditor from './Step3CanvasEditor';
 import { ParsedWorksheet } from '@/types/worksheet-generation';
@@ -238,9 +239,42 @@ const WorksheetEditor: React.FC = () => {
                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
                       ✨ AI is Creating Your Worksheet
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                      Generating content about "{parameters?.topic}"...
-                    </Typography>
+                    <Box 
+                      sx={{ 
+                        mb: 3,
+                        maxHeight: '240px', // ~10 lines at 24px line height
+                        overflowY: 'auto',
+                        px: 2,
+                        py: 1,
+                        backgroundColor: alpha(theme.palette.grey[100], 0.5),
+                        borderRadius: 2,
+                        border: `1px solid ${theme.palette.divider}`,
+                        textAlign: 'left',
+                        '& .chat-message': {
+                          fontSize: '0.875rem',
+                          '& p': {
+                            margin: '4px 0',
+                            fontSize: '0.875rem',
+                            lineHeight: 1.5,
+                          },
+                          '& strong': {
+                            fontWeight: 600,
+                            fontSize: '0.875rem',
+                          },
+                          '& ul, & ol': {
+                            margin: '4px 0',
+                            paddingLeft: '20px',
+                            fontSize: '0.875rem',
+                          },
+                          '& li': {
+                            margin: '2px 0',
+                            fontSize: '0.875rem',
+                          },
+                        },
+                      }}
+                    >
+                      <MarkdownRenderer content={parameters?.topic || ''} />
+                    </Box>
                     
                     {/* Progress Bar */}
                     <Box sx={{ width: '100%', maxWidth: 400, mx: 'auto', mb: 2 }}>

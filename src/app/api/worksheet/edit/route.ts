@@ -10,6 +10,7 @@ import {
   type ImageGenerationRequest,
   type ImageGenerationResult
 } from '@/services/worksheet/ImageGenerationHelper';
+import { InteractiveImageExtractor } from '@/services/worksheet/InteractiveImageExtractor';
 import { createClient } from '@/lib/supabase/server';
 
 /**
@@ -17,10 +18,13 @@ import { createClient } from '@/lib/supabase/server';
  */
 function collectImageRequests(patch: any, targetType: 'component' | 'page'): ImageGenerationRequest[] {
   const requests: ImageGenerationRequest[] = [];
+  const interactiveExtractor = new InteractiveImageExtractor();
 
   if (targetType === 'component') {
     // Single component edit
     const properties = patch.properties;
+    
+    // Check for image-placeholder with imagePrompt
     if (properties?.imagePrompt && !properties.url) {
       requests.push({
         id: 'component',
@@ -29,11 +33,33 @@ function collectImageRequests(patch: any, targetType: 'component' | 'page'): Ima
         height: properties.height || 512,
       });
     }
+    
+    // Check for interactive component with nested imagePrompts
+    // Note: For single component edits, we create a temporary element structure
+    if (patch.type && interactiveExtractor.isInteractiveComponent(patch.type)) {
+      const tempElement: CanvasElement = {
+        id: 'temp',
+        type: patch.type,
+        properties: patch.properties || {},
+        zIndex: 0,
+      };
+      
+      const interactiveRequests = interactiveExtractor.extractFromElement(tempElement, 0, 0);
+      interactiveRequests.forEach(req => {
+        requests.push({
+          id: req.id,
+          prompt: req.prompt,
+          width: req.width,
+          height: req.height,
+        });
+      });
+    }
   } else if (targetType === 'page') {
     // Page edit - check all elements
     const elements = patch.elements as CanvasElement[] | undefined;
     if (elements && Array.isArray(elements)) {
       elements.forEach((element, index) => {
+        // 1. Check image-placeholder components
         if (element.type === 'image-placeholder' && 
             element.properties?.imagePrompt && 
             !element.properties.url) {
@@ -42,6 +68,19 @@ function collectImageRequests(patch: any, targetType: 'component' | 'page'): Ima
             prompt: element.properties.imagePrompt,
             width: element.properties.width || 512,
             height: element.properties.height || 512,
+          });
+        }
+        
+        // 2. Check interactive components
+        if (interactiveExtractor.isInteractiveComponent(element.type)) {
+          const interactiveRequests = interactiveExtractor.extractFromElement(element, 0, index);
+          interactiveRequests.forEach(req => {
+            requests.push({
+              id: req.id,
+              prompt: req.prompt,
+              width: req.width,
+              height: req.height,
+            });
           });
         }
       });
@@ -64,44 +103,86 @@ function applyGeneratedImages(
   }
 
   const updatedPatch = { ...patch };
+  const interactiveExtractor = new InteractiveImageExtractor();
 
   if (targetType === 'component') {
-    // Single component - apply first result
-    const result = results[0];
-    if (result.success && result.image) {
-      updatedPatch.properties = {
-        ...updatedPatch.properties,
-        url: `data:image/png;base64,${result.image}`,
+    // Build image map for interactive components
+    const imageMap = new Map<string, string>();
+    let hasImagePlaceholder = false;
+    
+    results.forEach(result => {
+      if (result.success && result.image) {
+        const imageUrl = `data:image/png;base64,${result.image}`;
+        if (result.id === 'component') {
+          hasImagePlaceholder = true;
+          updatedPatch.properties = {
+            ...updatedPatch.properties,
+            url: imageUrl,
+          };
+          console.log('✅ Image generated for image-placeholder component');
+        } else {
+          // Interactive component image
+          imageMap.set(result.id!, imageUrl);
+        }
+      } else {
+        console.warn('⚠️ Image generation failed for component:', result.error);
+      }
+    });
+    
+    // Apply interactive images if any
+    if (imageMap.size > 0 && patch.type && interactiveExtractor.isInteractiveComponent(patch.type)) {
+      const tempElement: CanvasElement = {
+        id: 'temp',
+        type: patch.type,
+        properties: updatedPatch.properties || {},
+        zIndex: 0,
       };
-      console.log('✅ Image generated for component');
-    } else {
-      console.warn('⚠️ Image generation failed for component:', result.error);
+      
+      const updatedElement = interactiveExtractor.applyGeneratedImages(tempElement, imageMap);
+      updatedPatch.properties = updatedElement.properties;
+      console.log(`✅ Applied ${imageMap.size} images to interactive component`);
     }
   } else if (targetType === 'page') {
     // Page edit - map results back to elements
     const elements = [...(updatedPatch.elements || [])];
+    const imageMap = new Map<string, string>();
     
     results.forEach(result => {
       if (result.id && result.success && result.image) {
-        // Extract element index from ID: "element-{index}-{elementId}"
+        const imageUrl = `data:image/png;base64,${result.image}`;
+        
+        // Check if this is an image-placeholder element
         const match = result.id.match(/^element-(\d+)-/);
         if (match) {
           const index = parseInt(match[1], 10);
-          if (elements[index]) {
+          if (elements[index] && elements[index].type === 'image-placeholder') {
             elements[index] = {
               ...elements[index],
               properties: {
                 ...elements[index].properties,
-                url: `data:image/png;base64,${result.image}`,
+                url: imageUrl,
               },
             };
-            console.log(`✅ Image generated for element ${index}`);
+            console.log(`✅ Image generated for image-placeholder element ${index}`);
           }
+        } else {
+          // Interactive component image - store for batch application
+          imageMap.set(result.id, imageUrl);
         }
       } else if (result.id) {
         console.warn(`⚠️ Image generation failed for ${result.id}:`, result.error);
       }
     });
+    
+    // Apply interactive images
+    if (imageMap.size > 0) {
+      elements.forEach((element, index) => {
+        if (interactiveExtractor.isInteractiveComponent(element.type)) {
+          elements[index] = interactiveExtractor.applyGeneratedImages(element, imageMap);
+        }
+      });
+      console.log(`✅ Applied ${imageMap.size} images to interactive components`);
+    }
 
     updatedPatch.elements = elements;
   }

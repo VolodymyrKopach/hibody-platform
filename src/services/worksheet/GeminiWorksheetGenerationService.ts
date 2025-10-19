@@ -129,7 +129,7 @@ export class GeminiWorksheetGenerationService {
         useCases: ['Animal sounds', 'Object recognition', 'Cause-effect learning'],
         ageGroups: ['2-3', '4-6'],
         properties: {
-          imageUrl: { required: true, description: 'URL of the image or imagePrompt for generation' },
+          imagePrompt: { required: true, description: 'Detailed prompt for AI image generation. Be descriptive and child-friendly (e.g., "friendly cartoon cat with orange fur, big eyes, sitting and smiling, educational illustration for children aged 4-6")' },
           caption: { required: true, description: 'Simple text caption (1-3 words for 2-3 years)' },
           size: { required: false, default: 'medium', enum: ['small', 'medium', 'large'], description: 'Image size' },
           animation: { required: false, default: 'bounce', enum: ['bounce', 'scale', 'shake', 'spin'], description: 'Animation on tap' },
@@ -138,7 +138,7 @@ export class GeminiWorksheetGenerationService {
         },
         examples: [{
           properties: {
-            imageUrl: 'https://example.com/cat.jpg',
+            imagePrompt: 'friendly cartoon cat with orange fur and big eyes, sitting and smiling, bright colors, educational illustration for children aged 4-6',
             caption: 'Tap the cat!',
             size: 'large',
             animation: 'bounce',
@@ -157,15 +157,15 @@ export class GeminiWorksheetGenerationService {
         properties: {
           items: { 
             required: true, 
-            description: 'Array of draggable items with imageUrl, correctTarget, and optional label',
+            description: 'Array of draggable items with imagePrompt (AI generation), correctTarget, and optional label',
             examples: [[
-              { id: 'item-1', imageUrl: 'cat.jpg', correctTarget: 'target-1', label: 'Cat' },
-              { id: 'item-2', imageUrl: 'dog.jpg', correctTarget: 'target-2', label: 'Dog' }
+              { id: 'item-1', imagePrompt: 'cute cartoon cat with orange fur, simple friendly design for children aged 4-6', correctTarget: 'target-1', label: 'Cat' },
+              { id: 'item-2', imagePrompt: 'friendly cartoon dog with brown fur and wagging tail, simple design for kids aged 4-6', correctTarget: 'target-2', label: 'Dog' }
             ]]
           },
           targets: { 
             required: true, 
-            description: 'Array of drop targets with id, label, optional imageUrl and backgroundColor',
+            description: 'Array of drop targets with id, label, optional imagePrompt and backgroundColor',
             examples: [[
               { id: 'target-1', label: 'Meow', backgroundColor: '#FFF9E6' },
               { id: 'target-2', label: 'Woof', backgroundColor: '#E6F4FF' }
@@ -206,10 +206,10 @@ export class GeminiWorksheetGenerationService {
         properties: {
           objects: {
             required: true,
-            description: 'Array of counting objects with imageUrl and target count',
+            description: 'Array of counting objects with imagePrompt (AI generation) and target count',
             examples: [[
-              { imageUrl: 'apple.jpg', count: 3 },
-              { imageUrl: 'ball.jpg', count: 5 }
+              { imagePrompt: 'red apple fruit with green leaf, simple cartoon style for children aged 4-6', count: 3 },
+              { imagePrompt: 'colorful bouncing ball with stripes, bright colors, simple design for kids aged 4-6', count: 5 }
             ]]
           },
           voiceEnabled: { required: false, default: true, description: 'Enable voice counting' },
@@ -227,11 +227,11 @@ export class GeminiWorksheetGenerationService {
         properties: {
           pairs: {
             required: true,
-            description: 'Array of image pairs. Each pair object has id and imageUrl',
+            description: 'Array of image pairs. Each pair object has id and imagePrompt (AI generation)',
             examples: [[
-              { id: 'pair-1', imageUrl: 'cat.jpg' },
-              { id: 'pair-2', imageUrl: 'dog.jpg' },
-              { id: 'pair-3', imageUrl: 'bird.jpg' }
+              { id: 'pair-1', imagePrompt: 'friendly cartoon cat with whiskers, simple colorful design for children aged 4-6' },
+              { id: 'pair-2', imagePrompt: 'happy cartoon dog with floppy ears, bright colors, simple design for kids aged 4-6' },
+              { id: 'pair-3', imagePrompt: 'cute cartoon bird with colorful feathers, simple friendly style for children aged 4-6' }
             ]]
           },
           gridSize: { required: false, default: '2x3', enum: ['2x2', '2x3', '3x3', '3x4'], description: 'Grid layout for cards' },
@@ -249,10 +249,10 @@ export class GeminiWorksheetGenerationService {
         properties: {
           items: {
             required: true,
-            description: 'Array of items to sort with id, imageUrl, category, and optional emoji',
+            description: 'Array of items to sort with id, imagePrompt (AI generation), category, and optional emoji',
             examples: [[
-              { id: 'item-1', imageUrl: 'apple.jpg', category: 'fruit', emoji: '🍎' },
-              { id: 'item-2', imageUrl: 'carrot.jpg', category: 'vegetable', emoji: '🥕' }
+              { id: 'item-1', imagePrompt: 'red apple fruit with green leaf, simple cartoon style for children aged 4-6', category: 'fruit', emoji: '🍎' },
+              { id: 'item-2', imagePrompt: 'orange carrot vegetable with green top, simple bright design for kids aged 4-6', category: 'vegetable', emoji: '🥕' }
             ]]
           },
           categories: {
@@ -276,11 +276,11 @@ export class GeminiWorksheetGenerationService {
         properties: {
           items: {
             required: true,
-            description: 'Array of sequence items with id, imageUrl, correctPosition (0-indexed), and optional text',
+            description: 'Array of sequence items with id, imagePrompt (AI generation), correctPosition (0-indexed), and optional text',
             examples: [[
-              { id: 'step-1', imageUrl: 'seed.jpg', correctPosition: 0, text: 'Plant seed' },
-              { id: 'step-2', imageUrl: 'sprout.jpg', correctPosition: 1, text: 'Water it' },
-              { id: 'step-3', imageUrl: 'flower.jpg', correctPosition: 2, text: 'Flower grows' }
+              { id: 'step-1', imagePrompt: 'small brown seed in soil, simple educational illustration for children aged 4-6', correctPosition: 0, text: 'Plant seed' },
+              { id: 'step-2', imagePrompt: 'tiny green sprout emerging from soil with water drops, simple style for kids aged 4-6', correctPosition: 1, text: 'Water it' },
+              { id: 'step-3', imagePrompt: 'beautiful blooming flower with colorful petals, simple bright design for children aged 4-6', correctPosition: 2, text: 'Flower grows' }
             ]]
           },
           showNumbers: { required: false, default: true, description: 'Show position numbers' },
@@ -340,10 +340,10 @@ export class GeminiWorksheetGenerationService {
         properties: {
           items: {
             required: true,
-            description: 'Array of sound items with id, imageUrl, soundText (for TTS), optional soundUrl and label',
+            description: 'Array of sound items with id, imagePrompt (AI generation), soundText (for TTS), optional soundUrl and label',
             examples: [[
-              { id: 'cat', imageUrl: 'cat.jpg', soundText: 'Meow meow', label: 'Cat' },
-              { id: 'dog', imageUrl: 'dog.jpg', soundText: 'Woof woof', label: 'Dog' }
+              { id: 'cat', imagePrompt: 'cute cartoon cat with whiskers and big eyes, simple friendly design for children aged 4-6', soundText: 'Meow meow', label: 'Cat' },
+              { id: 'dog', imagePrompt: 'happy cartoon dog with floppy ears and wagging tail, bright colors for kids aged 4-6', soundText: 'Woof woof', label: 'Dog' }
             ]]
           },
           mode: { required: false, default: 'identify', enum: ['identify', 'match'], description: 'Game mode' },
@@ -358,7 +358,7 @@ export class GeminiWorksheetGenerationService {
         useCases: ['Spatial reasoning', 'Problem solving', 'Visual perception', 'Fine motor skills'],
         ageGroups: ['2-3', '4-6'],
         properties: {
-          imageUrl: { required: true, description: 'URL of the image to use for the puzzle' },
+          imagePrompt: { required: true, description: 'Detailed prompt for AI image generation. Use simple, clear subjects for puzzles (animals, objects, scenes) for children aged 4-6' },
           pieces: { required: false, default: 4, enum: [2, 4, 6], description: 'Number of puzzle pieces' },
           difficulty: { required: false, default: 'easy', enum: ['easy', 'medium'], description: 'Easy shows outline' },
           showOutline: { required: false, default: true, description: 'Show faint image outline as guide' },
@@ -374,10 +374,11 @@ export class GeminiWorksheetGenerationService {
         properties: {
           pattern: {
             required: true,
-            description: 'Array of pattern elements. Each has id and one of: color, emoji, imageUrl, or shape',
+            description: 'Array of pattern elements. Each has id and one of: color, emoji, imagePrompt, or shape. Use imagePrompt for AI image generation',
             examples: [[
               { id: 'red', color: '#EF4444' },
-              { id: 'blue', color: '#3B82F6' }
+              { id: 'blue', color: '#3B82F6' },
+              { id: 'apple', imagePrompt: 'simple red apple icon, flat design for children aged 4-6' }
             ]]
           },
           patternType: { required: false, default: 'color', enum: ['color', 'shape', 'image', 'emoji'], description: 'Type of pattern' },
@@ -395,10 +396,11 @@ export class GeminiWorksheetGenerationService {
         properties: {
           pairs: {
             required: true,
-            description: 'Array of cause-effect pairs. Each has id, cause object (emoji/imageUrl/text), effect object',
+            description: 'Array of cause-effect pairs. Each has id, cause object (emoji/imagePrompt/text), effect object (emoji/imagePrompt/text). Use imagePrompt for AI image generation',
             examples: [[
               { id: 'rain-puddle', cause: { emoji: '🌧️', text: 'Rain' }, effect: { emoji: '💧', text: 'Puddles' } },
-              { id: 'sun-hot', cause: { emoji: '☀️', text: 'Sun' }, effect: { emoji: '🔥', text: 'Hot' } }
+              { id: 'sun-hot', cause: { emoji: '☀️', text: 'Sun' }, effect: { emoji: '🔥', text: 'Hot' } },
+              { id: 'fire-warm', cause: { imagePrompt: 'bright fire flames, warm colors, simple illustration for children aged 4-6', text: 'Fire' }, effect: { imagePrompt: 'happy person warming hands, cartoon style for kids aged 4-6', text: 'Warm' } }
             ]]
           },
           showText: { required: false, default: true, description: 'Show text labels' },
@@ -490,13 +492,12 @@ export class GeminiWorksheetGenerationService {
     {
       "type": "tap-image",
       "properties": {
-        "images": [
-          { "imageUrl": "dog1.jpg", "soundUrl": "bark.mp3", "label": "Dog" },
-          { "imageUrl": "cat1.jpg", "soundUrl": "meow.mp3", "label": "Cat" },
-          { "imageUrl": "dog2.jpg", "soundUrl": "bark.mp3", "label": "Dog" }
-        ],
-        "target": "Dog",
-        "celebrationOnComplete": true
+        "imagePrompt": "friendly cartoon dog with floppy ears, sitting and smiling, bright colors, educational illustration for children aged 3-5",
+        "caption": "Tap the dog!",
+        "size": "large",
+        "animation": "bounce",
+        "soundEffect": "animal",
+        "showHint": true
       }
     }
   ]
@@ -551,14 +552,14 @@ export class GeminiWorksheetGenerationService {
     {
       "type": "color-matcher",
       "properties": {
-        "targetColor": "blue",
-        "items": [
-          { "imageUrl": "ball.jpg", "color": "blue", "name": "Ball" },
-          { "imageUrl": "sun.jpg", "color": "yellow", "name": "Sun" },
-          { "imageUrl": "sky.jpg", "color": "blue", "name": "Sky" }
+        "colors": [
+          { "name": "Blue", "hex": "#3B82F6", "voicePrompt": "Find blue!" },
+          { "name": "Yellow", "hex": "#FCD34D", "voicePrompt": "Find yellow!" },
+          { "name": "Red", "hex": "#EF4444", "voicePrompt": "Find red!" }
         ],
         "mode": "multiple",
-        "celebrationOnComplete": true
+        "showNames": true,
+        "autoVoice": true
       }
     }
   ]
@@ -629,11 +630,11 @@ export class GeminiWorksheetGenerationService {
           { "id": "air", "name": "Air", "color": "#87CEEB" }
         ],
         "items": [
-          { "id": "fish", "imageUrl": "fish.jpg", "correctCategory": "water" },
-          { "id": "bear", "imageUrl": "bear.jpg", "correctCategory": "land" },
-          { "id": "bird", "imageUrl": "bird.jpg", "correctCategory": "air" }
+          { "id": "fish", "imagePrompt": "colorful fish swimming, simple cartoon style for children aged 8-10", "category": "water", "emoji": "🐟" },
+          { "id": "bear", "imagePrompt": "friendly brown bear standing, cartoon educational style for kids aged 8-10", "category": "land", "emoji": "🐻" },
+          { "id": "bird", "imagePrompt": "small bird with colorful feathers, simple friendly design for children aged 8-10", "category": "air", "emoji": "🐦" }
         ],
-        "showFeedback": true
+        "sortBy": "category"
       }
     }
   ]
@@ -688,11 +689,13 @@ export class GeminiWorksheetGenerationService {
       "type": "sequence-builder",
       "properties": {
         "items": [
-          { "id": "1", "text": "Evaporation", "imageUrl": "evap.jpg", "correctOrder": 1 },
-          { "id": "2", "text": "Condensation", "imageUrl": "cloud.jpg", "correctOrder": 2 },
-          { "id": "3", "text": "Precipitation", "imageUrl": "rain.jpg", "correctOrder": 3 }
+          { "id": "1", "imagePrompt": "water evaporating from ocean with sun above, simple educational diagram for children aged 11+", "correctPosition": 0, "text": "Evaporation" },
+          { "id": "2", "imagePrompt": "water vapor forming white clouds in blue sky, simple diagram for kids aged 11+", "correctPosition": 1, "text": "Condensation" },
+          { "id": "3", "imagePrompt": "rain falling from grey clouds to earth, educational illustration for children aged 11+", "correctPosition": 2, "text": "Precipitation" }
         ],
-        "instruction": "Drag the steps in the correct order:"
+        "instruction": "Drag the steps in the correct order:",
+        "showNumbers": true,
+        "difficulty": "easy"
       }
     },
     {
@@ -831,6 +834,7 @@ ${ageSpecificGuidelines}
 4. **Progressive Difficulty:** Start easy, gradually increase challenge
 5. **Clear Instructions:** Be explicit and step-by-step
 6. **Smart Exercise Selection:** Analyze the topic and choose exercise types that best teach the concept. Consider what activities would be most effective for this specific subject and age group.
+7. **Image Generation:** ${includeImages ? 'ALWAYS use "imagePrompt" for ALL components with images (both image-placeholder and interactive components). Provide detailed, descriptive, child-friendly prompts in English.' : 'Do not include image components.'}
 
 ${componentLibrary}
 
@@ -953,8 +957,16 @@ You MUST respond with ONLY valid JSON in this exact format:
 7. **Balanced Content:** Don't overwhelm with too many exercises or too much text
 8. **Language:** All user-facing text in ${language}, technical fields in English
 9. **Images (IMPORTANT):** ${includeImages ? 
-  'When using image-placeholder, ALWAYS provide "imagePrompt" instead of "url". The imagePrompt should be a detailed, child-friendly description for AI image generation (e.g., "A friendly T-Rex dinosaur in prehistoric forest, educational illustration for children"). DO NOT provide url field when using imagePrompt.' : 
-  'Do not include any image-placeholder components.'}
+  `ALWAYS use "imagePrompt" for ALL components with images:
+   - For image-placeholder: use imagePrompt in properties
+   - For interactive components (tap-image, simple-drag-drop, sorting-game, etc.): use imagePrompt in items/objects/pairs arrays
+   - imagePrompt should be detailed, in English, child-friendly and age-appropriate
+   - Example: "friendly cartoon dog with brown fur and wagging tail, bright colors, simple educational illustration for children aged ${ageGroup}"
+   - Include style keywords: "cartoon", "simple", "educational", "bright colors", "for children aged ${ageGroup}"
+   - DO NOT use imageUrl, url, or placeholder filenames like "cat.jpg" or "dog.jpg"
+   - System will automatically generate real images from prompts
+   - Be specific about the subject, colors, style, and educational purpose` : 
+  'Do not include any image components.'}
 
 # EXAMPLES OF GOOD WORKSHEETS
 

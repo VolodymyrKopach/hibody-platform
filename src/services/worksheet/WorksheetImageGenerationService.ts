@@ -8,6 +8,7 @@
 
 import { ParsedWorksheet, ParsedPage } from '@/types/worksheet-generation';
 import { CanvasElement } from '@/types/canvas-element';
+import { InteractiveImageExtractor, ImageRequest } from './InteractiveImageExtractor';
 
 export interface ImageGenerationProgress {
   total: number;
@@ -65,11 +66,16 @@ export class WorksheetImageGenerationService {
     const startTime = Date.now();
     const errors: string[] = [];
 
+    // Initialize interactive image extractor
+    const interactiveExtractor = new InteractiveImageExtractor();
+
     // Collect all image requests from all pages
-    const imageRequests: (BatchImageRequest & { pageIndex: number; elementIndex: number })[] = [];
+    const imageRequests: (BatchImageRequest & { pageIndex: number; elementIndex: number; propertyPath?: string[] })[] = [];
+    const interactiveRequests: ImageRequest[] = [];
     
     worksheet.pages.forEach((page, pageIndex) => {
       page.elements.forEach((element, elementIndex) => {
+        // 1. Handle image-placeholder components (existing logic)
         if (element.type === 'image-placeholder' && element.properties?.imagePrompt) {
           imageRequests.push({
             id: `${pageIndex}-${elementIndex}`,
@@ -80,11 +86,34 @@ export class WorksheetImageGenerationService {
             elementIndex,
           });
         }
+        
+        // 2. Handle interactive components (NEW)
+        if (interactiveExtractor.isInteractiveComponent(element.type)) {
+          const requests = interactiveExtractor.extractFromElement(
+            element,
+            pageIndex,
+            elementIndex
+          );
+          interactiveRequests.push(...requests);
+          
+          // Add to main request list for batch processing
+          requests.forEach(req => {
+            imageRequests.push({
+              id: req.id,
+              prompt: req.prompt,
+              width: req.width,
+              height: req.height,
+              pageIndex: req.pageIndex,
+              elementIndex: req.elementIndex,
+              propertyPath: req.propertyPath,
+            });
+          });
+        }
       });
     });
 
     const totalImages = imageRequests.length;
-    console.log(`📊 [WorksheetImageGen] Found ${totalImages} images to generate`);
+    console.log(`📊 [WorksheetImageGen] Found ${totalImages} images to generate (${interactiveRequests.length} from interactive components)`);
 
     if (totalImages === 0) {
       return {
@@ -142,20 +171,31 @@ export class WorksheetImageGenerationService {
       let generated = 0;
       let failed = 0;
 
+      // Create a map of generated images for interactive components
+      const interactiveImageMap = new Map<string, string>();
+
       data.results.forEach((result, index) => {
         const request = imageRequests[index];
         const page = updatedPages[request.pageIndex];
         const element = page.elements[request.elementIndex];
 
         if (result.success && result.image) {
-          // Update element with generated image
-          page.elements[request.elementIndex] = {
-            ...element,
-            properties: {
-              ...element.properties,
-              url: `data:image/png;base64,${result.image}`,
-            },
-          };
+          const imageUrl = `data:image/png;base64,${result.image}`;
+          
+          // Check if this is an interactive component
+          if (request.propertyPath) {
+            // Store for batch application to interactive component
+            interactiveImageMap.set(request.id!, imageUrl);
+          } else {
+            // Apply directly to image-placeholder
+            page.elements[request.elementIndex] = {
+              ...element,
+              properties: {
+                ...element.properties,
+                url: imageUrl,
+              },
+            };
+          }
           generated++;
         } else {
           // Keep placeholder, log error
@@ -172,6 +212,21 @@ export class WorksheetImageGenerationService {
           errors,
         });
       });
+
+      // Apply all interactive images at once
+      if (interactiveImageMap.size > 0) {
+        console.log(`🎨 [WorksheetImageGen] Applying ${interactiveImageMap.size} images to interactive components`);
+        updatedPages.forEach((page, pageIndex) => {
+          page.elements.forEach((element, elementIndex) => {
+            if (interactiveExtractor.isInteractiveComponent(element.type)) {
+              page.elements[elementIndex] = interactiveExtractor.applyGeneratedImages(
+                element,
+                interactiveImageMap
+              );
+            }
+          });
+        });
+      }
 
       const duration = Date.now() - startTime;
 
