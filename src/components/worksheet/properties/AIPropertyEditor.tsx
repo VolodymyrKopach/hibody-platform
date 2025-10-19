@@ -14,8 +14,10 @@ import {
   alpha,
   useTheme,
   Divider,
+  Tooltip,
+  IconButton,
 } from '@mui/material';
-import { Sparkles, Send, Wand2, RefreshCw, Lightbulb } from 'lucide-react';
+import { Sparkles, Send, Lightbulb, Info } from 'lucide-react';
 import { CanvasElement } from '@/types/canvas-element';
 import {
   ComponentPropertySchema,
@@ -184,9 +186,39 @@ const AIPropertyEditor: React.FC<AIPropertyEditorProps> = ({
 
       {/* Custom instruction */}
       <Box>
-        <Typography variant="body2" fontWeight={600} gutterBottom>
-          Custom Instruction
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <Typography variant="body2" fontWeight={600}>
+            Custom Instruction
+          </Typography>
+          <Tooltip
+            title={
+              <Box sx={{ p: 0.5 }}>
+                <Typography variant="caption" display="block" sx={{ mb: 0.5, fontWeight: 600 }}>
+                  💡 AI Editing Tips:
+                </Typography>
+                <Typography variant="caption" display="block" sx={{ mb: 0.3 }}>
+                  • Be specific: "Change the first image to a cat"
+                </Typography>
+                <Typography variant="caption" display="block" sx={{ mb: 0.3 }}>
+                  • Describe outcome: "Make it more engaging for 5-year-olds"
+                </Typography>
+                <Typography variant="caption" display="block" sx={{ mb: 0.3 }}>
+                  • Multiple changes: "Add 2 more items and change colors to pastel"
+                </Typography>
+                <Typography variant="caption" display="block">
+                  • Use context: "Make it match the ocean theme"
+                </Typography>
+              </Box>
+            }
+            arrow
+            placement="top"
+            enterDelay={300}
+          >
+            <IconButton size="small" sx={{ p: 0.5 }}>
+              <Info size={16} color={theme.palette.info.main} />
+            </IconButton>
+          </Tooltip>
+        </Box>
         <TextField
           value={instruction}
           onChange={(e) => setInstruction(e.target.value)}
@@ -251,34 +283,6 @@ const AIPropertyEditor: React.FC<AIPropertyEditorProps> = ({
           </Stack>
         </Paper>
       )}
-
-      {/* AI Tips */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2,
-          background: alpha(theme.palette.info.main, 0.05),
-          border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
-        }}
-      >
-        <Typography variant="body2" fontWeight={600} gutterBottom>
-          💡 AI Editing Tips
-        </Typography>
-        <Stack spacing={0.5}>
-          <Typography variant="caption" color="text.secondary">
-            • Be specific: "Change the first image to a cat" instead of "Change image"
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            • Describe desired outcome: "Make it more engaging for 5-year-olds"
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            • Multiple changes: "Add 2 more items and change colors to pastel"
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            • Use context: "Make it match the ocean theme"
-          </Typography>
-        </Stack>
-      </Paper>
 
       {/* Component info */}
       <Box>
