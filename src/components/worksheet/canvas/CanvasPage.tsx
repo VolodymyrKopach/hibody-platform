@@ -35,6 +35,19 @@ import PatternBuilder from './interactive/PatternBuilder';
 import CauseEffectGame from './interactive/CauseEffectGame';
 import RewardCollector from './interactive/RewardCollector';
 import VoiceRecorder from './interactive/VoiceRecorder';
+// New interactive components
+import Flashcards from './interactive/Flashcards';
+import WordBuilder from './interactive/WordBuilder';
+import OpenQuestion from './interactive/OpenQuestion';
+import DrawingCanvas from './interactive/DrawingCanvas';
+import DialogRoleplay from './interactive/DialogRoleplay';
+import InteractiveMap from './interactive/InteractiveMap';
+import TimerChallenge from './interactive/TimerChallenge';
+import TimelineBuilder from './interactive/TimelineBuilder';
+import StoryBuilder from './interactive/StoryBuilder';
+import CategorizationGrid from './interactive/CategorizationGrid';
+import InteractiveBoard from './interactive/InteractiveBoard';
+import ObjectBuilder from './interactive/ObjectBuilder';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -1359,6 +1372,193 @@ function renderElement(
           maxDuration={element.properties.maxDuration || 30}
           showPlayback={element.properties.showPlayback ?? true}
           autoPlay={element.properties.autoPlay ?? false}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    // New interactive components
+    case 'flashcards':
+      return (
+        <Flashcards
+          cards={element.properties.cards || []}
+          cardSize={element.properties.cardSize || 'medium'}
+          autoFlip={element.properties.autoFlip ?? false}
+          showNavigation={element.properties.showNavigation ?? true}
+          flipDirection={element.properties.flipDirection || 'horizontal'}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'word-builder':
+      return (
+        <WordBuilder
+          targetWord={element.properties.targetWord || 'WORD'}
+          shuffledLetters={element.properties.shuffledLetters}
+          showHints={element.properties.showHints ?? true}
+          mode={element.properties.mode || 'buttons'}
+          imageHint={element.properties.imageHint}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'open-question':
+      return (
+        <OpenQuestion
+          question={element.properties.question || 'Enter your question here'}
+          expectedKeywords={element.properties.expectedKeywords || []}
+          maxLength={element.properties.maxLength || 500}
+          enableVoiceInput={element.properties.enableVoiceInput ?? false}
+          feedbackType={element.properties.feedbackType || 'encouraging'}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'drawing-canvas':
+      return (
+        <DrawingCanvas
+          backgroundImage={element.properties.backgroundImage}
+          canvasSize={element.properties.canvasSize || 'medium'}
+          tools={element.properties.tools || ['brush', 'eraser']}
+          colorPalette={element.properties.colorPalette || ['#000000', '#FF0000', '#00FF00', '#0000FF']}
+          brushSizes={element.properties.brushSizes || [2, 5, 10]}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'dialog-roleplay':
+      return (
+        <DialogRoleplay
+          dialogTree={element.properties.dialogTree || []}
+          characters={element.properties.characters || []}
+          showHints={element.properties.showHints ?? true}
+          enableVoice={element.properties.enableVoice ?? true}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'interactive-map':
+      return (
+        <InteractiveMap
+          backgroundImage={element.properties.backgroundImage || ''}
+          hotspots={element.properties.hotspots || []}
+          mode={element.properties.mode || 'learning'}
+          showLabels={element.properties.showLabels ?? true}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'timer-challenge':
+      return (
+        <TimerChallenge
+          duration={element.properties.duration || 60}
+          challengeType={element.properties.challengeType || 'answer-questions'}
+          items={element.properties.items || []}
+          showProgress={element.properties.showProgress ?? true}
+          bonusTime={element.properties.bonusTime || 5}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'timeline-builder':
+      return (
+        <TimelineBuilder
+          events={element.properties.events || []}
+          timelineType={element.properties.timelineType || 'linear'}
+          showDates={element.properties.showDates ?? true}
+          difficulty={element.properties.difficulty || 'easy'}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'story-builder':
+      return (
+        <StoryBuilder
+          characters={element.properties.characters || []}
+          settings={element.properties.settings || []}
+          items={element.properties.items || []}
+          events={element.properties.events || []}
+          enableAI={element.properties.enableAI ?? false}
+          minSelections={element.properties.minSelections || 3}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'categorization-grid':
+      return (
+        <CategorizationGrid
+          items={element.properties.items || []}
+          categories={element.properties.categories || []}
+          gridSize={element.properties.gridSize || '3x3'}
+          showHints={element.properties.showHints ?? false}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'interactive-board':
+      return (
+        <InteractiveBoard
+          backgroundImage={element.properties.backgroundImage}
+          allowedStickerTypes={element.properties.allowedStickerTypes || ['text', 'emoji', 'image']}
+          maxStickers={element.properties.maxStickers || 50}
+          boardSize={element.properties.boardSize || 'medium'}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'object-builder':
+      return (
+        <ObjectBuilder
+          targetObject={element.properties.targetObject || { targetName: 'Object', parts: [] }}
+          showGuide={element.properties.showGuide ?? true}
+          allowFreeform={element.properties.allowFreeform ?? false}
           ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {

@@ -216,6 +216,15 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
   const router = useRouter();
   const cleanupInProgressRef = useRef(false);
   
+  // Ensure AI Assistant is always available with default parameters
+  const effectiveParameters = parameters || {
+    topic: 'General Education',
+    ageGroup: '7-8',
+    level: '7-8',
+    difficulty: 'medium',
+    language: 'en',
+  };
+  
   // Initialize pages from generated worksheet or empty canvas
   const PAGE_GAP = 45; // Gap between pages (30% of original 150px for tighter PDF-like appearance)
   const initialPages = generatedWorksheet 
@@ -1379,12 +1388,12 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
 
       const editService = new WorksheetEditingService();
 
-      // Build context from parameters
+      // Build context from effective parameters (always available)
       const context: WorksheetEditContext = {
-        topic: parameters.topic || 'General',
-        ageGroup: parameters.level || parameters.ageGroup || 'general',
-        difficulty: parameters.difficulty || getDifficultyFromLevel(parameters.level),
-        language: parameters.language || 'en',
+        topic: effectiveParameters.topic || 'General',
+        ageGroup: effectiveParameters.level || effectiveParameters.ageGroup || 'general',
+        difficulty: effectiveParameters.difficulty || getDifficultyFromLevel(effectiveParameters.level),
+        language: effectiveParameters.language || 'en',
       };
 
       let result: any;
@@ -2831,7 +2840,7 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
             }}
             onPageBackgroundUpdate={handlePageBackgroundUpdate}
             // AI Editing props
-            parameters={parameters}
+            parameters={effectiveParameters}
             onAIEdit={handleAIEdit}
             editHistory={getCurrentEditHistory()}
             isAIEditing={isAIEditing}

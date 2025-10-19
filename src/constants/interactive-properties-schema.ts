@@ -766,6 +766,668 @@ export const INTERACTIVE_PROPERTIES_SCHEMAS: ComponentPropertySchema[] = [
       },
     ],
   },
+
+  // 16. Flashcards
+  {
+    componentType: 'flashcards',
+    componentName: 'Flashcards',
+    category: 'interactive',
+    icon: '🎴',
+    properties: [
+      {
+        key: 'cards',
+        label: 'Cards',
+        type: 'array-object',
+        required: true,
+        objectSchema: [
+          {
+            key: 'front',
+            label: 'Front Side',
+            type: 'object',
+            required: true,
+            objectSchema: [
+              { key: 'text', label: 'Text', type: 'string' },
+              { key: 'imageUrl', label: 'Image URL', type: 'url' },
+            ],
+          },
+          {
+            key: 'back',
+            label: 'Back Side',
+            type: 'object',
+            required: true,
+            objectSchema: [
+              { key: 'text', label: 'Text', type: 'string' },
+              { key: 'imageUrl', label: 'Image URL', type: 'url' },
+            ],
+          },
+        ],
+      },
+      {
+        key: 'cardSize',
+        label: 'Card Size',
+        type: 'select',
+        default: 'medium',
+        options: [
+          { value: 'small', label: 'Small' },
+          { value: 'medium', label: 'Medium' },
+          { value: 'large', label: 'Large' },
+        ],
+      },
+      {
+        key: 'autoFlip',
+        label: 'Auto Flip',
+        type: 'boolean',
+        default: false,
+        helperText: 'Automatically flip cards after a delay',
+      },
+      {
+        key: 'showNavigation',
+        label: 'Show Navigation',
+        type: 'boolean',
+        default: true,
+        helperText: 'Show previous/next buttons',
+      },
+      {
+        key: 'flipDirection',
+        label: 'Flip Direction',
+        type: 'select',
+        default: 'horizontal',
+        options: [
+          { value: 'horizontal', label: 'Horizontal' },
+          { value: 'vertical', label: 'Vertical' },
+        ],
+      },
+    ],
+  },
+
+  // 17. Word Builder
+  {
+    componentType: 'word-builder',
+    componentName: 'Word Builder',
+    category: 'interactive',
+    icon: '✍️',
+    properties: [
+      {
+        key: 'targetWord',
+        label: 'Target Word',
+        type: 'string',
+        required: true,
+        placeholder: 'ELEPHANT',
+        helperText: 'The word students need to spell',
+      },
+      {
+        key: 'shuffledLetters',
+        label: 'Letters to Use',
+        type: 'array-simple',
+        helperText: 'Leave empty to use letters from target word',
+      },
+      {
+        key: 'showHints',
+        label: 'Show Hints',
+        type: 'boolean',
+        default: true,
+        helperText: 'Allow students to see hints',
+      },
+      {
+        key: 'mode',
+        label: 'Interaction Mode',
+        type: 'select',
+        default: 'buttons',
+        options: [
+          { value: 'drag-drop', label: 'Drag and Drop' },
+          { value: 'buttons', label: 'Tap Buttons' },
+          { value: 'keyboard', label: 'Keyboard Input' },
+        ],
+      },
+      {
+        key: 'imageHint',
+        label: 'Image Hint URL',
+        type: 'url',
+        placeholder: 'https://example.com/elephant.jpg',
+        helperText: 'Optional image to help students',
+      },
+    ],
+  },
+
+  // 18. Open Question
+  {
+    componentType: 'open-question',
+    componentName: 'Open Question',
+    category: 'interactive',
+    icon: '💭',
+    properties: [
+      {
+        key: 'question',
+        label: 'Question',
+        type: 'string',
+        required: true,
+        placeholder: 'Describe your favorite animal and why you like it.',
+        helperText: 'The open-ended question for students',
+      },
+      {
+        key: 'expectedKeywords',
+        label: 'Expected Keywords',
+        type: 'array-simple',
+        helperText: 'Keywords AI will look for in answers',
+      },
+      {
+        key: 'maxLength',
+        label: 'Max Length',
+        type: 'number',
+        default: 500,
+        min: 50,
+        max: 2000,
+        helperText: 'Maximum character count',
+      },
+      {
+        key: 'enableVoiceInput',
+        label: 'Enable Voice Input',
+        type: 'boolean',
+        default: false,
+        helperText: 'Allow students to use voice-to-text',
+      },
+      {
+        key: 'feedbackType',
+        label: 'Feedback Type',
+        type: 'select',
+        default: 'encouraging',
+        options: [
+          { value: 'encouraging', label: 'Encouraging (warm & positive)' },
+          { value: 'detailed', label: 'Detailed (comprehensive)' },
+          { value: 'concise', label: 'Concise (brief & direct)' },
+        ],
+      },
+    ],
+  },
+
+  // 19. Drawing Canvas
+  {
+    componentType: 'drawing-canvas',
+    componentName: 'Drawing Canvas',
+    category: 'interactive',
+    icon: '🎨',
+    properties: [
+      {
+        key: 'backgroundImage',
+        label: 'Background Image',
+        type: 'url',
+        placeholder: 'https://example.com/coloring-page.jpg',
+        helperText: 'Optional background image to draw on',
+      },
+      {
+        key: 'canvasSize',
+        label: 'Canvas Size',
+        type: 'select',
+        default: 'medium',
+        options: [
+          { value: 'small', label: 'Small (400x300)' },
+          { value: 'medium', label: 'Medium (600x450)' },
+          { value: 'large', label: 'Large (800x600)' },
+        ],
+      },
+      {
+        key: 'tools',
+        label: 'Available Tools',
+        type: 'array-simple',
+        default: ['brush', 'eraser'],
+        helperText: 'Tools: brush, eraser, fill',
+      },
+      {
+        key: 'colorPalette',
+        label: 'Color Palette',
+        type: 'array-simple',
+        default: ['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'],
+        helperText: 'Hex color codes',
+      },
+      {
+        key: 'brushSizes',
+        label: 'Brush Sizes',
+        type: 'array-simple',
+        default: ['2', '5', '10', '15', '20'],
+        helperText: 'Available brush sizes in pixels',
+      },
+    ],
+  },
+
+  // 20. Dialog Roleplay
+  {
+    componentType: 'dialog-roleplay',
+    componentName: 'Dialog Roleplay',
+    category: 'interactive',
+    icon: '💬',
+    properties: [
+      {
+        key: 'dialogTree',
+        label: 'Dialog Tree',
+        type: 'array-object',
+        required: true,
+        objectSchema: [
+          { key: 'id', label: 'Node ID', type: 'string', required: true },
+          { key: 'character', label: 'Character Name', type: 'string', required: true },
+          { key: 'text', label: 'Dialog Text', type: 'string', required: true },
+          {
+            key: 'options',
+            label: 'Response Options',
+            type: 'array-object',
+            required: true,
+            objectSchema: [
+              { key: 'id', label: 'Option ID', type: 'string', required: true },
+              { key: 'text', label: 'Option Text', type: 'string', required: true },
+              { key: 'nextNodeId', label: 'Next Node ID', type: 'string' },
+              { key: 'isCorrect', label: 'Is Correct', type: 'boolean' },
+              { key: 'points', label: 'Points', type: 'number' },
+            ],
+          },
+          { key: 'isFinal', label: 'Is Final Node', type: 'boolean' },
+        ],
+      },
+      {
+        key: 'characters',
+        label: 'Characters',
+        type: 'array-object',
+        required: true,
+        objectSchema: [
+          { key: 'name', label: 'Name', type: 'string', required: true },
+          { key: 'avatar', label: 'Avatar URL', type: 'url', required: true },
+          { key: 'voice', label: 'Voice', type: 'string' },
+        ],
+      },
+      {
+        key: 'showHints',
+        label: 'Show Hints',
+        type: 'boolean',
+        default: true,
+      },
+      {
+        key: 'enableVoice',
+        label: 'Enable Voice',
+        type: 'boolean',
+        default: true,
+      },
+    ],
+  },
+
+  // 21. Interactive Map
+  {
+    componentType: 'interactive-map',
+    componentName: 'Interactive Map',
+    category: 'interactive',
+    icon: '🗺️',
+    properties: [
+      {
+        key: 'backgroundImage',
+        label: 'Background Image',
+        type: 'url',
+        required: true,
+        placeholder: 'https://example.com/map.jpg',
+      },
+      {
+        key: 'hotspots',
+        label: 'Hotspots',
+        type: 'array-object',
+        required: true,
+        objectSchema: [
+          { key: 'id', label: 'ID', type: 'string', required: true },
+          { key: 'x', label: 'X Position (%)', type: 'number', required: true, min: 0, max: 100 },
+          { key: 'y', label: 'Y Position (%)', type: 'number', required: true, min: 0, max: 100 },
+          { key: 'width', label: 'Width (%)', type: 'number', required: true, min: 1, max: 50 },
+          { key: 'height', label: 'Height (%)', type: 'number', required: true, min: 1, max: 50 },
+          { key: 'label', label: 'Label', type: 'string', required: true },
+          { key: 'info', label: 'Information', type: 'string', required: true },
+          { key: 'isCorrect', label: 'Is Correct (quiz mode)', type: 'boolean' },
+        ],
+      },
+      {
+        key: 'mode',
+        label: 'Mode',
+        type: 'select',
+        default: 'learning',
+        options: [
+          { value: 'learning', label: 'Learning (explore mode)' },
+          { value: 'quiz', label: 'Quiz (test mode)' },
+        ],
+      },
+      {
+        key: 'showLabels',
+        label: 'Show Labels',
+        type: 'boolean',
+        default: true,
+      },
+    ],
+  },
+
+  // 22. Timer Challenge
+  {
+    componentType: 'timer-challenge',
+    componentName: 'Timer Challenge',
+    category: 'interactive',
+    icon: '⏱️',
+    properties: [
+      {
+        key: 'duration',
+        label: 'Duration (seconds)',
+        type: 'number',
+        required: true,
+        default: 60,
+        min: 10,
+        max: 600,
+      },
+      {
+        key: 'challengeType',
+        label: 'Challenge Type',
+        type: 'select',
+        default: 'answer-questions',
+        options: [
+          { value: 'find-items', label: 'Find Items' },
+          { value: 'answer-questions', label: 'Answer Questions' },
+          { value: 'complete-task', label: 'Complete Task' },
+        ],
+      },
+      {
+        key: 'items',
+        label: 'Challenge Items',
+        type: 'array-object',
+        required: true,
+        objectSchema: [
+          { key: 'id', label: 'ID', type: 'string', required: true },
+          { key: 'question', label: 'Question', type: 'string', required: true },
+          { key: 'answer', label: 'Answer', type: 'string', required: true },
+          { key: 'imageUrl', label: 'Image URL', type: 'url' },
+        ],
+      },
+      {
+        key: 'showProgress',
+        label: 'Show Progress Bar',
+        type: 'boolean',
+        default: true,
+      },
+      {
+        key: 'bonusTime',
+        label: 'Bonus Time per Correct Answer (seconds)',
+        type: 'number',
+        default: 5,
+        min: 0,
+        max: 30,
+      },
+    ],
+  },
+
+  // 23. Timeline Builder
+  {
+    componentType: 'timeline-builder',
+    componentName: 'Timeline Builder',
+    category: 'interactive',
+    icon: '📅',
+    properties: [
+      {
+        key: 'events',
+        label: 'Timeline Events',
+        type: 'array-object',
+        required: true,
+        objectSchema: [
+          { key: 'id', label: 'ID', type: 'string', required: true },
+          { key: 'date', label: 'Date', type: 'string', required: true },
+          { key: 'title', label: 'Title', type: 'string', required: true },
+          { key: 'description', label: 'Description', type: 'string', required: true },
+          { key: 'imageUrl', label: 'Image URL', type: 'url' },
+          { key: 'order', label: 'Correct Order', type: 'number', required: true, min: 1 },
+        ],
+      },
+      {
+        key: 'timelineType',
+        label: 'Timeline Type',
+        type: 'select',
+        default: 'linear',
+        options: [
+          { value: 'linear', label: 'Linear (horizontal)' },
+          { value: 'circular', label: 'Circular (vertical)' },
+        ],
+      },
+      {
+        key: 'showDates',
+        label: 'Show Dates',
+        type: 'boolean',
+        default: true,
+      },
+      {
+        key: 'difficulty',
+        label: 'Difficulty',
+        type: 'select',
+        default: 'easy',
+        options: [
+          { value: 'easy', label: 'Easy' },
+          { value: 'medium', label: 'Medium' },
+          { value: 'hard', label: 'Hard' },
+        ],
+      },
+    ],
+  },
+
+  // 24. Story Builder
+  {
+    componentType: 'story-builder',
+    componentName: 'Story Builder',
+    category: 'interactive',
+    icon: '📚',
+    properties: [
+      {
+        key: 'characters',
+        label: 'Characters',
+        type: 'array-object',
+        objectSchema: [
+          { key: 'id', label: 'ID', type: 'string', required: true },
+          { key: 'type', label: 'Type', type: 'string', default: 'character' },
+          { key: 'name', label: 'Name', type: 'string', required: true },
+          { key: 'imageUrl', label: 'Image URL', type: 'url' },
+          { key: 'description', label: 'Description', type: 'string', required: true },
+        ],
+      },
+      {
+        key: 'settings',
+        label: 'Settings',
+        type: 'array-object',
+        objectSchema: [
+          { key: 'id', label: 'ID', type: 'string', required: true },
+          { key: 'type', label: 'Type', type: 'string', default: 'setting' },
+          { key: 'name', label: 'Name', type: 'string', required: true },
+          { key: 'imageUrl', label: 'Image URL', type: 'url' },
+          { key: 'description', label: 'Description', type: 'string', required: true },
+        ],
+      },
+      {
+        key: 'items',
+        label: 'Items',
+        type: 'array-object',
+        objectSchema: [
+          { key: 'id', label: 'ID', type: 'string', required: true },
+          { key: 'type', label: 'Type', type: 'string', default: 'item' },
+          { key: 'name', label: 'Name', type: 'string', required: true },
+          { key: 'imageUrl', label: 'Image URL', type: 'url' },
+          { key: 'description', label: 'Description', type: 'string', required: true },
+        ],
+      },
+      {
+        key: 'events',
+        label: 'Events',
+        type: 'array-object',
+        objectSchema: [
+          { key: 'id', label: 'ID', type: 'string', required: true },
+          { key: 'type', label: 'Type', type: 'string', default: 'event' },
+          { key: 'name', label: 'Name', type: 'string', required: true },
+          { key: 'imageUrl', label: 'Image URL', type: 'url' },
+          { key: 'description', label: 'Description', type: 'string', required: true },
+        ],
+      },
+      {
+        key: 'enableAI',
+        label: 'Enable AI Story Generation',
+        type: 'boolean',
+        default: false,
+        helperText: 'Use AI to generate more sophisticated stories',
+      },
+      {
+        key: 'minSelections',
+        label: 'Minimum Selections',
+        type: 'number',
+        default: 3,
+        min: 1,
+        max: 10,
+      },
+    ],
+  },
+
+  // 25. Categorization Grid
+  {
+    componentType: 'categorization-grid',
+    componentName: 'Categorization Grid',
+    category: 'interactive',
+    icon: '🗂️',
+    properties: [
+      {
+        key: 'items',
+        label: 'Items to Categorize',
+        type: 'array-object',
+        required: true,
+        objectSchema: [
+          { key: 'id', label: 'ID', type: 'string', required: true },
+          { key: 'name', label: 'Name', type: 'string', required: true },
+          { key: 'imageUrl', label: 'Image URL', type: 'url' },
+          { key: 'correctCategory', label: 'Correct Category ID', type: 'string', required: true },
+        ],
+      },
+      {
+        key: 'categories',
+        label: 'Categories',
+        type: 'array-object',
+        required: true,
+        objectSchema: [
+          { key: 'id', label: 'ID', type: 'string', required: true },
+          { key: 'name', label: 'Name', type: 'string', required: true },
+          { key: 'color', label: 'Color', type: 'color', required: true },
+          { key: 'icon', label: 'Icon (emoji)', type: 'string' },
+        ],
+      },
+      {
+        key: 'gridSize',
+        label: 'Grid Size',
+        type: 'select',
+        default: '3x3',
+        options: [
+          { value: '2x2', label: '2x2 Grid' },
+          { value: '3x3', label: '3x3 Grid' },
+          { value: '4x4', label: '4x4 Grid' },
+        ],
+      },
+      {
+        key: 'showHints',
+        label: 'Show Hints',
+        type: 'boolean',
+        default: false,
+      },
+    ],
+  },
+
+  // 26. Interactive Board
+  {
+    componentType: 'interactive-board',
+    componentName: 'Interactive Board',
+    category: 'interactive',
+    icon: '🎨',
+    properties: [
+      {
+        key: 'backgroundImage',
+        label: 'Background Image',
+        type: 'url',
+        placeholder: 'https://example.com/board-bg.jpg',
+        helperText: 'Optional background for the board',
+      },
+      {
+        key: 'allowedStickerTypes',
+        label: 'Allowed Sticker Types',
+        type: 'array-simple',
+        default: ['text', 'emoji', 'image'],
+        helperText: 'Types: text, emoji, image',
+      },
+      {
+        key: 'maxStickers',
+        label: 'Maximum Stickers',
+        type: 'number',
+        default: 50,
+        min: 10,
+        max: 200,
+      },
+      {
+        key: 'boardSize',
+        label: 'Board Size',
+        type: 'select',
+        default: 'medium',
+        options: [
+          { value: 'small', label: 'Small (600x400)' },
+          { value: 'medium', label: 'Medium (900x600)' },
+          { value: 'large', label: 'Large (1200x800)' },
+        ],
+      },
+    ],
+  },
+
+  // 27. Object Builder
+  {
+    componentType: 'object-builder',
+    componentName: 'Object Builder',
+    category: 'interactive',
+    icon: '🧱',
+    properties: [
+      {
+        key: 'targetObject',
+        label: 'Target Object',
+        type: 'object',
+        required: true,
+        objectSchema: [
+          { key: 'targetName', label: 'Object Name', type: 'string', required: true },
+          {
+            key: 'parts',
+            label: 'Building Parts',
+            type: 'array-object',
+            required: true,
+            objectSchema: [
+              { key: 'id', label: 'ID', type: 'string', required: true },
+              { key: 'name', label: 'Part Name', type: 'string', required: true },
+              { key: 'color', label: 'Color', type: 'color', required: true },
+              {
+                key: 'shape',
+                label: 'Shape',
+                type: 'select',
+                required: true,
+                options: [
+                  { value: 'square', label: 'Square' },
+                  { value: 'rectangle', label: 'Rectangle' },
+                  { value: 'circle', label: 'Circle' },
+                  { value: 'triangle', label: 'Triangle' },
+                ],
+              },
+              { key: 'size', label: 'Size (px)', type: 'number', required: true, min: 20, max: 200 },
+              { key: 'requiredPosition', label: 'Required Position', type: 'number' },
+            ],
+          },
+          { key: 'completionMessage', label: 'Completion Message', type: 'string' },
+        ],
+      },
+      {
+        key: 'showGuide',
+        label: 'Show Guide',
+        type: 'boolean',
+        default: true,
+        helperText: 'Show preview of target object',
+      },
+      {
+        key: 'allowFreeform',
+        label: 'Allow Freeform Building',
+        type: 'boolean',
+        default: false,
+        helperText: 'Allow any order of parts (no strict validation)',
+      },
+    ],
+  },
 ];
 
 /**

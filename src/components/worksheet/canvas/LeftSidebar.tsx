@@ -47,6 +47,17 @@ import {
   Grid3x3,
   Award,
   Mic,
+  CreditCard,
+  Type,
+  MessageCircle,
+  Paintbrush,
+  Map,
+  Timer,
+  Calendar,
+  Book,
+  FolderKanban,
+  Layout,
+  Box as BoxIcon,
 } from 'lucide-react';
 
 interface LeftSidebarProps {
@@ -307,6 +318,105 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           icon: Mic, 
           color: '#EF4444',
           description: 'Record and play voice' 
+        },
+      ],
+    },
+    {
+      name: 'Learning & Education',
+      items: [
+        { 
+          id: 'flashcards', 
+          name: 'Flashcards', 
+          icon: CreditCard, 
+          color: '#3B82F6',
+          description: '3D flip cards for vocabulary' 
+        },
+        { 
+          id: 'word-builder', 
+          name: 'Word Builder', 
+          icon: Type, 
+          color: '#10B981',
+          description: 'Spell words letter by letter' 
+        },
+        { 
+          id: 'open-question', 
+          name: 'Open Question', 
+          icon: MessageCircle, 
+          color: '#8B5CF6',
+          description: 'Text answers with AI feedback' 
+        },
+        { 
+          id: 'interactive-map', 
+          name: 'Interactive Map', 
+          icon: Map, 
+          color: '#14B8A6',
+          description: 'Clickable maps and diagrams' 
+        },
+        { 
+          id: 'timeline-builder', 
+          name: 'Timeline', 
+          icon: Calendar, 
+          color: '#F59E0B',
+          description: 'Order events chronologically' 
+        },
+      ],
+    },
+    {
+      name: 'Creative Activities',
+      items: [
+        { 
+          id: 'drawing-canvas', 
+          name: 'Drawing Canvas', 
+          icon: Paintbrush, 
+          color: '#EC4899',
+          description: 'Draw and color pictures' 
+        },
+        { 
+          id: 'story-builder', 
+          name: 'Story Builder', 
+          icon: Book, 
+          color: '#A855F7',
+          description: 'Create stories with elements' 
+        },
+        { 
+          id: 'dialog-roleplay', 
+          name: 'Dialog Roleplay', 
+          icon: MessageSquareText, 
+          color: '#6366F1',
+          description: 'Interactive conversations' 
+        },
+        { 
+          id: 'interactive-board', 
+          name: 'Interactive Board', 
+          icon: Layout, 
+          color: '#F97316',
+          description: 'Sticker wall and boards' 
+        },
+        { 
+          id: 'object-builder', 
+          name: 'Object Builder', 
+          icon: BoxIcon, 
+          color: '#EF4444',
+          description: 'Build objects LEGO-style' 
+        },
+      ],
+    },
+    {
+      name: 'Games & Challenges',
+      items: [
+        { 
+          id: 'timer-challenge', 
+          name: 'Timer Challenge', 
+          icon: Timer, 
+          color: '#EF4444',
+          description: 'Timed activities and tasks' 
+        },
+        { 
+          id: 'categorization-grid', 
+          name: 'Categorization', 
+          icon: FolderKanban, 
+          color: '#10B981',
+          description: 'Sort items into categories' 
         },
       ],
     },

@@ -6,7 +6,7 @@
 import { ComponentType } from 'react';
 
 // === Базові типи ===
-export type AgeGroup = '2-3' | '4-6' | '7-8' | '9-10';
+export type AgeGroup = '2-3' | '4-6' | '7-8' | '9-10' | '11-12' | '13-15' | '16-18';
 
 export type FieldType = 'text' | 'select' | 'multiselect' | 'textarea' | 'checkbox';
 

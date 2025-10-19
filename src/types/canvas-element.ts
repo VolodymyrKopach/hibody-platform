@@ -33,7 +33,20 @@ export interface CanvasElement {
     | 'pattern-builder'
     | 'cause-effect'
     | 'reward-collector'
-    | 'voice-recorder';
+    | 'voice-recorder'
+    // New interactive components
+    | 'flashcards'
+    | 'word-builder'
+    | 'open-question'
+    | 'drawing-canvas'
+    | 'dialog-roleplay'
+    | 'interactive-map'
+    | 'timer-challenge'
+    | 'timeline-builder'
+    | 'story-builder'
+    | 'categorization-grid'
+    | 'interactive-board'
+    | 'object-builder';
   position: {
     x: number;
     y: number;

@@ -171,6 +171,330 @@ export function generateQuickImprovements(
     ];
   }
   
+  // Quick improvements for Flashcards
+  if (componentType === 'flashcards') {
+    return [
+      {
+        id: 'add-card',
+        label: 'Додати картку',
+        icon: 'Plus',
+        description: 'Додати нову картку',
+        instruction: 'Додай ще одну картку з новим словом/поняттям'
+      },
+      {
+        id: 'add-images',
+        label: 'Додати зображення',
+        icon: 'ImageIcon',
+        description: 'Додати зображення на картки',
+        instruction: 'Додай відповідні зображення на картки для кращого запам\'ятовування'
+      },
+      {
+        id: 'simplify',
+        label: 'Спростити',
+        icon: 'Minimize2',
+        description: 'Спростити контент',
+        instruction: 'Зроби тексти на картках простішими та коротшими'
+      }
+    ];
+  }
+  
+  // Quick improvements for Word Builder
+  if (componentType === 'word-builder') {
+    return [
+      {
+        id: 'easier-word',
+        label: 'Легше слово',
+        icon: 'TrendingDown',
+        description: 'Використати простіше слово',
+        instruction: 'Зміни на простіше слово для вивчення'
+      },
+      {
+        id: 'harder-word',
+        label: 'Складніше слово',
+        icon: 'TrendingUp',
+        description: 'Використати складніше слово',
+        instruction: 'Зміни на більш складне слово для виклику'
+      },
+      {
+        id: 'add-hint',
+        label: 'Додати підказку',
+        icon: 'Lightbulb',
+        description: 'Додати підказку-зображення',
+        instruction: 'Додай зображення-підказку до слова'
+      }
+    ];
+  }
+  
+  // Quick improvements for Open Question
+  if (componentType === 'open-question') {
+    return [
+      {
+        id: 'rephrase',
+        label: 'Перефразувати',
+        icon: 'RefreshCw',
+        description: 'Переформулювати питання',
+        instruction: 'Перефразуй питання по-іншому, зробивши його чіткішим'
+      },
+      {
+        id: 'add-keywords',
+        label: 'Додати ключові слова',
+        icon: 'Key',
+        description: 'Додати очікувані ключові слова',
+        instruction: 'Додай більше ключових слів, які AI повинен шукати у відповіді'
+      },
+      {
+        id: 'make-easier',
+        label: 'Спростити питання',
+        icon: 'TrendingDown',
+        description: 'Зробити питання простішим',
+        instruction: 'Зроби питання простішим та зрозумілішим'
+      }
+    ];
+  }
+  
+  // Quick improvements for Drawing Canvas
+  if (componentType === 'drawing-canvas') {
+    return [
+      {
+        id: 'add-background',
+        label: 'Додати фон',
+        icon: 'ImageIcon',
+        description: 'Додати фонове зображення',
+        instruction: 'Додай цікаве фонове зображення для малювання'
+      },
+      {
+        id: 'more-colors',
+        label: 'Більше кольорів',
+        icon: 'Palette',
+        description: 'Розширити палітру',
+        instruction: 'Додай більше кольорів у палітру'
+      },
+      {
+        id: 'add-templates',
+        label: 'Додати шаблони',
+        icon: 'Layout',
+        description: 'Додати шаблони для малювання',
+        instruction: 'Додай готові шаблони або контури для малювання'
+      }
+    ];
+  }
+  
+  // Quick improvements for Dialog Roleplay
+  if (componentType === 'dialog-roleplay') {
+    return [
+      {
+        id: 'add-branch',
+        label: 'Додати гілку',
+        icon: 'GitBranch',
+        description: 'Додати варіант діалогу',
+        instruction: 'Додай нову гілку діалогу з альтернативними відповідями'
+      },
+      {
+        id: 'add-character',
+        label: 'Додати персонажа',
+        icon: 'Users',
+        description: 'Додати нового персонажа',
+        instruction: 'Додай нового персонажа до діалогу'
+      },
+      {
+        id: 'make-natural',
+        label: 'Природніший',
+        icon: 'MessageCircle',
+        description: 'Зробити діалог природнішим',
+        instruction: 'Зроби діалог більш природним та живим'
+      }
+    ];
+  }
+  
+  // Quick improvements for Interactive Map
+  if (componentType === 'interactive-map') {
+    return [
+      {
+        id: 'add-hotspot',
+        label: 'Додати точку',
+        icon: 'MapPin',
+        description: 'Додати нову інтерактивну точку',
+        instruction: 'Додай нову інтерактивну точку на карту з інформацією'
+      },
+      {
+        id: 'add-quiz',
+        label: 'Режим квізу',
+        icon: 'HelpCircle',
+        description: 'Додати завдання-квіз',
+        instruction: 'Додай завдання у форматі квізу для перевірки знань карти'
+      },
+      {
+        id: 'more-info',
+        label: 'Більше інформації',
+        icon: 'Info',
+        description: 'Розширити інформацію',
+        instruction: 'Додай більше деталей та інформації до кожної точки'
+      }
+    ];
+  }
+  
+  // Quick improvements for Timer Challenge
+  if (componentType === 'timer-challenge') {
+    return [
+      {
+        id: 'more-time',
+        label: 'Більше часу',
+        icon: 'Clock',
+        description: 'Збільшити час',
+        instruction: 'Збільш час на виконання завдання'
+      },
+      {
+        id: 'add-questions',
+        label: 'Додати питання',
+        icon: 'Plus',
+        description: 'Додати більше питань',
+        instruction: 'Додай більше питань до челенджу'
+      },
+      {
+        id: 'easier',
+        label: 'Зробити легше',
+        icon: 'TrendingDown',
+        description: 'Спростити завдання',
+        instruction: 'Зроби питання простішими'
+      }
+    ];
+  }
+  
+  // Quick improvements for Timeline Builder
+  if (componentType === 'timeline-builder') {
+    return [
+      {
+        id: 'add-event',
+        label: 'Додати подію',
+        icon: 'Plus',
+        description: 'Додати нову подію',
+        instruction: 'Додай ще одну важливу подію до таймлайну'
+      },
+      {
+        id: 'add-images',
+        label: 'Додати зображення',
+        icon: 'ImageIcon',
+        description: 'Додати зображення до подій',
+        instruction: 'Додай відповідні зображення до кожної події'
+      },
+      {
+        id: 'more-details',
+        label: 'Більше деталей',
+        icon: 'FileText',
+        description: 'Розширити описи',
+        instruction: 'Додай більше деталей та контексту до кожної події'
+      }
+    ];
+  }
+  
+  // Quick improvements for Story Builder
+  if (componentType === 'story-builder') {
+    return [
+      {
+        id: 'add-character',
+        label: 'Додати персонажа',
+        icon: 'User',
+        description: 'Додати нового персонажа',
+        instruction: 'Додай нового цікавого персонажа для історій'
+      },
+      {
+        id: 'add-location',
+        label: 'Додати локацію',
+        icon: 'Map',
+        description: 'Додати нову локацію',
+        instruction: 'Додай нову локацію де може відбуватися історія'
+      },
+      {
+        id: 'more-items',
+        label: 'Більше предметів',
+        icon: 'Package',
+        description: 'Додати предмети',
+        instruction: 'Додай більше предметів та елементів для історій'
+      }
+    ];
+  }
+  
+  // Quick improvements for Categorization Grid
+  if (componentType === 'categorization-grid') {
+    return [
+      {
+        id: 'add-item',
+        label: 'Додати елемент',
+        icon: 'Plus',
+        description: 'Додати елемент для сортування',
+        instruction: 'Додай ще один елемент для сортування по категоріях'
+      },
+      {
+        id: 'add-category',
+        label: 'Додати категорію',
+        icon: 'Folder',
+        description: 'Додати нову категорію',
+        instruction: 'Додай ще одну категорію для сортування'
+      },
+      {
+        id: 'add-images',
+        label: 'Додати зображення',
+        icon: 'ImageIcon',
+        description: 'Додати зображення до елементів',
+        instruction: 'Додай зображення до елементів для кращого розпізнавання'
+      }
+    ];
+  }
+  
+  // Quick improvements for Interactive Board
+  if (componentType === 'interactive-board') {
+    return [
+      {
+        id: 'add-background',
+        label: 'Змінити фон',
+        icon: 'ImageIcon',
+        description: 'Встановити фонове зображення',
+        instruction: 'Додай або зміни фонове зображення дошки'
+      },
+      {
+        id: 'add-instructions',
+        label: 'Додати інструкції',
+        icon: 'Info',
+        description: 'Додати інструкції використання',
+        instruction: 'Додай чіткі інструкції як користуватися дошкою'
+      },
+      {
+        id: 'more-stickers',
+        label: 'Більше стікерів',
+        icon: 'Smile',
+        description: 'Збільшити ліміт стікерів',
+        instruction: 'Збільш максимальну кількість стікерів'
+      }
+    ];
+  }
+  
+  // Quick improvements for Object Builder
+  if (componentType === 'object-builder') {
+    return [
+      {
+        id: 'add-part',
+        label: 'Додати деталь',
+        icon: 'Plus',
+        description: 'Додати нову деталь',
+        instruction: 'Додай ще одну деталь до об\'єкта'
+      },
+      {
+        id: 'simplify',
+        label: 'Спростити',
+        icon: 'Minimize2',
+        description: 'Зменшити кількість деталей',
+        instruction: 'Зменш кількість деталей для простішого будування'
+      },
+      {
+        id: 'add-colors',
+        label: 'Більше кольорів',
+        icon: 'Palette',
+        description: 'Додати різнокольорові деталі',
+        instruction: 'Додай більше кольорів до деталей об\'єкта'
+      }
+    ];
+  }
+  
   // Default fallback improvements
   return [
     {
@@ -208,7 +532,20 @@ export function getComponentTypeName(componentType: string): string {
     'table': 'Таблиця',
     'divider': 'Розділювач',
     'bullet-list': 'Маркований список',
-    'numbered-list': 'Нумерований список'
+    'numbered-list': 'Нумерований список',
+    // New interactive components
+    'flashcards': 'Флешкартки',
+    'word-builder': 'Будівник слів',
+    'open-question': 'Відкрите питання',
+    'drawing-canvas': 'Полотно для малювання',
+    'dialog-roleplay': 'Рольова гра діалог',
+    'interactive-map': 'Інтерактивна карта',
+    'timer-challenge': 'Челендж на час',
+    'timeline-builder': 'Таймлайн',
+    'story-builder': 'Конструктор історій',
+    'categorization-grid': 'Сітка категорій',
+    'interactive-board': 'Інтерактивна дошка',
+    'object-builder': 'Конструктор об\'єктів'
   };
   
   return names[componentType] || componentType;
@@ -251,7 +588,21 @@ export function getAIChatPlaceholder(target: 'component' | 'page', componentType
     'table': 'Що змінити в таблиці? (напр., "додай колонку" або "спрости дані")',
     
     // Divider
-    'divider': 'Що змінити в розділювачі? (напр., "зміни стиль" або "додай текст")'
+    'divider': 'Що змінити в розділювачі? (напр., "зміни стиль" або "додай текст")',
+    
+    // New interactive components
+    'flashcards': 'Що змінити у флешкартках? (напр., "додай картку" або "додай зображення")',
+    'word-builder': 'Що змінити у будівнику слів? (напр., "складніше слово" або "додай підказку")',
+    'open-question': 'Що змінити у відкритому питанні? (напр., "перефразуй" або "додай ключові слова")',
+    'drawing-canvas': 'Що змінити на полотні? (напр., "додай фон" або "більше кольорів")',
+    'dialog-roleplay': 'Що змінити в діалозі? (напр., "додай гілку" або "додай персонажа")',
+    'interactive-map': 'Що змінити на карті? (напр., "додай точку" або "додай квіз")',
+    'timer-challenge': 'Що змінити в челенджі? (напр., "більше часу" або "додай питання")',
+    'timeline-builder': 'Що змінити в таймлайні? (напр., "додай подію" або "додай зображення")',
+    'story-builder': 'Що змінити в конструкторі історій? (напр., "додай персонажа" або "додай локацію")',
+    'categorization-grid': 'Що змінити в сітці категорій? (напр., "додай елемент" або "додай категорію")',
+    'interactive-board': 'Що змінити на дошці? (напр., "змінити фон" або "більше стікерів")',
+    'object-builder': 'Що змінити в конструкторі? (напр., "додай деталь" або "спрости")'
   };
   
   // Return specific placeholder or default
