@@ -88,6 +88,7 @@ export const PAGE_CONFIGS: Record<string, PageConfig> = {
 export class ContentPaginationService {
   private pageConfig: PageConfig;
   private ageRange?: string; // For age-based size adjustments
+  private contentMode: 'pdf' | 'interactive' = 'pdf'; // Content mode for page type
   
   // Track overflow warnings for elements that exceed page height
   private overflowWarnings: Array<{
@@ -120,6 +121,13 @@ export class ContentPaginationService {
    */
   public setAgeRange(ageRange: string): void {
     this.ageRange = ageRange;
+  }
+
+  /**
+   * Set content mode for page type
+   */
+  public setContentMode(mode: 'pdf' | 'interactive'): void {
+    this.contentMode = mode;
   }
 
   // === ADVANCED PAGINATION: Pre-calculation Phase ===
@@ -697,6 +705,7 @@ export class ContentPaginationService {
       pageNumber,
       title: title || `Page ${pageNumber}`,
       elements,
+      pageType: this.contentMode, // Set pageType based on contentMode
     };
   }
 

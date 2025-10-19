@@ -74,6 +74,7 @@ export interface GeneratedPage {
   background?: PageBackgroundConfig;
   elements: GeneratedElement[]; // Elements without id and zIndex
   ageGroup?: string; // Age group for age-appropriate styling
+  pageType?: 'pdf' | 'interactive'; // PDF = fixed A4, Interactive = scrollable
 }
 
 /**
@@ -97,6 +98,7 @@ export interface WorksheetMetadata {
   componentsUsed: string[];
   estimatedDuration?: number; // Minutes to complete
   autoPaginated: boolean; // Whether pages were auto-generated
+  contentMode?: 'pdf' | 'interactive'; // Content mode used
 }
 
 /**

@@ -72,9 +72,11 @@ export class GeminiWorksheetGenerationService {
       console.log('📄 [WORKSHEET_GEN] Auto-paginating content...');
       // Set age range for proper component sizing
       this.paginationService.setAgeRange(request.ageGroup);
+      // Set content mode for page type (pdf or interactive)
+      this.paginationService.setContentMode(request.contentMode || 'pdf');
       const paginationResult = this.paginationService.paginateContent(
-        allElements,
-        `${request.topic} Worksheet`
+        allElements
+        // No title passed - pages will be named "Page 1", "Page 2", etc.
       );
 
       // Build final response with paginated content
@@ -96,6 +98,7 @@ export class GeminiWorksheetGenerationService {
           componentsUsed: this.getComponentTypesUsed(allElements),
           estimatedDuration: this.estimateDurationFromElements(allElements),
           autoPaginated: true,
+          contentMode: request.contentMode || 'pdf',
         },
       };
 
@@ -441,6 +444,283 @@ export class GeminiWorksheetGenerationService {
   }
 
   /**
+   * Get age-specific interactive page structure guidelines
+   */
+  private getAgeSpecificInteractiveStructureGuidelines(ageGroup: string): string {
+    // Parse age group to determine category
+    const age = parseInt(ageGroup.split('-')[0]);
+    
+    if (age <= 5) {
+      // Ages 2-3 and 3-5
+      return `
+**INTERACTIVE PAGE STRUCTURE FOR AGES 2-5 (TODDLERS & PRESCHOOL):**
+
+🎯 **PAGE STRUCTURE:**
+1. Giant Title with emoji (e.g., "🐶 Dogs!" or "🔴 Colors!")
+2. ONE Large Interactive Component (full screen focus)
+
+**RULES:**
+- NO body text - children this age can't read yet
+- NO instructions boxes - teacher/parent guides verbally
+- NO images separate from interactive component
+- ONE interactive activity per page maximum
+- Components should be HUGE (fill most of the screen)
+- Use bright colors, big buttons, simple interactions
+
+**RECOMMENDED COMPONENTS:**
+- tap-image (tap pictures to hear sounds)
+- color-matcher (match colors with big buttons)
+- simple-counter (count objects by tapping)
+- memory-cards (2-4 cards only)
+- sorting-game (2-3 categories max)
+- reward-collector (simple task checklist)
+
+**EXAMPLE PAGE:**
+\`\`\`json
+{
+  "elements": [
+    {
+      "type": "title-block",
+      "properties": {
+        "text": "🐕 Find Dogs!",
+        "level": "main",
+        "align": "center"
+      }
+    },
+    {
+      "type": "tap-image",
+      "properties": {
+        "images": [
+          { "imageUrl": "dog1.jpg", "soundUrl": "bark.mp3", "label": "Dog" },
+          { "imageUrl": "cat1.jpg", "soundUrl": "meow.mp3", "label": "Cat" },
+          { "imageUrl": "dog2.jpg", "soundUrl": "bark.mp3", "label": "Dog" }
+        ],
+        "target": "Dog",
+        "celebrationOnComplete": true
+      }
+    }
+  ]
+}
+\`\`\`
+`;
+    } else if (age >= 6 && age <= 7) {
+      // Ages 6-7 (early elementary)
+      return `
+**INTERACTIVE PAGE STRUCTURE FOR AGES 6-7 (EARLY ELEMENTARY):**
+
+🎯 **PAGE STRUCTURE:**
+1. Title (emoji + short phrase)
+2. Simple Instructions (1 sentence, optional)
+3. 1-2 Interactive Components
+4. Optional: 1 small supporting image
+
+**RULES:**
+- Keep text VERY SHORT (max 1-2 sentences)
+- Instructions should be simple: "Tap the blue shapes" or "Match the animals"
+- Can have 1-2 interactive components per page
+- Components should be LARGE (children have developing motor skills)
+- Use visual cues and colors to guide
+
+**RECOMMENDED COMPONENTS:**
+- All components from ages 2-5, plus:
+- simple-drag-and-drop (4-6 items)
+- shape-tracer (trace simple shapes)
+- emotion-recognizer (identify feelings)
+- pattern-builder (simple patterns)
+- cause-effect-game (simple cause/effect)
+
+**EXAMPLE PAGE:**
+\`\`\`json
+{
+  "elements": [
+    {
+      "type": "title-block",
+      "properties": {
+        "text": "🔵 Find Blue Things",
+        "level": "main",
+        "align": "center"
+      }
+    },
+    {
+      "type": "instructions-box",
+      "properties": {
+        "text": "Tap all the blue objects!",
+        "type": "activity"
+      }
+    },
+    {
+      "type": "color-matcher",
+      "properties": {
+        "targetColor": "blue",
+        "items": [
+          { "imageUrl": "ball.jpg", "color": "blue", "name": "Ball" },
+          { "imageUrl": "sun.jpg", "color": "yellow", "name": "Sun" },
+          { "imageUrl": "sky.jpg", "color": "blue", "name": "Sky" }
+        ],
+        "mode": "multiple",
+        "celebrationOnComplete": true
+      }
+    }
+  ]
+}
+\`\`\`
+`;
+    } else if (age >= 8 && age <= 10) {
+      // Ages 8-10 (elementary)
+      return `
+**INTERACTIVE PAGE STRUCTURE FOR AGES 8-10 (ELEMENTARY):**
+
+🎯 **PAGE STRUCTURE:**
+1. Title
+2. Body Text (2-3 sentences explaining concept)
+3. Optional Image (supporting visual)
+4. Interactive Component
+5. Instructions (what to do)
+
+**RULES:**
+- Can include short explanations (2-3 sentences)
+- Instructions can be more detailed
+- 1 main interactive component per page (or 2 smaller ones)
+- Can combine text + interactive learning
+- Use educational images to support concepts
+
+**RECOMMENDED COMPONENTS:**
+- All previous components, plus:
+- More complex memory-cards (6-12 cards)
+- sequence-builder (order events)
+- More advanced sorting-game (4-5 categories)
+- pattern-builder (complex patterns)
+- Multiple components on same page possible
+
+**EXAMPLE PAGE:**
+\`\`\`json
+{
+  "elements": [
+    {
+      "type": "title-block",
+      "properties": {
+        "text": "Animal Habitats",
+        "level": "main",
+        "align": "center"
+      }
+    },
+    {
+      "type": "body-text",
+      "properties": {
+        "text": "Animals live in different places. Fish live in water, birds live in trees, and bears live in forests. Let's sort them!",
+        "variant": "paragraph"
+      }
+    },
+    {
+      "type": "image-placeholder",
+      "properties": {
+        "imagePrompt": "Educational illustration showing different animal habitats - ocean, forest, and sky",
+        "width": 400,
+        "height": 250,
+        "align": "center"
+      }
+    },
+    {
+      "type": "sorting-game",
+      "properties": {
+        "categories": [
+          { "id": "water", "name": "Water", "color": "#2196F3" },
+          { "id": "land", "name": "Land", "color": "#4CAF50" },
+          { "id": "air", "name": "Air", "color": "#87CEEB" }
+        ],
+        "items": [
+          { "id": "fish", "imageUrl": "fish.jpg", "correctCategory": "water" },
+          { "id": "bear", "imageUrl": "bear.jpg", "correctCategory": "land" },
+          { "id": "bird", "imageUrl": "bird.jpg", "correctCategory": "air" }
+        ],
+        "showFeedback": true
+      }
+    }
+  ]
+}
+\`\`\`
+`;
+    } else {
+      // Ages 11+
+      return `
+**INTERACTIVE PAGE STRUCTURE FOR AGES 11+ (UPPER ELEMENTARY & MIDDLE SCHOOL):**
+
+🎯 **PAGE STRUCTURE:**
+1. Title
+2. Body Text (full explanation, 3-5 sentences)
+3. Multiple Interactive Components (can have 2-3)
+4. Reflection Questions (optional, to think about)
+5. Images and visual aids as needed
+
+**RULES:**
+- Can include detailed explanations
+- Multiple interactive components per page are fine
+- Can combine different types of learning activities
+- Add reflection or discussion prompts
+- More complex interactions and problem-solving
+
+**RECOMMENDED COMPONENTS:**
+- All previous components
+- Complex combinations possible
+- Multiple activities in sequence
+- Can mix interactive + traditional exercises
+
+**EXAMPLE PAGE:**
+\`\`\`json
+{
+  "elements": [
+    {
+      "type": "title-block",
+      "properties": {
+        "text": "The Water Cycle",
+        "level": "main",
+        "align": "center"
+      }
+    },
+    {
+      "type": "body-text",
+      "properties": {
+        "text": "Water on Earth moves in a continuous cycle. The sun heats water in oceans and lakes, causing evaporation. Water vapor rises and forms clouds (condensation). When clouds get heavy, rain falls (precipitation), returning water to Earth.",
+        "variant": "paragraph"
+      }
+    },
+    {
+      "type": "sequence-builder",
+      "properties": {
+        "items": [
+          { "id": "1", "text": "Evaporation", "imageUrl": "evap.jpg", "correctOrder": 1 },
+          { "id": "2", "text": "Condensation", "imageUrl": "cloud.jpg", "correctOrder": 2 },
+          { "id": "3", "text": "Precipitation", "imageUrl": "rain.jpg", "correctOrder": 3 }
+        ],
+        "instruction": "Drag the steps in the correct order:"
+      }
+    },
+    {
+      "type": "memory-cards",
+      "properties": {
+        "pairs": [
+          { "id": "p1", "front": "Evaporation", "back": "Water turning to vapor" },
+          { "id": "p2", "front": "Condensation", "back": "Vapor forming clouds" },
+          { "id": "p3", "front": "Precipitation", "back": "Rain falling from clouds" }
+        ],
+        "gridSize": "3x2"
+      }
+    },
+    {
+      "type": "body-text",
+      "properties": {
+        "text": "💭 Think: How does the water cycle affect weather in your area?",
+        "variant": "emphasis"
+      }
+    }
+  ]
+}
+\`\`\`
+`;
+    }
+  }
+
+  /**
    * Build detailed prompt for Gemini with component library
    */
   private buildGenerationPrompt(request: WorksheetGenerationRequest): string {
@@ -510,6 +790,10 @@ Focus on:
 - IMMEDIATE FEEDBACK with sounds and animations
 - FUN and ENGAGING gameplay
 - EMOTIONAL rewards (celebrations, praise, stars)
+
+${this.getAgeSpecificInteractiveStructureGuidelines(ageGroup)}
+
+**CRITICAL: Follow the age-specific page structure above! Each "page" worth of content should match the structure for this age group.**
 ` : ''}
 
 **IMPORTANT: Generate ALL content as a SINGLE list of components. Do NOT organize into pages. The system will automatically distribute content across pages based on actual component sizes.**
