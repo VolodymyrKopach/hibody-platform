@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Typography, Stack } from '@mui/material';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/constants/visual-themes';
 
 interface MatchPair {
   number: number;
@@ -11,6 +13,7 @@ interface MatchPair {
 
 interface MatchPairsProps {
   items: MatchPair[];
+  theme?: ThemeName;
   isSelected?: boolean;
   onEdit?: (properties: { items: MatchPair[] }) => void;
   onFocus?: () => void;
@@ -18,10 +21,12 @@ interface MatchPairsProps {
 
 const MatchPairs: React.FC<MatchPairsProps> = ({ 
   items,
+  theme: themeName,
   isSelected = false,
   onEdit,
   onFocus,
 }) => {
+  const componentTheme = useComponentTheme(themeName);
   const [editingItem, setEditingItem] = useState<{ number: number; side: 'left' | 'right' } | null>(null);
   const [localItems, setLocalItems] = useState<MatchPair[]>(items);
   const editRef = useRef<HTMLDivElement>(null);
@@ -47,9 +52,8 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
   const handleBlur = (itemNumber: number, side: 'left' | 'right') => {
     const text = editRef.current?.textContent || '';
     
-    // Protection from undefined/null
+    // Guard against undefined/null
     if (text === undefined || text === null || text === 'undefined') {
-      console.warn('⚠️ [MatchPairs handleBlur] Received undefined/null text, skipping update');
       setEditingItem(null);
       return;
     }
@@ -102,15 +106,21 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
                   width: 24,
                   height: 24,
                   borderRadius: '50%',
-                  background: '#EFF6FF',
-                  border: '2px solid #2563EB',
+                  background: componentTheme.colors.background,
+                  border: `2px solid ${componentTheme.colors.accent || componentTheme.colors.primary || '#2563EB'}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
+                  transition: componentTheme.animations.quick,
                 }}
               >
-                <Typography sx={{ fontSize: '12px', fontWeight: 600, color: '#2563EB' }}>
+                <Typography sx={{ 
+                  fontSize: componentTheme.typography.small, 
+                  fontWeight: 600, 
+                  color: componentTheme.colors.accent || componentTheme.colors.primary || '#2563EB',
+                  fontFamily: componentTheme.typography.fontFamily,
+                }}>
                   {item.number}
                 </Typography>
               </Box>
@@ -121,9 +131,10 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
                   flex: 1,
                   px: 2,
                   py: 1.5,
-                  backgroundColor: '#F9FAFB',
+                  backgroundColor: componentTheme.colors.background,
                   border: '1px solid #E5E7EB',
-                  borderRadius: '8px',
+                  borderRadius: componentTheme.spacing.borderRadius,
+                  transition: componentTheme.animations.quick,
                 }}
               >
                 {editingItem?.number === item.number && editingItem?.side === 'left' ? (
@@ -134,14 +145,15 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
                     onBlur={() => handleBlur(item.number, 'left')}
                     onKeyDown={(e) => handleKeyDown(e, item.number, 'left')}
                     sx={{
-                      fontSize: '14px',
-                      color: '#374151',
-                      fontFamily: 'Inter, sans-serif',
+                      fontSize: componentTheme.typography.body,
+                      color: componentTheme.colors.text,
+                      fontFamily: componentTheme.typography.fontFamily,
                       outline: 'none',
                       border: '1px solid #2563EB',
-                      borderRadius: '4px',
+                      borderRadius: componentTheme.spacing.borderRadius,
                       padding: '4px 8px',
                       backgroundColor: '#FFFFFF',
+                      transition: componentTheme.animations.quick,
                     }}
                   >
                     {item.left}
@@ -151,13 +163,14 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
                     onClick={handleClick}
                     onDoubleClick={() => handleDoubleClick(item.number, 'left')}
                     sx={{
-                      fontSize: '14px',
-                      color: '#374151',
-                      fontFamily: 'Inter, sans-serif',
+                      fontSize: componentTheme.typography.body,
+                      color: componentTheme.colors.text,
+                      fontFamily: componentTheme.typography.fontFamily,
                       cursor: isSelected && onEdit ? 'text' : 'default',
+                      transition: componentTheme.animations.quick,
                       '&:hover': isSelected && onEdit ? {
                         backgroundColor: '#FFFFFF',
-                        borderRadius: '4px',
+                        borderRadius: componentTheme.spacing.borderRadius,
                         padding: '4px 8px',
                         margin: '-4px -8px',
                       } : {},
@@ -206,9 +219,10 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
                   flex: 1,
                   px: 2,
                   py: 1.5,
-                  backgroundColor: '#F9FAFB',
+                  backgroundColor: componentTheme.colors.background,
                   border: '1px solid #E5E7EB',
-                  borderRadius: '8px',
+                  borderRadius: componentTheme.spacing.borderRadius,
+                  transition: componentTheme.animations.quick,
                 }}
               >
                 {editingItem?.number === item.number && editingItem?.side === 'right' ? (
@@ -219,14 +233,15 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
                     onBlur={() => handleBlur(item.number, 'right')}
                     onKeyDown={(e) => handleKeyDown(e, item.number, 'right')}
                     sx={{
-                      fontSize: '14px',
-                      color: '#374151',
-                      fontFamily: 'Inter, sans-serif',
+                      fontSize: componentTheme.typography.body,
+                      color: componentTheme.colors.text,
+                      fontFamily: componentTheme.typography.fontFamily,
                       outline: 'none',
                       border: '1px solid #2563EB',
-                      borderRadius: '4px',
+                      borderRadius: componentTheme.spacing.borderRadius,
                       padding: '4px 8px',
                       backgroundColor: '#FFFFFF',
+                      transition: componentTheme.animations.quick,
                     }}
                   >
                     {item.right}
@@ -236,13 +251,14 @@ const MatchPairs: React.FC<MatchPairsProps> = ({
                     onClick={handleClick}
                     onDoubleClick={() => handleDoubleClick(item.number, 'right')}
                     sx={{
-                      fontSize: '14px',
-                      color: '#374151',
-                      fontFamily: 'Inter, sans-serif',
+                      fontSize: componentTheme.typography.body,
+                      color: componentTheme.colors.text,
+                      fontFamily: componentTheme.typography.fontFamily,
                       cursor: isSelected && onEdit ? 'text' : 'default',
+                      transition: componentTheme.animations.quick,
                       '&:hover': isSelected && onEdit ? {
                         backgroundColor: '#FFFFFF',
-                        borderRadius: '4px',
+                        borderRadius: componentTheme.spacing.borderRadius,
                         padding: '4px 8px',
                         margin: '-4px -8px',
                       } : {},

@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Typography, Stack } from '@mui/material';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface MultipleChoiceOption {
   letter: string;
@@ -19,6 +21,7 @@ interface MultipleChoiceProps {
   isSelected?: boolean;
   onEdit?: (properties: { items: MultipleChoiceItem[] }) => void;
   onFocus?: () => void;
+  theme?: ThemeName;
 }
 
 const MultipleChoice: React.FC<MultipleChoiceProps> = ({ 
@@ -26,12 +29,16 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
   isSelected = false,
   onEdit,
   onFocus,
+  theme,
 }) => {
   const [editingQuestion, setEditingQuestion] = useState<number | null>(null);
   const [editingOption, setEditingOption] = useState<{ itemNumber: number; letter: string } | null>(null);
   const [localItems, setLocalItems] = useState<MultipleChoiceItem[]>(items);
   const questionRef = useRef<HTMLDivElement>(null);
   const optionRef = useRef<HTMLDivElement>(null);
+  
+  // Apply component theme
+  const componentTheme = useComponentTheme(theme);
 
   // Sync with external changes
   useEffect(() => {
@@ -66,9 +73,8 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
   const handleQuestionBlur = (itemNumber: number) => {
     const text = questionRef.current?.textContent || '';
     
-    // Захист від undefined/null
+    // Guard against undefined/null
     if (text === undefined || text === null || text === 'undefined') {
-      console.warn('⚠️ [MultipleChoice handleQuestionBlur] Received undefined/null text, skipping update');
       setEditingQuestion(null);
       return;
     }
@@ -86,9 +92,8 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
   const handleOptionBlur = (itemNumber: number, letter: string) => {
     const text = optionRef.current?.textContent || '';
     
-    // Захист від undefined/null
+    // Guard against undefined/null
     if (text === undefined || text === null || text === 'undefined') {
-      console.warn('⚠️ [MultipleChoice handleOptionBlur] Received undefined/null text, skipping update');
       setEditingOption(null);
       return;
     }
@@ -171,8 +176,8 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
                   width: 24,
                   height: 24,
                   borderRadius: '50%',
-                  background: '#EFF6FF',
-                  border: '2px solid #2563EB',
+                  background: `${componentTheme.colors?.primary || '#2563EB'}15`,
+                  border: `2px solid ${componentTheme.colors?.primary || '#2563EB'}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -180,7 +185,11 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
                   mt: 0.25,
                 }}
               >
-                <Typography sx={{ fontSize: '12px', fontWeight: 600, color: '#2563EB' }}>
+                <Typography sx={{ 
+                  fontSize: `${componentTheme.typography?.fontSize.small || 12}px`, 
+                  fontWeight: componentTheme.typography?.fontWeight.medium || 600, 
+                  color: componentTheme.colors?.primary || '#2563EB' 
+                }}>
                   {item.number}
                 </Typography>
               </Box>
@@ -193,13 +202,13 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
                   onBlur={() => handleQuestionBlur(item.number)}
                   onKeyDown={(e) => handleQuestionKeyDown(e, item.number)}
                   sx={{
-                    fontSize: '14px',
-                    color: '#374151',
-                    fontFamily: 'Inter, sans-serif',
+                    fontSize: `${componentTheme.typography?.fontSize.medium || 14}px`,
+                    color: componentTheme.colors?.text.primary || '#374151',
+                    fontFamily: componentTheme.typography?.fontFamily || 'Inter, sans-serif',
                     flex: 1,
                     outline: 'none',
-                    border: '1px solid #2563EB',
-                    borderRadius: '4px',
+                    border: `1px solid ${componentTheme.colors?.primary || '#2563EB'}`,
+                    borderRadius: `${componentTheme.borderRadius?.sm || 4}px`,
                     padding: '4px 8px',
                     backgroundColor: '#FFFFFF',
                   }}

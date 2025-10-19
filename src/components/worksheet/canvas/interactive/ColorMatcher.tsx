@@ -7,6 +7,8 @@ import { Volume2, Star, Sparkles, RotateCcw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundService } from '@/services/interactive/SoundService';
 import { triggerHaptic } from '@/utils/interactive/haptics';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface ColorOption {
   name: string;
@@ -19,6 +21,7 @@ interface ColorMatcherProps {
   mode?: 'single' | 'multiple';
   showNames?: boolean;
   autoVoice?: boolean; // Automatically speak color name
+  theme?: ThemeName;
   ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
@@ -30,10 +33,12 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
   mode = 'single',
   showNames = true,
   autoVoice = true,
+  theme: themeName,
   isSelected,
   onEdit,
   onFocus,
 }) => {
+  const componentTheme = useComponentTheme(themeName);
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
   const [selectedColors, setSelectedColors] = useState<Set<number>>(new Set());
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);

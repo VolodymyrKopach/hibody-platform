@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Typography, Stack } from '@mui/material';
 import { Check, X } from 'lucide-react';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface TrueFalseItem {
   number: number;
@@ -14,6 +16,7 @@ interface TrueFalseProps {
   isSelected?: boolean;
   onEdit?: (properties: { items: TrueFalseItem[] }) => void;
   onFocus?: () => void;
+  theme?: ThemeName;
 }
 
 const TrueFalse: React.FC<TrueFalseProps> = ({ 
@@ -21,10 +24,14 @@ const TrueFalse: React.FC<TrueFalseProps> = ({
   isSelected = false,
   onEdit,
   onFocus,
+  theme,
 }) => {
   const [editingStatement, setEditingStatement] = useState<number | null>(null);
   const [localItems, setLocalItems] = useState<TrueFalseItem[]>(items);
   const statementRef = useRef<HTMLDivElement>(null);
+  
+  // Apply component theme
+  const componentTheme = useComponentTheme(theme);
 
   // Sync with external changes
   useEffect(() => {
@@ -47,9 +54,8 @@ const TrueFalse: React.FC<TrueFalseProps> = ({
   const handleStatementBlur = (itemNumber: number) => {
     const text = statementRef.current?.textContent || '';
     
-    // Захист від undefined/null
+    // Guard against undefined/null
     if (text === undefined || text === null || text === 'undefined') {
-      console.warn('⚠️ [TrueFalse handleStatementBlur] Received undefined/null text, skipping update');
       setEditingStatement(null);
       return;
     }

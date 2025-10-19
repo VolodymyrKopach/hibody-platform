@@ -7,6 +7,8 @@ import { RotateCcw, Sparkles, Star } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundService } from '@/services/interactive/SoundService';
 import { triggerHaptic } from '@/utils/interactive/haptics';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface CountingObject {
   imageUrl: string;
@@ -18,6 +20,7 @@ interface SimpleCounterProps {
   voiceEnabled?: boolean;
   celebrationAtEnd?: boolean;
   showProgress?: boolean;
+  theme?: ThemeName;
   ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
@@ -29,10 +32,12 @@ const SimpleCounter: React.FC<SimpleCounterProps> = ({
   voiceEnabled = true,
   celebrationAtEnd = true,
   showProgress = true,
+  theme: themeName,
   isSelected,
   onEdit,
   onFocus,
 }) => {
+  const componentTheme = useComponentTheme(themeName);
   const [currentObjectIndex, setCurrentObjectIndex] = useState(0);
   const [tappedCount, setTappedCount] = useState(0);
   const [tappedItems, setTappedItems] = useState<Set<number>>(new Set());

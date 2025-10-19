@@ -5,6 +5,8 @@ import { Box, Typography, Stack, Button, CircularProgress, alpha, Chip } from '@
 import { Image as ImageIcon, Upload, X, AlertCircle, HardDrive, Cloud } from 'lucide-react';
 import { worksheetImageService } from '@/services/images/WorksheetImageService';
 import { localImageService } from '@/services/images/LocalImageService';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/constants/visual-themes';
 
 interface ImagePlaceholderProps {
   url?: string;
@@ -12,6 +14,7 @@ interface ImagePlaceholderProps {
   width?: number;
   height?: number;
   align?: 'left' | 'center' | 'right';
+  theme?: ThemeName;
   isSelected?: boolean;
   onEdit?: (properties: { url?: string; caption?: string; width?: number; height?: number; align?: string }) => void;
   onFocus?: () => void;
@@ -23,10 +26,12 @@ const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
   width = 400,
   height = 300,
   align = 'center',
+  theme: themeName,
   isSelected = false,
   onEdit,
   onFocus,
 }) => {
+  const componentTheme = useComponentTheme(themeName);
   const [isEditingCaption, setIsEditingCaption] = useState(false);
   const [localCaption, setLocalCaption] = useState(caption);
   const [imageError, setImageError] = useState(false);
@@ -314,7 +319,7 @@ const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
           maxWidth: width,
           height: height,
           ...getAlignmentStyles(),
-          borderRadius: '8px',
+          borderRadius: componentTheme.spacing.borderRadius,
           border: isDragging 
             ? '3px dashed #2563EB' 
             : hasValidImage 
@@ -333,7 +338,7 @@ const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
           overflow: 'hidden',
           position: 'relative',
           cursor: isSelected && onEdit ? 'pointer' : 'default',
-          transition: 'all 0.2s',
+          transition: componentTheme.animations.smooth,
           '&:hover': isSelected && onEdit && !hasValidImage ? {
             borderColor: '#2563EB',
             background: alpha('#2563EB', 0.02),
@@ -346,10 +351,10 @@ const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
             <CircularProgress size={40} />
             <Typography
               sx={{
-                fontSize: '14px',
-                color: '#6B7280',
+                fontSize: componentTheme.typography.small,
+                color: componentTheme.colors.text,
                 fontWeight: 500,
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: componentTheme.typography.fontFamily,
               }}
             >
               Uploading...
@@ -417,10 +422,10 @@ const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
                 <Upload size={48} color="#2563EB" />
                 <Typography
                   sx={{
-                    fontSize: '16px',
+                    fontSize: componentTheme.typography.body,
                     color: '#2563EB',
                     fontWeight: 600,
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: componentTheme.typography.fontFamily,
                   }}
                 >
                   Drop image here
@@ -431,10 +436,10 @@ const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
                 <ImageIcon size={48} color="#9CA3AF" />
                 <Typography
                   sx={{
-                    fontSize: '14px',
-                    color: '#6B7280',
+                    fontSize: componentTheme.typography.small,
+                    color: componentTheme.colors.text,
                     fontWeight: 500,
-                    fontFamily: 'Inter, sans-serif',
+                    fontFamily: componentTheme.typography.fontFamily,
                   }}
                 >
                   {imageError ? 'Failed to load image' : 'Image Placeholder'}
@@ -552,17 +557,18 @@ const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
             onBlur={handleCaptionBlur}
             onKeyDown={handleCaptionKeyDown}
             sx={{
-              fontSize: '12px',
-              color: '#6B7280',
+              fontSize: componentTheme.typography.small,
+              color: componentTheme.colors.text,
               textAlign: align,
               mt: 1,
               fontStyle: 'italic',
-              fontFamily: 'Inter, sans-serif',
+              fontFamily: componentTheme.typography.fontFamily,
               outline: 'none',
               border: '1px solid #2563EB',
-              borderRadius: '4px',
+              borderRadius: componentTheme.spacing.borderRadius,
               padding: '4px 8px',
               backgroundColor: '#FFFFFF',
+              transition: componentTheme.animations.quick,
             }}
           >
             {localCaption}
@@ -571,16 +577,17 @@ const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
           <Typography
             onDoubleClick={handleCaptionDoubleClick}
             sx={{
-              fontSize: '12px',
-              color: '#6B7280',
+              fontSize: componentTheme.typography.small,
+              color: componentTheme.colors.text,
               textAlign: align,
               mt: 1,
               fontStyle: 'italic',
-              fontFamily: 'Inter, sans-serif',
+              fontFamily: componentTheme.typography.fontFamily,
               cursor: isSelected && onEdit ? 'text' : 'default',
+              transition: componentTheme.animations.quick,
               '&:hover': isSelected && onEdit ? {
                 backgroundColor: '#F9FAFB',
-                borderRadius: '4px',
+                borderRadius: componentTheme.spacing.borderRadius,
                 padding: '4px 8px',
                 margin: '4px -8px',
               } : {},

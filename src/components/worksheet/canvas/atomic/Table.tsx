@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import { Trash2 } from 'lucide-react';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/constants/visual-themes';
 
 interface TableProps {
   headers: string[];
@@ -14,6 +16,7 @@ interface TableProps {
   cellPadding?: number;
   fontSize?: number;
   textAlign?: 'left' | 'center' | 'right';
+  theme?: ThemeName;
   isSelected?: boolean;
   onEdit?: (properties: {
     headers?: string[];
@@ -39,10 +42,12 @@ const Table: React.FC<TableProps> = ({
   cellPadding = 10,
   fontSize = 13,
   textAlign = 'left',
+  theme: themeName,
   isSelected = false,
   onEdit,
   onFocus,
 }) => {
+  const componentTheme = useComponentTheme(themeName);
   const [editingCell, setEditingCell] = useState<{ row: number; col: number; isHeader: boolean } | null>(null);
   const [localHeaders, setLocalHeaders] = useState<string[]>(headers);
   const [localRows, setLocalRows] = useState<string[][]>(rows);
@@ -70,9 +75,8 @@ const Table: React.FC<TableProps> = ({
     if (editingCell && textRef.current && onEdit) {
       const text = textRef.current.textContent || '';
       
-      // Захист від undefined/null
+      // Guard against undefined/null
       if (text === undefined || text === null || text === 'undefined') {
-        console.warn('⚠️ [Table handleBlur] Received undefined/null text, skipping update');
         setEditingCell(null);
         return;
       }

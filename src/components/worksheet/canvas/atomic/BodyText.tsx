@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Box, alpha } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { RichTextEditor } from '../shared/RichTextEditor';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface BodyTextProps {
   text: string;
@@ -11,6 +13,7 @@ interface BodyTextProps {
   isSelected?: boolean;
   onEdit?: (newText: string) => void;
   onFocus?: () => void;
+  theme?: ThemeName;
 }
 
 const BodyText: React.FC<BodyTextProps> = ({ 
@@ -19,29 +22,26 @@ const BodyText: React.FC<BodyTextProps> = ({
   isSelected = false,
   onEdit,
   onFocus,
+  theme: themeName,
 }) => {
-  const theme = useTheme();
+  const muiTheme = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   
-  // Логування змін тексту
-  React.useEffect(() => {
-    console.log('📄 [BodyText Component] Text prop updated:', {
-      text,
-      type: typeof text,
-      isUndefined: text === undefined,
-      isStringUndefined: text === 'undefined',
-      length: text?.length
-    });
-  }, [text]);
+  // Apply component theme
+  const componentTheme = useComponentTheme(themeName);
 
   const getStyles = () => {
+    const baseSize = componentTheme.typography?.fontSize.small || 14;
+    const textColor = componentTheme.colors?.text.primary || '#374151';
+    const secondaryColor = componentTheme.colors?.text.secondary || '#6B7280';
+    
     switch (variant) {
       case 'description':
-        return { fontSize: '13px', color: '#6B7280' };
+        return { fontSize: `${baseSize}px`, color: secondaryColor };
       case 'example':
-        return { fontSize: '13px', color: '#4B5563' };
+        return { fontSize: `${baseSize}px`, color: textColor };
       default:
-        return { fontSize: '14px', color: '#374151' };
+        return { fontSize: `${baseSize + 1}px`, color: textColor };
     }
   };
 
@@ -62,18 +62,8 @@ const BodyText: React.FC<BodyTextProps> = ({
   };
 
   const handleChange = (html: string) => {
-    console.log('🔄 [BodyText handleChange] onChange triggered:', {
-      html,
-      type: typeof html,
-      length: html?.length,
-      isUndefined: html === undefined,
-      isNull: html === null,
-      isStringUndefined: html === 'undefined'
-    });
-    
-    // Захист від undefined/null
+    // Guard against undefined/null
     if (html === undefined || html === null || html === 'undefined') {
-      console.warn('⚠️ [BodyText handleChange] Received undefined/null, skipping onEdit call');
       return;
     }
     
@@ -81,7 +71,6 @@ const BodyText: React.FC<BodyTextProps> = ({
   };
 
   const handleFinishEditing = () => {
-    console.log('👋 [BodyText handleFinishEditing] Finish editing called');
     setIsEditing(false);
   };
 
@@ -92,10 +81,10 @@ const BodyText: React.FC<BodyTextProps> = ({
       sx={{
         position: 'relative',
         cursor: isSelected && !isEditing ? 'text' : 'inherit',
-        transition: 'all 0.2s',
-        borderRadius: '4px',
+        transition: `all ${componentTheme.animations?.duration.fast || 200}ms`,
+        borderRadius: `${componentTheme.borderRadius?.sm || 4}px`,
         '&:hover': isSelected && !isEditing ? {
-          backgroundColor: alpha(theme.palette.primary.main, 0.03),
+          backgroundColor: alpha(componentTheme.colors?.primary || muiTheme.palette.primary.main, 0.03),
         } : {},
       }}
       onClick={handleClick}
@@ -117,8 +106,8 @@ const BodyText: React.FC<BodyTextProps> = ({
             fontSize: styles.fontSize,
             // Don't set color here - let inline styles from HTML take precedence
             fontStyle: variant === 'example' ? 'italic' : 'normal',
-            lineHeight: 1.6,
-            fontFamily: 'Inter, sans-serif',
+            lineHeight: componentTheme.typography?.lineHeight || 1.6,
+            fontFamily: componentTheme.typography?.fontFamily || 'Inter, sans-serif',
             padding: '8px 12px',
             minHeight: '40px',
             '& p': {

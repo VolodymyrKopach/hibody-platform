@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Box, Typography, Stack, IconButton, TextField, Button, alpha, useTheme } from '@mui/material';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface FillInBlankItem {
   number: number;
@@ -16,6 +18,7 @@ interface FillInBlankProps {
   isSelected?: boolean;
   onEdit?: (items: FillInBlankItem[], wordBank?: string[]) => void;
   onFocus?: () => void;
+  theme?: ThemeName;
 }
 
 const FillInBlank: React.FC<FillInBlankProps> = ({ 
@@ -24,8 +27,10 @@ const FillInBlank: React.FC<FillInBlankProps> = ({
   isSelected = false,
   onEdit,
   onFocus,
+  theme: themeName,
 }) => {
-  const theme = useTheme();
+  const muiTheme = useTheme();
+  const componentTheme = useComponentTheme(themeName);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [localItems, setLocalItems] = useState<FillInBlankItem[]>(items);
   const [localWordBank, setLocalWordBank] = useState<string[]>(wordBank || []);
@@ -114,7 +119,7 @@ const FillInBlank: React.FC<FillInBlankProps> = ({
         cursor: onEdit ? 'pointer' : 'default',
         transition: 'all 0.2s',
         '&:hover': onEdit ? {
-          boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
+          boxShadow: `0 0 0 2px ${alpha(muiTheme.palette.primary.main, 0.1)}`,
           borderRadius: '8px',
         } : {},
       }}
@@ -312,11 +317,11 @@ const FillInBlank: React.FC<FillInBlankProps> = ({
             mt: 2,
             borderRadius: '8px',
             textTransform: 'none',
-            border: `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
-            color: theme.palette.primary.main,
+            border: `2px dashed ${alpha(muiTheme.palette.primary.main, 0.3)}`,
+            color: muiTheme.palette.primary.main,
             '&:hover': {
-              border: `2px dashed ${theme.palette.primary.main}`,
-              background: alpha(theme.palette.primary.main, 0.05),
+              border: `2px dashed ${muiTheme.palette.primary.main}`,
+              background: alpha(muiTheme.palette.primary.main, 0.05),
             },
           }}
         >

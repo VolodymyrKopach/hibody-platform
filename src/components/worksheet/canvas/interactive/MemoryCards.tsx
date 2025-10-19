@@ -7,6 +7,8 @@ import { RotateCcw, Sparkles, Trophy } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundService } from '@/services/interactive/SoundService';
 import { triggerHaptic } from '@/utils/interactive/haptics';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface CardPair {
   id: string;
@@ -19,6 +21,7 @@ interface MemoryCardsProps {
   gridSize?: '2x2' | '2x3' | '3x3';
   cardBackImage?: string;
   difficulty?: 'easy' | 'hard';
+  theme?: ThemeName;
   ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
@@ -35,10 +38,12 @@ const MemoryCards: React.FC<MemoryCardsProps> = ({
   gridSize = '2x2',
   cardBackImage,
   difficulty = 'easy',
+  theme: themeName,
   isSelected,
   onEdit,
   onFocus,
 }) => {
+  const componentTheme = useComponentTheme(themeName);
   const [cards, setCards] = useState<CardPair[]>([]);
   const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
   const [matchedPairs, setMatchedPairs] = useState<Set<string>>(new Set());

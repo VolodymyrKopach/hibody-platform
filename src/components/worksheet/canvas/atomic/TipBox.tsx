@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Box, Typography, Stack, alpha, useTheme } from '@mui/material';
 import { RichTextEditor } from '../shared/RichTextEditor';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface TipBoxProps {
   text: string;
@@ -11,6 +13,7 @@ interface TipBoxProps {
   isSelected?: boolean;
   onEdit?: (newText: string) => void;
   onFocus?: () => void;
+  theme?: ThemeName;
 }
 
 const TipBox: React.FC<TipBoxProps> = ({ 
@@ -20,20 +23,13 @@ const TipBox: React.FC<TipBoxProps> = ({
   isSelected = false,
   onEdit,
   onFocus,
+  theme: themeName,
 }) => {
-  const theme = useTheme();
+  const muiTheme = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   
-  // Логування змін тексту
-  React.useEffect(() => {
-    console.log('💡 [TipBox Component] Text prop updated:', {
-      text,
-      type: typeof text,
-      isUndefined: text === undefined,
-      isStringUndefined: text === 'undefined',
-      length: text?.length
-    });
-  }, [text]);
+  // Apply component theme
+  const componentTheme = useComponentTheme(themeName);
 
   const getIcon = () => {
     switch (type) {
@@ -45,18 +41,8 @@ const TipBox: React.FC<TipBoxProps> = ({
   };
 
   const handleChange = (html: string) => {
-    console.log('🔄 [TipBox handleChange] onChange triggered:', {
-      html,
-      type: typeof html,
-      length: html?.length,
-      isUndefined: html === undefined,
-      isNull: html === null,
-      isStringUndefined: html === 'undefined'
-    });
-    
-    // Захист від undefined/null
+    // Guard against undefined/null
     if (html === undefined || html === null || html === 'undefined') {
-      console.warn('⚠️ [TipBox handleChange] Received undefined/null, skipping onEdit call');
       return;
     }
     
@@ -64,7 +50,6 @@ const TipBox: React.FC<TipBoxProps> = ({
   };
 
   const handleFinishEditing = () => {
-    console.log('👋 [TipBox handleFinishEditing] Finish editing called');
     setIsEditing(false);
   };
 
@@ -89,15 +74,15 @@ const TipBox: React.FC<TipBoxProps> = ({
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       sx={{
-        p: 2,
-        borderRadius: '8px',
-        background: '#F0F4FF',
-        borderLeft: '4px solid #667EEA',
+        p: `${componentTheme.spacing?.md || 16}px`,
+        borderRadius: `${componentTheme.borderRadius?.md || 8}px`,
+        background: alpha(componentTheme.colors?.success || '#667EEA', 0.05),
+        borderLeft: `4px solid ${componentTheme.colors?.success || '#667EEA'}`,
         cursor: onEdit ? 'pointer' : 'default',
-        transition: 'all 0.2s',
+        transition: `all ${componentTheme.animations?.duration.fast || 200}ms`,
         position: 'relative',
         '&:hover': onEdit ? {
-          boxShadow: `0 0 0 2px ${alpha('#667EEA', 0.2)}`,
+          boxShadow: `0 0 0 2px ${alpha(componentTheme.colors?.success || '#667EEA', 0.2)}`,
         } : {},
       }}
     >
@@ -106,11 +91,11 @@ const TipBox: React.FC<TipBoxProps> = ({
         <Box sx={{ flex: 1 }}>
           <Typography
             sx={{
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#667EEA',
+              fontSize: `${componentTheme.typography?.fontSize.small || 13}px`,
+              fontWeight: componentTheme.typography?.fontWeight.medium || 600,
+              color: componentTheme.colors?.success || '#667EEA',
               mb: 0.5,
-              fontFamily: 'Inter, sans-serif',
+              fontFamily: componentTheme.typography?.fontFamily || 'Inter, sans-serif',
             }}
           >
             {title}
@@ -128,10 +113,10 @@ const TipBox: React.FC<TipBoxProps> = ({
           ) : (
             <Box
               sx={{
-                fontSize: '13px',
-                color: '#374151',
-                lineHeight: 1.5,
-                fontFamily: 'Inter, sans-serif',
+                fontSize: `${componentTheme.typography?.fontSize.small || 13}px`,
+                color: componentTheme.colors?.text.primary || '#374151',
+                lineHeight: componentTheme.typography?.lineHeight || 1.5,
+                fontFamily: componentTheme.typography?.fontFamily || 'Inter, sans-serif',
                 minHeight: '20px',
                 cursor: isSelected ? 'text' : 'inherit',
                 '& p': {

@@ -62,10 +62,12 @@ import { WorksheetEdit, WorksheetEditContext } from '@/types/worksheet-generatio
 import AIAssistantPanel from './ai/AIAssistantPanel';
 import ManualPropertyEditor from '../properties/ManualPropertyEditor';
 import AIPropertyEditor from '../properties/AIPropertyEditor';
+import { ThemeSelector } from '../properties/ThemeSelector';
 import { 
   isInteractiveComponent,
   getComponentPropertySchema,
 } from '@/constants/interactive-properties-schema';
+import { ThemeName } from '@/types/themes';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -1649,6 +1651,18 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           <>
             {mainTab === 'properties' ? (
               <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
+          
+          {/* Universal Theme Selector - Shows for ALL components */}
+          <Box sx={{ mb: 3 }}>
+            <ThemeSelector
+              currentTheme={elementData.properties?.theme as ThemeName}
+              ageGroup={parameters?.ageGroup}
+              onChange={(newTheme) => onUpdate?.({ theme: newTheme })}
+              showAllThemes={false}
+            />
+          </Box>
+
+          <Divider sx={{ mb: 3 }} />
 
           {/* Check if interactive component - use Manual Property Editor */}
           {isInteractiveComponent(elementData.type) ? (

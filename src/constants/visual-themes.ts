@@ -740,13 +740,105 @@ export const getAllThemes = (): VisualTheme[] => {
   return Object.values(VISUAL_THEMES);
 };
 
+/**
+ * Get themes suitable for a specific age group
+ * Supports multiple formats: '4-6', '4-6 years', '4-6 years old'
+ */
 export const getThemesByAge = (ageGroup: string): VisualTheme[] => {
+  if (!ageGroup) return getAllThemes();
+  
+  // Normalize age group format - extract just the numbers and dash
+  const normalizedAge = ageGroup.match(/\d+-\d+/)?.[0] || ageGroup;
+  
   return getAllThemes().filter(theme => 
-    theme.suitableForAges.includes(ageGroup as any)
+    theme.suitableForAges.some(age => {
+      // Direct match
+      if (age === normalizedAge) return true;
+      
+      // Try to match with different formats
+      const normalizedThemeAge = age.match(/\d+-\d+/)?.[0] || age;
+      return normalizedThemeAge === normalizedAge;
+    })
   );
 };
 
 export const getThemesByCategory = (category: 'educational' | 'playful' | 'professional'): VisualTheme[] => {
   return getAllThemes().filter(theme => theme.category === category);
+};
+
+/**
+ * Get default theme for a specific age group
+ * Returns most suitable theme based on age and category preference
+ */
+export const getDefaultThemeForAge = (
+  ageGroup: string,
+  preferCategory?: 'educational' | 'playful' | 'professional'
+): VisualTheme | null => {
+  const themesForAge = getThemesByAge(ageGroup);
+  
+  if (themesForAge.length === 0) return null;
+  
+  // If category preference specified, try to find matching theme
+  if (preferCategory) {
+    const categoryTheme = themesForAge.find(theme => theme.category === preferCategory);
+    if (categoryTheme) return categoryTheme;
+  }
+  
+  // Default priority: playful > educational > professional
+  const playfulTheme = themesForAge.find(theme => theme.category === 'playful');
+  if (playfulTheme) return playfulTheme;
+  
+  const educationalTheme = themesForAge.find(theme => theme.category === 'educational');
+  if (educationalTheme) return educationalTheme;
+  
+  // Return first available
+  return themesForAge[0];
+};
+
+/**
+ * Get theme recommendations based on age and component type
+ */
+export const getThemeRecommendations = (
+  ageGroup: string,
+  componentType?: string
+): VisualTheme[] => {
+  const themesForAge = getThemesByAge(ageGroup);
+  
+  if (!componentType) return themesForAge;
+  
+  // Recommend based on component type
+  const isInteractive = componentType.includes('interactive') || 
+                        componentType.includes('tap') || 
+                        componentType.includes('drag') ||
+                        componentType.includes('game');
+  
+  if (isInteractive) {
+    // Prefer playful themes for interactive components
+    return [
+      ...themesForAge.filter(t => t.category === 'playful'),
+      ...themesForAge.filter(t => t.category !== 'playful'),
+    ];
+  }
+  
+  // For regular components, prefer educational themes
+  return [
+    ...themesForAge.filter(t => t.category === 'educational'),
+    ...themesForAge.filter(t => t.category !== 'educational'),
+  ];
+};
+
+/**
+ * Check if a theme is suitable for an age group
+ */
+export const isThemeSuitableForAge = (themeName: ThemeName, ageGroup: string): boolean => {
+  const theme = getTheme(themeName);
+  if (!theme || !ageGroup) return false;
+  
+  const normalizedAge = ageGroup.match(/\d+-\d+/)?.[0] || ageGroup;
+  
+  return theme.suitableForAges.some(age => {
+    const normalizedThemeAge = age.match(/\d+-\d+/)?.[0] || age;
+    return normalizedThemeAge === normalizedAge;
+  });
 };
 

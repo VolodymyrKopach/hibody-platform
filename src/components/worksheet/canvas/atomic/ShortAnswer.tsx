@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Typography, Stack } from '@mui/material';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface ShortAnswerItem {
   number: number;
@@ -14,6 +16,7 @@ interface ShortAnswerProps {
   isSelected?: boolean;
   onEdit?: (properties: { items: ShortAnswerItem[] }) => void;
   onFocus?: () => void;
+  theme?: ThemeName;
 }
 
 const ShortAnswer: React.FC<ShortAnswerProps> = ({ 
@@ -21,10 +24,14 @@ const ShortAnswer: React.FC<ShortAnswerProps> = ({
   isSelected = false,
   onEdit,
   onFocus,
+  theme,
 }) => {
   const [editingQuestion, setEditingQuestion] = useState<number | null>(null);
   const [localItems, setLocalItems] = useState<ShortAnswerItem[]>(items);
   const questionRef = useRef<HTMLDivElement>(null);
+  
+  // Apply component theme
+  const componentTheme = useComponentTheme(theme);
 
   // Sync with external changes
   useEffect(() => {
@@ -47,9 +54,8 @@ const ShortAnswer: React.FC<ShortAnswerProps> = ({
   const handleQuestionBlur = (itemNumber: number) => {
     const text = questionRef.current?.textContent || '';
     
-    // Захист від undefined/null
+    // Guard against undefined/null
     if (text === undefined || text === null || text === 'undefined') {
-      console.warn('⚠️ [ShortAnswer handleQuestionBlur] Received undefined/null text, skipping update');
       setEditingQuestion(null);
       return;
     }

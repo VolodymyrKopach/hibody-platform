@@ -25,6 +25,8 @@ import {
   ComponentPropertySchema,
   PropertyDefinition,
 } from '@/constants/interactive-properties-schema';
+import { ThemeSelector } from './ThemeSelector';
+import { ThemeName } from '@/types/themes';
 
 interface ManualPropertyEditorProps {
   schema: ComponentPropertySchema;
@@ -120,6 +122,15 @@ const ManualPropertyEditor: React.FC<ManualPropertyEditorProps> = ({
             propDef={propDef}
             value={value}
             onChange={(newValue) => handlePropertyChange(propDef.key, newValue)}
+          />
+        );
+
+      case 'theme':
+        return (
+          <ThemeSelector
+            currentTheme={value as ThemeName}
+            onChange={(newTheme) => handlePropertyChange(propDef.key, newTheme)}
+            showAllThemes={true}
           />
         );
 

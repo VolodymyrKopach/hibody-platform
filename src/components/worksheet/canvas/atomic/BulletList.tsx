@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Typography, Stack } from '@mui/material';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/constants/visual-themes';
 
 interface BulletListItem {
   id: string;
@@ -11,6 +13,7 @@ interface BulletListItem {
 interface BulletListProps {
   items: BulletListItem[];
   style?: 'dot' | 'circle' | 'square';
+  theme?: ThemeName;
   isSelected?: boolean;
   onEdit?: (properties: { items?: BulletListItem[]; style?: string }) => void;
   onFocus?: () => void;
@@ -19,10 +22,12 @@ interface BulletListProps {
 const BulletList: React.FC<BulletListProps> = ({
   items,
   style = 'dot',
+  theme: themeName,
   isSelected = false,
   onEdit,
   onFocus,
 }) => {
+  const componentTheme = useComponentTheme(themeName);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [localItems, setLocalItems] = useState<BulletListItem[]>(items);
   const textRef = useRef<HTMLDivElement>(null);
@@ -45,9 +50,8 @@ const BulletList: React.FC<BulletListProps> = ({
   const handleBlur = (itemId: string) => {
     const text = textRef.current?.textContent || '';
     
-    // Захист від undefined/null
+    // Guard against undefined/null
     if (text === undefined || text === null || text === 'undefined') {
-      console.warn('⚠️ [BulletList handleBlur] Received undefined/null text, skipping update');
       setEditingItemId(null);
       return;
     }
@@ -87,21 +91,25 @@ const BulletList: React.FC<BulletListProps> = ({
   };
 
   const getBulletStyle = () => {
+    const bulletColor = componentTheme.colors.accent || componentTheme.colors.text || '#374151';
+    
     switch (style) {
       case 'circle':
         return {
           width: 6,
           height: 6,
           borderRadius: '50%',
-          border: '2px solid #374151',
+          border: `2px solid ${bulletColor}`,
           backgroundColor: 'transparent',
+          transition: componentTheme.animations.quick,
         };
       case 'square':
         return {
           width: 6,
           height: 6,
           borderRadius: '1px',
-          backgroundColor: '#374151',
+          backgroundColor: bulletColor,
+          transition: componentTheme.animations.quick,
         };
       case 'dot':
       default:
@@ -109,7 +117,8 @@ const BulletList: React.FC<BulletListProps> = ({
           width: 6,
           height: 6,
           borderRadius: '50%',
-          backgroundColor: '#374151',
+          backgroundColor: bulletColor,
+          transition: componentTheme.animations.quick,
         };
     }
   };
@@ -133,15 +142,16 @@ const BulletList: React.FC<BulletListProps> = ({
                 onBlur={() => handleBlur(item.id)}
                 onKeyDown={(e) => handleKeyDown(e, item.id)}
                 sx={{
-                  fontSize: '14px',
-                  color: '#374151',
-                  fontFamily: 'Inter, sans-serif',
+                  fontSize: componentTheme.typography.body,
+                  color: componentTheme.colors.text,
+                  fontFamily: componentTheme.typography.fontFamily,
                   flex: 1,
                   outline: 'none',
                   border: '1px solid #2563EB',
-                  borderRadius: '4px',
+                  borderRadius: componentTheme.spacing.borderRadius,
                   padding: '4px 8px',
                   backgroundColor: '#FFFFFF',
+                  transition: componentTheme.animations.quick,
                 }}
               >
                 {item.text}
@@ -151,15 +161,16 @@ const BulletList: React.FC<BulletListProps> = ({
                 onClick={() => handleClick()}
                 onDoubleClick={() => handleDoubleClick(item.id)}
                 sx={{
-                  fontSize: '14px',
-                  color: '#374151',
-                  fontFamily: 'Inter, sans-serif',
+                  fontSize: componentTheme.typography.body,
+                  color: componentTheme.colors.text,
+                  fontFamily: componentTheme.typography.fontFamily,
                   flex: 1,
                   cursor: isSelected && onEdit ? 'text' : 'default',
                   lineHeight: 1.6,
+                  transition: componentTheme.animations.quick,
                   '&:hover': isSelected && onEdit ? {
                     backgroundColor: '#F9FAFB',
-                    borderRadius: '4px',
+                    borderRadius: componentTheme.spacing.borderRadius,
                     padding: '4px 8px',
                     margin: '-4px -8px',
                   } : {},

@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Typography, alpha } from '@mui/material';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface TitleBlockProps {
   text: string;
@@ -11,22 +13,36 @@ interface TitleBlockProps {
   isSelected?: boolean;
   onEdit?: (newText: string) => void;
   onFocus?: () => void;
+  theme?: ThemeName;
 }
 
 const TitleBlock: React.FC<TitleBlockProps> = ({ 
   text, 
   level = 'main',
   align = 'center',
-  color = '#1F2937',
+  color,
   isSelected = false,
   onEdit,
   onFocus,
+  theme,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const editRef = useRef<HTMLDivElement>(null);
   const isInitialEditRef = useRef(true);
+  
+  // Apply theme
+  const componentTheme = useComponentTheme(theme);
 
   const getFontSize = () => {
+    if (componentTheme.typography) {
+      switch (level) {
+        case 'main': return `${componentTheme.typography.fontSize.xlarge}px`;
+        case 'section': return `${componentTheme.typography.fontSize.large}px`;
+        case 'exercise': return `${componentTheme.typography.fontSize.medium}px`;
+        default: return `${componentTheme.typography.fontSize.large}px`;
+      }
+    }
+    // Fallback
     switch (level) {
       case 'main': return '28px';
       case 'section': return '20px';
@@ -36,7 +52,21 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
   };
 
   const getFontWeight = () => {
+    if (componentTheme.typography) {
+      return level === 'exercise' 
+        ? componentTheme.typography.fontWeight.medium
+        : componentTheme.typography.fontWeight.bold;
+    }
     return level === 'exercise' ? 600 : 700;
+  };
+  
+  const getColor = () => {
+    if (color) return color;
+    return componentTheme.colors?.primary || '#1F2937';
+  };
+  
+  const getFontFamily = () => {
+    return componentTheme.typography?.fontFamily || 'Inter, sans-serif';
   };
 
   // Focus on edit start - only set content once
@@ -80,9 +110,8 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
     if (editRef.current) {
       const newText = editRef.current.textContent?.trim() || '';
       
-      // Захист від undefined/null
+      // Guard against undefined/null
       if (newText === undefined || newText === null || newText === 'undefined') {
-        console.warn('⚠️ [TitleBlock handleBlur] Received undefined/null text, skipping update');
         return;
       }
       
@@ -127,15 +156,16 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
             fontSize: getFontSize(),
             fontWeight: getFontWeight(),
             textAlign: align,
-            color: color,
-            fontFamily: 'Inter, sans-serif',
+            color: getColor(),
+            fontFamily: getFontFamily(),
             outline: 'none',
-            borderRadius: '4px',
-            background: alpha('#2563EB', 0.05),
+            borderRadius: `${componentTheme.borderRadius?.sm || 4}px`,
+            background: alpha(componentTheme.colors?.primary || '#2563EB', 0.05),
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word',
+            transition: `all ${componentTheme.animations?.duration.fast || 200}ms`,
             '&:focus': {
-              background: alpha('#2563EB', 0.08),
+              background: alpha(componentTheme.colors?.primary || '#2563EB', 0.08),
             },
           }}
         />
@@ -145,8 +175,10 @@ const TitleBlock: React.FC<TitleBlockProps> = ({
             fontSize: getFontSize(),
             fontWeight: getFontWeight(),
             textAlign: align,
-            color: color,
-            fontFamily: 'Inter, sans-serif',
+            color: getColor(),
+            fontFamily: getFontFamily(),
+            lineHeight: componentTheme.typography?.lineHeight || 1.5,
+            transition: `all ${componentTheme.animations?.duration.fast || 200}ms`,
           }}
         >
           {text}

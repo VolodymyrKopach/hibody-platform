@@ -12,7 +12,8 @@ export type PropertyType =
   | 'select' 
   | 'array-simple' // Array of strings
   | 'array-object' // Array of objects
-  | 'object';
+  | 'object'
+  | 'theme'; // Visual theme selector
 
 export interface PropertyDefinition {
   key: string;
@@ -1431,14 +1432,30 @@ export const INTERACTIVE_PROPERTIES_SCHEMAS: ComponentPropertySchema[] = [
 ];
 
 /**
+ * Universal theme property definition
+ * Can be added to any component
+ */
+export const THEME_PROPERTY: PropertyDefinition = {
+  key: 'theme',
+  label: 'Visual Theme',
+  type: 'theme',
+  description: 'Visual theme affects colors, typography, spacing, and animations',
+  required: false,
+  helperText: 'Select a visual theme for this component',
+};
+
+/**
  * Get property schema for a component type
+ * Note: Theme property is handled separately in RightSidebar, not included in schema
  */
 export function getComponentPropertySchema(
   componentType: string
 ): ComponentPropertySchema | undefined {
-  return INTERACTIVE_PROPERTIES_SCHEMAS.find(
+  const schema = INTERACTIVE_PROPERTIES_SCHEMAS.find(
     (schema) => schema.componentType === componentType
   );
+
+  return schema;
 }
 
 /**
@@ -1448,5 +1465,13 @@ export function isInteractiveComponent(componentType: string): boolean {
   return INTERACTIVE_PROPERTIES_SCHEMAS.some(
     (schema) => schema.componentType === componentType
   );
+}
+
+/**
+ * Get all interactive component schemas
+ * Note: Theme property is handled separately in RightSidebar, not included in schemas
+ */
+export function getAllInteractiveSchemas(): ComponentPropertySchema[] {
+  return INTERACTIVE_PROPERTIES_SCHEMAS;
 }
 

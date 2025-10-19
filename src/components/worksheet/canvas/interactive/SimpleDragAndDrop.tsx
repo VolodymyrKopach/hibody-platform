@@ -7,6 +7,8 @@ import { CheckCircle, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundService } from '@/services/interactive/SoundService';
 import { triggerHaptic } from '@/utils/interactive/haptics';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface DragItem {
   id: string;
@@ -28,6 +30,7 @@ interface SimpleDragAndDropProps {
   layout?: 'horizontal' | 'vertical' | 'grid';
   difficulty?: 'easy' | 'medium';
   snapDistance?: number; // px
+  theme?: ThemeName;
   ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
@@ -46,10 +49,12 @@ const SimpleDragAndDrop: React.FC<SimpleDragAndDropProps> = ({
   layout = 'horizontal',
   difficulty = 'easy',
   snapDistance = 80,
+  theme: themeName,
   isSelected,
   onEdit,
   onFocus,
 }) => {
+  const componentTheme = useComponentTheme(themeName);
   const [placedItems, setPlacedItems] = useState<PlacedItem[]>([]);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [hoveredTarget, setHoveredTarget] = useState<string | null>(null);

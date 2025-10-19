@@ -959,6 +959,7 @@ function renderElement(
           level={element.properties.level || 'main'}
           align={element.properties.align || 'center'}
           color={element.properties.color}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(newText) => {
             onEdit(element.id, { ...element.properties, text: newText });
@@ -971,6 +972,7 @@ function renderElement(
         <BodyText 
           text={element.properties.text || ''}
           variant={element.properties.variant || 'paragraph'}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(newText) => {
             onEdit(element.id, { ...element.properties, text: newText });
@@ -985,6 +987,7 @@ function renderElement(
           title={element.properties.title}
           type={element.properties.type}
           icon={element.properties.icon}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(newText) => {
             onEdit(element.id, { ...element.properties, text: newText });
@@ -997,6 +1000,7 @@ function renderElement(
         <FillInBlank
           items={element.properties.items || []}
           wordBank={element.properties.wordBank}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(items, wordBank) => {
             onEdit(element.id, { 
@@ -1012,6 +1016,7 @@ function renderElement(
       return (
         <MultipleChoice
           items={element.properties.items || []}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1023,6 +1028,7 @@ function renderElement(
       return (
         <TrueFalse
           items={element.properties.items || []}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1034,6 +1040,7 @@ function renderElement(
       return (
         <ShortAnswer
           items={element.properties.items || []}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1045,6 +1052,7 @@ function renderElement(
       return (
         <MatchPairs
           items={element.properties.items || []}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1058,6 +1066,7 @@ function renderElement(
           text={element.properties.text || 'Tip here...'}
           title={element.properties.title}
           type={element.properties.type}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(newText) => {
             onEdit(element.id, { ...element.properties, text: newText });
@@ -1071,6 +1080,7 @@ function renderElement(
           text={element.properties.text || 'Warning here...'}
           title={element.properties.title}
           type={element.properties.type}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(newText) => {
             onEdit(element.id, { ...element.properties, text: newText });
@@ -1086,6 +1096,7 @@ function renderElement(
           width={element.properties.width}
           height={element.properties.height}
           align={element.properties.align}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1100,6 +1111,7 @@ function renderElement(
           thickness={element.properties.thickness}
           color={element.properties.color}
           spacing={element.properties.spacing}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1112,6 +1124,7 @@ function renderElement(
         <BulletList
           items={element.properties.items || []}
           style={element.properties.style}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1124,6 +1137,7 @@ function renderElement(
         <NumberedList
           items={element.properties.items || []}
           style={element.properties.style}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1143,6 +1157,7 @@ function renderElement(
           cellPadding={element.properties.cellPadding || 10}
           fontSize={element.properties.fontSize || 13}
           textAlign={element.properties.textAlign || 'left'}
+          theme={element.properties.theme}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1161,6 +1176,7 @@ function renderElement(
           size={element.properties.size || 'medium'}
           animation={element.properties.animation || 'bounce'}
           showHint={element.properties.showHint}
+          theme={element.properties.theme}
           ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
@@ -1177,6 +1193,7 @@ function renderElement(
           layout={element.properties.layout || 'horizontal'}
           difficulty={element.properties.difficulty || 'easy'}
           snapDistance={element.properties.snapDistance || 80}
+          theme={element.properties.theme}
           ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
@@ -1192,6 +1209,7 @@ function renderElement(
           mode={element.properties.mode || 'single'}
           showNames={element.properties.showNames ?? true}
           autoVoice={element.properties.autoVoice ?? true}
+          theme={element.properties.theme}
           ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
@@ -1207,6 +1225,7 @@ function renderElement(
           voiceEnabled={element.properties.voiceEnabled ?? true}
           celebrationAtEnd={element.properties.celebrationAtEnd ?? true}
           showProgress={element.properties.showProgress ?? true}
+          theme={element.properties.theme}
           ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {
@@ -1222,6 +1241,7 @@ function renderElement(
           gridSize={element.properties.gridSize || '2x2'}
           cardBackImage={element.properties.cardBackImage}
           difficulty={element.properties.difficulty || 'easy'}
+          theme={element.properties.theme}
           ageGroup={ageGroup}
           isSelected={isSelected}
           onEdit={(properties) => {

@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Typography, Stack } from '@mui/material';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/constants/visual-themes';
 
 interface NumberedListItem {
   id: string;
@@ -11,6 +13,7 @@ interface NumberedListItem {
 interface NumberedListProps {
   items: NumberedListItem[];
   style?: 'decimal' | 'lower-alpha' | 'upper-alpha' | 'lower-roman' | 'upper-roman';
+  theme?: ThemeName;
   isSelected?: boolean;
   onEdit?: (properties: { items?: NumberedListItem[]; style?: string }) => void;
   onFocus?: () => void;
@@ -19,10 +22,12 @@ interface NumberedListProps {
 const NumberedList: React.FC<NumberedListProps> = ({
   items,
   style = 'decimal',
+  theme: themeName,
   isSelected = false,
   onEdit,
   onFocus,
 }) => {
+  const componentTheme = useComponentTheme(themeName);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [localItems, setLocalItems] = useState<NumberedListItem[]>(items);
   const textRef = useRef<HTMLDivElement>(null);
@@ -45,9 +50,8 @@ const NumberedList: React.FC<NumberedListProps> = ({
   const handleBlur = (itemId: string) => {
     const text = textRef.current?.textContent || '';
     
-    // Захист від undefined/null
+    // Guard against undefined/null
     if (text === undefined || text === null || text === 'undefined') {
-      console.warn('⚠️ [NumberedList handleBlur] Received undefined/null text, skipping update');
       setEditingItemId(null);
       return;
     }
@@ -128,13 +132,14 @@ const NumberedList: React.FC<NumberedListProps> = ({
           <Stack key={item.id} direction="row" spacing={1.5} alignItems="flex-start">
             <Typography
               sx={{
-                fontSize: '14px',
+                fontSize: componentTheme.typography.body,
                 fontWeight: 600,
-                color: '#2563EB',
-                fontFamily: 'Inter, sans-serif',
+                color: componentTheme.colors.accent || componentTheme.colors.primary || '#2563EB',
+                fontFamily: componentTheme.typography.fontFamily,
                 minWidth: '24px',
                 flexShrink: 0,
                 mt: 0.25,
+                transition: componentTheme.animations.quick,
               }}
             >
               {getNumberLabel(index)}.
@@ -147,15 +152,16 @@ const NumberedList: React.FC<NumberedListProps> = ({
                 onBlur={() => handleBlur(item.id)}
                 onKeyDown={(e) => handleKeyDown(e, item.id)}
                 sx={{
-                  fontSize: '14px',
-                  color: '#374151',
-                  fontFamily: 'Inter, sans-serif',
+                  fontSize: componentTheme.typography.body,
+                  color: componentTheme.colors.text,
+                  fontFamily: componentTheme.typography.fontFamily,
                   flex: 1,
                   outline: 'none',
                   border: '1px solid #2563EB',
-                  borderRadius: '4px',
+                  borderRadius: componentTheme.spacing.borderRadius,
                   padding: '4px 8px',
                   backgroundColor: '#FFFFFF',
+                  transition: componentTheme.animations.quick,
                 }}
               >
                 {item.text}
@@ -165,15 +171,16 @@ const NumberedList: React.FC<NumberedListProps> = ({
                 onClick={() => handleClick()}
                 onDoubleClick={() => handleDoubleClick(item.id)}
                 sx={{
-                  fontSize: '14px',
-                  color: '#374151',
-                  fontFamily: 'Inter, sans-serif',
+                  fontSize: componentTheme.typography.body,
+                  color: componentTheme.colors.text,
+                  fontFamily: componentTheme.typography.fontFamily,
                   flex: 1,
                   cursor: isSelected && onEdit ? 'text' : 'default',
                   lineHeight: 1.6,
+                  transition: componentTheme.animations.quick,
                   '&:hover': isSelected && onEdit ? {
                     backgroundColor: '#F9FAFB',
-                    borderRadius: '4px',
+                    borderRadius: componentTheme.spacing.borderRadius,
                     padding: '4px 8px',
                     margin: '-4px -8px',
                   } : {},

@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { soundService } from '@/services/interactive/SoundService';
 import { hapticService } from '@/utils/interactive/haptics';
 import { bounceAnimation, pulseAnimation, celebrationAnimation } from '@/utils/interactive/animations';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/types/themes';
 
 interface TapImageProps {
   imageUrl: string;
@@ -15,6 +17,7 @@ interface TapImageProps {
   size?: 'small' | 'medium' | 'large';
   animation?: 'bounce' | 'scale' | 'shake' | 'spin';
   showHint?: boolean;
+  theme?: ThemeName;
   ageGroup?: string;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
@@ -29,22 +32,62 @@ const TapImage: React.FC<TapImageProps> = ({
   size = 'medium',
   animation = 'bounce',
   showHint = false,
+  theme: themeName,
   isSelected = false,
   onEdit,
   onFocus,
 }) => {
-  const theme = useTheme();
+  const muiTheme = useTheme();
+  const componentTheme = useComponentTheme(themeName);
   const [tapCount, setTapCount] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // Size mapping
-  const sizeMap = {
-    small: 200,
-    medium: 350,
-    large: 500,
+  // Size mapping - адаптується під тему
+  const getSizeForTheme = () => {
+    // Базові розміри
+    const baseSizes = {
+      small: 200,
+      medium: 350,
+      large: 500,
+    };
+    
+    // Для малюків - більші елементи
+    if (componentTheme.animations.complexity === 'very-high') {
+      return {
+        small: 250,
+        medium: 400,
+        large: 550,
+      };
+    }
+    
+    // Для підлітків/дорослих - менші, компактніші
+    if (componentTheme.animations.complexity === 'low' || componentTheme.animations.complexity === 'minimal') {
+      return {
+        small: 150,
+        medium: 280,
+        large: 420,
+      };
+    }
+    
+    return baseSizes;
   };
 
+  const sizeMap = getSizeForTheme();
   const imageSize = sizeMap[size];
+  
+  // Стиль рамки залежить від теми
+  const getBorderRadius = () => {
+    if (componentTheme.ui.buttonStyle === 'pill') {
+      return `${componentTheme.borderRadius.xl}px`;
+    }
+    if (componentTheme.ui.buttonStyle === 'rounded') {
+      return `${componentTheme.borderRadius.md}px`;
+    }
+    return `${componentTheme.borderRadius.sm}px`; // square
+  };
+  
+  // Чи показувати анімації залежить від складності теми
+  const shouldShowAnimations = componentTheme.animations.complexity !== 'minimal' && componentTheme.animations.complexity !== 'low';
 
   /**
    * Handle tap/click
@@ -84,11 +127,22 @@ const TapImage: React.FC<TapImageProps> = ({
   };
 
   /**
-   * Confetti component
+   * Confetti component - адаптується під тему
    */
   const Confetti = () => {
-    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'];
-    const particles = Array.from({ length: 20 });
+    // Кольори з теми
+    const colors = [
+      componentTheme.colors.primary,
+      componentTheme.colors.secondary,
+      componentTheme.colors.accent,
+      componentTheme.colors.success,
+      componentTheme.colors.warning,
+    ];
+    
+    // Кількість частинок залежить від складності анімацій
+    const particleCount = componentTheme.animations.complexity === 'very-high' ? 30 : 
+                         componentTheme.animations.complexity === 'high' ? 20 : 10;
+    const particles = Array.from({ length: particleCount });
 
     return (
       <Box
@@ -113,14 +167,14 @@ const TapImage: React.FC<TapImageProps> = ({
               rotate: Math.random() * 360,
             }}
             transition={{
-              duration: 0.8 + Math.random() * 0.4,
+              duration: (componentTheme.animations.duration.slow / 1000) + Math.random() * 0.4,
               ease: 'easeOut',
             }}
             style={{
               position: 'absolute',
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
+              width: componentTheme.spacing.xs + Math.random() * 4,
+              height: componentTheme.spacing.xs + Math.random() * 4,
+              borderRadius: componentTheme.ui.buttonStyle === 'square' ? '2px' : '50%',
               backgroundColor: colors[Math.floor(Math.random() * colors.length)],
             }}
           />
@@ -156,16 +210,16 @@ const TapImage: React.FC<TapImageProps> = ({
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 2,
-        p: 2,
-        borderRadius: '20px',
+        gap: componentTheme.spacing.md / 8, // Convert to MUI spacing units
+        p: componentTheme.spacing.md / 8,
+        borderRadius: getBorderRadius(),
         border: isSelected
-          ? `3px solid ${theme.palette.primary.main}`
+          ? `3px solid ${componentTheme.colors.primary}`
           : `3px solid transparent`,
         background: isSelected
-          ? alpha(theme.palette.primary.main, 0.05)
+          ? alpha(componentTheme.colors.primary, 0.08)
           : 'transparent',
-        transition: 'all 0.2s',
+        transition: `all ${componentTheme.animations.duration.normal}ms`,
         cursor: 'pointer',
         userSelect: 'none',
       }}
@@ -186,14 +240,20 @@ const TapImage: React.FC<TapImageProps> = ({
           sx={{
             width: imageSize,
             height: imageSize,
-            borderRadius: '20px',
+            borderRadius: getBorderRadius(),
             overflow: 'hidden',
-            boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.15)}`,
-            border: `4px solid ${theme.palette.background.paper}`,
+            boxShadow: componentTheme.ui.cardElevation === 'high' 
+              ? componentTheme.shadows.lg 
+              : componentTheme.ui.cardElevation === 'medium'
+                ? componentTheme.shadows.md
+                : componentTheme.shadows.sm,
+            border: `${componentTheme.spacing.xs / 2}px solid ${componentTheme.colors.surface}`,
             position: 'relative',
-            '&:hover': {
-              boxShadow: `0 12px 32px ${alpha(theme.palette.primary.main, 0.25)}`,
-            },
+            transition: `all ${componentTheme.animations.duration.normal}ms`,
+            '&:hover': componentTheme.animations.enableHover ? {
+              boxShadow: componentTheme.shadows.xl,
+              transform: 'scale(1.02)',
+            } : {},
           }}
         >
           {/* Image */}
@@ -208,26 +268,28 @@ const TapImage: React.FC<TapImageProps> = ({
             }}
           />
 
-          {/* Tap count badge */}
-          {tapCount > 0 && (
+          {/* Tap count badge - тільки якщо тема підтримує анімації */}
+          {tapCount > 0 && shouldShowAnimations && (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
+              transition={{ duration: componentTheme.animations.duration.fast / 1000 }}
               style={{
                 position: 'absolute',
-                top: 16,
-                right: 16,
-                background: theme.palette.success.main,
-                color: 'white',
-                borderRadius: '50%',
-                width: 40,
-                height: 40,
+                top: componentTheme.spacing.md,
+                right: componentTheme.spacing.md,
+                background: componentTheme.colors.success,
+                color: componentTheme.colors.surface,
+                borderRadius: componentTheme.ui.buttonStyle === 'pill' ? '50%' : `${componentTheme.borderRadius.md}px`,
+                width: componentTheme.spacing.xl,
+                height: componentTheme.spacing.xl,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 'bold',
-                fontSize: '1.2rem',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                fontWeight: componentTheme.typography.fontWeight.bold,
+                fontSize: `${componentTheme.typography.fontSize.medium}px`,
+                fontFamily: componentTheme.typography.fontFamily,
+                boxShadow: componentTheme.shadows.md,
               }}
             >
               {tapCount}
@@ -235,12 +297,12 @@ const TapImage: React.FC<TapImageProps> = ({
           )}
         </Box>
 
-        {/* Animated hand hint */}
-        {showHint && <HandHint />}
+        {/* Animated hand hint - тільки для малюків */}
+        {showHint && shouldShowAnimations && componentTheme.animations.complexity === 'very-high' && <HandHint />}
 
-        {/* Confetti */}
+        {/* Confetti - тільки якщо тема підтримує particles */}
         <AnimatePresence>
-          {showConfetti && <Confetti />}
+          {showConfetti && componentTheme.animations.enableParticles && <Confetti />}
         </AnimatePresence>
       </motion.div>
 
@@ -250,8 +312,11 @@ const TapImage: React.FC<TapImageProps> = ({
           variant="h6"
           sx={{
             fontWeight: 600,
-            color: theme.palette.text.primary,
+            fontSize: componentTheme.typography.title,
+            fontFamily: componentTheme.typography.fontFamily,
+            color: componentTheme.colors.text,
             textAlign: 'center',
+            transition: componentTheme.animations.quick,
           }}
         >
           {caption}
@@ -263,8 +328,11 @@ const TapImage: React.FC<TapImageProps> = ({
         <Typography
           variant="caption"
           sx={{
-            color: theme.palette.primary.main,
+            fontSize: componentTheme.typography.small,
+            fontFamily: componentTheme.typography.fontFamily,
+            color: muiTheme.palette.primary.main,
             fontWeight: 600,
+            transition: componentTheme.animations.quick,
           }}
         >
           ⚡ Interactive Component

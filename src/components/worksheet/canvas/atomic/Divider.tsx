@@ -2,12 +2,15 @@
 
 import React from 'react';
 import { Box } from '@mui/material';
+import { useComponentTheme } from '@/hooks/useComponentTheme';
+import { ThemeName } from '@/constants/visual-themes';
 
 interface DividerProps {
   style?: 'solid' | 'dashed' | 'dotted' | 'double';
   thickness?: number;
   color?: string;
   spacing?: 'small' | 'medium' | 'large';
+  theme?: ThemeName;
   isSelected?: boolean;
   onEdit?: (properties: { style?: string; thickness?: number; color?: string; spacing?: string }) => void;
   onFocus?: () => void;
@@ -18,10 +21,12 @@ const Divider: React.FC<DividerProps> = ({
   thickness = 1,
   color = '#D1D5DB',
   spacing = 'medium',
+  theme: themeName,
   isSelected = false,
   onEdit,
   onFocus,
 }) => {
+  const componentTheme = useComponentTheme(themeName);
   const getSpacingValue = () => {
     switch (spacing) {
       case 'small':
@@ -56,6 +61,7 @@ const Divider: React.FC<DividerProps> = ({
         width: '100%',
         cursor: isSelected && onEdit ? 'pointer' : 'default',
         position: 'relative',
+        transition: componentTheme.animations.quick,
         '&:hover': isSelected && onEdit ? {
           '&::after': {
             content: '""',
@@ -65,8 +71,9 @@ const Divider: React.FC<DividerProps> = ({
             right: -4,
             bottom: -4,
             border: `2px solid ${isSelected ? '#2563EB' : 'rgba(37, 99, 235, 0.3)'}`,
-            borderRadius: '4px',
+            borderRadius: componentTheme.spacing.borderRadius,
             pointerEvents: 'none',
+            transition: componentTheme.animations.quick,
           },
         } : {},
       }}
@@ -76,6 +83,7 @@ const Divider: React.FC<DividerProps> = ({
           width: '100%',
           height: 0,
           borderTop: `${thickness}px ${getBorderStyle()} ${color}`,
+          transition: componentTheme.animations.quick,
         }}
       />
     </Box>
