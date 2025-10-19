@@ -7,6 +7,7 @@ import {
   WorksheetEditChange
 } from '@/types/worksheet-generation';
 import { CanvasElement } from '@/types/canvas-element';
+import { stripBase64Images, logStrippingStats } from '@/utils/base64Stripper';
 
 /**
  * Custom error for worksheet editing service
@@ -114,12 +115,21 @@ export class WorksheetEditingService {
       try {
         console.log(`📡 Attempt ${attempt + 1}/${this.maxRetries + 1}: Sending edit request...`);
 
+        // CRITICAL: Strip Base64 images before sending to save bandwidth/tokens
+        const stripResult = stripBase64Images(request);
+        logStrippingStats(stripResult.stats, 'Client Request');
+        
+        // Log request size
+        const requestPayload = JSON.stringify(stripResult.strippedData);
+        const requestSizeKB = Math.round(requestPayload.length / 1024);
+        console.log(`📦 [WORKSHEET_EDIT] Request size: ${requestSizeKB}KB (after stripping)`);
+
         const response = await fetch(this.baseUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(request),
+          body: requestPayload,
         });
 
         const data: WorksheetEditResponse = await response.json();

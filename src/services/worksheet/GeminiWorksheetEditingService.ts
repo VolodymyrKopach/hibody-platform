@@ -55,10 +55,16 @@ export class GeminiWorksheetEditingService {
     });
 
     try {
+      // Reset sanitization statistics for this request
+      this.resetSanitizationStats();
+      
       // Build prompt based on target type
       const prompt = target.type === 'component'
         ? this.buildComponentEditPrompt(target, instruction, context)
         : this.buildPageEditPrompt(target, instruction, context);
+
+      // Log sanitization results
+      this.logSanitizationStats();
 
       console.log('📝 [GEMINI_WORKSHEET_EDITING] Calling Gemini API...');
 
@@ -86,6 +92,7 @@ export class GeminiWorksheetEditingService {
 
   /**
    * Sanitize data for prompt - remove base64 URLs to avoid token limit
+   * Tracks and replaces ALL Base64 image data in any field
    */
   private sanitizeDataForPrompt(data: any): any {
     if (typeof data !== 'object' || data === null) {
@@ -100,9 +107,27 @@ export class GeminiWorksheetEditingService {
     for (const key in data) {
       const value = data[key];
       
-      // Replace base64 image URLs with placeholder
-      if (key === 'url' && typeof value === 'string' && value.startsWith('data:image')) {
-        sanitized[key] = '[BASE64_IMAGE_DATA_OMITTED]';
+      // Replace ANY base64 image data in string values
+      if (typeof value === 'string' && value.startsWith('data:image')) {
+        // Extract image metadata if available (from HTML comments)
+        const promptMatch = value.match(/<!--\s*IMAGE_PROMPT:\s*"([^"]+)"/);
+        const imagePrompt = promptMatch ? promptMatch[1] : 'Generated image';
+        
+        // Calculate size savings
+        const originalSize = value.length;
+        const originalKB = Math.round(originalSize / 1024);
+        
+        // Replace with informative placeholder
+        sanitized[key] = `[BASE64_IMAGE_OMITTED:${imagePrompt.substring(0, 50)}...]`;
+        
+        console.log(`🔒 [SANITIZE] Removed Base64 from "${key}":`, {
+          originalSize: `${originalKB}KB`,
+          estimatedTokensSaved: Math.floor(originalSize / 4),
+          prompt: imagePrompt.substring(0, 80) + '...'
+        });
+        
+        this.totalBase64Removed++;
+        this.totalBytesSaved += originalSize;
       } else if (typeof value === 'object') {
         sanitized[key] = this.sanitizeDataForPrompt(value);
       } else {
@@ -110,6 +135,37 @@ export class GeminiWorksheetEditingService {
       }
     }
     return sanitized;
+  }
+  
+  // Track sanitization statistics
+  private totalBase64Removed = 0;
+  private totalBytesSaved = 0;
+  
+  /**
+   * Reset and log sanitization statistics
+   */
+  private resetSanitizationStats(): void {
+    this.totalBase64Removed = 0;
+    this.totalBytesSaved = 0;
+  }
+  
+  /**
+   * Log sanitization statistics
+   */
+  private logSanitizationStats(): void {
+    if (this.totalBase64Removed > 0) {
+      const savedMB = (this.totalBytesSaved / (1024 * 1024)).toFixed(2);
+      const estimatedTokensSaved = Math.floor(this.totalBytesSaved / 4);
+      
+      console.log('💰 [SANITIZATION_COMPLETE] Base64 removal summary:', {
+        imagesRemoved: this.totalBase64Removed,
+        bytesSaved: `${savedMB}MB`,
+        estimatedTokensSaved: `~${estimatedTokensSaved} tokens`,
+        tokenCostSaved: `~$${(estimatedTokensSaved * 0.000001).toFixed(4)}`
+      });
+    } else {
+      console.log('ℹ️ [SANITIZATION_COMPLETE] No Base64 images found in data');
+    }
   }
 
   /**
@@ -423,14 +479,29 @@ Return ONLY valid JSON. No explanations, no markdown formatting.`;
 
     // Estimate token count from prompt length
     const estimatedPromptTokens = Math.floor(prompt.length / 4);
+    const promptSizeKB = Math.round(prompt.length / 1024);
+    const promptSizeMB = (prompt.length / (1024 * 1024)).toFixed(2);
 
+    // Log detailed prompt analysis
     console.log('🤖 [GEMINI_EDIT_API] Calling Gemini:', {
       model,
       temperature,
       maxTokens,
       promptLength: prompt.length,
-      estimatedPromptTokens: `~${estimatedPromptTokens} tokens`
+      promptSizeKB: `${promptSizeKB}KB`,
+      promptSizeMB: `${promptSizeMB}MB`,
+      estimatedPromptTokens: `~${estimatedPromptTokens} tokens`,
+      estimatedCost: `~$${(estimatedPromptTokens * 0.000001).toFixed(6)}`
     });
+    
+    // Warning if prompt is very large (even after sanitization)
+    if (promptSizeKB > 100) {
+      console.warn('⚠️ [GEMINI_EDIT_API] Large prompt detected:', {
+        size: `${promptSizeKB}KB`,
+        tokens: `~${estimatedPromptTokens}`,
+        message: 'Consider additional optimization if Base64 images are still present'
+      });
+    }
 
     try {
       const response = await this.client.models.generateContent({
