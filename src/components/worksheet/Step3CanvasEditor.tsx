@@ -202,6 +202,15 @@ function formatTimeSince(date: Date): string {
   return `${hours}h ago`;
 }
 
+// Helper function to convert level to difficulty
+function getDifficultyFromLevel(level?: string): 'easy' | 'medium' | 'hard' {
+  if (!level) return 'medium';
+  const lowercaseLevel = level.toLowerCase();
+  if (lowercaseLevel.includes('beginner') || lowercaseLevel.includes('elementary')) return 'easy';
+  if (lowercaseLevel.includes('advanced') || lowercaseLevel.includes('upper')) return 'hard';
+  return 'medium';
+}
+
 const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, generatedWorksheet, onOpenGenerateDialog }) => {
   const theme = useTheme();
   const router = useRouter();
@@ -239,7 +248,14 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     generatedWorksheet.pages.forEach(page => {
       initialPageContents.set(page.pageId, {
         elements: page.elements,
-      });
+        // TOKEN OPTIMIZATION: Store generation context if worksheet was generated
+        generationContext: parameters ? {
+          topic: parameters.topic || '',
+          ageGroup: parameters.level || parameters.ageGroup || '',
+          difficulty: getDifficultyFromLevel(parameters.level) || 'medium',
+          language: parameters.language || 'en'
+        } : undefined
+      } as any);
     });
   }
   
@@ -1436,9 +1452,12 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
         }
       } else {
         // Edit page
+        // TOKEN OPTIMIZATION: Include generation context if available
+        const pageContent = pageContents.get(selection.data.id);
         const pageData = {
           ...selection.data,
-          elements: pageContents.get(selection.data.id)?.elements || []
+          elements: pageContent?.elements || [],
+          generationContext: pageContent?.generationContext
         };
 
         result = await editService.editPage(
@@ -1528,15 +1547,6 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
     } finally {
       setIsAIEditing(false);
     }
-  };
-
-  // Helper: Convert level to difficulty
-  const getDifficultyFromLevel = (level: string): 'easy' | 'medium' | 'hard' => {
-    if (!level) return 'medium';
-    const lowercaseLevel = level.toLowerCase();
-    if (lowercaseLevel.includes('beginner') || lowercaseLevel.includes('elementary')) return 'easy';
-    if (lowercaseLevel.includes('advanced') || lowercaseLevel.includes('upper')) return 'hard';
-    return 'medium';
   };
 
   const handleAddNewPage = (pageType?: 'pdf' | 'interactive') => {

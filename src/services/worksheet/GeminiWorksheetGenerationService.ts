@@ -1220,6 +1220,7 @@ Now generate the worksheet as pure JSON:`;
             maxOutputTokens: maxTokens,
             topP: 0.9,
             topK: 40,
+            responseMimeType: 'application/json', // Force JSON-only response
           },
         });
 
@@ -1285,6 +1286,15 @@ Now generate the worksheet as pure JSON:`;
         cleanedResponse = cleanedResponse.replace(/^```json\s*\n/, '').replace(/\n```$/, '');
       } else if (cleanedResponse.startsWith('```')) {
         cleanedResponse = cleanedResponse.replace(/^```\s*\n/, '').replace(/\n```$/, '');
+      }
+
+      // Extract JSON from response if it contains explanatory text
+      // Look for first { and last } to extract pure JSON
+      const firstBrace = cleanedResponse.indexOf('{');
+      const lastBrace = cleanedResponse.lastIndexOf('}');
+      if (firstBrace > 0 || lastBrace < cleanedResponse.length - 1) {
+        console.log('⚠️ [PARSER] Extracting JSON from response with extra text...');
+        cleanedResponse = cleanedResponse.substring(firstBrace, lastBrace + 1);
       }
 
       // Try to fix incomplete JSON

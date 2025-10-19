@@ -148,6 +148,12 @@ export interface ParsedPage {
   elements: CanvasElement[]; // Full elements with id, zIndex, etc.
   pageType?: 'pdf' | 'interactive'; // PDF = fixed A4, Interactive = scrollable
   ageGroup?: string; // Age group for age-appropriate styling
+  generationContext?: {
+    topic: string;
+    ageGroup: string;
+    difficulty: 'easy' | 'medium' | 'hard';
+    language: string;
+  };
 }
 
 /**

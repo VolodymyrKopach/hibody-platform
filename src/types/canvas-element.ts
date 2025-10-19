@@ -49,9 +49,15 @@ export interface CanvasElement {
 }
 
 export interface PageContent {
-  id: string;
-  pageId: string;
+  id?: string;
+  pageId?: string;
   elements: CanvasElement[];
+  generationContext?: {
+    topic: string;
+    ageGroup: string;
+    difficulty: 'easy' | 'medium' | 'hard';
+    language: string;
+  };
 }
 
 export interface DragState {

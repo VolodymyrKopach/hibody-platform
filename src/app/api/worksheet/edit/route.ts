@@ -229,11 +229,41 @@ export async function POST(request: NextRequest) {
     
     console.log(`[${requestId}] 🤖 Calling Gemini service...`);
     
-    // Add userId to context for token tracking
-    const contextWithUserId = {
-      ...body.context,
-      userId: user?.id
-    };
+    // TOKEN OPTIMIZATION: Use appropriate context based on edit type
+    let contextWithUserId;
+    
+    if (body.editTarget.type === 'component') {
+      // For component edits - minimal context (language only)
+      console.log(`[${requestId}] 📊 Component edit: using minimal context (no topic/age)`);
+      contextWithUserId = {
+        topic: '', // Not needed for atomic components
+        ageGroup: '', // Not needed for atomic components
+        difficulty: 'medium' as const,
+        language: body.context.language || 'en',
+        userId: user?.id
+      };
+    } else {
+      // For page edits - use page's generation context if exists
+      const pageData = body.editTarget.data as any;
+      const genContext = pageData.generationContext;
+      
+      if (genContext) {
+        console.log(`[${requestId}] 📊 Page edit: using stored generation context`, {
+          topic: genContext.topic,
+          ageGroup: genContext.ageGroup
+        });
+      } else {
+        console.log(`[${requestId}] 📊 Page edit: no generation context (blank page)`);
+      }
+      
+      contextWithUserId = {
+        topic: genContext?.topic || '',
+        ageGroup: genContext?.ageGroup || body.context.ageGroup || '',
+        difficulty: genContext?.difficulty || body.context.difficulty || 'medium',
+        language: genContext?.language || body.context.language || 'en',
+        userId: user?.id
+      };
+    }
     
     // STEP 1: Use Gemini service to edit worksheet
     const result = await geminiWorksheetEditingService.editWorksheet(
