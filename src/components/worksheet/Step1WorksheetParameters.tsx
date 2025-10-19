@@ -37,6 +37,7 @@ import {
 import AgeGroupTooltip from './AgeGroupTooltip';
 import TopicSuggestions from './TopicSuggestions';
 import ModeSelectionCards from './generation/ModeSelectionCards';
+import TopicGenerationChatDialog from './TopicGenerationChatDialog';
 
 interface WorksheetParameters {
   topic: string;
@@ -211,70 +212,8 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
               </Stack>
             </Box>
 
-            {/* Topic Suggestions - Show after age group selected */}
+            {/* 2. Worksheet Type - Show after age group selected */}
             {parameters.level && (
-              <TopicSuggestions
-                ageGroup={parameters.level}
-                selectedTopic={parameters.topic}
-                onTopicSelect={(topic) => setParameters({ ...parameters, topic })}
-              />
-            )}
-
-            {/* 2. Topic - Prominent */}
-            <Box>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <BookOpen size={18} color={theme.palette.primary.main} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    What's your topic?
-                  </Typography>
-                  <Typography variant="caption" color="error.main">*</Typography>
-                </Stack>
-                <Button
-                  size="small"
-                  startIcon={<Sparkles size={16} />}
-                  onClick={() => setShowTopicGenerator(true)}
-                  disabled={!parameters.level || !parameters.contentMode}
-                  sx={{
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    borderRadius: '8px',
-                    px: 2,
-                  }}
-                >
-                  Generate with AI
-                </Button>
-              </Stack>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                placeholder="Present Simple, Travel Vocabulary, Daily Routines...&#10;&#10;You can also describe your topic in detail or generate it with AI!"
-                value={parameters.topic}
-                onChange={(e) => setParameters({ ...parameters, topic: e.target.value })}
-                autoFocus
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
-                    fontSize: '1rem',
-                    '& textarea': {
-                      py: 1.5,
-                      px: 2,
-                      maxHeight: '200px',
-                      overflowY: 'auto !important',
-                    },
-                  },
-                }}
-              />
-              {!parameters.level && (
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                  💡 Select age group first to enable AI generation
-                </Typography>
-              )}
-            </Box>
-
-            {/* Mode Selection - Show after topic is filled */}
-            {parameters.topic.trim() && parameters.level && (
               <ModeSelectionCards
                 ageGroup={parameters.level}
                 selectedMode={parameters.contentMode}
@@ -282,10 +221,71 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
               />
             )}
 
-            {/* Show rest of form only after mode is selected */}
-            {parameters.contentMode && (
+            {/* Topic Suggestions - Show after content mode selected */}
+            {parameters.level && parameters.contentMode && (
+              <TopicSuggestions
+                ageGroup={parameters.level}
+                selectedTopic={parameters.topic}
+                onTopicSelect={(topic) => setParameters({ ...parameters, topic })}
+              />
+            )}
+
+            {/* 3. Topic - Show after content mode selected */}
+            {parameters.level && parameters.contentMode && (
+              <Box>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <BookOpen size={18} color={theme.palette.primary.main} />
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      What's your topic?
+                    </Typography>
+                    <Typography variant="caption" color="error.main">*</Typography>
+                  </Stack>
+                  <Button
+                    size="small"
+                    startIcon={<Sparkles size={16} />}
+                    onClick={() => setShowTopicGenerator(true)}
+                    sx={{
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      px: 2,
+                    }}
+                  >
+                    Generate with AI
+                  </Button>
+                </Stack>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  placeholder="Present Simple, Travel Vocabulary, Daily Routines...&#10;&#10;You can also describe your topic in detail or generate it with AI!"
+                  value={parameters.topic}
+                  onChange={(e) => setParameters({ ...parameters, topic: e.target.value })}
+                  autoFocus
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '12px',
+                      fontSize: '1rem',
+                      '& textarea': {
+                        py: 1.5,
+                        px: 2,
+                        maxHeight: '200px',
+                        overflowY: 'auto !important',
+                      },
+                    },
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  💡 Use AI generation for tailored topic suggestions
+                </Typography>
+              </Box>
+            )}
+
+            {/* Show rest of form only after topic is filled */}
+            {parameters.topic.trim() && (
               <>
-            {/* 3. Learning Objectives (Optional) */}
+            {/* 4. Learning Objectives (Optional) */}
             <Box>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
                 <Target size={18} color={theme.palette.primary.main} />
@@ -356,7 +356,7 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
                     <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
                       <Globe size={16} color={theme.palette.text.secondary} />
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        Content Language
+                        Worksheet Language
                       </Typography>
                     </Stack>
                     <FormControl fullWidth size="small">
@@ -558,11 +558,29 @@ const Step1WorksheetParameters: React.FC<Step1WorksheetParametersProps> = ({
         
         {!isValid() && (
           <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', mt: 1 }}>
-            Please fill in the topic to continue
+            {!parameters.level 
+              ? '👆 Select age group to start'
+              : !parameters.contentMode
+              ? '👆 Select worksheet type (PDF or Interactive)'
+              : !parameters.topic.trim()
+              ? '👆 Add or generate a topic'
+              : 'Please complete all required fields'}
           </Typography>
         )}
         </Stack>
       </Box>
+
+      {/* Topic Generation Chat Dialog */}
+      <TopicGenerationChatDialog
+        open={showTopicGenerator}
+        onClose={() => setShowTopicGenerator(false)}
+        onTopicGenerated={(topic) => {
+          setParameters({ ...parameters, topic });
+          setShowTopicGenerator(false);
+        }}
+        ageGroup={parameters.level}
+        contentMode={parameters.contentMode || 'pdf'}
+      />
     </Box>
   );
 };
