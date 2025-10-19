@@ -63,7 +63,7 @@ export class GeminiWorksheetEditingService {
       console.log('📝 [GEMINI_WORKSHEET_EDITING] Calling Gemini API...');
 
       // Call Gemini API with appropriate token limit based on target type
-      const maxTokens = target.type === 'page' ? 8192 : 4096;
+      const maxTokens = target.type === 'page' ? 8192 : 16384;
       const response = await this.callGeminiAPI(prompt, maxTokens, context.userId);
 
       console.log('✅ [GEMINI_WORKSHEET_EDITING] AI response received');
@@ -363,7 +363,7 @@ Return ONLY valid JSON. No explanations, no markdown formatting.`;
   /**
    * Call Gemini API - following GeminiWorksheetGenerationService pattern
    */
-  private async callGeminiAPI(prompt: string, maxTokens: number = 4096, userId?: string): Promise<string> {
+  private async callGeminiAPI(prompt: string, maxTokens: number = 16384, userId?: string): Promise<string> {
     const temperature = 0.7;
     const model = 'gemini-2.5-flash';
 
