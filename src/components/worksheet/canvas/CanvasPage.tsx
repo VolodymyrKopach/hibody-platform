@@ -865,6 +865,13 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
                   ? 'translateY(20px)'
                   : 'translateY(0)',
                 willChange: 'transform',
+                // Alignment support for elements with align property
+                display: 'flex',
+                justifyContent: element.properties?.align === 'left' 
+                  ? 'flex-start' 
+                  : element.properties?.align === 'right'
+                  ? 'flex-end'
+                  : 'center',
                 '&:hover': element.locked ? {} : {
                   border: `2px solid ${alpha(theme.palette.primary.main, 0.5)}`,
                   '& .drag-handle': {
@@ -1176,6 +1183,7 @@ function renderElement(
           size={element.properties.size || 'medium'}
           animation={element.properties.animation || 'bounce'}
           showHint={element.properties.showHint}
+          align={element.properties.align || 'center'}
           theme={element.properties.theme}
           ageGroup={ageGroup}
           isSelected={isSelected}
@@ -1193,6 +1201,25 @@ function renderElement(
           layout={element.properties.layout || 'horizontal'}
           difficulty={element.properties.difficulty || 'easy'}
           snapDistance={element.properties.snapDistance || 80}
+          theme={element.properties.theme}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+    case 'tap-image':
+      return (
+        <TapImage
+          imageUrl={element.properties.imageUrl || ''}
+          caption={element.properties.caption || 'Tap me!'}
+          size={element.properties.size || 'medium'}
+          animation={element.properties.animation || 'bounce'}
+          soundEffect={element.properties.soundEffect || 'praise'}
+          showHint={element.properties.showHint ?? true}
+          align={element.properties.align || 'center'}
           theme={element.properties.theme}
           ageGroup={ageGroup}
           isSelected={isSelected}
@@ -1760,6 +1787,7 @@ function getDefaultProperties(type: string) {
         animation: 'bounce',
         soundEffect: 'praise',
         showHint: true,
+        align: 'center',
       };
     case 'simple-drag-drop':
       return {

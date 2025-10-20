@@ -62,12 +62,13 @@ import { WorksheetEdit, WorksheetEditContext } from '@/types/worksheet-generatio
 import AIAssistantPanel from './ai/AIAssistantPanel';
 import ManualPropertyEditor from '../properties/ManualPropertyEditor';
 import AIPropertyEditor from '../properties/AIPropertyEditor';
-import { ThemeSelector } from '../properties/ThemeSelector';
 import { 
   isInteractiveComponent,
   getComponentPropertySchema,
 } from '@/constants/interactive-properties-schema';
 import { ThemeName } from '@/types/themes';
+import { getDefaultThemeForAge } from '@/constants/visual-themes';
+import { AgeSelector } from '../properties/AgeSelector';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -192,6 +193,26 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
       }
     }
   }, [selection]);
+
+  // Auto-set theme based on component age or fallback to worksheet age
+  React.useEffect(() => {
+    if (selection?.type === 'element') {
+      const elementData = selection.elementData;
+      
+      // Use component-specific age or fallback to worksheet age
+      const ageToUse = elementData.properties?.componentAge || parameters?.ageGroup;
+      
+      if (ageToUse) {
+        // Only auto-set theme if it's not already set or if age changed
+        const autoTheme = getDefaultThemeForAge(ageToUse, elementData.type);
+        
+        // Update theme if it's different from current
+        if (autoTheme !== elementData.properties?.theme) {
+          onUpdate?.({ theme: autoTheme });
+        }
+      }
+    }
+  }, [selection, parameters?.ageGroup, onUpdate]);
 
   // Mock layers for the selected page
   const mockLayers = selection && selection.type === 'page' ? [
@@ -1652,20 +1673,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             {mainTab === 'properties' ? (
               <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
           
-          {/* Universal Theme Selector - Shows for ALL components */}
-          <Box sx={{ mb: 3 }}>
-            <ThemeSelector
-              currentTheme={elementData.properties?.theme as ThemeName}
-              ageGroup={parameters?.ageGroup}
-              onChange={(newTheme) => onUpdate?.({ theme: newTheme })}
-              showAllThemes={false}
-            />
-          </Box>
-
-          <Divider sx={{ mb: 3 }} />
 
           {/* Check if interactive component - use Manual Property Editor */}
-          {isInteractiveComponent(elementData.type) ? (
+          {/* Exception: tap-image uses custom UI below */}
+          {isInteractiveComponent(elementData.type) && elementData.type !== 'tap-image' ? (
             (() => {
               const schema = getComponentPropertySchema(elementData.type);
               return schema ? (
@@ -4254,34 +4265,271 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           ) : elementData.type === 'tap-image' ? (
             <Stack spacing={2.5}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                ⚡ Tap Image Properties
+                👆 Tap Image Properties
               </Typography>
 
-              {/* Image URL */}
+              {/* Age Selector */}
+              <AgeSelector
+                currentAge={elementData.properties?.componentAge as string}
+                suitableAges={['2-3', '4-6', '7-8']}
+                onChange={(age) => {
+                  // Update component age and auto-select theme
+                  const newTheme = getDefaultThemeForAge(age, elementData.type);
+                  onUpdate?.({ componentAge: age, theme: newTheme });
+                }}
+              />
+
+              <Divider />
+
+              {/* ====== POSITION/ALIGNMENT ====== */}
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
-                  Image URL
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block', fontSize: '0.75rem' }}>
+                  📍 Position
                 </Typography>
-                <TextField
-                  fullWidth
-                  placeholder="https://example.com/image.jpg"
-                  value={elementData.properties?.imageUrl || ''}
-                  onChange={(e) => onUpdate?.({ imageUrl: e.target.value })}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '10px',
-                      fontSize: '0.875rem',
-                    },
-                  }}
-                />
+                <Stack direction="row" spacing={1}>
+                  {[
+                    { label: 'Left', value: 'left', icon: AlignLeft },
+                    { label: 'Center', value: 'center', icon: AlignCenter },
+                    { label: 'Right', value: 'right', icon: AlignRight },
+                  ].map((position) => {
+                    const isActive = (elementData.properties?.align || 'center') === position.value;
+                    const Icon = position.icon;
+                    return (
+                      <Box
+                        key={position.value}
+                        onClick={() => onUpdate?.({ align: position.value })}
+                        sx={{
+                          flex: 1,
+                          p: 1.25,
+                          borderRadius: '8px',
+                          border: isActive ? '2px solid #8B5CF6' : '1px solid #E5E7EB',
+                          backgroundColor: isActive ? '#F5F3FF' : '#FFFFFF',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          '&:hover': {
+                            borderColor: '#8B5CF6',
+                            backgroundColor: alpha('#F5F3FF', 0.5),
+                          },
+                        }}
+                      >
+                        <Icon size={16} color={isActive ? '#8B5CF6' : '#6B7280'} />
+                        <Typography
+                          sx={{
+                            fontSize: '0.65rem',
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive ? '#8B5CF6' : '#6B7280',
+                          }}
+                        >
+                          {position.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
               </Box>
 
               <Divider />
 
-              {/* Caption */}
+              {/* ====== MAIN SECTION: IMAGE ====== */}
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  borderRadius: '12px',
+                  border: `2px solid ${alpha('#8B5CF6', 0.2)}`,
+                  backgroundColor: alpha('#F5F3FF', 0.3),
+                }}
+              >
+                <Typography variant="caption" sx={{ fontWeight: 700, mb: 1.5, display: 'block', fontSize: '0.8rem' }}>
+                  📸 Image
+                </Typography>
+
+                {/* Image Preview */}
+                {elementData.properties?.imageUrl ? (
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: 160,
+                      borderRadius: '10px',
+                      overflow: 'hidden',
+                      mb: 1.5,
+                      position: 'relative',
+                      backgroundColor: '#F3F4F6',
+                      border: '2px dashed #D1D5DB',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={elementData.properties.imageUrl}
+                      alt="Preview"
+                      sx={{
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        objectFit: 'contain',
+                      }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                    {/* Action buttons overlay */}
+                    <Stack
+                      direction="row"
+                      spacing={0.75}
+                      sx={{
+                        position: 'absolute',
+                        bottom: 8,
+                        right: 8,
+                      }}
+                    >
+                      <Button
+                        size="small"
+                        variant="contained"
+                        component="label"
+                        sx={{
+                          textTransform: 'none',
+                          fontSize: '0.7rem',
+                          py: 0.5,
+                          px: 1.25,
+                          borderRadius: '6px',
+                          minWidth: 'auto',
+                          backgroundColor: 'rgba(0,0,0,0.6)',
+                          '&:hover': {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                          },
+                        }}
+                      >
+                        Change
+                        <input
+                          type="file"
+                          hidden
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              // TODO: Handle file upload
+                              console.log('File selected:', file);
+                            }
+                          }}
+                        />
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        startIcon={<Sparkles size={14} />}
+                        onClick={() => setMainTab('ai')}
+                        sx={{
+                          textTransform: 'none',
+                          fontSize: '0.7rem',
+                          py: 0.5,
+                          px: 1.25,
+                          borderRadius: '6px',
+                          minWidth: 'auto',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
+                          },
+                        }}
+                      >
+                        AI
+                      </Button>
+                    </Stack>
+                  </Box>
+                ) : (
+                  <Stack spacing={1.5} sx={{ mb: 1.5 }}>
+                    {/* Upload from device */}
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      component="label"
+                      startIcon={<Upload size={18} />}
+                      sx={{
+                        py: 2.5,
+                        borderRadius: '10px',
+                        borderStyle: 'dashed',
+                        borderWidth: 2,
+                        borderColor: '#8B5CF6',
+                        color: '#8B5CF6',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        '&:hover': {
+                          borderStyle: 'dashed',
+                          backgroundColor: alpha('#8B5CF6', 0.05),
+                          borderColor: '#7C3AED',
+                        },
+                      }}
+                    >
+                      Upload Image
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // TODO: Handle file upload
+                            console.log('File selected:', file);
+                          }
+                        }}
+                      />
+                    </Button>
+
+                    {/* Generate with AI */}
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={<Sparkles size={18} />}
+                      onClick={() => setMainTab('ai')}
+                      sx={{
+                        py: 2.5,
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
+                          boxShadow: '0 6px 16px rgba(102, 126, 234, 0.4)',
+                          transform: 'translateY(-2px)',
+                        },
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      Generate with AI
+                    </Button>
+                  </Stack>
+                )}
+
+                {/* URL Input - compact */}
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Or paste image URL..."
+                  value={elementData.properties?.imageUrl || ''}
+                  onChange={(e) => onUpdate?.({ imageUrl: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      backgroundColor: 'white',
+                    },
+                  }}
+                />
+              </Paper>
+
+              {/* ====== MAIN SECTION: CAPTION ====== */}
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
-                  Caption
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.75, display: 'block', fontSize: '0.75rem' }}>
+                  💬 Caption
                 </Typography>
                 <TextField
                   fullWidth
@@ -4297,175 +4545,148 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 />
               </Box>
 
-              <Divider />
-
-              {/* Size */}
+              {/* ====== MAIN SECTION: QUICK STYLE PRESETS ====== */}
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
-                  Image Size
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block', fontSize: '0.75rem' }}>
+                  ✨ Quick Style
                 </Typography>
                 <Stack direction="row" spacing={1}>
                   {[
-                    { label: 'Small', value: 'small' },
-                    { label: 'Medium', value: 'medium' },
-                    { label: 'Large', value: 'large' },
-                  ].map((size) => {
-                    const isActive = (elementData.properties?.size || 'medium') === size.value;
+                    {
+                      label: 'Simple',
+                      value: 'simple',
+                      icon: '⚪',
+                      config: { animation: 'bounce', soundEffect: 'praise', showHint: true, size: 'medium' },
+                      tooltip: {
+                        title: 'Simple Style',
+                        desc: 'Basic, neutral interaction',
+                        details: [
+                          '⬆️ Bounce animation',
+                          '🎉 Praise sound',
+                          '📏 Medium size',
+                          '👆 Hint visible'
+                        ]
+                      }
+                    },
+                    {
+                      label: 'Fun',
+                      value: 'fun',
+                      icon: '🎉',
+                      config: { animation: 'spin', soundEffect: 'animal', showHint: true, size: 'large' },
+                      tooltip: {
+                        title: 'Fun Style',
+                        desc: 'Energetic & playful',
+                        details: [
+                          '🔄 Spin animation',
+                          '🐾 Animal sound',
+                          '📏 Large size',
+                          '👆 Hint visible'
+                        ]
+                      }
+                    },
+                    {
+                      label: 'Calm',
+                      value: 'calm',
+                      icon: '🌸',
+                      config: { animation: 'scale', soundEffect: 'praise', showHint: false, size: 'medium' },
+                      tooltip: {
+                        title: 'Calm Style',
+                        desc: 'Gentle & focused',
+                        details: [
+                          '🔍 Scale animation',
+                          '🎉 Praise sound',
+                          '📏 Medium size',
+                          '✋ No hint (less distraction)'
+                        ]
+                      }
+                    },
+                  ].map((preset) => {
+                    const isActive =
+                      elementData.properties?.animation === preset.config.animation &&
+                      elementData.properties?.soundEffect === preset.config.soundEffect;
+
                     return (
-                      <Box
-                        key={size.value}
-                        onClick={() => onUpdate?.({ size: size.value })}
-                        sx={{
-                          flex: 1,
-                          p: 1.5,
-                          borderRadius: '8px',
-                          border: isActive ? '2px solid #8B5CF6' : '1px solid #E5E7EB',
-                          backgroundColor: isActive ? '#F5F3FF' : '#FFFFFF',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          textAlign: 'center',
-                          '&:hover': {
-                            borderColor: '#8B5CF6',
-                            backgroundColor: '#F9FAFB',
+                      <Tooltip
+                        key={preset.value}
+                        title={
+                          <Box sx={{ p: 0.5 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.75rem', display: 'block', mb: 0.5 }}>
+                              {preset.tooltip.title}
+                            </Typography>
+                            <Typography variant="caption" sx={{ fontSize: '0.65rem', display: 'block', mb: 0.75, color: 'rgba(255,255,255,0.8)' }}>
+                              {preset.tooltip.desc}
+                            </Typography>
+                            {preset.tooltip.details.map((detail, idx) => (
+                              <Typography key={idx} variant="caption" sx={{ fontSize: '0.65rem', display: 'block', lineHeight: 1.6 }}>
+                                {detail}
+                              </Typography>
+                            ))}
+                          </Box>
+                        }
+                        placement="top"
+                        arrow
+                        componentsProps={{
+                          tooltip: {
+                            sx: {
+                              backgroundColor: alpha('#1F2937', 0.95),
+                              backdropFilter: 'blur(8px)',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                              maxWidth: 200,
+                            },
+                          },
+                          arrow: {
+                            sx: {
+                              color: alpha('#1F2937', 0.95),
+                            },
                           },
                         }}
                       >
-                        <Typography
+                        <Box
+                          onClick={() => onUpdate?.(preset.config)}
                           sx={{
-                            fontSize: '13px',
-                            fontWeight: isActive ? 600 : 500,
-                            color: isActive ? '#8B5CF6' : '#6B7280',
+                            flex: 1,
+                            p: 1.5,
+                            borderRadius: '10px',
+                            border: isActive ? '2px solid #8B5CF6' : '1px solid #E5E7EB',
+                            backgroundColor: isActive ? '#F5F3FF' : '#FFFFFF',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            textAlign: 'center',
+                            '&:hover': {
+                              borderColor: '#8B5CF6',
+                              backgroundColor: alpha('#F5F3FF', 0.5),
+                              transform: 'translateY(-2px)',
+                            },
                           }}
                         >
-                          {size.label}
-                        </Typography>
-                      </Box>
+                          <Typography sx={{ fontSize: '20px', mb: 0.5 }}>{preset.icon}</Typography>
+                          <Typography
+                            sx={{
+                              fontSize: '0.75rem',
+                              fontWeight: isActive ? 600 : 500,
+                              color: isActive ? '#8B5CF6' : '#6B7280',
+                            }}
+                          >
+                            {preset.label}
+                          </Typography>
+                        </Box>
+                      </Tooltip>
                     );
                   })}
                 </Stack>
-              </Box>
-
-              <Divider />
-
-              {/* Animation */}
-              <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
-                  Animation
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    fontSize: '0.7rem',
+                    display: 'block',
+                    mt: 0.75,
+                    fontStyle: 'italic'
+                  }}
+                >
+                  Hover to see details
                 </Typography>
-                <Stack direction="row" spacing={1}>
-                  {[
-                    { label: 'Bounce', value: 'bounce', emoji: '⬆️' },
-                    { label: 'Scale', value: 'scale', emoji: '🔍' },
-                    { label: 'Shake', value: 'shake', emoji: '🤝' },
-                    { label: 'Spin', value: 'spin', emoji: '🔄' },
-                  ].map((animation) => {
-                    const isActive = (elementData.properties?.animation || 'bounce') === animation.value;
-                    return (
-                      <Box
-                        key={animation.value}
-                        onClick={() => onUpdate?.({ animation: animation.value })}
-                        sx={{
-                          flex: 1,
-                          p: 1.5,
-                          borderRadius: '8px',
-                          border: isActive ? '2px solid #8B5CF6' : '1px solid #E5E7EB',
-                          backgroundColor: isActive ? '#F5F3FF' : '#FFFFFF',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          textAlign: 'center',
-                          '&:hover': {
-                            borderColor: '#8B5CF6',
-                            backgroundColor: '#F9FAFB',
-                          },
-                        }}
-                      >
-                        <Typography sx={{ fontSize: '16px', mb: 0.5 }}>{animation.emoji}</Typography>
-                        <Typography
-                          sx={{
-                            fontSize: '11px',
-                            fontWeight: isActive ? 600 : 500,
-                            color: isActive ? '#8B5CF6' : '#6B7280',
-                          }}
-                        >
-                          {animation.label}
-                        </Typography>
-                      </Box>
-                    );
-                  })}
-                </Stack>
-              </Box>
-
-              <Divider />
-
-              {/* Sound Effect */}
-              <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
-                  Sound Effect
-                </Typography>
-                <Stack spacing={1}>
-                  {[
-                    { label: '🎉 Praise', value: 'praise' },
-                    { label: '🐾 Animal', value: 'animal' },
-                    { label: '⚡ Action', value: 'action' },
-                  ].map((sound) => {
-                    const isActive = (elementData.properties?.soundEffect || 'praise') === sound.value;
-                    return (
-                      <Box
-                        key={sound.value}
-                        onClick={() => onUpdate?.({ soundEffect: sound.value })}
-                        sx={{
-                          p: 1.5,
-                          borderRadius: '8px',
-                          border: isActive ? '2px solid #8B5CF6' : '1px solid #E5E7EB',
-                          backgroundColor: isActive ? '#F5F3FF' : '#FFFFFF',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          '&:hover': {
-                            borderColor: '#8B5CF6',
-                            backgroundColor: '#F9FAFB',
-                          },
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontSize: '13px',
-                            fontWeight: isActive ? 600 : 500,
-                            color: isActive ? '#8B5CF6' : '#374151',
-                          }}
-                        >
-                          {sound.label}
-                        </Typography>
-                      </Box>
-                    );
-                  })}
-                </Stack>
-              </Box>
-
-              <Divider />
-
-              {/* Show Hint */}
-              <Box>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={elementData.properties?.showHint ?? true}
-                      onChange={(e) => onUpdate?.({ showHint: e.target.checked })}
-                      sx={{
-                        '& .MuiSwitch-switchBase.Mui-checked': {
-                          color: '#8B5CF6',
-                        },
-                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                          backgroundColor: '#8B5CF6',
-                        },
-                      }}
-                    />
-                  }
-                  label={
-                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.8125rem' }}>
-                      👆 Show hint (animated hand)
-                    </Typography>
-                  }
-                />
               </Box>
             </Stack>
           ) : elementData.type === 'color-matcher' ? (
@@ -4473,6 +4694,18 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 ⚡ Color Matcher Properties
               </Typography>
+
+              {/* Age Selector */}
+              <AgeSelector
+                currentAge={elementData.properties?.componentAge as string}
+                suitableAges={['2-3', '4-6', '7-8']}
+                onChange={(age) => {
+                  const newTheme = getDefaultThemeForAge(age, elementData.type);
+                  onUpdate?.({ componentAge: age, theme: newTheme });
+                }}
+              />
+
+              <Divider />
 
               {/* Mode */}
               <Box>
@@ -4596,6 +4829,18 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 ⚡ Counter Properties
               </Typography>
 
+              {/* Age Selector */}
+              <AgeSelector
+                currentAge={elementData.properties?.componentAge as string}
+                suitableAges={['4-6', '7-8', '9-10']}
+                onChange={(age) => {
+                  const newTheme = getDefaultThemeForAge(age, elementData.type);
+                  onUpdate?.({ componentAge: age, theme: newTheme });
+                }}
+              />
+
+              <Divider />
+
               {/* Voice & Celebration */}
               <Box>
                 <FormControlLabel
@@ -4686,6 +4931,18 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 ⚡ Drag & Drop Properties
               </Typography>
+
+              {/* Age Selector */}
+              <AgeSelector
+                currentAge={elementData.properties?.componentAge as string}
+                suitableAges={['2-3', '4-6', '7-8', '9-10']}
+                onChange={(age) => {
+                  const newTheme = getDefaultThemeForAge(age, elementData.type);
+                  onUpdate?.({ componentAge: age, theme: newTheme });
+                }}
+              />
+
+              <Divider />
 
               {/* Layout */}
               <Box>
@@ -4950,6 +5207,18 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 ⚡ Voice Recorder Properties
               </Typography>
+
+              {/* Age Selector */}
+              <AgeSelector
+                currentAge={elementData.properties?.componentAge as string}
+                suitableAges={['4-6', '7-8', '9-10', '11-13', '14-15', '16-18']}
+                onChange={(age) => {
+                  const newTheme = getDefaultThemeForAge(age, elementData.type);
+                  onUpdate?.({ componentAge: age, theme: newTheme });
+                }}
+              />
+
+              <Divider />
 
               {/* Prompt */}
               <Box>
@@ -5722,8 +5991,9 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
         ) : (
           <Box sx={{ flex: 1, p: 2, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             {/* AI Assistant Panel - Use AIPropertyEditor for interactive components */}
+            {/* Exception: tap-image uses standard AI Assistant */}
             {aiContext ? (
-              isInteractiveComponent(elementData.type) ? (
+              isInteractiveComponent(elementData.type) && elementData.type !== 'tap-image' ? (
                 (() => {
                   const schema = getComponentPropertySchema(elementData.type);
                   return schema ? (

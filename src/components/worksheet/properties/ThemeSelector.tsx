@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
-  FormControl,
   FormLabel,
   Stack,
   Paper,
@@ -12,17 +11,12 @@ import {
   Tooltip,
   alpha,
   useTheme as useMuiTheme,
-  Button,
-  Collapse,
 } from '@mui/material';
 import { 
   Palette, 
-  ChevronDown, 
-  ChevronUp, 
   Check,
-  Sparkles,
 } from 'lucide-react';
-import { VisualTheme, ThemeName } from '@/types/themes';
+import { ThemeName } from '@/types/themes';
 import { getAllThemes, getThemesByAge, getTheme } from '@/constants/visual-themes';
 
 interface ThemeSelectorProps {
@@ -30,6 +24,11 @@ interface ThemeSelectorProps {
   ageGroup?: string;
   onChange: (theme: ThemeName) => void;
   showAllThemes?: boolean;
+  /**
+   * Suitable ages for the component (e.g., ['2-3', '4-6', '7-8'] for TapImage)
+   * If provided, themes will be filtered to only show those suitable for these ages
+   */
+  componentSuitableAges?: string[];
 }
 
 export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
@@ -37,23 +36,29 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   ageGroup,
   onChange,
   showAllThemes = false,
+  componentSuitableAges,
 }) => {
   const muiTheme = useMuiTheme();
-  const [isExpanded, setIsExpanded] = useState(false);
 
   // Get themes filtered by age group or all themes
-  const availableThemes = showAllThemes 
+  let availableThemes = showAllThemes 
     ? getAllThemes() 
     : ageGroup 
       ? getThemesByAge(ageGroup) 
       : getAllThemes();
+
+  // If componentSuitableAges is provided, filter themes to only those suitable for the component
+  if (componentSuitableAges && componentSuitableAges.length > 0) {
+    availableThemes = availableThemes.filter(theme => 
+      theme.suitableForAges.some(age => componentSuitableAges.includes(age))
+    );
+  }
 
   // Get current theme object
   const currentThemeObj = currentTheme ? getTheme(currentTheme) : null;
 
   const handleThemeSelect = (themeName: ThemeName) => {
     onChange(themeName);
-    setIsExpanded(false);
   };
 
   const getCategoryColor = (category: string) => {
@@ -83,259 +88,245 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   };
 
   return (
-    <FormControl fullWidth>
-      <FormLabel sx={{ mb: 1.5, fontWeight: 700, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Palette size={16} />
-        Visual Theme
+    <Box>
+      {/* Header */}
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+        <FormLabel sx={{ fontWeight: 600, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0 }}>
+          <Palette size={14} />
+          Theme
+        </FormLabel>
         {ageGroup && (
           <Chip 
-            label={`Age ${ageGroup}`} 
+            label={ageGroup} 
             size="small" 
             sx={{ 
-              height: 18, 
-              fontSize: '0.65rem',
+              height: 16, 
+              fontSize: '0.6rem',
               fontWeight: 600,
             }} 
           />
         )}
-      </FormLabel>
+      </Stack>
 
-      {/* Current Theme Display */}
+      {/* Current Theme Name (small badge if selected) */}
       {currentThemeObj && (
-        <Paper
-          elevation={0}
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            display: 'block',
+            fontSize: '0.65rem', 
+            fontWeight: 600,
+            color: currentThemeObj.colors.primary,
+            mb: 1,
+          }}
+        >
+          ✓ {currentThemeObj.name}
+        </Typography>
+      )}
+
+      {/* Horizontal Scrollable Theme Carousel */}
+      {availableThemes.length > 0 ? (
+        <Box
           sx={{
-            p: 2,
-            mb: 1.5,
-            background: alpha(currentThemeObj.colors.primary, 0.05),
-            border: `2px solid ${alpha(currentThemeObj.colors.primary, 0.3)}`,
-            borderRadius: 2,
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            '&:hover': {
-              borderColor: currentThemeObj.colors.primary,
-              background: alpha(currentThemeObj.colors.primary, 0.08),
+            display: 'flex',
+            gap: 1,
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            pb: 1,
+            px: 0.5,
+            mx: -0.5,
+            // Hide scrollbar but keep functionality
+            '&::-webkit-scrollbar': {
+              height: '4px',
             },
+            '&::-webkit-scrollbar-track': {
+              background: alpha(muiTheme.palette.divider, 0.1),
+              borderRadius: '2px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: alpha(muiTheme.palette.primary.main, 0.3),
+              borderRadius: '2px',
+              '&:hover': {
+                background: alpha(muiTheme.palette.primary.main, 0.5),
+              },
+            },
+            // Scroll snap for better UX
+            scrollSnapType: 'x mandatory',
+            scrollPaddingLeft: '8px',
           }}
-          onClick={() => setIsExpanded(!isExpanded)}
         >
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Box sx={{ flex: 1 }}>
-              <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 0.5 }}>
-                <Box
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '8px',
-                    background: `linear-gradient(135deg, ${currentThemeObj.colors.primary} 0%, ${currentThemeObj.colors.secondary} 100%)`,
-                    border: `2px solid ${currentThemeObj.colors.accent}`,
-                  }}
-                />
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                  {currentThemeObj.name}
-                </Typography>
-                <Chip
-                  label={getCategoryLabel(currentThemeObj.category)}
-                  size="small"
-                  sx={{
-                    height: 20,
-                    fontSize: '0.65rem',
-                    fontWeight: 600,
-                    backgroundColor: alpha(getCategoryColor(currentThemeObj.category), 0.1),
-                    color: getCategoryColor(currentThemeObj.category),
-                  }}
-                />
-              </Stack>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                {currentThemeObj.description}
-              </Typography>
-            </Box>
-            {isExpanded ? (
-              <ChevronUp size={20} color={muiTheme.palette.text.secondary} />
-            ) : (
-              <ChevronDown size={20} color={muiTheme.palette.text.secondary} />
-            )}
-          </Stack>
-        </Paper>
-      )}
-
-      {/* No Theme Selected */}
-      {!currentThemeObj && (
-        <Button
-          variant="outlined"
-          onClick={() => setIsExpanded(!isExpanded)}
-          sx={{
-            mb: 1.5,
-            justifyContent: 'space-between',
-            textTransform: 'none',
-            borderRadius: 2,
-            py: 1.5,
-          }}
-          endIcon={isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Sparkles size={16} />
-            <Typography variant="body2">Select a theme</Typography>
-          </Stack>
-        </Button>
-      )}
-
-      {/* Theme Options */}
-      <Collapse in={isExpanded}>
-        <Stack spacing={1.5}>
-          {availableThemes.length === 0 && (
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                textAlign: 'center',
-                backgroundColor: alpha(muiTheme.palette.warning.main, 0.05),
-                border: `1px solid ${alpha(muiTheme.palette.warning.main, 0.2)}`,
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                No themes available for age group <strong>{ageGroup}</strong>
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Try selecting a different age group
-              </Typography>
-            </Paper>
-          )}
-
           {availableThemes.map((theme) => {
             const isSelected = currentTheme === theme.id;
 
             return (
-              <Paper
+              <Tooltip
                 key={theme.id}
-                elevation={0}
-                sx={{
-                  p: 1.5,
-                  background: isSelected
-                    ? alpha(theme.colors.primary, 0.1)
-                    : alpha(muiTheme.palette.background.paper, 0.5),
-                  border: isSelected
-                    ? `2px solid ${theme.colors.primary}`
-                    : `1px solid ${alpha(muiTheme.palette.divider, 0.3)}`,
-                  borderRadius: 1.5,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    borderColor: theme.colors.primary,
-                    background: alpha(theme.colors.primary, 0.05),
-                    transform: 'translateX(4px)',
-                  },
-                }}
-                onClick={() => handleThemeSelect(theme.id)}
-              >
-                <Stack direction="row" alignItems="center" spacing={1.5}>
-                  {/* Theme Color Preview */}
-                  <Box
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: '10px',
-                      background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 50%, ${theme.colors.accent} 100%)`,
-                      border: `2px solid ${alpha(theme.colors.primary, 0.3)}`,
-                      flexShrink: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {isSelected && (
-                      <Check 
-                        size={24} 
-                        color="#ffffff" 
-                        strokeWidth={3}
-                      />
-                    )}
-                  </Box>
-
-                  {/* Theme Info */}
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
-                      <Typography 
-                        variant="subtitle2" 
-                        sx={{ 
-                          fontWeight: 700, 
-                          fontSize: '0.85rem',
-                          color: isSelected ? theme.colors.primary : 'text.primary',
-                        }}
-                      >
-                        {theme.name}
-                      </Typography>
+                title={
+                  <Box sx={{ p: 0.5 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.75rem', display: 'block', mb: 0.5 }}>
+                      {theme.name}
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontSize: '0.65rem', display: 'block', mb: 0.5, color: 'rgba(255,255,255,0.8)' }}>
+                      {theme.description}
+                    </Typography>
+                    <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
                       <Chip
                         label={getCategoryLabel(theme.category)}
                         size="small"
                         sx={{
-                          height: 18,
-                          fontSize: '0.6rem',
+                          height: 14,
+                          fontSize: '0.55rem',
                           fontWeight: 600,
-                          backgroundColor: alpha(getCategoryColor(theme.category), 0.1),
-                          color: getCategoryColor(theme.category),
+                          backgroundColor: 'rgba(255,255,255,0.2)',
+                          color: 'white',
+                          '& .MuiChip-label': {
+                            px: 0.5,
+                          },
                         }}
                       />
-                    </Stack>
-                    <Typography 
-                      variant="caption" 
-                      color="text.secondary" 
-                      sx={{ 
-                        fontSize: '0.7rem',
-                        display: 'block',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {theme.description}
-                    </Typography>
-                    
-                    {/* Age Groups */}
-                    <Stack direction="row" spacing={0.5} sx={{ mt: 0.5, flexWrap: 'wrap' }}>
                       {theme.suitableForAges.map((age) => (
                         <Chip
                           key={age}
                           label={age}
                           size="small"
                           sx={{
-                            height: 16,
-                            fontSize: '0.6rem',
+                            height: 14,
+                            fontSize: '0.55rem',
                             fontWeight: 600,
-                            backgroundColor: alpha(muiTheme.palette.primary.main, 0.05),
-                            color: muiTheme.palette.primary.main,
+                            backgroundColor: 'rgba(255,255,255,0.15)',
+                            color: 'white',
                             '& .MuiChip-label': {
-                              px: 0.75,
+                              px: 0.5,
                             },
                           }}
                         />
                       ))}
                     </Stack>
                   </Box>
-                </Stack>
-              </Paper>
+                }
+                placement="top"
+                arrow
+                componentsProps={{
+                  tooltip: {
+                    sx: {
+                      backgroundColor: alpha('#1F2937', 0.95),
+                      backdropFilter: 'blur(8px)',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      maxWidth: 220,
+                    },
+                  },
+                  arrow: {
+                    sx: {
+                      color: alpha('#1F2937', 0.95),
+                    },
+                  },
+                }}
+              >
+                <Box
+                  onClick={() => handleThemeSelect(theme.id)}
+                  sx={{
+                    width: 52,
+                    height: 52,
+                    flexShrink: 0,
+                    borderRadius: '10px',
+                    background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 50%, ${theme.colors.accent} 100%)`,
+                    border: isSelected
+                      ? `3px solid ${theme.colors.primary}`
+                      : `2px solid ${alpha(theme.colors.primary, 0.3)}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    scrollSnapAlign: 'start',
+                    '&:hover': {
+                      transform: 'translateY(-4px) scale(1.05)',
+                      boxShadow: `0 4px 12px ${alpha(theme.colors.primary, 0.4)}`,
+                      border: `3px solid ${theme.colors.primary}`,
+                    },
+                    '&:active': {
+                      transform: 'translateY(-2px) scale(1.02)',
+                    },
+                  }}
+                >
+                  {/* Check mark for selected */}
+                  {isSelected && (
+                    <Check 
+                      size={24} 
+                      color="#ffffff" 
+                      strokeWidth={3}
+                      style={{
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                      }}
+                    />
+                  )}
+                  
+                  {/* Small name label on hover - optional */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: -18,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      opacity: 0,
+                      transition: 'opacity 0.2s',
+                      backgroundColor: alpha(theme.colors.primary, 0.9),
+                      color: 'white',
+                      px: 0.75,
+                      py: 0.25,
+                      borderRadius: '4px',
+                      fontSize: '0.6rem',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      pointerEvents: 'none',
+                      '.MuiBox-root:hover > &': {
+                        opacity: 1,
+                      },
+                    }}
+                  >
+                    {theme.name}
+                  </Box>
+                </Box>
+              </Tooltip>
             );
           })}
-        </Stack>
-      </Collapse>
+        </Box>
+      ) : (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 1.5,
+            textAlign: 'center',
+            backgroundColor: alpha(muiTheme.palette.warning.main, 0.05),
+            border: `1px solid ${alpha(muiTheme.palette.warning.main, 0.2)}`,
+            borderRadius: '8px',
+          }}
+        >
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+            No themes for <strong>{ageGroup}</strong>
+          </Typography>
+        </Paper>
+      )}
 
-      {/* Helper Text */}
-      {!showAllThemes && ageGroup && (
+      {/* Helper hint */}
+      {availableThemes.length > 3 && (
         <Typography 
           variant="caption" 
           color="text.secondary" 
           sx={{ 
-            mt: 1.5, 
+            mt: 1, 
             display: 'block',
-            fontSize: '0.7rem',
+            fontSize: '0.65rem',
+            fontStyle: 'italic',
+            textAlign: 'center',
           }}
         >
-          Showing themes suitable for age group <strong>{ageGroup}</strong>. 
-          <br />
-          Theme affects colors, typography, spacing, and animations.
+          ← Scroll to see more →
         </Typography>
       )}
-    </FormControl>
+    </Box>
   );
 };
 

@@ -17,6 +17,7 @@ interface TapImageProps {
   size?: 'small' | 'medium' | 'large';
   animation?: 'bounce' | 'scale' | 'shake' | 'spin';
   showHint?: boolean;
+  align?: 'left' | 'center' | 'right';
   theme?: ThemeName;
   ageGroup?: string;
   isSelected?: boolean;

@@ -766,34 +766,6 @@ export const getThemesByCategory = (category: 'educational' | 'playful' | 'profe
   return getAllThemes().filter(theme => theme.category === category);
 };
 
-/**
- * Get default theme for a specific age group
- * Returns most suitable theme based on age and category preference
- */
-export const getDefaultThemeForAge = (
-  ageGroup: string,
-  preferCategory?: 'educational' | 'playful' | 'professional'
-): VisualTheme | null => {
-  const themesForAge = getThemesByAge(ageGroup);
-  
-  if (themesForAge.length === 0) return null;
-  
-  // If category preference specified, try to find matching theme
-  if (preferCategory) {
-    const categoryTheme = themesForAge.find(theme => theme.category === preferCategory);
-    if (categoryTheme) return categoryTheme;
-  }
-  
-  // Default priority: playful > educational > professional
-  const playfulTheme = themesForAge.find(theme => theme.category === 'playful');
-  if (playfulTheme) return playfulTheme;
-  
-  const educationalTheme = themesForAge.find(theme => theme.category === 'educational');
-  if (educationalTheme) return educationalTheme;
-  
-  // Return first available
-  return themesForAge[0];
-};
 
 /**
  * Get theme recommendations based on age and component type
@@ -840,5 +812,52 @@ export const isThemeSuitableForAge = (themeName: ThemeName, ageGroup: string): b
     const normalizedThemeAge = age.match(/\d+-\d+/)?.[0] || age;
     return normalizedThemeAge === normalizedAge;
   });
+};
+
+/**
+ * Automatically select the best theme for a given age group
+ * This is the default theme selection logic - no user choice needed
+ */
+export const getDefaultThemeForAge = (ageGroup: string, componentType?: string): ThemeName => {
+  // Normalize age group format (e.g., "3-5 years" -> "3-5")
+  const normalizedAge = ageGroup.match(/\d+-\d+/)?.[0] || ageGroup;
+  
+  // Age-based theme selection
+  switch (normalizedAge) {
+    case '2-3':
+    case '3-5':
+      // Very young children - bright, cartoon style
+      return 'cartoon';
+    
+    case '4-6':
+      // Preschool - playful and colorful
+      return 'playful';
+    
+    case '6-7':
+    case '7-8':
+      // Early elementary - still playful but more structured
+      return componentType?.includes('interactive') ? 'playful' : 'modern-minimal';
+    
+    case '8-9':
+    case '9-10':
+      // Elementary - balanced approach
+      return 'modern-minimal';
+    
+    case '10-11':
+    case '10-12':
+    case '11-13':
+      // Middle school - more mature
+      return 'modern-minimal';
+    
+    case '12-13':
+    case '14-15':
+    case '16-18':
+      // Teens - professional and clean
+      return 'professional';
+    
+    default:
+      // Fallback to modern-minimal
+      return 'modern-minimal';
+  }
 };
 
