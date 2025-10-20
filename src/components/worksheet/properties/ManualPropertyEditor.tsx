@@ -20,13 +20,16 @@ import {
   alpha,
   useTheme,
 } from '@mui/material';
-import { Plus, Trash2, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, HelpCircle, Sparkles } from 'lucide-react';
 import {
   ComponentPropertySchema,
   PropertyDefinition,
 } from '@/constants/interactive-properties-schema';
 import { ThemeSelector } from './ThemeSelector';
 import { ThemeName } from '@/types/themes';
+import { VisualChipSelector, ChipOption } from './VisualChipSelector';
+import { AgeStyleName } from '@/types/interactive-age-styles';
+import { getAllAgeStyles, AGE_STYLE_LABELS } from '@/constants/interactive-age-styles';
 
 interface ManualPropertyEditorProps {
   schema: ComponentPropertySchema;
@@ -90,6 +93,40 @@ const ManualPropertyEditor: React.FC<ManualPropertyEditorProps> = ({
         );
 
       case 'select':
+        // Special handling for ageStyle (tap-image, drag-drop, and other interactive components)
+        if (propDef.key === 'ageStyle') {
+          const allStyles = getAllAgeStyles();
+          
+          // Filter by suitable age styles if defined in schema
+          const suitableStyles = schema.suitableAgeStyles
+            ? allStyles.filter(style => schema.suitableAgeStyles?.includes(style.id))
+            : allStyles;
+          
+          const options: ChipOption<AgeStyleName>[] = suitableStyles.map((style) => ({
+            value: style.id,
+            label: AGE_STYLE_LABELS[style.id],
+            emoji: style.emoji,
+            color: style.color,
+            tooltip: {
+              title: style.name,
+              description: style.description,
+              details: `Element: ${style.sizes.element}px • Gap: ${style.sizes.gap}px`,
+            },
+          }));
+
+          return (
+            <VisualChipSelector
+              label="Age Style"
+              icon={<Sparkles size={14} />}
+              options={options}
+              value={value as AgeStyleName}
+              onChange={(newStyle) => handlePropertyChange(propDef.key, newStyle)}
+              colorMode="multi"
+            />
+          );
+        }
+        
+        // Default select field
         return (
           <SelectField
             propDef={propDef}

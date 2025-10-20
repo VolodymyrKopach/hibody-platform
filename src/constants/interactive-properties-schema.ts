@@ -3,6 +3,8 @@
  * Defines editable properties for each interactive component type
  */
 
+import { AgeStyleName } from '@/types/interactive-age-styles';
+
 export type PropertyType = 
   | 'string' 
   | 'number' 
@@ -36,6 +38,7 @@ export interface ComponentPropertySchema {
   componentName: string;
   category: 'interactive';
   icon: string;
+  suitableAgeStyles?: AgeStyleName[]; // Which age styles are suitable for this component
   properties: PropertyDefinition[];
 }
 
@@ -49,7 +52,20 @@ export const INTERACTIVE_PROPERTIES_SCHEMAS: ComponentPropertySchema[] = [
     componentName: 'Tap Image',
     category: 'interactive',
     icon: '👆',
+    suitableAgeStyles: ['toddler', 'preschool', 'elementary'], // Simple component - only for younger kids
     properties: [
+      {
+        key: 'ageStyle',
+        label: 'Age Style',
+        type: 'select',
+        default: 'preschool',
+        options: [
+          { value: 'toddler', label: '🐣 Toddler (3-5) - Extra large, simple' },
+          { value: 'preschool', label: '🎨 Preschool (6-7) - Large, playful' },
+          { value: 'elementary', label: '📚 Elementary (8-9) - Medium, structured' },
+        ],
+        helperText: 'Visual style optimized for different age groups',
+      },
       {
         key: 'imageUrl',
         label: 'Image URL',
@@ -116,7 +132,22 @@ export const INTERACTIVE_PROPERTIES_SCHEMAS: ComponentPropertySchema[] = [
     componentName: 'Drag and Drop',
     category: 'interactive',
     icon: '🎯',
+    suitableAgeStyles: ['toddler', 'preschool', 'elementary', 'middle', 'teen'], // Works for all ages
     properties: [
+      {
+        key: 'ageStyle',
+        label: 'Age Style',
+        type: 'select',
+        default: 'elementary',
+        options: [
+          { value: 'toddler', label: '🐣 Toddler (3-5) - Extra large, simple' },
+          { value: 'preschool', label: '🎨 Preschool (6-7) - Large, playful' },
+          { value: 'elementary', label: '📚 Elementary (8-9) - Medium, structured' },
+          { value: 'middle', label: '🎯 Middle School (10-13) - Standard' },
+          { value: 'teen', label: '🎓 Teen (14-18) - Compact, minimal' },
+        ],
+        helperText: 'Visual style optimized for different age groups',
+      },
       {
         key: 'items',
         label: 'Draggable Items',
@@ -179,6 +210,7 @@ export const INTERACTIVE_PROPERTIES_SCHEMAS: ComponentPropertySchema[] = [
     componentName: 'Color Matcher',
     category: 'interactive',
     icon: '🎨',
+    suitableAgeStyles: ['toddler', 'preschool', 'elementary'], // Simple matching - for younger kids
     properties: [
       {
         key: 'colors',
@@ -222,6 +254,7 @@ export const INTERACTIVE_PROPERTIES_SCHEMAS: ComponentPropertySchema[] = [
     componentName: 'Counter',
     category: 'interactive',
     icon: '🔢',
+    suitableAgeStyles: ['preschool', 'elementary', 'middle'], // Counting - medium complexity
     properties: [
       {
         key: 'objects',
@@ -736,6 +769,7 @@ export const INTERACTIVE_PROPERTIES_SCHEMAS: ComponentPropertySchema[] = [
     componentName: 'Voice Recorder',
     category: 'interactive',
     icon: '🎤',
+    suitableAgeStyles: ['elementary', 'middle', 'teen'], // Recording - for older kids
     properties: [
       {
         key: 'prompt',

@@ -67,7 +67,9 @@ import {
 } from '@/constants/interactive-properties-schema';
 import { ThemeName } from '@/types/themes';
 import { getDefaultThemeForAge } from '@/constants/visual-themes';
-import { AgeSelector } from '../properties/AgeSelector';
+import { VisualChipSelector, ChipOption } from '../properties/VisualChipSelector';
+import { AgeStyleName } from '@/types/interactive-age-styles';
+import { getAllAgeStyles, AGE_STYLE_LABELS } from '@/constants/interactive-age-styles';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -4262,21 +4264,36 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               </Box>
             </Stack>
           ) : elementData.type === 'tap-image' ? (
-            <Stack spacing={2.5}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                👆 Tap Image Properties
-              </Typography>
-
-              {/* Age Selector */}
-              <AgeSelector
-                currentAge={elementData.properties?.componentAge as string}
-                suitableAges={['2-3', '4-6', '7-8']}
-                onChange={(age) => {
-                  // Update component age and auto-select theme
-                  const newTheme = getDefaultThemeForAge(age, elementData.type);
-                  onUpdate?.({ componentAge: age, theme: newTheme });
-                }}
-              />
+            (() => {
+              const schema = getComponentPropertySchema(elementData.type);
+              const allStyles = getAllAgeStyles();
+              const suitableStyles = schema?.suitableAgeStyles
+                ? allStyles.filter(style => schema.suitableAgeStyles?.includes(style.id))
+                : allStyles;
+              
+              return (
+                <Stack spacing={2.5}>
+                  {/* Age Style Selector */}
+                  <VisualChipSelector
+                    label="Age Style"
+                    icon={<Sparkles size={14} />}
+                    options={suitableStyles.map((style): ChipOption<AgeStyleName> => ({
+                      value: style.id,
+                      label: AGE_STYLE_LABELS[style.id],
+                      emoji: style.emoji,
+                      color: style.color,
+                      tooltip: {
+                        title: style.name,
+                        description: style.description,
+                        details: `Element: ${style.sizes.element}px • Gap: ${style.sizes.gap}px`,
+                      },
+                    }))}
+                    value={elementData.properties?.ageStyle as AgeStyleName}
+                    onChange={(ageStyle) => {
+                      onUpdate?.({ ageStyle });
+                    }}
+                    colorMode="multi"
+                  />
 
               <Divider />
 
@@ -4688,20 +4705,34 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 </Typography>
               </Box>
             </Stack>
+          );
+        })()
           ) : elementData.type === 'color-matcher' ? (
             <Stack spacing={2.5}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 ⚡ Color Matcher Properties
               </Typography>
 
-              {/* Age Selector */}
-              <AgeSelector
-                currentAge={elementData.properties?.componentAge as string}
-                suitableAges={['2-3', '4-6', '7-8']}
-                onChange={(age) => {
-                  const newTheme = getDefaultThemeForAge(age, elementData.type);
-                  onUpdate?.({ componentAge: age, theme: newTheme });
+              {/* Age Style Selector */}
+              <VisualChipSelector
+                label="Age Style"
+                icon={<Sparkles size={14} />}
+                options={getAllAgeStyles().map((style): ChipOption<AgeStyleName> => ({
+                  value: style.id,
+                  label: AGE_STYLE_LABELS[style.id],
+                  emoji: style.emoji,
+                  color: style.color,
+                  tooltip: {
+                    title: style.name,
+                    description: style.description,
+                    details: `Element: ${style.sizes.element}px • Gap: ${style.sizes.gap}px`,
+                  },
+                }))}
+                value={elementData.properties?.ageStyle as AgeStyleName}
+                onChange={(ageStyle) => {
+                  onUpdate?.({ ageStyle });
                 }}
+                colorMode="multi"
               />
 
               <Divider />
@@ -4828,14 +4859,26 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 ⚡ Counter Properties
               </Typography>
 
-              {/* Age Selector */}
-              <AgeSelector
-                currentAge={elementData.properties?.componentAge as string}
-                suitableAges={['4-6', '7-8', '9-10']}
-                onChange={(age) => {
-                  const newTheme = getDefaultThemeForAge(age, elementData.type);
-                  onUpdate?.({ componentAge: age, theme: newTheme });
+              {/* Age Style Selector */}
+              <VisualChipSelector
+                label="Age Style"
+                icon={<Sparkles size={14} />}
+                options={getAllAgeStyles().map((style): ChipOption<AgeStyleName> => ({
+                  value: style.id,
+                  label: AGE_STYLE_LABELS[style.id],
+                  emoji: style.emoji,
+                  color: style.color,
+                  tooltip: {
+                    title: style.name,
+                    description: style.description,
+                    details: `Element: ${style.sizes.element}px • Gap: ${style.sizes.gap}px`,
+                  },
+                }))}
+                value={elementData.properties?.ageStyle as AgeStyleName}
+                onChange={(ageStyle) => {
+                  onUpdate?.({ ageStyle });
                 }}
+                colorMode="multi"
               />
 
               <Divider />
@@ -4931,14 +4974,26 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 ⚡ Drag & Drop Properties
               </Typography>
 
-              {/* Age Selector */}
-              <AgeSelector
-                currentAge={elementData.properties?.componentAge as string}
-                suitableAges={['2-3', '4-6', '7-8', '9-10']}
-                onChange={(age) => {
-                  const newTheme = getDefaultThemeForAge(age, elementData.type);
-                  onUpdate?.({ componentAge: age, theme: newTheme });
+              {/* Age Style Selector */}
+              <VisualChipSelector
+                label="Age Style"
+                icon={<Sparkles size={14} />}
+                options={getAllAgeStyles().map((style): ChipOption<AgeStyleName> => ({
+                  value: style.id,
+                  label: AGE_STYLE_LABELS[style.id],
+                  emoji: style.emoji,
+                  color: style.color,
+                  tooltip: {
+                    title: style.name,
+                    description: style.description,
+                    details: `Element: ${style.sizes.element}px • Gap: ${style.sizes.gap}px`,
+                  },
+                }))}
+                value={elementData.properties?.ageStyle as AgeStyleName}
+                onChange={(ageStyle) => {
+                  onUpdate?.({ ageStyle });
                 }}
+                colorMode="multi"
               />
 
               <Divider />
@@ -5207,14 +5262,26 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 ⚡ Voice Recorder Properties
               </Typography>
 
-              {/* Age Selector */}
-              <AgeSelector
-                currentAge={elementData.properties?.componentAge as string}
-                suitableAges={['4-6', '7-8', '9-10', '11-13', '14-15', '16-18']}
-                onChange={(age) => {
-                  const newTheme = getDefaultThemeForAge(age, elementData.type);
-                  onUpdate?.({ componentAge: age, theme: newTheme });
+              {/* Age Style Selector */}
+              <VisualChipSelector
+                label="Age Style"
+                icon={<Sparkles size={14} />}
+                options={getAllAgeStyles().map((style): ChipOption<AgeStyleName> => ({
+                  value: style.id,
+                  label: AGE_STYLE_LABELS[style.id],
+                  emoji: style.emoji,
+                  color: style.color,
+                  tooltip: {
+                    title: style.name,
+                    description: style.description,
+                    details: `Element: ${style.sizes.element}px • Gap: ${style.sizes.gap}px`,
+                  },
+                }))}
+                value={elementData.properties?.ageStyle as AgeStyleName}
+                onChange={(ageStyle) => {
+                  onUpdate?.({ ageStyle });
                 }}
+                colorMode="multi"
               />
 
               <Divider />

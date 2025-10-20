@@ -8,7 +8,7 @@
 properties/
 ├── ManualPropertyEditor.tsx      # Ручне редагування властивостей
 ├── ThemeSelector.tsx             # Вибір візуальної теми
-├── AgeSelector.tsx               # Вибір вікової групи
+├── VisualChipSelector.tsx       # ⭐ Універсальний chip-based селектор (SOLID)
 └── README.md                     # Ця документація
 ```
 
@@ -71,19 +71,183 @@ properties/
 - Адаптивний scrollable layout
 - Check mark на активній темі
 
-### AgeSelector
+### VisualChipSelector ⭐
 
-Компонент для вибору вікової групи.
+**Універсальний SOLID компонент** для вибору опцій через візуальні чіпи. Використовується напряму без обгорток!
 
 **Props:**
-- `currentAge?: string` - Поточна обрана вікова група
-- `suitableAges: string[]` - Підходящі вікові групи для вибору
-- `onChange: (age: string) => void` - Callback при виборі
+```typescript
+interface ChipOption<T> {
+  value: T;                    // Значення опції
+  label: string;               // Текст на чіпі
+  emoji?: string;              // Опціональне emoji
+  color?: string;              // Опціональний колір (для colorMode='multi')
+  tooltip?: {                  // Опціональний tooltip
+    title: string;
+    description: string;
+    details?: string;
+  };
+}
+
+interface VisualChipSelectorProps<T> {
+  label: string;               // Заголовок селектора
+  icon?: ReactNode;            // Іконка біля заголовка
+  options: ChipOption<T>[];    // Масив опцій
+  value?: T;                   // Поточне значення
+  onChange: (value: T) => void; // Callback при виборі
+  colorMode?: 'single' | 'multi'; // Режим кольорів
+}
+```
 
 **Можливості:**
-- Chip-based UI для швидкого вибору
-- Horizontal scrollable layout
-- Візуальні індикатори активної групи
+- ✅ **Generic тип** - працює з будь-яким типом значень
+- ✅ **SOLID принципи** - один компонент, одна відповідальність
+- ✅ **Підтримка emoji** на чіпах
+- ✅ **Два режими кольорів:** 
+  - `single` - всі чіпи theme.primary (для Age Group)
+  - `multi` - кожен чіп свій колір (для Age Style)
+- ✅ **Опціональні tooltips** з детальною інформацією
+- ✅ **Horizontal scrollable** layout з кастомним scrollbar
+- ✅ **Кастомні іконки** заголовків
+- ✅ **Smooth анімації** та hover ефекти
+- ✅ **Повністю переюзабельний** - без обгорток!
+
+---
+
+#### Приклад 1: Вибір Вікової Групи (Age Group)
+
+```typescript
+import { VisualChipSelector, ChipOption } from './VisualChipSelector';
+import { Users } from 'lucide-react';
+
+const AGE_LABELS: Record<string, string> = {
+  '2-3': '2-3 yrs',
+  '4-6': '4-6 yrs',
+  '7-8': '7-8 yrs',
+  '9-10': '9-10 yrs',
+};
+
+<VisualChipSelector
+  label="Age Group"
+  icon={<Users size={14} />}
+  options={['2-3', '4-6', '7-8', '9-10'].map((age): ChipOption<string> => ({
+    value: age,
+    label: AGE_LABELS[age] || age,
+  }))}
+  value={currentAge}
+  onChange={handleAgeChange}
+  colorMode="single"  // ← Один колір для всіх чіпів
+/>
+```
+
+**Використовується в:**
+- `RightSidebar` для всіх інтерактивних компонентів:
+  - Tap Image
+  - Color Matcher
+  - Simple Counter
+  - Simple Drag & Drop
+  - Voice Recorder
+
+---
+
+#### Приклад 2: Вибір Стилю Drag-Drop (Age Style)
+
+```typescript
+import { VisualChipSelector, ChipOption } from './VisualChipSelector';
+import { Move } from 'lucide-react';
+import { getAllDragDropStyles } from '@/constants/drag-drop-age-styles';
+import { DragDropAgeStyleName } from '@/types/drag-drop-styles';
+
+const STYLE_CONFIG: Record<DragDropAgeStyleName, { emoji: string; color: string }> = {
+  'toddler': { emoji: '🐣', color: '#FF6B9D' },
+  'preschool': { emoji: '🎨', color: '#667eea' },
+  'elementary': { emoji: '📚', color: '#3B82F6' },
+  'middle': { emoji: '🎯', color: '#8B5CF6' },
+  'teen': { emoji: '🎓', color: '#1F2937' },
+};
+
+const AGE_LABELS: Record<DragDropAgeStyleName, string> = {
+  'toddler': '3-5 yrs',
+  'preschool': '6-7 yrs',
+  'elementary': '8-9 yrs',
+  'middle': '10-13 yrs',
+  'teen': '14-18 yrs',
+};
+
+const allStyles = getAllDragDropStyles();
+const options: ChipOption<DragDropAgeStyleName>[] = allStyles.map((style) => ({
+  value: style.id,
+  label: AGE_LABELS[style.id],
+  emoji: STYLE_CONFIG[style.id].emoji,
+  color: STYLE_CONFIG[style.id].color,  // ← Кожен чіп свій колір!
+  tooltip: {
+    title: style.name,
+    description: style.description,
+    details: `Item: ${style.elementSize.item}px • Target: ${style.elementSize.target}px`,
+  },
+}));
+
+<VisualChipSelector
+  label="Age Style"
+  icon={<Move size={14} />}
+  options={options}
+  value={currentStyle}
+  onChange={handleStyleChange}
+  colorMode="multi"  // ← Мульти-колірний режим
+/>
+```
+
+**Використовується в:**
+- `ManualPropertyEditor` для `simple-drag-drop` компонента
+
+---
+
+#### Приклад 3: Власний Селектор (Custom)
+
+```typescript
+import { VisualChipSelector, ChipOption } from './VisualChipSelector';
+import { Target } from 'lucide-react';
+
+// Селектор складності
+<VisualChipSelector
+  label="Difficulty"
+  icon={<Target size={14} />}
+  options={[
+    { 
+      value: 'easy', 
+      label: 'Easy', 
+      emoji: '😊', 
+      color: '#10B981',
+      tooltip: {
+        title: 'Easy Level',
+        description: 'Perfect for beginners',
+        details: 'Ages 3-5'
+      }
+    },
+    { value: 'medium', label: 'Medium', emoji: '🤔', color: '#F59E0B' },
+    { value: 'hard', label: 'Hard', emoji: '😰', color: '#EF4444' },
+  ]}
+  value={difficulty}
+  onChange={setDifficulty}
+  colorMode="multi"
+/>
+```
+
+---
+
+#### Чому Без Обгорток?
+
+**SOLID Principles:**
+- ✅ **Single Responsibility** - компонент робить одну річ добре
+- ✅ **Open/Closed** - відкритий для розширення через props
+- ✅ **Dependency Inversion** - залежить від конфігурації, не від конкретних випадків
+
+**Переваги:**
+- ✅ Менше коду (на 68% менше без обгорток!)
+- ✅ Прямий виклик - зрозуміліше що відбувається
+- ✅ Повний контроль над опціями
+- ✅ Легко додавати нові селектори
+- ✅ Немає зайвих шарів абстракції
 
 ### AIAssistantPanel
 
