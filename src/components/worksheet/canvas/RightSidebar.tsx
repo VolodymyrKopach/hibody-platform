@@ -61,7 +61,6 @@ import { RichTextEditor } from './shared/RichTextEditor';
 import { WorksheetEdit, WorksheetEditContext } from '@/types/worksheet-generation';
 import AIAssistantPanel from './ai/AIAssistantPanel';
 import ManualPropertyEditor from '../properties/ManualPropertyEditor';
-import AIPropertyEditor from '../properties/AIPropertyEditor';
 import { 
   isInteractiveComponent,
   getComponentPropertySchema,
@@ -5990,47 +5989,17 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           </Box>
         ) : (
           <Box sx={{ flex: 1, p: 2, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-            {/* AI Assistant Panel - Use AIPropertyEditor for interactive components */}
-            {/* Exception: tap-image uses standard AI Assistant */}
-            {aiContext ? (
-              isInteractiveComponent(elementData.type) && elementData.type !== 'tap-image' ? (
-                (() => {
-                  const schema = getComponentPropertySchema(elementData.type);
-                  return schema ? (
-                    <AIPropertyEditor
-                      element={elementData}
-                      pageId={pageData.id}
-                      schema={schema}
-                      context={aiContext}
-                      onPropertiesChange={(newProperties) => {
-                        onUpdate?.(newProperties);
-                      }}
-                    />
-                  ) : (
-                    <Box sx={{ textAlign: 'center', py: 4 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        AI editing schema not available for this component.
-                      </Typography>
-                    </Box>
-                  );
-                })()
-              ) : onAIEdit ? (
-                <AIAssistantPanel
-                  selection={selection}
-                  context={aiContext}
-                  onEdit={onAIEdit}
-                  editHistory={editHistory}
-                  isEditing={isAIEditing}
-                  error={editError}
-                  onClearError={onClearEditError}
-                />
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    AI Assistant не налаштований для цього типу елементів.
-                  </Typography>
-                </Box>
-              )
+            {/* AI Assistant Panel - Universal for all component types */}
+            {aiContext && onAIEdit ? (
+              <AIAssistantPanel
+                selection={selection}
+                context={aiContext}
+                onEdit={onAIEdit}
+                editHistory={editHistory}
+                isEditing={isAIEditing}
+                error={editError}
+                onClearError={onClearEditError}
+              />
             ) : (
               <Box sx={{ textAlign: 'center', py: 4 }}>
                 <Typography variant="body2" color="text.secondary">

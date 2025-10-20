@@ -6,9 +6,9 @@
 
 ```
 properties/
-├── PropertiesPanel.tsx           # [DEPRECATED] Старий компонент-обгортка
 ├── ManualPropertyEditor.tsx      # Ручне редагування властивостей
-├── AIPropertyEditor.tsx          # AI редагування через текстові інструкції
+├── ThemeSelector.tsx             # Вибір візуальної теми
+├── AgeSelector.tsx               # Вибір вікової групи
 └── README.md                     # Ця документація
 ```
 
@@ -21,11 +21,10 @@ properties/
 - **Звичайні компоненти** (title-block, body-text, etc.) → вбудовані UI контроли
 
 ### Tab "AI Assistant"
-- **Інтерактивні компоненти** → `AIPropertyEditor` з контекстними Quick Improvements
-- **Звичайні компоненти** → `AIAssistantPanel` з загальним AI асистентом
+- **ВСІ компоненти** → `AIAssistantPanel` (універсальний AI асистент)
 - **Page selection** → `AIAssistantPanel` для редагування сторінки
 
-Це усуває дублювання табів і створює чисту, контекстно-залежну архітектуру.
+Це усуває дублювання табів і створює єдиний, універсальний AI інтерфейс.
 
 ## Компоненти
 
@@ -55,29 +54,59 @@ properties/
 - Додавання/видалення елементів масивів
 - Real-time оновлення
 
-### AIPropertyEditor
+### ThemeSelector
 
-**Спеціалізований AI-редактор для інтерактивних компонентів.** Використовується в табі "AI Assistant" RightSidebar.
+Компонент для вибору візуальної теми інтерактивних компонентів.
 
 **Props:**
-- `element: CanvasElement` - Інтерактивний елемент
-- `pageId: string` - ID сторінки
-- `schema: ComponentPropertySchema` - Схема властивостей
-- `context: WorksheetEditContext` - Контекст worksheet
-- `onPropertiesChange: (newProperties: any) => void` - Callback для оновлення
+- `currentTheme?: ThemeName` - Поточна обрана тема
+- `ageGroup?: string` - Вікова група для фільтрації тем
+- `onChange: (theme: ThemeName) => void` - Callback при виборі теми
+- `showAllThemes?: boolean` - Показати всі теми (без фільтрації)
+- `componentSuitableAges?: string[]` - Підходящі вікові групи для компонента
 
 **Можливості:**
-1. **Quick Improvements** - Контекстні швидкі дії для кожного типу компонента:
-   - Tap Image: "Make it bigger", "Add caption", "Change animation"
-   - Simple Drag & Drop: "Add more items", "Make it easier", "Change colors"
-   - Color Matcher: "Add more colors", "Enable voice", "Simplify"
-   - Memory Cards: "More pairs", "Make easier", "Add theme"
-   - Sorting Game: "Add category", "Change layout", "More items"
+- Візуальний preview кожної теми з кольорами
+- Автоматична фільтрація тем по віковій групі
+- Адаптивний scrollable layout
+- Check mark на активній темі
+
+### AgeSelector
+
+Компонент для вибору вікової групи.
+
+**Props:**
+- `currentAge?: string` - Поточна обрана вікова група
+- `suitableAges: string[]` - Підходящі вікові групи для вибору
+- `onChange: (age: string) => void` - Callback при виборі
+
+**Можливості:**
+- Chip-based UI для швидкого вибору
+- Horizontal scrollable layout
+- Візуальні індикатори активної групи
+
+### AIAssistantPanel
+
+**Універсальний AI-асистент** для всіх типів компонентів та сторінок. Використовується в табі "AI Assistant" для редагування елементів та page settings.
+
+**Props:**
+- `selection: Selection` - Поточний вибраний елемент або сторінка
+- `context: WorksheetEditContext` - Контекст worksheet
+- `onEdit: (instruction: string) => Promise<void>` - Callback для AI редагування
+- `editHistory: WorksheetEdit[]` - Історія змін
+- `isEditing: boolean` - Статус процесу редагування
+- `error: string | null` - Помилка якщо є
+- `onClearError?: () => void` - Очистити помилку
+
+**Можливості:**
+1. **Quick Improvements** - Контекстні швидкі дії згенеровані динамічно для кожного типу:
+   - Адаптуються до типу компонента
+   - Враховують контекст worksheet
    
 2. **Custom Instructions** - Довільні текстові інструкції для точного контролю
-3. **Context-aware** - Враховує тип компонента, вікову групу, складність
-4. **Real-time feedback** - Показує, які зміни були застосовані
-5. **AI Tips** - Підказки як краще формулювати інструкції
+3. **Context-aware** - Враховує тип компонента/сторінки, вікову групу, складність
+4. **Edit History** - Повна історія всіх змін з можливістю перегляду
+5. **Real-time feedback** - Показує, які зміни були застосовані
 
 **Приклади інструкцій:**
 ```
@@ -85,16 +114,14 @@ properties/
 "Change all colors to pastel tones"
 "Make it more suitable for 3-year-olds"
 "Add a fun ocean theme with blue backgrounds"
+"Change background to gradient blue"
 ```
 
 **Технічна реалізація:**
 - Використовує `WorksheetEditingService` для AI-редагування
 - Генерує patch з змінами через Gemini AI
 - Автоматично застосовує зміни до властивостей
-
-### AIAssistantPanel
-
-Загальний AI-асистент для неінтерактивних компонентів та сторінок. Використовується для редагування звичайних елементів (title-block, body-text, etc.) та page settings.
+- Підтримує як компоненти так і сторінки
 
 ## Схема властивостей
 
@@ -178,7 +205,7 @@ export const INTERACTIVE_PROPERTIES_SCHEMAS: ComponentPropertySchema[] = [
 
 ## Інтеграція в RightSidebar
 
-Обидва редактори інтегровані безпосередньо в RightSidebar з умовною логікою:
+Система інтегрована безпосередньо в RightSidebar з простою та чіткою логікою:
 
 ```typescript
 // В RightSidebar.tsx - Tab "Properties"
@@ -202,28 +229,18 @@ export const INTERACTIVE_PROPERTIES_SCHEMAS: ComponentPropertySchema[] = [
   // Вбудовані UI контроли
 )}
 
-// Tab "AI Assistant" - умовний рендеринг
-{aiContext ? (
-  isInteractiveComponent(elementData.type) ? (
-    // Для інтерактивних компонентів - спеціалізований AI Editor
-    <AIPropertyEditor
-      element={elementData}
-      pageId={pageData.id}
-      schema={schema}
-      context={aiContext}
-      onPropertiesChange={(newProperties) => {
-        onUpdate?.(newProperties);
-      }}
-    />
-  ) : (
-    // Для звичайних компонентів - загальний AI Assistant
-    <AIAssistantPanel
-      selection={selection}
-      context={aiContext}
-      onEdit={onAIEdit}
-      // ...
-    />
-  )
+// Tab "AI Assistant" - УНІВЕРСАЛЬНИЙ для всіх типів
+{aiContext && onAIEdit ? (
+  // ✅ AIAssistantPanel для ВСІХ компонентів і сторінок
+  <AIAssistantPanel
+    selection={selection}
+    context={aiContext}
+    onEdit={onAIEdit}
+    editHistory={editHistory}
+    isEditing={isAIEditing}
+    error={editError}
+    onClearError={onClearEditError}
+  />
 ) : (
   // Fallback: AI недоступний
 )}
@@ -275,16 +292,17 @@ export const INTERACTIVE_PROPERTIES_SCHEMAS: ComponentPropertySchema[] = [
 ## Переваги системи
 
 ✅ **Пряма інтеграція** - Без зайвих обгорток і дублювання табів  
-✅ **Контекстно-залежна архітектура** - Різні компоненти для різних типів елементів  
-✅ **Спеціалізований AI** - `AIPropertyEditor` з контекстними Quick Improvements для інтерактивних компонентів  
+✅ **Єдиний AI компонент** - `AIAssistantPanel` для всіх типів елементів та сторінок  
+✅ **Простота архітектури** - Немає умовної логіки для різних типів в AI табі  
 ✅ **Ручне + AI редагування** - Гнучкість у виборі способу через таби RightSidebar  
-✅ **Уніфікований інтерфейс** - Однакова структура для всіх інтерактивних елементів  
+✅ **Уніфікований інтерфейс** - Однакова структура для всіх елементів  
 ✅ **Автоматична валідація** - Неможливо створити некоректний стан  
 ✅ **Type-safe** - Повна типізація TypeScript  
-✅ **Розширюваність** - Легко додавати нові типи полів та Quick Improvements  
+✅ **Розширюваність** - Легко додавати нові типи полів  
 ✅ **DRY принцип** - Немає дублювання коду  
 ✅ **Відповідає SOLID** - Чиста архітектура з розділенням відповідальностей  
-✅ **Чистий UI** - Використання існуючих табів RightSidebar замість вкладених карток
+✅ **Чистий UI** - Використання існуючих табів RightSidebar замість вкладених карток  
+✅ **Універсальність AI** - Один асистент для всього, адаптується до контексту
 
 ## Технічні деталі
 
@@ -307,19 +325,21 @@ User Action → ManualPropertyEditor → onChange callback
 ### AI Editing Flow
 
 ```
-User Instruction → AIAssistantPanel → onAIEdit callback
-                                            ↓
-                                   Step3CanvasEditor
-                                            ↓
-                               WorksheetEditingService
-                                            ↓
-                                     Gemini AI API
-                                            ↓
-                                    Generate patch
-                                            ↓
-                              Apply patch to properties
-                                            ↓
-                                   Update element state
+User Instruction → AIAssistantPanel (універсальний) → onAIEdit callback
+                                                              ↓
+                                                     Step3CanvasEditor
+                                                              ↓
+                                                 WorksheetEditingService
+                                                              ↓
+                                                       Gemini AI API
+                                                              ↓
+                                                      Generate patch
+                                                              ↓
+                                                Apply patch to properties
+                                                              ↓
+                                                     Update element state
+                                                              ↓
+                                                 Display changes in history
 ```
 
 ## Підтримка
@@ -330,8 +350,8 @@ User Instruction → AIAssistantPanel → onAIEdit callback
 
 ---
 
-**Версія:** 2.0.0  
-**Дата:** 2025-10-19  
+**Версія:** 2.1.0  
+**Дата:** 2025-10-20  
 **Автор:** AI Assistant  
-**Зміни:** Видалено дублювання табів, інтеграція безпосередньо в RightSidebar
+**Зміни:** Спрощена архітектура AI - тепер використовується тільки AIAssistantPanel для всіх типів компонентів
 
