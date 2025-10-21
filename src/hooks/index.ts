@@ -11,3 +11,4 @@ export * from './useUnsavedChanges';
 export * from './useAdminAuth';
 export * from './useAgeStyle';
 export * from './useEnhancedAgeStyle';
+export * from './useComponentTheme';
