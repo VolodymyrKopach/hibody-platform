@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, alpha, useTheme } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
 import { soundService } from '@/services/interactive/SoundService';
 import { hapticService } from '@/utils/interactive/haptics';
-import { bounceAnimation, pulseAnimation, celebrationAnimation } from '@/utils/interactive/animations';
-import { useComponentTheme } from '@/hooks/useComponentTheme';
-import { ThemeName } from '@/types/themes';
+import { bounceAnimation, pulseAnimation } from '@/utils/interactive/animations';
+import { useEnhancedAgeStyle } from '@/hooks/useEnhancedAgeStyle';
+import { AgeStyleName } from '@/types/interactive-age-styles';
 
 interface TapImageProps {
   imageUrl: string;
@@ -18,8 +19,8 @@ interface TapImageProps {
   animation?: 'bounce' | 'scale' | 'shake' | 'spin';
   showHint?: boolean;
   align?: 'left' | 'center' | 'right';
-  theme?: ThemeName;
   ageGroup?: string;
+  ageStyle?: AgeStyleName;
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;
@@ -33,117 +34,117 @@ const TapImage: React.FC<TapImageProps> = ({
   size = 'medium',
   animation = 'bounce',
   showHint = false,
-  theme: themeName,
+  ageGroup,
+  ageStyle: ageStyleProp,
   isSelected = false,
   onEdit,
   onFocus,
 }) => {
   const muiTheme = useTheme();
-  const componentTheme = useComponentTheme(themeName);
+  
+  // Use enhanced age style with all features
+  const enhancedStyle = useEnhancedAgeStyle(ageStyleProp, ageGroup);
+  const { baseStyle, feedbackPattern, motivationSystem, colorPsychology } = enhancedStyle;
+  
   const [tapCount, setTapCount] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Track age style changes for transition animation
+  const [prevAgeStyle, setPrevAgeStyle] = useState(baseStyle.id);
+  
+  useEffect(() => {
+    if (prevAgeStyle !== baseStyle.id) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setPrevAgeStyle(baseStyle.id);
+      }, 300);
+    }
+  }, [baseStyle.id, prevAgeStyle]);
 
-  // Size mapping - адаптується під тему
-  const getSizeForTheme = () => {
-    // Базові розміри
-    const baseSizes = {
-      small: 200,
-      medium: 350,
-      large: 500,
+  // Size mapping - адаптується під age style
+  const getSizeForAgeStyle = () => {
+    const baseSize = baseStyle.sizes.element;
+    
+    return {
+      small: baseSize * 0.8,
+      medium: baseSize,
+      large: baseSize * 1.3,
     };
-    
-    // Для малюків - більші елементи
-    if (componentTheme.animations.complexity === 'very-high') {
-      return {
-        small: 250,
-        medium: 400,
-        large: 550,
-      };
-    }
-    
-    // Для підлітків/дорослих - менші, компактніші
-    if (componentTheme.animations.complexity === 'low' || componentTheme.animations.complexity === 'minimal') {
-      return {
-        small: 150,
-        medium: 280,
-        large: 420,
-      };
-    }
-    
-    return baseSizes;
   };
 
-  const sizeMap = getSizeForTheme();
+  const sizeMap = getSizeForAgeStyle();
   const imageSize = sizeMap[size];
   
-  // Стиль рамки залежить від теми
+  // Border radius від age style
   const getBorderRadius = () => {
-    if (componentTheme.ui.buttonStyle === 'pill') {
-      return `${componentTheme.borderRadius.xl}px`;
-    }
-    if (componentTheme.ui.buttonStyle === 'rounded') {
-      return `${componentTheme.borderRadius.md}px`;
-    }
-    return `${componentTheme.borderRadius.sm}px`; // square
+    return `${baseStyle.borders.radius}px`;
   };
   
-  // Чи показувати анімації залежить від складності теми
-  const shouldShowAnimations = componentTheme.animations.complexity !== 'minimal' && componentTheme.animations.complexity !== 'low';
+  // Чи показувати анімації
+  const shouldShowAnimations = baseStyle.animations.enabled;
 
   /**
-   * Handle tap/click
+   * Handle tap/click with enhanced feedback
    */
   const handleTap = async () => {
+    const feedback = feedbackPattern.onSuccess;
+    
     // Increment tap count
     setTapCount((prev) => prev + 1);
 
     // Haptic feedback
-    hapticService.lightTap();
-
-    // Play sound
-    try {
-      if (customSound) {
-        await soundService.play('custom');
-      } else {
-        switch (soundEffect) {
-          case 'animal':
-            await soundService.play('animal-cat');
-            break;
-          case 'praise':
-            await soundService.playRandomPraise();
-            break;
-          default:
-            await soundService.play('tap');
-        }
-      }
-    } catch (error) {
-      console.error('[TapImage] Sound error:', error);
+    if (feedback.haptic) {
+      hapticService.lightTap();
     }
 
-    // Show confetti on every 3rd tap
-    if ((tapCount + 1) % 3 === 0) {
+    // Play sound based on age style
+    if (feedback.sound && feedback.sound !== 'none') {
+      try {
+        if (customSound) {
+          await soundService.play('custom');
+        } else {
+          switch (feedback.sound) {
+            case 'cheerful':
+              await soundService.playRandomPraise();
+              break;
+            case 'bell':
+            case 'chime':
+              await soundService.play('success');
+              break;
+            default:
+              await soundService.play('tap');
+          }
+        }
+      } catch (error) {
+        console.error('[TapImage] Sound error:', error);
+      }
+    }
+
+    // Show success message for younger ages
+    if (feedback.message && motivationSystem.encouragementMessages.length > 0) {
+      const message = enhancedStyle.getEncouragementMessage();
+      setSuccessMessage(message);
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), feedback.duration);
+    }
+
+    // Show confetti/particles based on age style
+    if (shouldShowAnimations && feedback.particles) {
       setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 1000);
+      setTimeout(() => setShowConfetti(false), feedback.duration);
     }
   };
 
   /**
-   * Confetti component - адаптується під тему
+   * Enhanced Confetti component with age-based particles
    */
   const Confetti = () => {
-    // Кольори з теми
-    const colors = [
-      componentTheme.colors.primary,
-      componentTheme.colors.secondary,
-      componentTheme.colors.accent,
-      componentTheme.colors.success,
-      componentTheme.colors.warning,
-    ];
-    
-    // Кількість частинок залежить від складності анімацій
-    const particleCount = componentTheme.animations.complexity === 'very-high' ? 30 : 
-                         componentTheme.animations.complexity === 'high' ? 20 : 10;
-    const particles = Array.from({ length: particleCount });
+    const particleConfig = enhancedStyle.getParticleConfig();
+    const particles = Array.from({ length: particleConfig.count });
 
     return (
       <Box
@@ -168,15 +169,15 @@ const TapImage: React.FC<TapImageProps> = ({
               rotate: Math.random() * 360,
             }}
             transition={{
-              duration: (componentTheme.animations.duration.slow / 1000) + Math.random() * 0.4,
+              duration: (particleConfig.duration / 1000) + Math.random() * 0.4,
               ease: 'easeOut',
             }}
             style={{
               position: 'absolute',
-              width: componentTheme.spacing.xs + Math.random() * 4,
-              height: componentTheme.spacing.xs + Math.random() * 4,
-              borderRadius: componentTheme.ui.buttonStyle === 'square' ? '2px' : '50%',
-              backgroundColor: colors[Math.floor(Math.random() * colors.length)],
+              width: baseStyle.sizes.gap / 2 + Math.random() * 4,
+              height: baseStyle.sizes.gap / 2 + Math.random() * 4,
+              borderRadius: baseStyle.borders.radius > 10 ? '50%' : '2px',
+              backgroundColor: particleConfig.colors[Math.floor(Math.random() * particleConfig.colors.length)],
             }}
           />
         ))}
@@ -185,7 +186,7 @@ const TapImage: React.FC<TapImageProps> = ({
   };
 
   /**
-   * Animated hand hint
+   * Animated hand hint (for youngest ages)
    */
   const HandHint = () => (
     <motion.div
@@ -204,33 +205,137 @@ const TapImage: React.FC<TapImageProps> = ({
     </motion.div>
   );
 
+  /**
+   * Success message overlay
+   */
+  const SuccessMessage = () => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, y: -20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.8, y: 20 }}
+      transition={{ duration: 0.3 }}
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: alpha(colorPsychology.success, 0.95),
+        color: '#FFFFFF',
+        padding: `${baseStyle.sizes.padding}px ${baseStyle.sizes.padding * 1.5}px`,
+        borderRadius: getBorderRadius(),
+        fontSize: `${baseStyle.typography.fontSize}px`,
+        fontWeight: baseStyle.typography.fontWeight,
+        boxShadow: `0 ${baseStyle.sizes.gap / 2}px ${baseStyle.sizes.gap}px rgba(0,0,0,0.2)`,
+        zIndex: 20,
+        pointerEvents: 'none',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {successMessage}
+    </motion.div>
+  );
+
+  /**
+   * Reward badge (stars/emojis)
+   */
+  const RewardBadge = () => {
+    const reward = enhancedStyle.getRewardEmoji('task');
+    if (!reward || tapCount === 0) return null;
+    
+    return (
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ 
+          duration: baseStyle.animations.duration / 1000,
+          type: 'spring',
+          stiffness: 200,
+        }}
+        style={{
+          position: 'absolute',
+          top: baseStyle.sizes.padding,
+          right: baseStyle.sizes.padding,
+          background: colorPsychology.success,
+          color: '#FFFFFF',
+          borderRadius: baseStyle.borders.radius > 10 ? '50%' : `${baseStyle.borders.radius}px`,
+          width: baseStyle.sizes.icon,
+          height: baseStyle.sizes.icon,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: baseStyle.typography.fontWeight,
+          fontSize: `${baseStyle.typography.fontSize * 0.8}px`,
+          boxShadow: `0 ${baseStyle.sizes.gap / 4}px ${baseStyle.sizes.gap / 2}px rgba(0,0,0,0.2)`,
+        }}
+      >
+        {tapCount}
+      </motion.div>
+    );
+  };
+
   return (
     <Box
+      component={motion.div}
+      initial={false}
+      animate={{
+        scale: isTransitioning ? 0.95 : 1,
+        opacity: isTransitioning ? 0.7 : 1,
+      }}
+      transition={{
+        duration: 0.3,
+        ease: 'easeInOut',
+      }}
       sx={{
         position: 'relative',
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: componentTheme.spacing.md / 8, // Convert to MUI spacing units
-        p: componentTheme.spacing.md / 8,
+        gap: baseStyle.sizes.gap / 8,
+        p: baseStyle.sizes.padding / 8,
         borderRadius: getBorderRadius(),
         border: isSelected
-          ? `3px solid ${componentTheme.colors.primary}`
-          : `3px solid transparent`,
+          ? `${baseStyle.borders.width}px solid ${colorPsychology.primary}`
+          : `${baseStyle.borders.width}px solid transparent`,
         background: isSelected
-          ? alpha(componentTheme.colors.primary, 0.08)
+          ? alpha(colorPsychology.primary, 0.08)
           : 'transparent',
-        transition: `all ${componentTheme.animations.duration.normal}ms`,
+        transition: `all ${baseStyle.animations.duration}ms ${baseStyle.animations.easing}`,
         cursor: 'pointer',
         userSelect: 'none',
       }}
       onClick={onFocus}
     >
+      {/* Age style indicator (only when selected) */}
+      {isSelected && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: -baseStyle.sizes.padding,
+            left: baseStyle.sizes.padding,
+            background: colorPsychology.primary,
+            color: '#FFFFFF',
+            px: 1.5,
+            py: 0.5,
+            borderRadius: `${baseStyle.borders.radius / 2}px`,
+            fontSize: `${baseStyle.typography.fontSize * 0.6}px`,
+            fontWeight: baseStyle.typography.fontWeight,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            boxShadow: `0 2px 8px ${alpha(colorPsychology.primary, 0.3)}`,
+            zIndex: 1,
+          }}
+        >
+          <Sparkles size={12} />
+          {baseStyle.name.split('(')[0].trim()}
+        </Box>
+      )}
+
       {/* Image Container */}
       <motion.div
         variants={bounceAnimation}
         initial="initial"
-        whileTap="tap"
+        whileTap={shouldShowAnimations ? "tap" : undefined}
         style={{
           position: 'relative',
         }}
@@ -238,22 +343,18 @@ const TapImage: React.FC<TapImageProps> = ({
         <Box
           component={motion.div}
           onClick={handleTap}
+          whileHover={shouldShowAnimations ? { scale: 1.05 } : undefined}
           sx={{
             width: imageSize,
             height: imageSize,
             borderRadius: getBorderRadius(),
             overflow: 'hidden',
-            boxShadow: componentTheme.ui.cardElevation === 'high' 
-              ? componentTheme.shadows.lg 
-              : componentTheme.ui.cardElevation === 'medium'
-                ? componentTheme.shadows.md
-                : componentTheme.shadows.sm,
-            border: `${componentTheme.spacing.xs / 2}px solid ${componentTheme.colors.surface}`,
+            boxShadow: `0 ${baseStyle.sizes.gap / 4}px ${baseStyle.sizes.gap / 2}px rgba(0,0,0,0.1)`,
+            border: `${baseStyle.borders.width}px ${baseStyle.borders.style} ${baseStyle.colors.border}`,
             position: 'relative',
-            transition: `all ${componentTheme.animations.duration.normal}ms`,
-            '&:hover': componentTheme.animations.enableHover ? {
-              boxShadow: componentTheme.shadows.xl,
-              transform: 'scale(1.02)',
+            transition: `all ${baseStyle.animations.duration}ms ${baseStyle.animations.easing}`,
+            '&:hover': shouldShowAnimations ? {
+              boxShadow: `0 ${baseStyle.sizes.gap / 2}px ${baseStyle.sizes.gap}px rgba(0,0,0,0.15)`,
             } : {},
           }}
         >
@@ -269,55 +370,42 @@ const TapImage: React.FC<TapImageProps> = ({
             }}
           />
 
-          {/* Tap count badge - тільки якщо тема підтримує анімації */}
-          {tapCount > 0 && shouldShowAnimations && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: componentTheme.animations.duration.fast / 1000 }}
-              style={{
-                position: 'absolute',
-                top: componentTheme.spacing.md,
-                right: componentTheme.spacing.md,
-                background: componentTheme.colors.success,
-                color: componentTheme.colors.surface,
-                borderRadius: componentTheme.ui.buttonStyle === 'pill' ? '50%' : `${componentTheme.borderRadius.md}px`,
-                width: componentTheme.spacing.xl,
-                height: componentTheme.spacing.xl,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: componentTheme.typography.fontWeight.bold,
-                fontSize: `${componentTheme.typography.fontSize.medium}px`,
-                fontFamily: componentTheme.typography.fontFamily,
-                boxShadow: componentTheme.shadows.md,
-              }}
-            >
-              {tapCount}
-            </motion.div>
-          )}
+          {/* Reward Badge */}
+          {shouldShowAnimations && <RewardBadge />}
+          
+          {/* Success Message Overlay */}
+          <AnimatePresence>
+            {showSuccessMessage && <SuccessMessage />}
+          </AnimatePresence>
         </Box>
 
         {/* Animated hand hint - тільки для малюків */}
-        {showHint && shouldShowAnimations && componentTheme.animations.complexity === 'very-high' && <HandHint />}
+        {showHint && shouldShowAnimations && baseStyle.interaction.showHandCursor && <HandHint />}
 
-        {/* Confetti - тільки якщо тема підтримує particles */}
+        {/* Confetti/Particles */}
         <AnimatePresence>
-          {showConfetti && componentTheme.animations.enableParticles && <Confetti />}
+          {showConfetti && feedbackPattern.onSuccess.particles && <Confetti />}
         </AnimatePresence>
       </motion.div>
 
       {/* Caption */}
-      {caption && (
+      {caption && baseStyle.typography.showLabels && (
         <Typography
-          variant="h6"
+          component={motion.div}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
           sx={{
-            fontWeight: 600,
-            fontSize: componentTheme.typography.title,
-            fontFamily: componentTheme.typography.fontFamily,
-            color: componentTheme.colors.text,
+            fontWeight: baseStyle.typography.fontWeight,
+            fontSize: baseStyle.typography.fontSize,
+            lineHeight: baseStyle.typography.lineHeight,
+            letterSpacing: `${baseStyle.typography.letterSpacing}px`,
+            color: baseStyle.colors.text,
             textAlign: 'center',
-            transition: componentTheme.animations.quick,
+            transition: `all ${baseStyle.animations.duration}ms`,
+            maxWidth: imageSize,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
         >
           {caption}
@@ -329,11 +417,13 @@ const TapImage: React.FC<TapImageProps> = ({
         <Typography
           variant="caption"
           sx={{
-            fontSize: componentTheme.typography.small,
-            fontFamily: componentTheme.typography.fontFamily,
-            color: muiTheme.palette.primary.main,
-            fontWeight: 600,
-            transition: componentTheme.animations.quick,
+            fontSize: baseStyle.typography.fontSize * 0.7,
+            color: colorPsychology.primary,
+            fontWeight: baseStyle.typography.fontWeight,
+            transition: `all ${baseStyle.animations.duration}ms`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
           }}
         >
           ⚡ Interactive Component
@@ -344,4 +434,3 @@ const TapImage: React.FC<TapImageProps> = ({
 };
 
 export default TapImage;
-

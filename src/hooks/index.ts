@@ -9,3 +9,5 @@ export * from './useBreakpoint';
 export * from './useFormWithHistory';
 export * from './useUnsavedChanges';
 export * from './useAdminAuth';
+export * from './useAgeStyle';
+export * from './useEnhancedAgeStyle';

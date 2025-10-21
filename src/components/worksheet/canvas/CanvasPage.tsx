@@ -1184,8 +1184,8 @@ function renderElement(
           animation={element.properties.animation || 'bounce'}
           showHint={element.properties.showHint}
           align={element.properties.align || 'center'}
-          theme={element.properties.theme}
           ageGroup={ageGroup}
+          ageStyle={element.properties.ageStyle}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1220,8 +1220,8 @@ function renderElement(
           soundEffect={element.properties.soundEffect || 'praise'}
           showHint={element.properties.showHint ?? true}
           align={element.properties.align || 'center'}
-          theme={element.properties.theme}
           ageGroup={ageGroup}
+          ageStyle={element.properties.ageStyle}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
