@@ -30,6 +30,7 @@ import { ThemeName } from '@/types/themes';
 import { VisualChipSelector, ChipOption } from './VisualChipSelector';
 import { AgeStyleName } from '@/types/interactive-age-styles';
 import { getAllAgeStyles, AGE_STYLE_LABELS } from '@/constants/interactive-age-styles';
+import DragDropPropertyEditor from './DragDropPropertyEditor';
 
 interface ManualPropertyEditorProps {
   schema: ComponentPropertySchema;
@@ -50,6 +51,16 @@ const ManualPropertyEditor: React.FC<ManualPropertyEditorProps> = ({
       [key]: value,
     });
   };
+
+  // Use specialized editor for drag-drop component
+  if (schema.componentType === 'simple-drag-drop') {
+    return (
+      <DragDropPropertyEditor
+        properties={properties}
+        onChange={onChange}
+      />
+    );
+  }
 
   const renderPropertyField = (propDef: PropertyDefinition) => {
     const value = properties[propDef.key] ?? propDef.default;
