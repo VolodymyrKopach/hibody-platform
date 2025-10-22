@@ -538,8 +538,11 @@ const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
 
                   {/* Image Preview and URL */}
                   <Box>
-                    <FormLabel sx={{ fontSize: '0.75rem', mb: 1, display: 'block' }}>
+                    <FormLabel sx={{ fontSize: '0.75rem', mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       📸 Зображення
+                      <Tooltip title="💡 Знайдіть картинку в Google Images → клік правою → Копіювати адресу зображення">
+                        <HelpCircle size={14} style={{ cursor: 'help' }} />
+                      </Tooltip>
                     </FormLabel>
                     <Stack direction="row" spacing={2} alignItems="center">
                       {item.imageUrl ? (
@@ -584,7 +587,6 @@ const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
                         InputProps={{
                           startAdornment: <LinkIcon size={14} style={{ marginRight: 8 }} />,
                         }}
-                        helperText="💡 Знайдіть картинку в Google Images → клік правою → Копіювати адресу зображення"
                       />
                     </Stack>
                   </Box>
