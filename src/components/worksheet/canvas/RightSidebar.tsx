@@ -143,7 +143,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   onClearEditError
 }) => {
   const theme = useTheme();
-  const sidebarWidth = isOpen ? 320 : 72;
+  const sidebarWidth = isOpen ? 420 : 72;
   const [customColor, setCustomColor] = useState('#FFFFFF');
   const [patternBgColor, setPatternBgColor] = useState('#FFFFFF');
   const [patternFgColor, setPatternFgColor] = useState('#E5E7EB');
@@ -164,6 +164,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   
   // Main sidebar tab state  
   const [mainTab, setMainTab] = useState<'properties' | 'ai'>('properties');
+  const [aiEditingContext, setAiEditingContext] = useState<string>('');
 
   // Update local color state when selection changes
   React.useEffect(() => {
@@ -1545,6 +1546,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 isEditing={isAIEditing}
                 error={editError}
                 onClearError={onClearEditError}
+                editingContext={aiEditingContext}
+                onContextCleared={() => setAiEditingContext('')}
               />
             ) : (
               <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -1687,6 +1690,12 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                   properties={elementData.properties}
                   onChange={(newProperties) => {
                     onUpdate?.(newProperties);
+                  }}
+                  onSwitchToAI={(contextInfo) => {
+                    if (contextInfo) {
+                      setAiEditingContext(contextInfo);
+                    }
+                    setMainTab('ai');
                   }}
                 />
               ) : (
@@ -6095,6 +6104,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 isEditing={isAIEditing}
                 error={editError}
                 onClearError={onClearEditError}
+                editingContext={aiEditingContext}
+                onContextCleared={() => setAiEditingContext('')}
               />
             ) : (
               <Box sx={{ textAlign: 'center', py: 4 }}>

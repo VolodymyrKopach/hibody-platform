@@ -1200,9 +1200,8 @@ function renderElement(
           targets={element.properties.targets || []}
           layout={element.properties.layout || 'horizontal'}
           difficulty={element.properties.difficulty || 'easy'}
-          snapDistance={element.properties.snapDistance || 80}
-          theme={element.properties.theme}
-          ageGroup={ageGroup}
+          snapDistance={element.properties.snapDistance}
+          ageStyle={element.properties.ageStyle}
           isSelected={isSelected}
           onEdit={(properties) => {
             onEdit(element.id, { ...element.properties, ...properties });
@@ -1819,7 +1818,7 @@ function getDefaultProperties(type: string) {
         ],
         layout: 'horizontal',
         difficulty: 'easy',
-        snapDistance: 80,
+        ageStyle: 'elementary', // Default age style
       };
     case 'color-matcher':
       return {

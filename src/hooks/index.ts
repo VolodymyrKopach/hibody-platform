@@ -12,3 +12,4 @@ export * from './useAdminAuth';
 export * from './useAgeStyle';
 export * from './useEnhancedAgeStyle';
 export * from './useComponentTheme';
+export * from './useDragDropAgeStyle';

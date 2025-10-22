@@ -36,12 +36,14 @@ interface ManualPropertyEditorProps {
   schema: ComponentPropertySchema;
   properties: any;
   onChange: (newProperties: any) => void;
+  onSwitchToAI?: (prompt?: string) => void;
 }
 
 const ManualPropertyEditor: React.FC<ManualPropertyEditorProps> = ({
   schema,
   properties,
   onChange,
+  onSwitchToAI,
 }) => {
   const theme = useTheme();
 
@@ -58,6 +60,7 @@ const ManualPropertyEditor: React.FC<ManualPropertyEditorProps> = ({
       <DragDropPropertyEditor
         properties={properties}
         onChange={onChange}
+        onSwitchToAI={onSwitchToAI}
       />
     );
   }

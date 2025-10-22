@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -11,9 +11,10 @@ import {
   CircularProgress,
   alpha,
   useTheme,
-  Divider
+  Divider,
+  Chip
 } from '@mui/material';
-import { Send, Sparkles, AlertCircle } from 'lucide-react';
+import { Send, Sparkles, AlertCircle, Wand2 } from 'lucide-react';
 import { 
   WorksheetEdit, 
   WorksheetEditContext,
@@ -36,6 +37,8 @@ interface AIAssistantPanelProps {
   isEditing: boolean;
   error: string | null;
   onClearError?: () => void;
+  editingContext?: string;
+  onContextCleared?: () => void;
 }
 
 const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
@@ -45,7 +48,9 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   editHistory,
   isEditing,
   error,
-  onClearError
+  onClearError,
+  editingContext,
+  onContextCleared
 }) => {
   const theme = useTheme();
   const [chatInput, setChatInput] = useState('');
@@ -93,6 +98,20 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
     previousSelectionKeyRef.current = currentKey;
   }, [selection]);
 
+  // Parse editing context
+  const parsedContext = useMemo(() => {
+    if (!editingContext) return null;
+    try {
+      return JSON.parse(editingContext) as {
+        itemId: string;
+        itemLabel: string;
+        targetLabel: string;
+      };
+    } catch {
+      return null;
+    }
+  }, [editingContext]);
+
   // Auto-scroll to bottom when history updates
   useEffect(() => {
     historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -119,6 +138,10 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
 
   // Generate dynamic placeholder based on selection
   const inputPlaceholder = React.useMemo(() => {
+    if (parsedContext) {
+      return `Generate image for "${parsedContext.itemLabel}"...`;
+    }
+    
     if (!selection) {
       return 'Що змінити?';
     }
@@ -129,12 +152,21 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
       const componentType = selection.elementData?.type;
       return getAIChatPlaceholder('component', componentType);
     }
-  }, [selection]);
+  }, [selection, parsedContext]);
 
   const handleSend = async () => {
     if (!chatInput.trim() || isEditing) return;
     
-    const instruction = chatInput.trim();
+    let instruction = chatInput.trim();
+    
+    // Add editing context to instruction if present
+    if (parsedContext) {
+      const contextPrefix = `[Editing ${parsedContext.itemId}: "${parsedContext.itemLabel}" for category "${parsedContext.targetLabel}"] `;
+      instruction = contextPrefix + instruction;
+      // Clear the context after using it
+      onContextCleared?.();
+    }
+    
     setChatInput('');
     
     // Clear saved input for current selection
@@ -160,10 +192,20 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   const handleQuickAction = async (improvement: QuickImprovement) => {
     if (isEditing) return;
     
+    let instruction = improvement.instruction;
+    
+    // Add editing context to instruction if present
+    if (parsedContext) {
+      const contextPrefix = `[Editing ${parsedContext.itemId}: "${parsedContext.itemLabel}" for category "${parsedContext.targetLabel}"] `;
+      instruction = contextPrefix + instruction;
+      // Clear the context after using it
+      onContextCleared?.();
+    }
+    
     // Don't clear input for quick actions - user might have text typed
     
     try {
-      await onEdit(improvement.instruction);
+      await onEdit(instruction);
     } catch (error) {
       console.error('Quick action failed:', error);
     }
@@ -215,6 +257,40 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
         overflow: 'hidden'
       }}
     >
+      {/* Editing Context Indicator */}
+      {parsedContext && (
+        <Alert 
+          severity="info"
+          icon={<Wand2 size={18} />}
+          onClose={() => onContextCleared?.()}
+          sx={{ 
+            borderRadius: 2,
+            backgroundColor: alpha(theme.palette.primary.main, 0.08),
+            '& .MuiAlert-message': { width: '100%' }
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Typography variant="caption" sx={{ fontWeight: 600 }}>
+              Editing:
+            </Typography>
+            <Chip
+              label={parsedContext.itemId}
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: '0.65rem',
+                fontWeight: 600,
+                backgroundColor: theme.palette.primary.main,
+                color: 'white',
+              }}
+            />
+            <Typography variant="caption" color="text.secondary">
+              {parsedContext.itemLabel} → {parsedContext.targetLabel}
+            </Typography>
+          </Box>
+        </Alert>
+      )}
+
       {/* Error Alert */}
       {error && (
         <Alert 

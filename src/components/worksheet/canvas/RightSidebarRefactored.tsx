@@ -28,7 +28,7 @@ const RightSidebarRefactored: React.FC<RightSidebarProps> = ({
   onClearEditError
 }) => {
   const theme = useTheme();
-  const sidebarWidth = isOpen ? 320 : 72;
+  const sidebarWidth = isOpen ? 420 : 72;
 
   // If nothing selected
   if (!selection) {

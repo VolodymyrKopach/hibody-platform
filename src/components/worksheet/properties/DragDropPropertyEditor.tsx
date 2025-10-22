@@ -5,40 +5,71 @@ import {
   Box,
   Typography,
   Stack,
-  Paper,
   IconButton,
   Button,
   TextField,
   Tooltip,
-  alpha,
   useTheme,
-  FormControl,
   FormLabel,
   Select,
   MenuItem,
   Card,
   CardContent,
-  Divider,
   Slider,
   Collapse,
+  Popover,
+  ToggleButtonGroup,
+  ToggleButton,
+  Chip,
+  Badge,
+  Menu,
+  ListItemIcon,
+  ListItemText,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Plus,
   Trash2,
-  Upload,
   Link as LinkIcon,
   Sparkles,
   Image as ImageIcon,
   AlertCircle,
-  Check,
   MoveRight,
   HelpCircle,
   ChevronDown,
   ChevronUp,
+  Copy,
+  LayoutGrid,
+  Columns,
+  Rows,
+  GraduationCap,
+  Target,
+  Grid3x3,
+  MoreVertical,
+  Wand2,
 } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { VisualChipSelector, ChipOption } from './VisualChipSelector';
-import { AgeStyleName } from '@/types/interactive-age-styles';
-import { getAllAgeStyles, AGE_STYLE_LABELS } from '@/constants/interactive-age-styles';
+import ColorPickerButton from './shared/ColorPickerButton';
+import EmptyStateCard from './shared/EmptyStateCard';
+import DraggableListItem from './shared/DraggableListItem';
+import { DragDropAgeStyleName } from '@/types/drag-drop-styles';
+import { getAllDragDropStyles } from '@/constants/drag-drop-age-styles';
 
 interface DraggableItem {
   id: string;
@@ -54,7 +85,7 @@ interface DropTarget {
 }
 
 interface DragDropProperties {
-  ageStyle?: AgeStyleName;
+  ageStyle?: DragDropAgeStyleName;
   items: DraggableItem[];
   targets: DropTarget[];
   layout?: 'horizontal' | 'vertical' | 'grid';
@@ -65,16 +96,22 @@ interface DragDropProperties {
 interface DragDropPropertyEditorProps {
   properties: DragDropProperties;
   onChange: (newProperties: DragDropProperties) => void;
+  onSwitchToAI?: (prompt?: string) => void;
 }
 
 const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
   properties,
   onChange,
+  onSwitchToAI,
 }) => {
   const theme = useTheme();
-  const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
-  const [showGuide, setShowGuide] = useState(false);
-  
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [showSettings, setShowSettings] = useState(false);
+  const [helpAnchorEl, setHelpAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const [itemMenuAnchor, setItemMenuAnchor] = useState<{ element: HTMLElement; itemId: string } | null>(null);
+  const [targetMenuAnchor, setTargetMenuAnchor] = useState<{ element: HTMLElement; targetId: string } | null>(null);
+  const [aiHintAnchor, setAiHintAnchor] = useState<HTMLButtonElement | null>(null);
+
   // Initialize with defaults
   const items = properties.items || [];
   const targets = properties.targets || [];
@@ -83,6 +120,14 @@ const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
   const difficulty = properties.difficulty || 'easy';
   const snapDistance = properties.snapDistance || 80;
 
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   // Auto-generate unique ID
   const generateId = (prefix: string) => {
     const timestamp = Date.now().toString(36);
@@ -90,14 +135,44 @@ const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
     return `${prefix}-${timestamp}-${random}`;
   };
 
+  // Handle drag end for targets
+  const handleTargetDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = targets.findIndex((t) => t.id === active.id);
+      const newIndex = targets.findIndex((t) => t.id === over.id);
+
+      onChange({
+        ...properties,
+        targets: arrayMove(targets, oldIndex, newIndex),
+      });
+    }
+  };
+
+  // Handle drag end for items
+  const handleItemDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+
+      onChange({
+        ...properties,
+        items: arrayMove(items, oldIndex, newIndex),
+      });
+    }
+  };
+
   // Add new target
   const handleAddTarget = () => {
     const newTarget: DropTarget = {
       id: generateId('target'),
-      label: `Target ${targets.length + 1}`,
+      label: `Category ${targets.length + 1}`,
       backgroundColor: theme.palette.mode === 'light' ? '#F0F4FF' : '#1A2332',
     };
-    
+
     onChange({
       ...properties,
       targets: [...targets, newTarget],
@@ -107,29 +182,31 @@ const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
   // Add new draggable item
   const handleAddItem = () => {
     if (targets.length === 0) {
-      return; // Don't add item if no targets exist
+      return;
     }
 
     const newItem: DraggableItem = {
       id: generateId('item'),
       imageUrl: '',
-      correctTarget: targets[0].id, // Default to first target
-      label: `Item ${items.length + 1}`,
+      correctTarget: targets[0].id,
+      label: '',
     };
-    
+
     onChange({
       ...properties,
       items: [...items, newItem],
     });
-    
-    setSelectedItemIndex(items.length);
+
+    // Auto-expand the new item
+    setExpandedItems(new Set([...expandedItems, newItem.id]));
   };
 
   // Update target
-  const handleUpdateTarget = (index: number, updates: Partial<DropTarget>) => {
-    const updatedTargets = [...targets];
-    updatedTargets[index] = { ...updatedTargets[index], ...updates };
-    
+  const handleUpdateTarget = (id: string, updates: Partial<DropTarget>) => {
+    const updatedTargets = targets.map((target) =>
+      target.id === id ? { ...target, ...updates } : target
+    );
+
     onChange({
       ...properties,
       targets: updatedTargets,
@@ -137,18 +214,17 @@ const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
   };
 
   // Delete target
-  const handleDeleteTarget = (index: number) => {
-    const targetId = targets[index].id;
-    const updatedTargets = targets.filter((_, i) => i !== index);
-    
+  const handleDeleteTarget = (id: string) => {
+    const updatedTargets = targets.filter((t) => t.id !== id);
+
     // Update items that pointed to this target
-    const updatedItems = items.map(item => {
-      if (item.correctTarget === targetId) {
+    const updatedItems = items.map((item) => {
+      if (item.correctTarget === id) {
         return { ...item, correctTarget: updatedTargets[0]?.id || '' };
       }
       return item;
     });
-    
+
     onChange({
       ...properties,
       targets: updatedTargets,
@@ -156,11 +232,29 @@ const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
     });
   };
 
+  // Duplicate target
+  const handleDuplicateTarget = (id: string) => {
+    const targetToDuplicate = targets.find((t) => t.id === id);
+    if (!targetToDuplicate) return;
+
+    const newTarget: DropTarget = {
+      ...targetToDuplicate,
+      id: generateId('target'),
+      label: `${targetToDuplicate.label} (Copy)`,
+    };
+
+    onChange({
+      ...properties,
+      targets: [...targets, newTarget],
+    });
+  };
+
   // Update item
-  const handleUpdateItem = (index: number, updates: Partial<DraggableItem>) => {
-    const updatedItems = [...items];
-    updatedItems[index] = { ...updatedItems[index], ...updates };
-    
+  const handleUpdateItem = (id: string, updates: Partial<DraggableItem>) => {
+    const updatedItems = items.map((item) =>
+      item.id === id ? { ...item, ...updates } : item
+    );
+
     onChange({
       ...properties,
       items: updatedItems,
@@ -168,665 +262,919 @@ const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
   };
 
   // Delete item
-  const handleDeleteItem = (index: number) => {
-    const updatedItems = items.filter((_, i) => i !== index);
+  const handleDeleteItem = (id: string) => {
+    const updatedItems = items.filter((item) => item.id !== id);
     onChange({
       ...properties,
       items: updatedItems,
     });
-    
-    if (selectedItemIndex === index) {
-      setSelectedItemIndex(null);
+
+    // Remove from expanded set
+    const newExpanded = new Set(expandedItems);
+    newExpanded.delete(id);
+    setExpandedItems(newExpanded);
+  };
+
+  // Duplicate item
+  const handleDuplicateItem = (id: string) => {
+    const itemToDuplicate = items.find((item) => item.id === id);
+    if (!itemToDuplicate) return;
+
+    const newItem: DraggableItem = {
+      ...itemToDuplicate,
+      id: generateId('item'),
+      label: itemToDuplicate.label ? `${itemToDuplicate.label} (Copy)` : '',
+    };
+
+    onChange({
+      ...properties,
+      items: [...items, newItem],
+    });
+  };
+
+  // Toggle item expansion
+  const toggleItemExpansion = (id: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
     }
+    setExpandedItems(newExpanded);
+  };
+
+  // Create example activity
+  const handleCreateExample = () => {
+    const exampleTargets = [
+      { id: generateId('target'), label: 'Meow 🐱', backgroundColor: '#FFF9E6' },
+      { id: generateId('target'), label: 'Woof 🐶', backgroundColor: '#E6F4FF' },
+    ];
+    const exampleItems = [
+      {
+        id: generateId('item'),
+        imageUrl:
+          'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=200',
+        correctTarget: exampleTargets[0].id,
+        label: 'Cat',
+      },
+      {
+        id: generateId('item'),
+        imageUrl:
+          'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=200',
+        correctTarget: exampleTargets[1].id,
+        label: 'Dog',
+      },
+    ];
+    onChange({
+      ...properties,
+      targets: exampleTargets,
+      items: exampleItems,
+    });
   };
 
   // Age Style Options
-  const allStyles = getAllAgeStyles();
-  const ageStyleOptions: ChipOption<AgeStyleName>[] = allStyles.map((style) => ({
-    value: style.id,
-    label: AGE_STYLE_LABELS[style.id],
-    emoji: style.emoji,
-    color: style.color,
-    tooltip: {
-      title: style.name,
-      description: style.description,
-      details: `Element: ${style.sizes.element}px • Gap: ${style.sizes.gap}px`,
-    },
-  }));
+  const allStyles = getAllDragDropStyles();
+  const ageStyleOptions: ChipOption<DragDropAgeStyleName>[] = allStyles.map((style) => {
+    const ageMatch = style.name.match(/\(([^)]+)\)/);
+    const ageLabel = ageMatch ? ageMatch[1] : style.name;
+
+    return {
+      value: style.id,
+      label: ageLabel,
+      emoji: '',
+      color: style.colors.itemBorder,
+      tooltip: {
+        title: style.name,
+        description: style.description,
+        details: `Item: ${style.elementSize.item}px • Target: ${style.elementSize.target}px • Snap: ${style.interaction.snapDistance}px`,
+      },
+    };
+  });
+
+  // Get connected items count for a target
+  const getConnectedItemsCount = (targetId: string) => {
+    return items.filter((item) => item.correctTarget === targetId).length;
+  };
+
+  // Check if item is complete (has image URL)
+  const isItemComplete = (item: DraggableItem) => {
+    return item.imageUrl.trim() !== '';
+  };
 
   return (
     <Stack spacing={3}>
       {/* Age Style Selector */}
-      <VisualChipSelector
-        label="Age Style"
-        icon={<Sparkles size={14} />}
-        options={ageStyleOptions}
-        value={ageStyle}
-        onChange={(newStyle) => onChange({ ...properties, ageStyle: newStyle })}
-        colorMode="multi"
-      />
+      <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+        <CardContent>
+          <VisualChipSelector
+            label="Age Style"
+            icon={<Sparkles size={14} />}
+            options={ageStyleOptions}
+            value={ageStyle}
+            onChange={(newStyle) => onChange({ ...properties, ageStyle: newStyle })}
+            colorMode="multi"
+          />
+        </CardContent>
+      </Card>
 
-      {/* Help button with collapsible guide */}
-      <Box>
+      {/* Quick Help Button */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Button
           variant="text"
           size="small"
           startIcon={<HelpCircle size={16} />}
-          endIcon={showGuide ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          onClick={() => setShowGuide(!showGuide)}
+          onClick={(e) => setHelpAnchorEl(e.currentTarget)}
           sx={{
             textTransform: 'none',
-            color: 'info.main',
-            fontWeight: 600,
-            mb: showGuide ? 2 : 0,
+            color: 'text.secondary',
+            '&:hover': {
+              color: 'primary.main',
+            },
           }}
         >
-          Як створити активність?
+          Need help?
         </Button>
-        
-        <Collapse in={showGuide}>
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              background: alpha(theme.palette.info.main, 0.05),
-              border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
-              borderRadius: 2,
-              mb: 2,
-            }}
-          >
-            <Stack spacing={1.5}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'info.main' }}>
-                📝 Покрокова інструкція
+        <Popover
+          open={Boolean(helpAnchorEl)}
+          anchorEl={helpAnchorEl}
+          onClose={() => setHelpAnchorEl(null)}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          slotProps={{
+            paper: {
+              sx: { p: 2, maxWidth: 320 },
+            },
+          }}
+        >
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              How to Create Drag & Drop Activity
+            </Typography>
+            <Box>
+              <Typography variant="caption" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                1. Create categories
               </Typography>
-              <Box>
-                <Typography variant="caption" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
-                  1️⃣ Створіть категорії (наприклад: "Meow", "Woof")
-                </Typography>
-                <Typography variant="caption" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
-                  2️⃣ Додайте картинки (наприклад: кіт 🐱, собака 🐶)
-                </Typography>
-                <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
-                  3️⃣ Вкажіть, куди перетягувати кожну картинку
-                </Typography>
-              </Box>
-              {items.length === 0 && targets.length === 0 && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => {
-                    // Create example activity
-                    const exampleTargets = [
-                      { id: generateId('target'), label: 'Meow 🐱', backgroundColor: '#FFF9E6' },
-                      { id: generateId('target'), label: 'Woof 🐶', backgroundColor: '#E6F4FF' },
-                    ];
-                    const exampleItems = [
-                      {
-                        id: generateId('item'),
-                        imageUrl: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=200',
-                        correctTarget: exampleTargets[0].id,
-                        label: 'Cat',
-                      },
-                      {
-                        id: generateId('item'),
-                        imageUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=200',
-                        correctTarget: exampleTargets[1].id,
-                        label: 'Dog',
-                      },
-                    ];
-                    onChange({
-                      ...properties,
-                      targets: exampleTargets,
-                      items: exampleItems,
-                    });
-                    setShowGuide(false); // Close guide after creating example
-                  }}
-                  sx={{ textTransform: 'none', mt: 1 }}
-                >
-                  ✨ Створити приклад для початку
-                </Button>
-              )}
-            </Stack>
-          </Paper>
-        </Collapse>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                Add zones where students will drop items (e.g., "Animals", "Plants")
+              </Typography>
+
+              <Typography variant="caption" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                2. Add images
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                Upload or link images that students will drag
+              </Typography>
+
+              <Typography variant="caption" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                3. Assign targets
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                Specify which category each image belongs to
+              </Typography>
+            </Box>
+            {items.length === 0 && targets.length === 0 && (
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => {
+                  handleCreateExample();
+                  setHelpAnchorEl(null);
+                }}
+                sx={{ textTransform: 'none' }}
+              >
+                Create Example Activity
+              </Button>
+            )}
+          </Stack>
+        </Popover>
       </Box>
 
-      <Divider />
-
-      {/* Drop Targets Section */}
-      <Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
-              🎯 Крок 1: Категорії
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Створіть зони, куди учні перетягуватимуть картинки
-            </Typography>
+      {/* Categories Section */}
+      <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+            <Box>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+                Categories
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Create drop zones where students will place items
+              </Typography>
+            </Box>
+            <Tooltip title="Add Category">
+              <span>
+                <IconButton
+                  onClick={handleAddTarget}
+                  size="small"
+                  sx={{
+                    border: `1px solid ${theme.palette.divider}`,
+                    '&:hover': {
+                      borderColor: theme.palette.primary.main,
+                      backgroundColor: theme.palette.action.hover,
+                    },
+                  }}
+                >
+                  <Plus size={18} />
+                </IconButton>
+              </span>
+            </Tooltip>
           </Box>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Plus size={16} />}
-            onClick={handleAddTarget}
-            sx={{ textTransform: 'none' }}
-          >
-            Додати категорію
-          </Button>
-        </Box>
 
-        {targets.length === 0 && (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              textAlign: 'center',
-              border: `2px dashed ${theme.palette.divider}`,
-              borderRadius: 2,
-              background: alpha(theme.palette.primary.main, 0.02),
-            }}
-          >
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              📦 Ще немає категорій
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Приклади: "Meow", "Woof", "Червоний", "Синій", "Фрукти", "Овочі"
-            </Typography>
-          </Paper>
-        )}
+          {targets.length === 0 ? (
+            <EmptyStateCard
+              icon={Target}
+              title="No categories yet"
+              description="Click the + button above to create your first drop zone"
+              variant="default"
+            />
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTargetDragEnd}>
+              <SortableContext items={targets.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+                <Stack spacing={1}>
+                  {targets.map((target) => (
+                    <DraggableListItem key={target.id} id={target.id}>
+                      <Box sx={{ p: 1.5, display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                        <TextField
+                          value={target.label}
+                          onChange={(e) => handleUpdateTarget(target.id, { label: e.target.value })}
+                          placeholder="Category name..."
+                          size="small"
+                          fullWidth
+                          sx={{ flex: 1 }}
+                        />
 
+                        <ColorPickerButton
+                          value={target.backgroundColor || '#F0F4FF'}
+                          onChange={(color) => handleUpdateTarget(target.id, { backgroundColor: color })}
+                          size="small"
+                          label="Pick category color"
+                        />
+
+                        <Badge badgeContent={getConnectedItemsCount(target.id)} color="success" showZero={false}>
+                          <Chip
+                            label={`${getConnectedItemsCount(target.id)} items`}
+                            size="small"
+                            sx={{ minWidth: 70 }}
+                          />
+                        </Badge>
+
+                        <Tooltip title="More actions">
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={(e) => setTargetMenuAnchor({ element: e.currentTarget, targetId: target.id })}
+                            >
+                              <MoreVertical size={16} />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </Box>
+                    </DraggableListItem>
+                  ))}
+                </Stack>
+              </SortableContext>
+            </DndContext>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Items Section */}
+      <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+            <Box>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+                Images
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Add images that students will drag to categories
+              </Typography>
+            </Box>
+            <Tooltip title="Add Image">
+              <span>
+                <IconButton
+                  onClick={handleAddItem}
+                  disabled={targets.length === 0}
+                  size="small"
+                  sx={{
+                    border: `1px solid ${theme.palette.divider}`,
+                    '&:hover': {
+                      borderColor: theme.palette.primary.main,
+                      backgroundColor: theme.palette.action.hover,
+                    },
+                    '&.Mui-disabled': {
+                      borderColor: theme.palette.action.disabled,
+                      color: theme.palette.action.disabled,
+                    },
+                  }}
+                >
+                  <Plus size={18} />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Box>
+
+          {targets.length === 0 ? (
+            <EmptyStateCard
+              icon={AlertCircle}
+              title="Create categories first"
+              description="You need at least one category before adding images"
+              variant="warning"
+            />
+          ) : items.length === 0 ? (
+            <EmptyStateCard
+              icon={ImageIcon}
+              title="No images yet"
+              description="Click the + button above to create your first draggable item"
+              variant="default"
+            />
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleItemDragEnd}>
+              <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+                <Stack spacing={1}>
+                  {items.map((item) => {
+                    const isExpanded = expandedItems.has(item.id);
+                    const targetObj = targets.find((t) => t.id === item.correctTarget);
+                    const isComplete = isItemComplete(item);
+
+                    return (
+                      <DraggableListItem key={item.id} id={item.id}>
+                        <Box>
+                          {/* Main Content - Always Visible */}
+                          <Box sx={{ p: 2 }}>
+                            <Stack spacing={2}>
+                              {/* Top Row: Thumbnail and Actions */}
+                              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                                {/* Thumbnail Preview */}
+                                <Box sx={{ position: 'relative' }}>
+                                  {item.imageUrl ? (
+                                    <Box
+                                      component="img"
+                                      src={item.imageUrl}
+                                      alt={item.label || 'Item'}
+                                      sx={{
+                                        width: 120,
+                                        height: 120,
+                                        objectFit: 'cover',
+                                        borderRadius: 2,
+                                        border: `2px solid ${theme.palette.divider}`,
+                                      }}
+                                      onError={(e: any) => {
+                                        e.target.style.display = 'none';
+                                      }}
+                                    />
+                                  ) : (
+                                    <Box
+                                      sx={{
+                                        width: 120,
+                                        height: 120,
+                                        borderRadius: 2,
+                                        border: `2px dashed ${theme.palette.divider}`,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: theme.palette.action.hover,
+                                      }}
+                                    >
+                                      <ImageIcon size={40} color={theme.palette.text.disabled} />
+                                    </Box>
+                                  )}
+                                  {/* Status Badge */}
+                                  <Tooltip title={isComplete ? 'Complete' : 'Missing image URL'}>
+                                    <Box
+                                      sx={{
+                                        position: 'absolute',
+                                        top: -8,
+                                        right: -8,
+                                        width: 20,
+                                        height: 20,
+                                        borderRadius: '50%',
+                                        backgroundColor: isComplete
+                                          ? theme.palette.success.main
+                                          : theme.palette.warning.main,
+                                        border: `2px solid ${theme.palette.background.paper}`,
+                                        boxShadow: theme.shadows[2],
+                                      }}
+                                    />
+                                  </Tooltip>
+                                </Box>
+
+                                {/* Content Column */}
+                                <Stack spacing={1.5} sx={{ flex: 1, minWidth: 0 }}>
+                                  {/* Label */}
+                                  <Box>
+                                    <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                                      Label
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={600}>
+                                      {item.label || 'Untitled Image'}
+                                    </Typography>
+                                  </Box>
+
+                                  {/* Target Assignment */}
+                                  <Box>
+                                    <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                                      Drag to
+                                    </Typography>
+                                    <Select
+                                      value={item.correctTarget}
+                                      onChange={(e) => handleUpdateItem(item.id, { correctTarget: e.target.value })}
+                                      size="small"
+                                      fullWidth
+                                      sx={{
+                                        '& .MuiSelect-select': {
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: 1,
+                                        },
+                                      }}
+                                    >
+                                      {targets.map((target) => (
+                                        <MenuItem key={target.id} value={target.id}>
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Box
+                                              sx={{
+                                                width: 20,
+                                                height: 20,
+                                                borderRadius: 0.5,
+                                                backgroundColor: target.backgroundColor || '#F0F4FF',
+                                                border: `1px solid ${theme.palette.divider}`,
+                                              }}
+                                            />
+                                            <Typography variant="body2" fontWeight={500}>
+                                              {target.label}
+                                            </Typography>
+                                          </Box>
+                                        </MenuItem>
+                                      ))}
+                                    </Select>
+                                  </Box>
+                                </Stack>
+
+                                {/* Action Buttons Column */}
+                                <Box 
+                                  sx={{ 
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    height: 120,
+                                    justifyContent: 'space-between',
+                                  }}
+                                >
+                                  <Tooltip title="More actions" placement="left">
+                                    <IconButton
+                                      size="small"
+                                      onClick={(e) => setItemMenuAnchor({ element: e.currentTarget, itemId: item.id })}
+                                      sx={{
+                                        border: `1px solid ${theme.palette.divider}`,
+                                      }}
+                                    >
+                                      <MoreVertical size={16} />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Edit details" placement="left">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => toggleItemExpansion(item.id)}
+                                      color={isExpanded ? 'primary' : 'default'}
+                                      sx={{
+                                        border: `1px solid ${theme.palette.divider}`,
+                                      }}
+                                    >
+                                      {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                    </IconButton>
+                                  </Tooltip>
+                                </Box>
+                              </Box>
+                            </Stack>
+                          </Box>
+
+                          {/* Expanded Details */}
+                          <Collapse in={isExpanded}>
+                            <Box
+                              sx={{
+                                px: 2,
+                                pb: 2,
+                                borderTop: `1px solid ${theme.palette.divider}`,
+                                backgroundColor: theme.palette.action.hover,
+                              }}
+                            >
+                              <Stack spacing={2}>
+                                {/* Image URL */}
+                                <Box>
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                                    <FormLabel sx={{ fontSize: '0.75rem' }}>
+                                      Image URL
+                                    </FormLabel>
+                                    <Button
+                                      size="small"
+                                      variant="text"
+                                      startIcon={<Wand2 size={14} />}
+                                      onClick={(e) => {
+                                        if (onSwitchToAI) {
+                                          const itemIndex = items.findIndex(i => i.id === item.id) + 1;
+                                          const targetObj = targets.find(t => t.id === item.correctTarget);
+                                          const itemLabel = item.label || 'Unnamed';
+                                          const targetLabel = targetObj?.label || 'Unknown';
+                                          const contextInfo = JSON.stringify({
+                                            itemId: `image-${itemIndex}`,
+                                            itemLabel,
+                                            targetLabel,
+                                          });
+                                          onSwitchToAI(contextInfo);
+                                        } else {
+                                          setAiHintAnchor(e.currentTarget);
+                                        }
+                                      }}
+                                      sx={{
+                                        textTransform: 'none',
+                                        fontSize: '0.7rem',
+                                        py: 0.25,
+                                        px: 1,
+                                        minHeight: 0,
+                                        color: 'primary.main',
+                                      }}
+                                    >
+                                      Generate with AI
+                                    </Button>
+                                  </Box>
+                                  <TextField
+                                    value={item.imageUrl}
+                                    onChange={(e) => handleUpdateItem(item.id, { imageUrl: e.target.value })}
+                                    placeholder="https://example.com/image.jpg"
+                                    size="small"
+                                    fullWidth
+                                    InputProps={{
+                                      startAdornment: <LinkIcon size={14} style={{ marginRight: 6 }} />,
+                                    }}
+                                  />
+                                </Box>
+
+                                {/* Label */}
+                                <Box>
+                                  <FormLabel sx={{ fontSize: '0.75rem', mb: 0.5, display: 'block' }}>
+                                    Label (Optional)
+                                  </FormLabel>
+                                  <TextField
+                                    value={item.label || ''}
+                                    onChange={(e) => handleUpdateItem(item.id, { label: e.target.value })}
+                                    placeholder="e.g., Cat, Dog, Apple..."
+                                    size="small"
+                                    fullWidth
+                                  />
+                                </Box>
+                              </Stack>
+                            </Box>
+                          </Collapse>
+                        </Box>
+                      </DraggableListItem>
+                    );
+                  })}
+                </Stack>
+              </SortableContext>
+            </DndContext>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Target Actions Menu */}
+      <Menu
+        anchorEl={targetMenuAnchor?.element}
+        open={Boolean(targetMenuAnchor)}
+        onClose={() => setTargetMenuAnchor(null)}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem
+          onClick={() => {
+            if (targetMenuAnchor) {
+              handleDuplicateTarget(targetMenuAnchor.targetId);
+              setTargetMenuAnchor(null);
+            }
+          }}
+        >
+          <ListItemIcon>
+            <Copy size={16} />
+          </ListItemIcon>
+          <ListItemText>Duplicate</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (targetMenuAnchor) {
+              const target = targets.find(t => t.id === targetMenuAnchor.targetId);
+              const canDelete = !(targets.length === 1 && items.length > 0);
+              if (canDelete) {
+                handleDeleteTarget(targetMenuAnchor.targetId);
+              }
+              setTargetMenuAnchor(null);
+            }
+          }}
+          disabled={targets.length === 1 && items.length > 0}
+          sx={{ color: 'error.main' }}
+        >
+          <ListItemIcon sx={{ color: 'error.main' }}>
+            <Trash2 size={16} />
+          </ListItemIcon>
+          <ListItemText>Delete</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      {/* AI Generation Hint Popover */}
+      <Popover
+        open={Boolean(aiHintAnchor)}
+        anchorEl={aiHintAnchor}
+        onClose={() => setAiHintAnchor(null)}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+        slotProps={{
+          paper: {
+            sx: { 
+              p: 2, 
+              maxWidth: 320,
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}15 0%, ${theme.palette.secondary.main}15 100%)`,
+              border: `1px solid ${theme.palette.primary.main}40`,
+            },
+          },
+        }}
+      >
         <Stack spacing={1.5}>
-          {targets.map((target, index) => (
-            <Paper
-              key={target.id}
-              elevation={0}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box
               sx={{
-                p: 2,
-                border: `1px solid ${theme.palette.divider}`,
-                borderRadius: 2,
-                '&:hover': {
-                  borderColor: theme.palette.primary.main,
-                },
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                color: 'white',
               }}
             >
-              <Stack spacing={1.5}>
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 1,
-                      backgroundColor: target.backgroundColor || '#F0F4FF',
-                      border: `2px solid ${theme.palette.divider}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Typography variant="caption" fontWeight={700}>
-                      {index + 1}
-                    </Typography>
-                  </Box>
-
-                  <TextField
-                    value={target.label}
-                    onChange={(e) => handleUpdateTarget(index, { label: e.target.value })}
-                    placeholder="Наприклад: Meow, Червоний, Фрукти..."
-                    size="small"
-                    fullWidth
-                    sx={{ flex: 1 }}
-                  />
-
-                  <input
-                    type="color"
-                    value={target.backgroundColor || '#F0F4FF'}
-                    onChange={(e) => handleUpdateTarget(index, { backgroundColor: e.target.value })}
-                    style={{
-                      width: 40,
-                      height: 40,
-                      border: `1px solid ${theme.palette.divider}`,
-                      borderRadius: 4,
-                      cursor: 'pointer',
-                    }}
-                  />
-
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDeleteTarget(index)}
-                    color="error"
-                    disabled={targets.length === 1 && items.length > 0}
-                  >
-                    <Trash2 size={16} />
-                  </IconButton>
-                </Box>
-
-                {/* Show which items point to this target */}
-                {items.filter(item => item.correctTarget === target.id).length > 0 && (
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      gap: 1,
-                      alignItems: 'center',
-                      px: 1.5,
-                      py: 0.5,
-                      background: alpha(theme.palette.success.main, 0.08),
-                      borderRadius: 1,
-                    }}
-                  >
-                    <Check size={12} color={theme.palette.success.main} />
-                    <Typography variant="caption" color="success.main" fontWeight={600}>
-                      ✓ Підключено {items.filter(item => item.correctTarget === target.id).length} картинок
-                    </Typography>
-                  </Box>
-                )}
-              </Stack>
-            </Paper>
-          ))}
-        </Stack>
-      </Box>
-
-      <Divider />
-
-      {/* Draggable Items Section */}
-      <Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
-              🖼️ Крок 2: Картинки
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Додайте зображення, які учні перетягуватимуть
+              <Sparkles size={20} />
+            </Box>
+            <Typography variant="subtitle2" fontWeight={700}>
+              AI Image Generation
             </Typography>
           </Box>
+          
+          <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
+            To generate an image with AI:
+          </Typography>
+          
+          <Stack spacing={0.5} sx={{ pl: 1 }}>
+            <Typography variant="caption" sx={{ display: 'flex', gap: 0.5 }}>
+              <span style={{ fontWeight: 600 }}>1.</span> Switch to <strong>AI Assistant</strong> tab
+            </Typography>
+            <Typography variant="caption" sx={{ display: 'flex', gap: 0.5 }}>
+              <span style={{ fontWeight: 600 }}>2.</span> Request: <em>"Generate an image of [your subject]"</em>
+            </Typography>
+            <Typography variant="caption" sx={{ display: 'flex', gap: 0.5 }}>
+              <span style={{ fontWeight: 600 }}>3.</span> Copy the generated image URL
+            </Typography>
+            <Typography variant="caption" sx={{ display: 'flex', gap: 0.5 }}>
+              <span style={{ fontWeight: 600 }}>4.</span> Paste it in the Image URL field
+            </Typography>
+          </Stack>
+
           <Button
             variant="contained"
             size="small"
-            startIcon={<Plus size={16} />}
-            onClick={handleAddItem}
-            disabled={targets.length === 0}
-            sx={{ textTransform: 'none' }}
+            fullWidth
+            onClick={() => setAiHintAnchor(null)}
+            sx={{ textTransform: 'none', mt: 0.5 }}
           >
-            Додати картинку
+            Got it!
           </Button>
-        </Box>
-
-        {targets.length === 0 && (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              textAlign: 'center',
-              border: `2px dashed ${theme.palette.divider}`,
-              borderRadius: 2,
-              background: alpha(theme.palette.warning.main, 0.05),
-            }}
-          >
-            <AlertCircle
-              size={24}
-              color={theme.palette.warning.main}
-              style={{ marginBottom: 8 }}
-            />
-            <Typography variant="body2" color="warning.main" fontWeight={600}>
-              ⚠️ Спочатку створіть хоча б одну категорію
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Поверніться до Кроку 1 вгорі ↑
-            </Typography>
-          </Paper>
-        )}
-
-        {targets.length > 0 && items.length === 0 && (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              textAlign: 'center',
-              border: `2px dashed ${theme.palette.divider}`,
-              borderRadius: 2,
-              background: alpha(theme.palette.primary.main, 0.02),
-            }}
-          >
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              🎨 Ще немає картинок
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Натисніть "Додати картинку" і вставте посилання на зображення
-            </Typography>
-          </Paper>
-        )}
-
-        <Stack spacing={2}>
-          {items.map((item, index) => (
-            <Card
-              key={item.id}
-              elevation={0}
-              sx={{
-                border: `2px solid ${
-                  selectedItemIndex === index
-                    ? theme.palette.primary.main
-                    : theme.palette.divider
-                }`,
-                borderRadius: 2,
-                overflow: 'visible',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  borderColor: theme.palette.primary.main,
-                  boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.15)}`,
-                },
-              }}
-              onClick={() => setSelectedItemIndex(index)}
-            >
-              <CardContent>
-                <Stack spacing={2}>
-                  {/* Header */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      Картинка {index + 1} {item.label && `• ${item.label}`}
-                    </Typography>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteItem(index);
-                      }}
-                      color="error"
-                    >
-                      <Trash2 size={16} />
-                    </IconButton>
-                  </Box>
-
-                  {/* Image Preview and URL */}
-                  <Box>
-                    <FormLabel sx={{ fontSize: '0.75rem', mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      📸 Зображення
-                      <Tooltip title="💡 Знайдіть картинку в Google Images → клік правою → Копіювати адресу зображення">
-                        <HelpCircle size={14} style={{ cursor: 'help' }} />
-                      </Tooltip>
-                    </FormLabel>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      {item.imageUrl ? (
-                        <Box
-                          component="img"
-                          src={item.imageUrl}
-                          alt={item.label || 'Item'}
-                          sx={{
-                            width: 80,
-                            height: 80,
-                            objectFit: 'cover',
-                            borderRadius: 1,
-                            border: `2px solid ${theme.palette.divider}`,
-                          }}
-                          onError={(e: any) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <Box
-                          sx={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: 1,
-                            border: `2px dashed ${theme.palette.divider}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: alpha(theme.palette.divider, 0.1),
-                          }}
-                        >
-                          <ImageIcon size={24} color={theme.palette.text.disabled} />
-                        </Box>
-                      )}
-
-                      <TextField
-                        value={item.imageUrl}
-                        onChange={(e) => handleUpdateItem(index, { imageUrl: e.target.value })}
-                        placeholder="Вставте посилання на картинку..."
-                        size="small"
-                        fullWidth
-                        InputProps={{
-                          startAdornment: <LinkIcon size={14} style={{ marginRight: 8 }} />,
-                        }}
-                      />
-                    </Stack>
-                  </Box>
-
-                  {/* Label (optional) */}
-                  <TextField
-                    value={item.label || ''}
-                    onChange={(e) => handleUpdateItem(index, { label: e.target.value })}
-                    label="Підпис (необов'язково)"
-                    placeholder="Наприклад: Кіт, Собака, Яблуко..."
-                    size="small"
-                    fullWidth
-                  />
-
-                  {/* Target Connection */}
-                  <Box>
-                    <FormLabel sx={{ fontSize: '0.75rem', mb: 1, display: 'block' }}>
-                      🎯 Куди перетягувати?
-                    </FormLabel>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                      <Select
-                        value={item.correctTarget}
-                        onChange={(e) => handleUpdateItem(index, { correctTarget: e.target.value })}
-                        size="small"
-                        fullWidth
-                        sx={{
-                          '& .MuiSelect-select': {
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                          },
-                        }}
-                      >
-                        {targets.map((target, targetIndex) => (
-                          <MenuItem key={target.id} value={target.id}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box
-                                sx={{
-                                  width: 20,
-                                  height: 20,
-                                  borderRadius: 0.5,
-                                  backgroundColor: target.backgroundColor || '#F0F4FF',
-                                  border: `1px solid ${theme.palette.divider}`,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontSize: '0.65rem',
-                                  fontWeight: 700,
-                                }}
-                              >
-                                {targetIndex + 1}
-                              </Box>
-                              {target.label}
-                            </Box>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      
-                      <Tooltip title="Ця картинка буде правильною, коли її перетягнуть на вибрану категорію">
-                        <Box>
-                          <MoveRight size={18} color={theme.palette.text.secondary} />
-                        </Box>
-                      </Tooltip>
-                    </Box>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-          ))}
         </Stack>
-      </Box>
+      </Popover>
 
-      <Divider />
+      {/* Item Actions Menu */}
+      <Menu
+        anchorEl={itemMenuAnchor?.element}
+        open={Boolean(itemMenuAnchor)}
+        onClose={() => setItemMenuAnchor(null)}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem
+          onClick={() => {
+            if (itemMenuAnchor) {
+              handleDuplicateItem(itemMenuAnchor.itemId);
+              setItemMenuAnchor(null);
+            }
+          }}
+        >
+          <ListItemIcon>
+            <Copy size={16} />
+          </ListItemIcon>
+          <ListItemText>Duplicate</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (itemMenuAnchor) {
+              handleDeleteItem(itemMenuAnchor.itemId);
+              setItemMenuAnchor(null);
+            }
+          }}
+          sx={{ color: 'error.main' }}
+        >
+          <ListItemIcon sx={{ color: 'error.main' }}>
+            <Trash2 size={16} />
+          </ListItemIcon>
+          <ListItemText>Delete</ListItemText>
+        </MenuItem>
+      </Menu>
 
-      {/* Settings */}
-      <Stack spacing={3}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-          ⚙️ Налаштування активності
-        </Typography>
+      {/* Settings Section */}
+      <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+        <CardContent>
+          <Button
+            variant="text"
+            size="small"
+            startIcon={<Sparkles size={16} />}
+            endIcon={showSettings ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            onClick={() => setShowSettings(!showSettings)}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              mb: showSettings ? 2 : 0,
+            }}
+          >
+            Advanced Settings
+          </Button>
 
-        {/* Layout - Visual Buttons */}
-        <Box>
-          <FormLabel sx={{ fontSize: '0.75rem', mb: 1.5, display: 'block' }}>
-            📐 Розташування
-          </FormLabel>
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant={layout === 'horizontal' ? 'contained' : 'outlined'}
-              onClick={() => onChange({ ...properties, layout: 'horizontal' })}
-              sx={{
-                flex: 1,
-                textTransform: 'none',
-                py: 1.5,
-                flexDirection: 'column',
-                gap: 0.5,
-              }}
-            >
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>→</Typography>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                В ряд
-              </Typography>
-            </Button>
-            <Button
-              variant={layout === 'vertical' ? 'contained' : 'outlined'}
-              onClick={() => onChange({ ...properties, layout: 'vertical' })}
-              sx={{
-                flex: 1,
-                textTransform: 'none',
-                py: 1.5,
-                flexDirection: 'column',
-                gap: 0.5,
-              }}
-            >
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>↓</Typography>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                В стовпчик
-              </Typography>
-            </Button>
-            <Button
-              variant={layout === 'grid' ? 'contained' : 'outlined'}
-              onClick={() => onChange({ ...properties, layout: 'grid' })}
-              sx={{
-                flex: 1,
-                textTransform: 'none',
-                py: 1.5,
-                flexDirection: 'column',
-                gap: 0.5,
-              }}
-            >
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>⊞</Typography>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                Сітка
-              </Typography>
-            </Button>
-          </Stack>
-        </Box>
+          <Collapse in={showSettings}>
+            <Stack spacing={3}>
+              {/* Layout */}
+              <Box>
+                <FormLabel sx={{ fontSize: '0.75rem', mb: 1.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <LayoutGrid size={14} />
+                  Layout
+                </FormLabel>
+                <ToggleButtonGroup
+                  value={layout}
+                  exclusive
+                  onChange={(_, value) => {
+                    if (value !== null) {
+                      onChange({ ...properties, layout: value });
+                    }
+                  }}
+                  fullWidth
+                  size="small"
+                >
+                  <ToggleButton value="horizontal" aria-label="Horizontal">
+                    <Tooltip title="Horizontal row" arrow>
+                      <span>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Columns size={16} />
+                          <Typography variant="caption">Row</Typography>
+                        </Box>
+                      </span>
+                    </Tooltip>
+                  </ToggleButton>
+                  <ToggleButton value="vertical" aria-label="Vertical">
+                    <Tooltip title="Vertical column" arrow>
+                      <span>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Rows size={16} />
+                          <Typography variant="caption">Column</Typography>
+                        </Box>
+                      </span>
+                    </Tooltip>
+                  </ToggleButton>
+                  <ToggleButton value="grid" aria-label="Grid">
+                    <Tooltip title="Grid layout" arrow>
+                      <span>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Grid3x3 size={16} />
+                          <Typography variant="caption">Grid</Typography>
+                        </Box>
+                      </span>
+                    </Tooltip>
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
 
-        {/* Difficulty - Toggle Buttons */}
-        <Box>
-          <FormLabel sx={{ fontSize: '0.75rem', mb: 1.5, display: 'block' }}>
-            🎓 Складність
-          </FormLabel>
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant={difficulty === 'easy' ? 'contained' : 'outlined'}
-              onClick={() => onChange({ ...properties, difficulty: 'easy' })}
-              sx={{
-                flex: 1,
-                textTransform: 'none',
-                py: 1.5,
-                flexDirection: 'column',
-                gap: 0.5,
-              }}
-            >
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>😊</Typography>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                Легко
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                з підказками
-              </Typography>
-            </Button>
-            <Button
-              variant={difficulty === 'medium' ? 'contained' : 'outlined'}
-              onClick={() => onChange({ ...properties, difficulty: 'medium' })}
-              sx={{
-                flex: 1,
-                textTransform: 'none',
-                py: 1.5,
-                flexDirection: 'column',
-                gap: 0.5,
-              }}
-            >
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>🤔</Typography>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                Середньо
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                без підказок
-              </Typography>
-            </Button>
-          </Stack>
-        </Box>
+              {/* Difficulty */}
+              <Box>
+                <FormLabel sx={{ fontSize: '0.75rem', mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <GraduationCap size={14} />
+                  Difficulty Level
+                </FormLabel>
+                <Tooltip 
+                  title="Display colored zones and helper text for easier gameplay" 
+                  arrow
+                  placement="top"
+                >
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={difficulty === 'easy'}
+                        onChange={(e) => {
+                          onChange({ ...properties, difficulty: e.target.checked ? 'easy' : 'medium' });
+                        }}
+                        size="small"
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                        Show visual hints
+                      </Typography>
+                    }
+                  />
+                </Tooltip>
+              </Box>
 
-        {/* Snap Distance - Slider */}
-        <Box>
-          <FormLabel sx={{ fontSize: '0.75rem', mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            🎯 Точність прилипання
-            <Tooltip title="Наскільки близько треба піднести картинку до категорії">
-              <span style={{ cursor: 'help' }}>ℹ️</span>
-            </Tooltip>
-          </FormLabel>
-          <Box sx={{ px: 1 }}>
-            <Slider
-              value={snapDistance}
-              onChange={(_, value) => onChange({ ...properties, snapDistance: value as number })}
-              min={50}
-              max={200}
-              step={10}
-              marks={[
-                { value: 50, label: '🎯' },
-                { value: 80, label: '👍' },
-                { value: 120, label: '😊' },
-                { value: 200, label: '🤗' },
-              ]}
-              valueLabelDisplay="auto"
-              valueLabelFormat={(value) => `${value}px`}
-              sx={{
-                '& .MuiSlider-mark': {
-                  fontSize: '1.2rem',
-                },
-                '& .MuiSlider-markLabel': {
-                  fontSize: '1.2rem',
-                  top: -8,
-                },
-              }}
-            />
-            <Typography 
-              variant="caption" 
-              color="text.secondary" 
-              sx={{ 
-                display: 'block', 
-                textAlign: 'center', 
-                mt: 1,
-                fontWeight: 600,
-              }}
-            >
-              {snapDistance}px - {
-                snapDistance < 70 ? '🎯 Точно (для старших дітей)' : 
-                snapDistance < 100 ? '👍 Нормально (рекомендовано)' : 
-                snapDistance < 150 ? '😊 М\'яко (для молодших дітей)' :
-                '🤗 Дуже м\'яко (для найменших)'
-              }
-            </Typography>
-          </Box>
-        </Box>
-      </Stack>
+              {/* Snap Distance */}
+              <Box>
+                <FormLabel sx={{ fontSize: '0.75rem', mb: 1.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Target size={14} />
+                  Snap Distance
+                  <Tooltip title="How close the item needs to be to snap to the category">
+                    <span style={{ display: 'inline-flex', cursor: 'help' }}>
+                      <HelpCircle size={12} />
+                    </span>
+                  </Tooltip>
+                </FormLabel>
+                <ToggleButtonGroup
+                  value={snapDistance}
+                  exclusive
+                  onChange={(_, value) => {
+                    if (value !== null) {
+                      onChange({ ...properties, snapDistance: value });
+                    }
+                  }}
+                  fullWidth
+                  size="small"
+                >
+                  <ToggleButton value={50} aria-label="Precise">
+                    <Tooltip title="Requires precise placement (50px) - for older students" arrow>
+                      <span>
+                        <Typography variant="caption" fontWeight={600}>
+                          🎯 Precise
+                        </Typography>
+                      </span>
+                    </Tooltip>
+                  </ToggleButton>
+                  <ToggleButton value={80} aria-label="Normal">
+                    <Tooltip title="Normal snapping (80px) - recommended for most activities" arrow>
+                      <span>
+                        <Typography variant="caption" fontWeight={600}>
+                          👍 Normal
+                        </Typography>
+                      </span>
+                    </Tooltip>
+                  </ToggleButton>
+                  <ToggleButton value={120} aria-label="Relaxed">
+                    <Tooltip title="Relaxed snapping (120px) - easier for younger kids" arrow>
+                      <span>
+                        <Typography variant="caption" fontWeight={600}>
+                          😊 Relaxed
+                        </Typography>
+                      </span>
+                    </Tooltip>
+                  </ToggleButton>
+                  <ToggleButton value={200} aria-label="Very Easy">
+                    <Tooltip title="Very easy snapping (200px) - best for youngest learners" arrow>
+                      <span>
+                        <Typography variant="caption" fontWeight={600}>
+                          🤗 Easy
+                        </Typography>
+                      </span>
+                    </Tooltip>
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+            </Stack>
+          </Collapse>
+        </CardContent>
+      </Card>
     </Stack>
   );
 };
 
 export default DragDropPropertyEditor;
-
