@@ -20,6 +20,7 @@ import {
   CardContent,
   Divider,
   Slider,
+  Collapse,
 } from '@mui/material';
 import {
   Plus,
@@ -31,6 +32,9 @@ import {
   AlertCircle,
   Check,
   MoveRight,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { VisualChipSelector, ChipOption } from './VisualChipSelector';
 import { AgeStyleName } from '@/types/interactive-age-styles';
@@ -69,6 +73,7 @@ const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
 }) => {
   const theme = useTheme();
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
+  const [showGuide, setShowGuide] = useState(false);
   
   // Initialize with defaults
   const items = properties.items || [];
@@ -201,68 +206,90 @@ const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
         colorMode="multi"
       />
 
-      {/* Step-by-step guide with examples */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2,
-          background: alpha(theme.palette.info.main, 0.05),
-          border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
-          borderRadius: 2,
-        }}
-      >
-        <Stack spacing={1.5}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'info.main' }}>
-            📝 Як створити активність
-          </Typography>
-          <Box>
-            <Typography variant="caption" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
-              1️⃣ Створіть категорії (наприклад: "Meow", "Woof")
-            </Typography>
-            <Typography variant="caption" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
-              2️⃣ Додайте картинки (наприклад: кіт 🐱, собака 🐶)
-            </Typography>
-            <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
-              3️⃣ Вкажіть, куди перетягувати кожну картинку
-            </Typography>
-          </Box>
-          {items.length === 0 && targets.length === 0 && (
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => {
-                // Create example activity
-                const exampleTargets = [
-                  { id: generateId('target'), label: 'Meow 🐱', backgroundColor: '#FFF9E6' },
-                  { id: generateId('target'), label: 'Woof 🐶', backgroundColor: '#E6F4FF' },
-                ];
-                const exampleItems = [
-                  {
-                    id: generateId('item'),
-                    imageUrl: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=200',
-                    correctTarget: exampleTargets[0].id,
-                    label: 'Cat',
-                  },
-                  {
-                    id: generateId('item'),
-                    imageUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=200',
-                    correctTarget: exampleTargets[1].id,
-                    label: 'Dog',
-                  },
-                ];
-                onChange({
-                  ...properties,
-                  targets: exampleTargets,
-                  items: exampleItems,
-                });
-              }}
-              sx={{ textTransform: 'none', mt: 1 }}
-            >
-              ✨ Створити приклад для початку
-            </Button>
-          )}
-        </Stack>
-      </Paper>
+      {/* Help button with collapsible guide */}
+      <Box>
+        <Button
+          variant="text"
+          size="small"
+          startIcon={<HelpCircle size={16} />}
+          endIcon={showGuide ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          onClick={() => setShowGuide(!showGuide)}
+          sx={{
+            textTransform: 'none',
+            color: 'info.main',
+            fontWeight: 600,
+            mb: showGuide ? 2 : 0,
+          }}
+        >
+          Як створити активність?
+        </Button>
+        
+        <Collapse in={showGuide}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              background: alpha(theme.palette.info.main, 0.05),
+              border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
+              borderRadius: 2,
+              mb: 2,
+            }}
+          >
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'info.main' }}>
+                📝 Покрокова інструкція
+              </Typography>
+              <Box>
+                <Typography variant="caption" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                  1️⃣ Створіть категорії (наприклад: "Meow", "Woof")
+                </Typography>
+                <Typography variant="caption" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+                  2️⃣ Додайте картинки (наприклад: кіт 🐱, собака 🐶)
+                </Typography>
+                <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
+                  3️⃣ Вкажіть, куди перетягувати кожну картинку
+                </Typography>
+              </Box>
+              {items.length === 0 && targets.length === 0 && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => {
+                    // Create example activity
+                    const exampleTargets = [
+                      { id: generateId('target'), label: 'Meow 🐱', backgroundColor: '#FFF9E6' },
+                      { id: generateId('target'), label: 'Woof 🐶', backgroundColor: '#E6F4FF' },
+                    ];
+                    const exampleItems = [
+                      {
+                        id: generateId('item'),
+                        imageUrl: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=200',
+                        correctTarget: exampleTargets[0].id,
+                        label: 'Cat',
+                      },
+                      {
+                        id: generateId('item'),
+                        imageUrl: 'https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=200',
+                        correctTarget: exampleTargets[1].id,
+                        label: 'Dog',
+                      },
+                    ];
+                    onChange({
+                      ...properties,
+                      targets: exampleTargets,
+                      items: exampleItems,
+                    });
+                    setShowGuide(false); // Close guide after creating example
+                  }}
+                  sx={{ textTransform: 'none', mt: 1 }}
+                >
+                  ✨ Створити приклад для початку
+                </Button>
+              )}
+            </Stack>
+          </Paper>
+        </Collapse>
+      </Box>
 
       <Divider />
 
