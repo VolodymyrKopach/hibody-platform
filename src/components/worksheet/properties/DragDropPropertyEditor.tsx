@@ -1012,20 +1012,24 @@ const DragDropPropertyEditor: React.FC<DragDropPropertyEditorProps> = ({
       {/* Settings Section */}
       <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
         <CardContent>
-          <Button
-            variant="text"
-            size="small"
-            startIcon={<Sparkles size={16} />}
-            endIcon={showSettings ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          <Box
             onClick={() => setShowSettings(!showSettings)}
             sx={{
-              textTransform: 'none',
-              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              cursor: 'pointer',
               mb: showSettings ? 2 : 0,
+              '&:hover': {
+                opacity: 0.8,
+              },
             }}
           >
-            Advanced Settings
-          </Button>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, flex: 1 }}>
+              Advanced Settings
+            </Typography>
+            {showSettings ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </Box>
 
           <Collapse in={showSettings}>
             <Stack spacing={3}>
