@@ -48,6 +48,7 @@ import {
   Trash,
   Sparkles,
   ChevronRight,
+  MessageSquare,
 } from 'lucide-react';
 
 import { alpha } from '@mui/material';
@@ -4826,144 +4827,315 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               </Box>
             </Stack>
           ) : elementData.type === 'simple-drag-drop' ? (
-            <Stack spacing={2.5}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                ⚡ Drag & Drop Properties
-              </Typography>
-
-              {/* Age Style Selector */}
-              <VisualChipSelector
-                label="Age Style"
-                icon={<Sparkles size={14} />}
-                options={getAllAgeStyles().map((style): ChipOption<AgeStyleName> => ({
-                  value: style.id,
-                  label: AGE_STYLE_LABELS[style.id],
-                  emoji: style.emoji,
-                  color: style.color,
-                  tooltip: {
-                    title: style.name,
-                    description: style.description,
-                    details: `Element: ${style.sizes.element}px • Gap: ${style.sizes.gap}px`,
-                  },
-                }))}
-                value={elementData.properties?.ageStyle as AgeStyleName}
-                onChange={(ageStyle) => {
-                  onUpdate?.({ ageStyle });
-                }}
-                colorMode="multi"
-              />
+            <Stack spacing={3}>
+              {/* === HEADER === */}
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', mb: 0.5 }}>
+                  ⚡ Drag & Drop
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                  Drag items to correct targets
+                </Typography>
+              </Box>
 
               <Divider />
 
-              {/* Layout */}
+              {/* === SECTION 1: APPEARANCE === */}
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
-                  Layout
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    fontSize: '0.7rem', 
+                    color: '#6B7280',
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    mb: 2,
+                    display: 'block'
+                  }}
+                >
+                  🎨 Appearance
                 </Typography>
-                <Stack spacing={1}>
-                  {[
-                    { label: 'Horizontal', value: 'horizontal' },
-                    { label: 'Vertical', value: 'vertical' },
-                    { label: 'Grid', value: 'grid' },
-                  ].map((layout) => {
-                    const isActive = (elementData.properties?.layout || 'horizontal') === layout.value;
-                    return (
-                      <Box
-                        key={layout.value}
-                        onClick={() => onUpdate?.({ layout: layout.value })}
-                        sx={{
-                          p: 1.5,
-                          borderRadius: '8px',
-                          border: isActive ? '2px solid #EC4899' : '1px solid #E5E7EB',
-                          backgroundColor: isActive ? '#FCE7F3' : '#FFFFFF',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          '&:hover': {
-                            borderColor: '#EC4899',
-                            backgroundColor: '#F9FAFB',
-                          },
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontSize: '13px',
-                            fontWeight: isActive ? 600 : 500,
-                            color: isActive ? '#EC4899' : '#374151',
-                          }}
-                        >
-                          {layout.label}
-                        </Typography>
-                      </Box>
-                    );
-                  })}
+                
+                <Stack spacing={2.5}>
+                  {/* Age Style - Simplified */}
+                  <VisualChipSelector
+                    label="👶 For Age"
+                    options={getAllAgeStyles().map((style): ChipOption<AgeStyleName> => ({
+                      value: style.id,
+                      label: AGE_STYLE_LABELS[style.id],
+                      emoji: style.emoji,
+                      color: style.color,
+                      tooltip: {
+                        title: `${style.emoji} ${style.name}`,
+                        description: style.description,
+                      },
+                    }))}
+                    value={elementData.properties?.ageStyle as AgeStyleName}
+                    onChange={(ageStyle) => onUpdate?.({ ageStyle })}
+                    colorMode="multi"
+                  />
+
+                  {/* Layout with Visual Examples */}
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block', fontSize: '0.75rem' }}>
+                      📐 Item Layout
+                    </Typography>
+                    <Stack spacing={1}>
+                      {[
+                        { label: 'Horizontal', value: 'horizontal', emoji: '➡️', example: '🔵 🟢 🔴' },
+                        { label: 'Vertical', value: 'vertical', emoji: '⬇️', example: '🔵\n🟢\n🔴' },
+                        { label: 'Grid', value: 'grid', emoji: '📊', example: '🔵🟢\n🔴🟡' },
+                      ].map((layout) => {
+                        const isActive = (elementData.properties?.layout || 'horizontal') === layout.value;
+                        return (
+                          <Box
+                            key={layout.value}
+                            onClick={() => onUpdate?.({ layout: layout.value })}
+                            sx={{
+                              p: 1.5,
+                              borderRadius: '10px',
+                              border: isActive ? '2px solid #EC4899' : '1px solid #E5E7EB',
+                              backgroundColor: isActive ? '#FCE7F3' : '#FFFFFF',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                borderColor: '#EC4899',
+                                backgroundColor: alpha('#EC4899', 0.05),
+                                transform: 'translateY(-1px)',
+                              },
+                            }}
+                          >
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              <Typography sx={{ fontSize: '1.3rem' }}>{layout.emoji}</Typography>
+                              <Box sx={{ flex: 1 }}>
+                                <Typography
+                                  sx={{
+                                    fontSize: '13px',
+                                    fontWeight: isActive ? 600 : 500,
+                                    color: isActive ? '#EC4899' : '#374151',
+                                    mb: 0.25,
+                                  }}
+                                >
+                                  {layout.label}
+                                </Typography>
+                                <Typography
+                                  sx={{
+                                    fontSize: '9px',
+                                    color: isActive ? '#DB2777' : '#9CA3AF',
+                                    fontFamily: 'monospace',
+                                    whiteSpace: 'pre-line',
+                                    lineHeight: 1.2,
+                                  }}
+                                >
+                                  {layout.example}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
                 </Stack>
               </Box>
 
               <Divider />
 
-              {/* Difficulty */}
+              {/* === SECTION 2: CONTENT === */}
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>
-                  Difficulty
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    fontSize: '0.7rem', 
+                    color: '#6B7280',
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    mb: 2,
+                    display: 'block'
+                  }}
+                >
+                  📝 Content
                 </Typography>
-                <Stack direction="row" spacing={1}>
-                  {[
-                    { label: 'Easy', value: 'easy', desc: 'With hints' },
-                    { label: 'Medium', value: 'medium', desc: 'No hints' },
-                  ].map((diff) => {
-                    const isActive = (elementData.properties?.difficulty || 'easy') === diff.value;
-                    return (
-                      <Box
-                        key={diff.value}
-                        onClick={() => onUpdate?.({ difficulty: diff.value })}
-                        sx={{
-                          flex: 1,
-                          p: 1.5,
-                          borderRadius: '8px',
-                          border: isActive ? '2px solid #EC4899' : '1px solid #E5E7EB',
-                          backgroundColor: isActive ? '#FCE7F3' : '#FFFFFF',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          '&:hover': {
-                            borderColor: '#EC4899',
-                            backgroundColor: '#F9FAFB',
-                          },
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontSize: '13px',
-                            fontWeight: isActive ? 600 : 500,
-                            color: isActive ? '#EC4899' : '#374151',
-                            mb: 0.5,
-                          }}
-                        >
-                          {diff.label}
+                
+                <Box>
+                  <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.25, display: 'block', fontSize: '0.75rem' }}>
+                    ✏️ Items & Targets
+                  </Typography>
+                  
+                  {/* Quick Info Card */}
+                  <Box
+                    sx={{
+                      p: 1.75,
+                      borderRadius: '10px',
+                      backgroundColor: '#F0F9FF',
+                      border: '1px solid #BFDBFE',
+                      mb: 1.5,
+                    }}
+                  >
+                    <Stack direction="row" spacing={3} alignItems="center" justifyContent="center">
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography sx={{ fontSize: '1.75rem', mb: 0.25 }}>📦</Typography>
+                        <Typography sx={{ fontSize: '0.85rem', color: '#3B82F6', fontWeight: 700, mb: 0.25 }}>
+                          {(elementData.properties?.items || []).length}
                         </Typography>
-                        <Typography
-                          sx={{
-                            fontSize: '10px',
-                            color: isActive ? '#DB2777' : '#9CA3AF',
-                          }}
-                        >
-                          {diff.desc}
+                        <Typography sx={{ fontSize: '0.65rem', color: '#6B7280', fontWeight: 500 }}>
+                          items
                         </Typography>
                       </Box>
-                    );
-                  })}
-                </Stack>
+                      <Box sx={{ 
+                        width: '2px', 
+                        height: '40px', 
+                        backgroundColor: '#BFDBFE',
+                        borderRadius: '2px'
+                      }} />
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography sx={{ fontSize: '1.75rem', mb: 0.25 }}>🎯</Typography>
+                        <Typography sx={{ fontSize: '0.85rem', color: '#10B981', fontWeight: 700, mb: 0.25 }}>
+                          {(elementData.properties?.targets || []).length}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.65rem', color: '#6B7280', fontWeight: 500 }}>
+                          targets
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
+
+                  {/* AI Assistant Edit Button */}
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    startIcon={<MessageSquare size={18} />}
+                    onClick={() => setMainTab?.('ai')}
+                    sx={{
+                      py: 1.5,
+                      borderRadius: '10px',
+                      borderWidth: 2,
+                      borderStyle: 'dashed',
+                      borderColor: '#8B5CF6',
+                      color: '#8B5CF6',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      fontSize: '0.8125rem',
+                      backgroundColor: 'transparent',
+                      '&:hover': {
+                        borderStyle: 'dashed',
+                        borderWidth: 2,
+                        backgroundColor: alpha('#8B5CF6', 0.05),
+                        borderColor: '#7C3AED',
+                      },
+                    }}
+                  >
+                    Edit with AI Assistant →
+                  </Button>
+                  
+                  <Typography 
+                    variant="caption" 
+                    color="text.secondary" 
+                    sx={{ 
+                      fontSize: '0.65rem', 
+                      display: 'block', 
+                      mt: 1,
+                      textAlign: 'center',
+                      fontStyle: 'italic',
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    💡 Try: "Add 3 items: apple, banana, orange"
+                  </Typography>
+                </Box>
               </Box>
 
               <Divider />
 
-              {/* Items */}
+              {/* === SECTION 3: BEHAVIOR === */}
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
-                  Items ({(elementData.properties?.items || []).length}) & Targets ({(elementData.properties?.targets || []).length})
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    fontSize: '0.7rem', 
+                    color: '#6B7280',
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    mb: 2,
+                    display: 'block'
+                  }}
+                >
+                  ⚙️ Settings
                 </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'block' }}>
-                  Items management coming soon. Edit via AI Assistant for now.
-                </Typography>
+                
+                {/* Difficulty with Emojis */}
+                <Box>
+                  <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block', fontSize: '0.75rem' }}>
+                    🎲 Difficulty Level
+                  </Typography>
+                  <Stack direction="row" spacing={1.5}>
+                    {[
+                      { 
+                        label: 'Easy', 
+                        value: 'easy', 
+                        emoji: '😊',
+                        desc: 'With hints',
+                        color: '#10B981'
+                      },
+                      { 
+                        label: 'Medium', 
+                        value: 'medium', 
+                        emoji: '🤔',
+                        desc: 'No hints',
+                        color: '#F59E0B'
+                      },
+                    ].map((diff) => {
+                      const isActive = (elementData.properties?.difficulty || 'easy') === diff.value;
+                      return (
+                        <Box
+                          key={diff.value}
+                          onClick={() => onUpdate?.({ difficulty: diff.value })}
+                          sx={{
+                            flex: 1,
+                            p: 1.75,
+                            borderRadius: '12px',
+                            border: isActive ? `2px solid ${diff.color}` : '1px solid #E5E7EB',
+                            backgroundColor: isActive ? alpha(diff.color, 0.1) : '#FFFFFF',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            textAlign: 'center',
+                            '&:hover': {
+                              borderColor: diff.color,
+                              backgroundColor: alpha(diff.color, 0.05),
+                              transform: 'translateY(-2px)',
+                            },
+                          }}
+                        >
+                          <Typography sx={{ fontSize: '1.75rem', mb: 0.5 }}>
+                            {diff.emoji}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontSize: '13px',
+                              fontWeight: isActive ? 700 : 500,
+                              color: isActive ? diff.color : '#374151',
+                              mb: 0.25,
+                            }}
+                          >
+                            {diff.label}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontSize: '9px',
+                              color: isActive ? diff.color : '#9CA3AF',
+                              fontWeight: 500,
+                            }}
+                          >
+                            {diff.desc}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                </Box>
               </Box>
             </Stack>
           ) : elementData.type === 'simple-puzzle' ? (
