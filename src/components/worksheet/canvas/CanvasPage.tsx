@@ -646,18 +646,18 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         height: isInteractive ? height : height,
         minHeight: isInteractive ? height : undefined,
         maxHeight: isInteractive ? height : height,
-        ...getBackgroundStyle(),
         // No overflow on Paper - it's on content container below
         overflow: 'visible',
         // Different styling for interactive pages
         ...(isInteractive && {
           borderRadius: '16px',
-          background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.95)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
           backdropFilter: 'blur(10px)',
           border: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
           display: 'flex',
           flexDirection: 'column',
         }),
+        // Apply page background (after interactive styles so it takes precedence)
+        ...getBackgroundStyle(),
         // Ensure proper rendering for export
         WebkitFontSmoothing: 'antialiased',
         MozOsxFontSmoothing: 'grayscale',
@@ -989,16 +989,16 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         onClose={handleClosePreview}
         elementType="interactive-page"
         title={title || `Page ${pageNumber}`}
+        pageType={pageType}
+        pageWidth={width}
+        background={background}
       >
         <Box
           sx={{
             width: '100%',
-            maxWidth: '800px',
-            minHeight: '400px',
             display: 'flex',
             flexDirection: 'column',
             gap: 3,
-            p: 4,
           }}
         >
           {elements.map((element) => (

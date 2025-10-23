@@ -3170,6 +3170,9 @@ const Step3CanvasEditor: React.FC<Step3CanvasEditorProps> = ({ parameters, gener
           pageNumber={playDialogPage.pageNumber}
           background={playDialogPage.background}
           elements={pageContents.get(playDialogPage.id)?.elements || []}
+          pageType={playDialogPage.pageType}
+          pageWidth={playDialogPage.width}
+          pageHeight={playDialogPage.height}
         />
       )}
     </Box>

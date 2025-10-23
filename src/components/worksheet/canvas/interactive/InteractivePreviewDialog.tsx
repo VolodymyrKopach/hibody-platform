@@ -4,17 +4,47 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
   IconButton,
   Box,
   Typography,
   Slide,
-  Paper,
   alpha,
+  useTheme,
 } from '@mui/material';
 import { TransitionProps } from '@mui/material/transitions';
 import { X, Maximize2, Minimize2, RotateCcw } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+
+// Page dimensions constants (matching worksheet pages)
+const A4_WIDTH = 794;
+const INTERACTIVE_WIDTH = 1200;
+
+interface PageBackground {
+  type: 'solid' | 'gradient' | 'pattern' | 'image';
+  color?: string;
+  image?: {
+    url: string;
+    size: 'cover' | 'contain' | 'repeat' | 'auto';
+    position: 'center' | 'top' | 'bottom' | 'left' | 'right';
+    opacity?: number;
+  };
+  gradient?: {
+    from: string;
+    to: string;
+    colors?: string[]; // For multi-color gradients (2-4 colors)
+    direction: 'to-bottom' | 'to-top' | 'to-right' | 'to-left' | 'to-bottom-right' | 'to-bottom-left' | 'to-top-right' | 'to-top-left';
+  };
+  pattern?: {
+    name: string;
+    backgroundColor: string;
+    patternColor: string;
+    css: string;
+    backgroundSize: string;
+    backgroundPosition?: string;
+    scale?: number; // Custom scale multiplier (0.5 - 2.0)
+    opacity?: number; // Pattern opacity (0-100)
+  };
+  opacity?: number;
+}
 
 interface InteractivePreviewDialogProps {
   open: boolean;
@@ -22,6 +52,9 @@ interface InteractivePreviewDialogProps {
   title?: string;
   children: React.ReactNode;
   elementType?: string;
+  pageType?: 'pdf' | 'interactive'; // Page type determines width
+  pageWidth?: number; // Custom width (optional)
+  background?: PageBackground; // Page background
 }
 
 const Transition = React.forwardRef(function Transition(
@@ -39,21 +72,121 @@ const InteractivePreviewDialog: React.FC<InteractivePreviewDialogProps> = ({
   title = 'Interactive Preview',
   children,
   elementType,
+  pageType = 'interactive',
+  pageWidth: customWidth,
+  background,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [key, setKey] = useState(0);
+  const theme = useTheme();
+  
+  // Calculate page width
+  const pageWidth = customWidth || (pageType === 'pdf' ? A4_WIDTH : INTERACTIVE_WIDTH);
 
-  // Reset component
+  // Generate background CSS based on type
+  const getBackgroundStyle = (): React.CSSProperties => {
+    if (!background) return { background: theme.palette.background.default };
+
+    const opacity = background.opacity ? background.opacity / 100 : 1;
+
+    switch (background.type) {
+      case 'solid':
+        return {
+          background: background.color || theme.palette.background.default,
+        };
+      
+      case 'gradient':
+        if (background.gradient) {
+          const { from, to, colors, direction } = background.gradient;
+          
+          // Support multi-color gradients
+          const gradientColors = colors && colors.length >= 2 ? colors : [from, to];
+          
+          // Convert direction format: 'to-bottom-right' -> 'to bottom right'
+          const cssDirection = direction.replace(/-/g, ' ');
+          const gradientCss = `linear-gradient(${cssDirection}, ${gradientColors.join(', ')})`;
+          
+          return {
+            background: gradientCss,
+          };
+        }
+        return { background: theme.palette.background.default };
+      
+      case 'pattern':
+        if (background.pattern) {
+          const scale = background.pattern.scale || 1;
+          const patternOpacity = background.pattern.opacity !== undefined ? background.pattern.opacity / 100 : 1;
+          
+          // Parse backgroundSize and apply scale
+          let scaledSize = background.pattern.backgroundSize;
+          if (background.pattern.backgroundSize !== 'auto') {
+            // Extract numeric values and scale them
+            scaledSize = background.pattern.backgroundSize.replace(/(\d+)px/g, (match, p1) => {
+              return `${Math.round(parseInt(p1) * scale)}px`;
+            });
+          }
+          
+          // Replace colors in CSS with custom colors and apply opacity
+          let customCss = background.pattern.css
+            .replace(/#E5E7EB/g, background.pattern.patternColor)
+            .replace(/#DBEAFE/g, background.pattern.patternColor)
+            .replace(/#F3F4F6/g, background.pattern.patternColor)
+            .replace(/#FDE68A/g, background.pattern.patternColor)
+            .replace(/#D1D5DB/g, background.pattern.patternColor);
+          
+          // Add opacity to pattern color if not full opacity
+          if (patternOpacity < 1) {
+            // Convert hex to rgba with opacity
+            const hexToRgba = (hex: string, alpha: number) => {
+              const r = parseInt(hex.slice(1, 3), 16);
+              const g = parseInt(hex.slice(3, 5), 16);
+              const b = parseInt(hex.slice(5, 7), 16);
+              return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            };
+            
+            const patternColorRgba = hexToRgba(background.pattern.patternColor, patternOpacity);
+            customCss = customCss.replace(
+              new RegExp(background.pattern.patternColor, 'g'),
+              patternColorRgba
+            );
+          }
+          
+          return {
+            background: background.pattern.backgroundColor,
+            backgroundImage: customCss,
+            backgroundSize: scaledSize,
+            backgroundPosition: background.pattern.backgroundPosition || '0 0',
+          };
+        }
+        return { background: theme.palette.background.default };
+      
+      case 'image':
+        if (background.image) {
+          const imageOpacity = background.image.opacity !== undefined ? background.image.opacity / 100 : 1;
+          
+          return {
+            backgroundImage: `url(${background.image.url})`,
+            backgroundSize: background.image.size,
+            backgroundPosition: background.image.position,
+            backgroundRepeat: background.image.size === 'repeat' ? 'repeat' : 'no-repeat',
+            opacity: imageOpacity,
+          };
+        }
+        return { background: theme.palette.background.default };
+      
+      default:
+        return { background: theme.palette.background.default };
+    }
+  };
+
   const handleReset = () => {
     setKey((prev) => prev + 1);
   };
 
-  // Toggle fullscreen
   const toggleFullscreen = () => {
     setIsFullscreen((prev) => !prev);
   };
 
-  // Component type display names
   const displayNames: Record<string, string> = {
     'tap-image': '🖼️ Tap Image',
     'simple-drag-and-drop': '🎯 Drag & Drop',
@@ -86,229 +219,221 @@ const InteractivePreviewDialog: React.FC<InteractivePreviewDialogProps> = ({
       fullScreen={isFullscreen}
       PaperProps={{
         sx: {
-          width: isFullscreen ? '100%' : '90vw',
-          height: isFullscreen ? '100%' : '90vh',
-          maxWidth: isFullscreen ? '100%' : '1400px',
-          maxHeight: isFullscreen ? '100%' : '900px',
-          borderRadius: isFullscreen ? 0 : 3,
+          width: isFullscreen ? '100%' : '95vw',
+          height: isFullscreen ? '100%' : '95vh',
+          maxWidth: isFullscreen ? '100%' : '100vw',
+          maxHeight: isFullscreen ? '100%' : '100vh',
+          borderRadius: isFullscreen ? 0 : 0,
           overflow: 'hidden',
-          backgroundColor: alpha('#f5f5f5', 0.98),
-          backdropFilter: 'blur(10px)',
+          background: 'transparent',
+          boxShadow: 'none',
+          margin: 0,
+        },
+      }}
+      slotProps={{
+        backdrop: {
+          sx: {
+            background: alpha('#000', 0.5),
+          },
         },
       }}
     >
-      {/* Header */}
-      <DialogTitle
+      {/* Floating Header */}
+      <Box
         sx={{
+          position: 'absolute',
+          top: 16,
+          left: 16,
+          right: 16,
+          zIndex: 1300,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 2,
-          p: 2,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          backgroundColor: 'background.paper',
+          background: alpha(theme.palette.background.paper, 0.95),
+          backdropFilter: 'blur(10px)',
+          borderRadius: 2,
+          padding: '8px 16px',
+          boxShadow: `0 4px 12px ${alpha('#000', 0.15)}`,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 600,
-              fontSize: '1.25rem',
-            }}
-          >
+        {/* Title */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
             {componentTitle}
           </Typography>
           <Box
             sx={{
-              px: 1.5,
-              py: 0.5,
+              px: 1,
+              py: 0.25,
               borderRadius: 1,
-              backgroundColor: alpha('#2196F3', 0.1),
-              border: '1px solid',
-              borderColor: alpha('#2196F3', 0.3),
+              backgroundColor: alpha(theme.palette.primary.main, 0.1),
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
             }}
           >
             <Typography
               variant="caption"
               sx={{
-                color: '#2196F3',
+                color: theme.palette.primary.main,
                 fontWeight: 600,
-                fontSize: '0.75rem',
+                fontSize: '0.7rem',
               }}
             >
-              INTERACTIVE MODE
+              PREVIEW
             </Typography>
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {/* Reset button */}
+        {/* Controls */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <IconButton
             onClick={handleReset}
+            size="small"
             sx={{
               color: 'text.secondary',
               '&:hover': {
-                backgroundColor: alpha('#FF9800', 0.1),
-                color: '#FF9800',
+                backgroundColor: alpha(theme.palette.warning.main, 0.1),
+                color: theme.palette.warning.main,
               },
             }}
-            title="Reset component"
+            title="Reset"
           >
-            <RotateCcw size={20} />
+            <RotateCcw size={18} />
           </IconButton>
 
-          {/* Fullscreen toggle */}
           <IconButton
             onClick={toggleFullscreen}
+            size="small"
             sx={{
               color: 'text.secondary',
               '&:hover': {
-                backgroundColor: alpha('#2196F3', 0.1),
-                color: '#2196F3',
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                color: theme.palette.primary.main,
               },
             }}
-            title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           >
-            {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+            {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
           </IconButton>
 
-          {/* Close button */}
           <IconButton
             onClick={onClose}
+            size="small"
             sx={{
               color: 'text.secondary',
               '&:hover': {
-                backgroundColor: alpha('#f44336', 0.1),
-                color: '#f44336',
+                backgroundColor: alpha(theme.palette.error.main, 0.1),
+                color: theme.palette.error.main,
               },
             }}
-            title="Close preview"
+            title="Close"
           >
-            <X size={20} />
+            <X size={18} />
           </IconButton>
         </Box>
-      </DialogTitle>
+      </Box>
 
-      {/* Content */}
+      {/* Content - Centered with page width */}
       <DialogContent
         sx={{
           p: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: alpha('#f5f5f5', 0.5),
-          position: 'relative',
+          height: '100%',
           overflow: 'auto',
+          background: 'transparent',
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          pt: 10, // Space for floating header
+          pb: 8,  // Space for floating instructions
+          position: 'relative',
+          '&::-webkit-scrollbar': {
+            width: 10,
+            height: 10,
+          },
+          '&::-webkit-scrollbar-track': {
+            background: alpha(theme.palette.divider, 0.05),
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: alpha(theme.palette.divider, 0.2),
+            borderRadius: 5,
+            '&:hover': {
+              background: alpha(theme.palette.divider, 0.3),
+            },
+          },
         }}
       >
-        {/* Background pattern */}
+        {/* Background Layer - Fullscreen */}
         <Box
           sx={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: `
-              linear-gradient(45deg, ${alpha('#000', 0.02)} 25%, transparent 25%),
-              linear-gradient(-45deg, ${alpha('#000', 0.02)} 25%, transparent 25%),
-              linear-gradient(45deg, transparent 75%, ${alpha('#000', 0.02)} 75%),
-              linear-gradient(-45deg, transparent 75%, ${alpha('#000', 0.02)} 75%)
-            `,
-            backgroundSize: '20px 20px',
-            backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
-            pointerEvents: 'none',
+            zIndex: 0,
+            ...getBackgroundStyle(),
           }}
         />
 
-        {/* Component container */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={key}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '40px',
-              position: 'relative',
-              zIndex: 1,
-            }}
-          >
-            <Paper
-              elevation={8}
-              sx={{
-                width: '100%',
-                maxWidth: '800px',
-                minHeight: '400px',
-                p: 4,
-                borderRadius: 3,
-                backgroundColor: 'background.paper',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-                overflow: 'hidden',
-                boxShadow: `0 20px 60px ${alpha('#000', 0.15)}`,
-              }}
-            >
-              {/* Interactive component */}
-              {children}
-            </Paper>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Instructions overlay */}
+        {/* Page container with fixed width */}
         <Box
+          key={key}
           sx={{
-            position: 'absolute',
-            bottom: 20,
-            left: '50%',
-            transform: 'translateX(-50%)',
+            width: pageWidth,
+            minHeight: '100%',
             display: 'flex',
-            alignItems: 'center',
-            gap: 2,
+            flexDirection: 'column',
+            py: 4,
             px: 3,
-            py: 1.5,
-            borderRadius: 2,
-            backgroundColor: alpha('#000', 0.7),
-            backdropFilter: 'blur(10px)',
-            zIndex: 2,
+            position: 'relative',
+            zIndex: 1,
           }}
         >
-          <Typography
-            variant="body2"
-            sx={{
-              color: 'white',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-            }}
-          >
-            💡 Interact with the component • Press{' '}
-            <Box
-              component="kbd"
-              sx={{
-                px: 1,
-                py: 0.5,
-                borderRadius: 0.5,
-                backgroundColor: alpha('#fff', 0.2),
-                fontFamily: 'monospace',
-                fontSize: '0.75rem',
-              }}
-            >
-              ESC
-            </Box>{' '}
-            to close
-          </Typography>
+          {children}
         </Box>
       </DialogContent>
+
+      {/* Floating Instructions */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 16,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1300,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          px: 2,
+          py: 1,
+          borderRadius: 2,
+          background: alpha('#000', 0.7),
+          backdropFilter: 'blur(10px)',
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'white',
+            fontSize: '0.75rem',
+            fontWeight: 500,
+          }}
+        >
+          💡 Press{' '}
+          <Box
+            component="kbd"
+            sx={{
+              px: 0.75,
+              py: 0.25,
+              borderRadius: 0.5,
+              backgroundColor: alpha('#fff', 0.2),
+              fontFamily: 'monospace',
+              fontSize: '0.7rem',
+            }}
+          >
+            ESC
+          </Box>{' '}
+          to close
+        </Typography>
+      </Box>
     </Dialog>
   );
 };
 
 export default InteractivePreviewDialog;
-

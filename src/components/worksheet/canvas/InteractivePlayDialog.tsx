@@ -14,7 +14,7 @@ import {
   Chip,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { X, Play, Maximize2 } from 'lucide-react';
+import { X, Play, Maximize2, ZoomIn, ZoomOut, Minimize2, Fullscreen } from 'lucide-react';
 import { CanvasElement } from '@/types/canvas-element';
 import TapImage from './interactive/TapImage';
 import SimpleDragAndDrop from './interactive/SimpleDragAndDrop';
@@ -31,6 +31,12 @@ import PatternBuilder from './interactive/PatternBuilder';
 import CauseEffectGame from './interactive/CauseEffectGame';
 import RewardCollector from './interactive/RewardCollector';
 import VoiceRecorder from './interactive/VoiceRecorder';
+
+// Page dimensions constants (matching Step3CanvasEditor)
+const A4_WIDTH = 794;
+const A4_HEIGHT = 1123;
+const INTERACTIVE_WIDTH = 1200;
+const INTERACTIVE_MIN_HEIGHT = 800;
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -67,19 +73,22 @@ interface InteractivePlayDialogProps {
   pageNumber: number;
   background?: PageBackground;
   elements: CanvasElement[];
+  pageType?: 'pdf' | 'interactive'; // Determines page dimensions
+  pageWidth?: number; // Custom width (optional)
+  pageHeight?: number; // Custom height (optional)
 }
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
-    maxWidth: '95vw',
-    maxHeight: '95vh',
-    width: '95vw',
-    height: '95vh',
-    margin: theme.spacing(2),
-    borderRadius: theme.spacing(2),
+    maxWidth: '100vw',
+    maxHeight: '100vh',
+    width: '100vw',
+    height: '100vh',
+    margin: 0,
+    borderRadius: 0,
     overflow: 'hidden',
-    boxShadow: '0 32px 64px rgba(0,0,0,0.3)',
-    background: theme.palette.background.paper,
+    boxShadow: 'none',
+    background: 'transparent', // Transparent - page background will fill it
   },
 }));
 
@@ -112,29 +121,12 @@ const DialogHeader = styled(Box)(({ theme }) => ({
 }));
 
 const ContentContainer = styled(DialogContent)(({ theme }) => ({
-  padding: theme.spacing(4),
+  padding: 0,
   display: 'flex',
   flexDirection: 'column',
-  gap: theme.spacing(3),
-  overflow: 'auto',
-  background: theme.palette.background.default,
-  
-  '&::-webkit-scrollbar': {
-    width: 14,
-  },
-  
-  '&::-webkit-scrollbar-track': {
-    background: alpha(theme.palette.action.hover, 0.1),
-  },
-  
-  '&::-webkit-scrollbar-thumb': {
-    background: alpha(theme.palette.success.main, 0.4),
-    borderRadius: 6,
-    
-    '&:hover': {
-      background: alpha(theme.palette.success.main, 0.6),
-    },
-  },
+  overflow: 'hidden',
+  position: 'relative',
+  background: 'transparent', // No background - page background fills this
 }));
 
 const InteractivePlayDialog: React.FC<InteractivePlayDialogProps> = ({
@@ -144,8 +136,42 @@ const InteractivePlayDialog: React.FC<InteractivePlayDialogProps> = ({
   pageNumber,
   background,
   elements,
+  pageType = 'interactive',
+  pageWidth: customWidth,
+  pageHeight: customHeight,
 }) => {
   const theme = useTheme();
+  const [zoom, setZoom] = React.useState(1);
+  
+  // Calculate page dimensions
+  const pageWidth = customWidth || (pageType === 'pdf' ? A4_WIDTH : INTERACTIVE_WIDTH);
+  const pageHeight = customHeight || (pageType === 'pdf' ? A4_HEIGHT : INTERACTIVE_MIN_HEIGHT);
+  
+  // Calculate optimal zoom to fit screen
+  const calculateFitZoom = () => {
+    const headerHeight = 64; // Approximate header height
+    const padding = 80; // Padding around page
+    const availableWidth = window.innerWidth - padding;
+    const availableHeight = window.innerHeight - headerHeight - padding;
+    
+    const widthZoom = availableWidth / pageWidth;
+    const heightZoom = availableHeight / pageHeight;
+    
+    return Math.min(widthZoom, heightZoom, 1); // Max 100%
+  };
+  
+  // Set initial zoom to fit
+  React.useEffect(() => {
+    if (open) {
+      setZoom(calculateFitZoom());
+    }
+  }, [open, pageWidth, pageHeight]);
+  
+  // Zoom controls
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 2));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.3));
+  const handleZoomReset = () => setZoom(1);
+  const handleZoomFit = () => setZoom(calculateFitZoom());
   
   // Generate background CSS based on type
   const getBackgroundStyle = (): React.CSSProperties => {
@@ -442,12 +468,20 @@ const InteractivePlayDialog: React.FC<InteractivePlayDialogProps> = ({
           exit: 300,
         },
       }}
+      slotProps={{
+        backdrop: {
+          sx: {
+            background: 'transparent', // No backdrop - page background is visible
+          },
+        },
+      }}
     >
       <DialogHeader>
+        {/* Left section - Title */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 1 }}>
           <Play size={24} fill="currentColor" />
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Play Mode - {pageTitle}
+            {pageTitle}
           </Typography>
           <Chip
             label={`Page ${pageNumber}`}
@@ -459,7 +493,7 @@ const InteractivePlayDialog: React.FC<InteractivePlayDialogProps> = ({
             }}
           />
           <Chip
-            label="⚡ Interactive"
+            label={pageType === 'pdf' ? '📄 PDF' : '⚡ Interactive'}
             size="small"
             sx={{
               backgroundColor: alpha(theme.palette.success.contrastText, 0.2),
@@ -468,44 +502,197 @@ const InteractivePlayDialog: React.FC<InteractivePlayDialogProps> = ({
             }}
           />
         </Box>
+        
+        {/* Center section - Zoom controls */}
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1, 
+          position: 'absolute',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1,
+          backgroundColor: alpha(theme.palette.common.black, 0.3),
+          borderRadius: 2,
+          padding: '4px 8px',
+        }}>
+          <IconButton 
+            size="small" 
+            onClick={handleZoomOut}
+            sx={{ 
+              color: 'inherit',
+              '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.1) },
+            }}
+            title="Zoom Out"
+          >
+            <ZoomOut size={18} />
+          </IconButton>
+          
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              minWidth: 60,
+              textAlign: 'center',
+              fontWeight: 600,
+              fontSize: '0.875rem',
+            }}
+          >
+            {Math.round(zoom * 100)}%
+          </Typography>
+          
+          <IconButton 
+            size="small" 
+            onClick={handleZoomIn}
+            sx={{ 
+              color: 'inherit',
+              '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.1) },
+            }}
+            title="Zoom In"
+          >
+            <ZoomIn size={18} />
+          </IconButton>
+          
+          <Box sx={{ width: 1, height: 20, backgroundColor: alpha(theme.palette.common.white, 0.3), mx: 0.5 }} />
+          
+          <IconButton 
+            size="small" 
+            onClick={handleZoomReset}
+            sx={{ 
+              color: 'inherit',
+              '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.1) },
+            }}
+            title="100%"
+          >
+            <Minimize2 size={18} />
+          </IconButton>
+          
+          <IconButton 
+            size="small" 
+            onClick={handleZoomFit}
+            sx={{ 
+              color: 'inherit',
+              '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.1) },
+            }}
+            title="Fit to Screen"
+          >
+            <Fullscreen size={18} />
+          </IconButton>
+        </Box>
+        
+        {/* Right section - Close */}
         <IconButton onClick={onClose} sx={{ color: 'inherit', position: 'relative', zIndex: 1 }}>
           <X size={20} />
         </IconButton>
       </DialogHeader>
 
-      <ContentContainer sx={getBackgroundStyle()}>
-        <Fade in={open} timeout={500}>
-          <Box>
-            {elements.length === 0 ? (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: 400,
-                  gap: 2,
-                }}
-              >
-                <Maximize2 size={48} color={theme.palette.text.disabled} />
-                <Typography variant="h6" color="text.secondary">
-                  No interactive elements on this page
-                </Typography>
-                <Typography variant="body2" color="text.disabled">
-                  Add interactive components from the left sidebar
-                </Typography>
-              </Box>
-            ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {elements.map((element) => (
-                  <Box key={element.id}>
-                    {renderElement(element)}
+      <ContentContainer>
+        {/* Page Background fills entire dialog */}
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 0,
+            ...getBackgroundStyle(), // Page background = Dialog background
+          }}
+        />
+        
+        {/* Page Content Layer - Scrollable and Zoomable */}
+        <Box
+          sx={{
+            position: 'relative',
+            zIndex: 1,
+            width: '100%',
+            height: '100%',
+            overflow: 'auto',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            padding: 4,
+            '&::-webkit-scrollbar': {
+              width: 10,
+              height: 10,
+            },
+            '&::-webkit-scrollbar-track': {
+              background: alpha(theme.palette.divider, 0.1),
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: alpha(theme.palette.divider, 0.3),
+              borderRadius: 5,
+              '&:hover': {
+                background: alpha(theme.palette.divider, 0.5),
+              },
+            },
+          }}
+        >
+          <Fade in={open} timeout={500}>
+            <Box
+              sx={{
+                width: '100%',
+                maxWidth: pageWidth,
+                minHeight: `calc(100vh - ${64 + 32}px)`, // Full height minus header and padding
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top center',
+                transition: 'transform 0.3s ease',
+                padding: pageType === 'pdf' ? 6 : 4,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+              }}
+            >
+              {elements.length === 0 ? (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: 400,
+                    gap: 2,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      p: 3,
+                      borderRadius: '50%',
+                      background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.1)} 100%)`,
+                    }}
+                  >
+                    <Maximize2 size={48} color={theme.palette.text.disabled} />
                   </Box>
-                ))}
-              </Box>
-            )}
-          </Box>
-        </Fade>
+                  <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    No interactive elements on this page
+                  </Typography>
+                  <Typography variant="body2" color="text.disabled" sx={{ textAlign: 'center', maxWidth: 400 }}>
+                    Add interactive components to see them here
+                  </Typography>
+                </Box>
+              ) : (
+                <>
+                  {elements.map((element, index) => (
+                    <Box 
+                      key={element.id}
+                      sx={{
+                        animation: `fadeInUp 0.5s ease ${index * 0.1}s both`,
+                        '@keyframes fadeInUp': {
+                          '0%': {
+                            opacity: 0,
+                            transform: 'translateY(20px)',
+                          },
+                          '100%': {
+                            opacity: 1,
+                            transform: 'translateY(0)',
+                          },
+                        },
+                      }}
+                    >
+                      {renderElement(element)}
+                    </Box>
+                  ))}
+                </>
+              )}
+            </Box>
+          </Fade>
+        </Box>
       </ContentContainer>
     </StyledDialog>
   );
