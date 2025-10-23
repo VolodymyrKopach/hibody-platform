@@ -1,52 +1,64 @@
 # Sound Files Directory
 
-This directory contains audio files used by interactive components.
+⚠️ **No Audio Files Required!**
 
-## Required Files
+This application uses **Web Audio API** to generate all sounds programmatically in JavaScript. No external audio files are needed!
 
-The following sound files are used by the interactive components:
+## How It Works
 
-### Game Sounds
-- `success.mp3` - Played when user gets correct answer
-- `wrong.mp3` - Played when user gets incorrect answer
-- `celebration.mp3` - Played when completing a game/activity
-- `tap.mp3` - Played on tap interactions
+The `SoundService` (`src/services/interactive/SoundService.ts`) uses the Web Audio API to:
+- Generate tones with oscillators
+- Create synthesized sound effects
+- Produce melodies and chords
+- Simulate animal sounds
 
-### Voice Sounds
-- `praise-1.mp3` through `praise-5.mp3` - Random praise sounds
+## Available Sound Effects
 
-### Animal Sounds (for TapImage and SoundMatcher)
-- `animal-cat.mp3` - Cat sound
-- `animal-dog.mp3` - Dog sound
-- `animal-bird.mp3` - Bird sound
+All sounds are generated in real-time:
+
+### Game Sounds (Synthesized)
+- `success` - Happy major chord (C, E, G)
+- `wrong` - Dissonant tone
+- `celebration` - Ascending melody (C5 → D5 → E5 → G5 → C6)
+- `tap` - Short click sound
+- `drop` - Falling pitch effect
+
+### Animal Sounds (Approximated)
+- `animal-cat` - High-pitched meow simulation
+- `animal-dog` - Low bark approximation  
+- `animal-cow` - Deep moo sound
+- `animal-bird` - Quick chirp sequence
+
+### Praise Sounds (Musical Arpeggios)
+- `praise-great` - C major arpeggio
+- `praise-wonderful` - D major arpeggio
+- `praise-youdid it` - E major arpeggio
+
+## Benefits
+
+✅ **Zero external dependencies** - No files to download or manage
+✅ **Instant loading** - Sounds generate instantly, no network delay
+✅ **Small bundle size** - No audio files in your build
+✅ **Always available** - Works offline without assets
+✅ **Customizable** - Easy to adjust frequencies and patterns
+✅ **Cross-browser** - Web Audio API supported in all modern browsers
+
+## Technical Details
+
+The service uses:
+- **OscillatorNode** for tone generation
+- **GainNode** for volume control and ADSR envelopes
+- **Multiple oscillator types**: sine, triangle, sawtooth, square
+- **Frequency modulation** for dynamic effects
+- **Timed sequences** for melodies
+
+## Customization
+
+To modify sounds, edit the private methods in `SoundService.ts`:
+- `playSuccessSound()` - Change chord notes
+- `playAnimalSound()` - Adjust frequency patterns
+- `playCelebrationSound()` - Modify melody sequence
 - etc.
 
-## Placeholder Mode
-
-If sound files are missing, the SoundService will:
-1. Log a warning to console
-2. Gracefully fail (no error thrown)
-3. Continue without sound
-
-This allows the app to work without actual sound files during development.
-
-## Adding Real Sounds
-
-To add real sound files:
-
-1. Place `.mp3` files in this directory
-2. Ensure filenames match those referenced in `SoundService.ts`
-3. Recommended: Use short clips (1-3 seconds)
-4. Format: MP3, 128kbps or lower for smaller file sizes
-
-## Free Sound Resources
-
-- [Freesound.org](https://freesound.org/)
-- [ZapSplat](https://www.zapsplat.com/)
-- [Mixkit](https://mixkit.co/free-sound-effects/)
-- [BBC Sound Effects](https://sound-effects.bbcrewind.co.uk/)
-
-## License
-
-Ensure any sound files you add have appropriate licenses for your use case.
+No external audio editing tools required!
 

@@ -11,6 +11,15 @@
 
 export { default as MagneticPlayground } from './MagneticPlayground';
 
+// Export shared utilities
+export { 
+  useDragDropContext,
+  type DragState,
+  type CompletionState,
+  type AgeSettings,
+  type DragDropContextValue
+} from '../shared/BaseDragDrop';
+
 // Export component definitions for registration
 export const TODDLER_COMPONENTS = {
   'magnetic-playground': {

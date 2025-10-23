@@ -1,6 +1,6 @@
 /**
  * Sound Service for Interactive Worksheets
- * Manages sound effects, voice instructions, and audio playback
+ * Uses Web Audio API to generate sounds programmatically (no external files needed)
  */
 
 export type SoundEffect = 
@@ -24,129 +24,269 @@ export interface SoundConfig {
 }
 
 class SoundService {
-  private sounds: Map<string, HTMLAudioElement> = new Map();
+  private audioContext: AudioContext | null = null;
   private enabled: boolean = true;
   private globalVolume: number = 0.7;
-  
-  // Preset sound URLs (these would be replaced with actual audio files)
-  private presets: Record<SoundEffect, string> = {
-    success: '/sounds/success.mp3',
-    tap: '/sounds/tap.mp3',
-    drop: '/sounds/drop.mp3',
-    wrong: '/sounds/wrong.mp3',
-    celebration: '/sounds/celebration.mp3',
-    'animal-cat': '/sounds/animals/cat.mp3',
-    'animal-dog': '/sounds/animals/dog.mp3',
-    'animal-cow': '/sounds/animals/cow.mp3',
-    'animal-bird': '/sounds/animals/bird.mp3',
-    'praise-great': '/sounds/praise/great.mp3',
-    'praise-wonderful': '/sounds/praise/wonderful.mp3',
-    'praise-youdid it': '/sounds/praise/you-did-it.mp3',
-  };
 
   constructor() {
-    this.checkAudioSupport();
+    this.initAudioContext();
   }
 
   /**
-   * Check if browser supports audio
+   * Initialize Web Audio API context
    */
-  private checkAudioSupport(): boolean {
+  private initAudioContext(): void {
     try {
-      const audio = new Audio();
-      return !!audio.canPlayType;
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        this.audioContext = new AudioContextClass();
+      } else {
+        console.warn('Web Audio API not supported in this browser');
+        this.enabled = false;
+      }
     } catch (error) {
-      console.warn('Audio not supported in this browser');
+      console.warn('Failed to initialize Web Audio API:', error);
       this.enabled = false;
-      return false;
     }
   }
 
   /**
-   * Preload a sound
+   * Resume audio context (required for user interaction in some browsers)
    */
-  async preload(soundId: string, url?: string): Promise<void> {
-    if (!this.enabled) return;
-
-    try {
-      const audio = new Audio();
-      audio.preload = 'auto';
-      audio.src = url || this.presets[soundId as SoundEffect] || '';
-      
-      await new Promise((resolve, reject) => {
-        audio.addEventListener('canplaythrough', resolve, { once: true });
-        audio.addEventListener('error', reject, { once: true });
-      });
-
-      this.sounds.set(soundId, audio);
-      console.log(`✅ [SoundService] Preloaded: ${soundId}`);
-    } catch (error) {
-      console.error(`❌ [SoundService] Failed to preload ${soundId}:`, error);
+  private async resumeContext(): Promise<void> {
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      await this.audioContext.resume();
     }
   }
 
   /**
-   * Preload multiple sounds
+   * Create oscillator with envelope (ADSR)
    */
-  async preloadMultiple(sounds: Array<{ id: string; url?: string }>): Promise<void> {
-    const promises = sounds.map(({ id, url }) => this.preload(id, url));
-    await Promise.allSettled(promises);
+  private playTone(
+    frequency: number,
+    duration: number,
+    volume: number = 1,
+    type: OscillatorType = 'sine',
+    attack: number = 0.01,
+    release: number = 0.1
+  ): void {
+    if (!this.audioContext || !this.enabled) return;
+
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+
+    oscillator.type = type;
+    oscillator.frequency.value = frequency;
+
+    const now = this.audioContext.currentTime;
+    const adjustedVolume = volume * this.globalVolume;
+
+    // ADSR envelope
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(adjustedVolume, now + attack);
+    gainNode.gain.setValueAtTime(adjustedVolume, now + duration - release);
+    gainNode.gain.linearRampToValueAtTime(0, now + duration);
+
+    oscillator.start(now);
+    oscillator.stop(now + duration);
   }
 
   /**
-   * Play a sound
+   * Play success sound (happy chord)
+   */
+  private playSuccessSound(): void {
+    // C major chord (C5, E5, G5)
+    this.playTone(523.25, 0.3, 0.3, 'sine'); // C5
+    this.playTone(659.25, 0.3, 0.2, 'sine'); // E5
+    this.playTone(783.99, 0.3, 0.2, 'sine'); // G5
+  }
+
+  /**
+   * Play tap sound (short click)
+   */
+  private playTapSound(): void {
+    this.playTone(800, 0.05, 0.2, 'square', 0.001, 0.01);
+  }
+
+  /**
+   * Play drop sound (falling pitch)
+   */
+  private playDropSound(): void {
+    if (!this.audioContext || !this.enabled) return;
+
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+
+    const now = this.audioContext.currentTime;
+    oscillator.frequency.setValueAtTime(600, now);
+    oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.2);
+
+    gainNode.gain.setValueAtTime(0.3 * this.globalVolume, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.2);
+  }
+
+  /**
+   * Play wrong sound (dissonant)
+   */
+  private playWrongSound(): void {
+    this.playTone(200, 0.2, 0.3, 'sawtooth');
+    setTimeout(() => this.playTone(180, 0.2, 0.2, 'sawtooth'), 50);
+  }
+
+  /**
+   * Play celebration sound (happy melody)
+   */
+  private playCelebrationSound(): void {
+    const notes = [
+      { freq: 523.25, time: 0 },    // C5
+      { freq: 587.33, time: 0.15 },  // D5
+      { freq: 659.25, time: 0.3 },   // E5
+      { freq: 783.99, time: 0.45 },  // G5
+      { freq: 1046.5, time: 0.6 },   // C6
+    ];
+
+    notes.forEach(({ freq, time }) => {
+      setTimeout(() => this.playTone(freq, 0.2, 0.25, 'sine'), time * 1000);
+    });
+  }
+
+  /**
+   * Play animal sounds (synthesized approximations)
+   */
+  private playAnimalSound(animal: 'cat' | 'dog' | 'cow' | 'bird'): void {
+    if (!this.audioContext || !this.enabled) return;
+
+    switch (animal) {
+      case 'cat':
+        // Meow approximation (high pitch with vibrato)
+        this.playTone(800, 0.3, 0.3, 'triangle');
+        setTimeout(() => this.playTone(600, 0.2, 0.2, 'triangle'), 100);
+        break;
+
+      case 'dog':
+        // Bark approximation (low gruff sound)
+        this.playTone(180, 0.15, 0.4, 'sawtooth');
+        setTimeout(() => this.playTone(200, 0.15, 0.3, 'sawtooth'), 150);
+        break;
+
+      case 'cow':
+        // Moo approximation (low sustained tone)
+        this.playTone(220, 0.5, 0.3, 'sawtooth');
+        setTimeout(() => this.playTone(200, 0.3, 0.25, 'sawtooth'), 200);
+        break;
+
+      case 'bird':
+        // Chirp approximation (high quick notes)
+        this.playTone(2000, 0.08, 0.2, 'sine');
+        setTimeout(() => this.playTone(2400, 0.08, 0.2, 'sine'), 80);
+        setTimeout(() => this.playTone(1800, 0.08, 0.15, 'sine'), 160);
+        break;
+    }
+  }
+
+  /**
+   * Play praise sound (cheerful trill)
+   */
+  private playPraiseSound(variant: number = 1): void {
+    const patterns = [
+      [523.25, 659.25, 783.99], // C major arpeggio
+      [587.33, 739.99, 880.0],  // D major arpeggio
+      [659.25, 830.61, 987.77], // E major arpeggio
+    ];
+
+    const pattern = patterns[variant % patterns.length];
+    pattern.forEach((freq, i) => {
+      setTimeout(() => this.playTone(freq, 0.15, 0.2, 'sine'), i * 100);
+    });
+  }
+
+  /**
+   * Play a sound by ID
    */
   async play(soundId: string, config: SoundConfig = {}): Promise<void> {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.audioContext) return;
 
     try {
-      let audio = this.sounds.get(soundId);
+      await this.resumeContext();
 
-      // If not preloaded, create and play immediately
-      if (!audio) {
-        audio = new Audio(this.presets[soundId as SoundEffect] || '');
-        this.sounds.set(soundId, audio);
+      const effect = soundId as SoundEffect;
+      
+      switch (effect) {
+        case 'success':
+          this.playSuccessSound();
+          break;
+        case 'tap':
+          this.playTapSound();
+          break;
+        case 'drop':
+          this.playDropSound();
+          break;
+        case 'wrong':
+          this.playWrongSound();
+          break;
+        case 'celebration':
+          this.playCelebrationSound();
+          break;
+        case 'animal-cat':
+          this.playAnimalSound('cat');
+          break;
+        case 'animal-dog':
+          this.playAnimalSound('dog');
+          break;
+        case 'animal-cow':
+          this.playAnimalSound('cow');
+          break;
+        case 'animal-bird':
+          this.playAnimalSound('bird');
+          break;
+        case 'praise-great':
+          this.playPraiseSound(0);
+          break;
+        case 'praise-wonderful':
+          this.playPraiseSound(1);
+          break;
+        case 'praise-youdid it':
+          this.playPraiseSound(2);
+          break;
+        default:
+          console.warn(`Unknown sound effect: ${soundId}`);
       }
-
-      // Reset audio to beginning
-      audio.currentTime = 0;
-
-      // Apply config
-      audio.volume = (config.volume ?? 1) * this.globalVolume;
-      audio.loop = config.loop ?? false;
-      audio.playbackRate = config.playbackRate ?? 1.0;
-
-      // Play
-      await audio.play();
     } catch (error) {
-      // Gracefully handle missing sound files (common in development)
-      if (error instanceof DOMException && (error.name === 'NotSupportedError' || error.name === 'NotAllowedError')) {
-        console.warn(`⚠️ [SoundService] Sound file not available: ${soundId} (${this.presets[soundId as SoundEffect] || 'unknown path'})`);
-      } else {
-        console.error(`❌ [SoundService] Failed to play ${soundId}:`, error);
-      }
+      console.error(`❌ [SoundService] Failed to play ${soundId}:`, error);
     }
   }
 
   /**
-   * Stop a sound
+   * Preload a sound (not needed for Web Audio API, but kept for compatibility)
    */
-  stop(soundId: string): void {
-    const audio = this.sounds.get(soundId);
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
+  async preload(soundId: string, url?: string): Promise<void> {
+    // Web Audio API generates sounds on-the-fly, no preloading needed
+    console.log(`✅ [SoundService] Sound ready: ${soundId}`);
+  }
+
+  /**
+   * Preload multiple sounds (kept for compatibility)
+   */
+  async preloadMultiple(sounds: Array<{ id: string; url?: string }>): Promise<void> {
+    // No-op for Web Audio API
+    console.log(`✅ [SoundService] All sounds ready`);
   }
 
   /**
    * Stop all sounds
    */
   stopAll(): void {
-    this.sounds.forEach((audio) => {
-      audio.pause();
-      audio.currentTime = 0;
-    });
+    // Web Audio API sounds are self-terminating
+    // This method is kept for compatibility but doesn't need to do anything
   }
 
   /**
@@ -258,7 +398,10 @@ class SoundService {
    */
   dispose(): void {
     this.stopAll();
-    this.sounds.clear();
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
   }
 }
 

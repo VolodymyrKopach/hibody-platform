@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, createContext, useContext } from 'react';
 import { Box, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import { AgeGroup, BaseComponentData } from '@/types/age-group-data';
@@ -30,6 +30,34 @@ export interface CompletionState {
   mistakes: number;
   timeSpent: number;
 }
+
+export interface AgeSettings {
+  snapDistance: number;
+  animationDuration: number;
+  enableSounds: boolean;
+  enableHaptics: boolean;
+  autoComplete: boolean;
+  showHints: boolean;
+}
+
+export interface DragDropContextValue {
+  dragState: DragState;
+  completionState: CompletionState;
+  ageSettings: AgeSettings;
+  onDragStart: (itemId: string) => void;
+  onDragEnd: (itemId: string, targetId: string | null) => void;
+  onTargetHover: (targetId: string | null) => void;
+}
+
+const DragDropContext = createContext<DragDropContextValue | null>(null);
+
+export const useDragDropContext = () => {
+  const context = useContext(DragDropContext);
+  if (!context) {
+    throw new Error('useDragDropContext must be used within BaseDragDrop');
+  }
+  return context;
+};
 
 /**
  * Base component for all age-specific drag and drop components
@@ -64,7 +92,7 @@ export const BaseDragDrop: React.FC<BaseDragDropProps & { children: React.ReactN
   });
 
   // Age-specific settings
-  const getAgeSettings = () => {
+  const getAgeSettings = (): AgeSettings => {
     switch (ageGroup) {
       case '3-5':
         return {
@@ -331,20 +359,24 @@ export const BaseDragDrop: React.FC<BaseDragDropProps & { children: React.ReactN
       )}
 
       {/* Main content */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: ageSettings.animationDuration / 1000 }}
-      >
-        {React.cloneElement(children as React.ReactElement, {
+      <DragDropContext.Provider
+        value={{
           dragState,
           completionState,
           ageSettings,
           onDragStart: handleDragStart,
           onDragEnd: handleDragEnd,
           onTargetHover: handleTargetHover,
-        })}
-      </motion.div>
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: ageSettings.animationDuration / 1000 }}
+        >
+          {children}
+        </motion.div>
+      </DragDropContext.Provider>
     </Box>
   );
 };
