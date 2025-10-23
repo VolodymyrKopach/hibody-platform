@@ -337,31 +337,14 @@ const InteractivePreviewDialog: React.FC<InteractivePreviewDialogProps> = ({
         sx={{
           p: 0,
           height: '100%',
-          overflow: 'auto',
+          overflow: 'hidden',
           background: 'transparent',
           display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
-          pt: 10, // Space for floating header
-          pb: 8,  // Space for floating instructions
+          flexDirection: 'column',
           position: 'relative',
-          '&::-webkit-scrollbar': {
-            width: 10,
-            height: 10,
-          },
-          '&::-webkit-scrollbar-track': {
-            background: alpha(theme.palette.divider, 0.05),
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: alpha(theme.palette.divider, 0.2),
-            borderRadius: 5,
-            '&:hover': {
-              background: alpha(theme.palette.divider, 0.3),
-            },
-          },
         }}
       >
-        {/* Background Layer - Fullscreen */}
+        {/* Background Layer - Fixed behind content */}
         <Box
           sx={{
             position: 'absolute',
@@ -371,21 +354,49 @@ const InteractivePreviewDialog: React.FC<InteractivePreviewDialogProps> = ({
           }}
         />
 
-        {/* Page container with fixed width */}
+        {/* Scrollable content container */}
         <Box
-          key={key}
           sx={{
-            width: pageWidth,
-            minHeight: '100%',
+            flex: 1,
+            overflow: 'auto',
             display: 'flex',
-            flexDirection: 'column',
-            py: 4,
-            px: 3,
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            pt: 10, // Space for floating header
+            pb: 8,  // Space for floating instructions
             position: 'relative',
             zIndex: 1,
+            '&::-webkit-scrollbar': {
+              width: 10,
+              height: 10,
+            },
+            '&::-webkit-scrollbar-track': {
+              background: alpha(theme.palette.divider, 0.05),
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: alpha(theme.palette.divider, 0.2),
+              borderRadius: 5,
+              '&:hover': {
+                background: alpha(theme.palette.divider, 0.3),
+              },
+            },
           }}
         >
-          {children}
+          {/* Page container with fixed width */}
+          <Box
+            key={key}
+            sx={{
+              width: pageWidth,
+              minHeight: 'calc(100vh - 160px)', // Adjusted for header and instructions
+              display: 'flex',
+              flexDirection: 'column',
+              py: 4,
+              px: 3,
+              position: 'relative',
+            }}
+          >
+            {children}
+          </Box>
         </Box>
       </DialogContent>
 
