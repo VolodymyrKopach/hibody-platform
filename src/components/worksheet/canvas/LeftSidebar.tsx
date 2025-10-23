@@ -254,6 +254,13 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           description: 'Large items with magnetic attraction and animal helpers'
         },
         { 
+          id: 'tap-image', 
+          name: '👆 Tap Image', 
+          icon: Hand, 
+          color: '#FF6B9D',
+          description: 'Interactive image with sounds and animations' 
+        },
+        { 
           id: 'coloring-canvas', 
           name: '🎨 Coloring Canvas', 
           icon: Paintbrush, 
@@ -264,29 +271,85 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           id: 'sticker-scene', 
           name: '🎭 Sticker Scene', 
           icon: Sticker, 
-          color: '#8B5CF6',
+          color: '#FFB6C1',
           description: 'Create stories with fun stickers' 
         },
         { 
           id: 'simple-counter', 
-          name: 'Counter', 
+          name: '🔢 Counter', 
           icon: Hash, 
-          color: '#10B981',
-          description: 'Count objects with voice' 
+          color: '#68D391',
+          description: 'Count objects (1-5) with voice' 
         },
         { 
           id: 'color-matcher', 
-          name: 'Color Match', 
+          name: '🎨 Color Match', 
           icon: Palette, 
-          color: '#F59E0B',
-          description: 'Learn colors with voice' 
+          color: '#FEC84E',
+          description: 'Learn colors with voice and sounds' 
         },
         { 
-          id: 'tap-image', 
-          name: 'Tap Image', 
-          icon: Hand, 
-          color: '#8B5CF6',
-          description: 'Interactive image with sounds' 
+          id: 'simple-drag-drop', 
+          name: '🎯 Drag & Drop', 
+          icon: Move, 
+          color: '#FF6B9D',
+          description: 'Drag big items to targets (toddler style)' 
+        },
+        { 
+          id: 'simple-puzzle', 
+          name: '🧩 Easy Puzzle', 
+          icon: Puzzle, 
+          color: '#A78BFA',
+          description: 'Simple 2x2 puzzle (4 pieces only)' 
+        },
+        { 
+          id: 'memory-cards', 
+          name: '🃏 Memory Game', 
+          icon: Brain, 
+          color: '#60A5FA',
+          description: 'Match 2 pairs (4 cards only)' 
+        },
+        { 
+          id: 'emotion-recognizer', 
+          name: '😊 Emotions', 
+          icon: Smile, 
+          color: '#FBBF24',
+          description: 'Learn happy, sad, angry faces' 
+        },
+        { 
+          id: 'sorting-game', 
+          name: '📦 Easy Sorting', 
+          icon: FolderTree, 
+          color: '#34D399',
+          description: 'Sort by color (3-4 items max)' 
+        },
+        { 
+          id: 'flashcards', 
+          name: '🎴 Picture Cards', 
+          icon: CreditCard, 
+          color: '#F472B6',
+          description: 'Flip cards to see pictures and words' 
+        },
+        { 
+          id: 'animated-mascot', 
+          name: '🐰 Animal Friend', 
+          icon: Sparkles, 
+          color: '#FFD700',
+          description: 'Helpful bunny, cat, dog or bear' 
+        },
+        { 
+          id: 'sparkle-reward', 
+          name: '✨ Celebration', 
+          icon: Sparkles, 
+          color: '#FFD700',
+          description: 'Confetti and sparkles for success' 
+        },
+        { 
+          id: 'reward-collector', 
+          name: '⭐ Star Rewards', 
+          icon: Award, 
+          color: '#FBBF24',
+          description: 'Collect stars for completing tasks' 
         },
       ],
     },
