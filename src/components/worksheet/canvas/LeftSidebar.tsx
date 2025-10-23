@@ -32,6 +32,8 @@ import {
   ListOrdered,
   Table as TableIcon,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   Zap,
   Hand,
   Move,
@@ -58,6 +60,8 @@ import {
   FolderKanban,
   Layout,
   Box as BoxIcon,
+  Sticker,
+  Sparkles,
 } from 'lucide-react';
 
 interface LeftSidebarProps {
@@ -74,6 +78,20 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'pdf' | 'interactive'>('pdf');
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+
+  // Toggle category collapse
+  const toggleCategoryCollapse = (categoryName: string) => {
+    setCollapsedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryName)) {
+        newSet.delete(categoryName);
+      } else {
+        newSet.add(categoryName);
+      }
+      return newSet;
+    });
+  };
 
   // PDF Components
   const pdfComponentCategories = [
@@ -167,6 +185,13 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           color: '#F59E0B',
           description: 'Add picture' 
         },
+        { 
+          id: 'image-story', 
+          name: 'Picture Story', 
+          icon: Book, 
+          color: '#3B82F6',
+          description: 'Sequential images (3-5 scenes)' 
+        },
       ],
     },
     {
@@ -205,35 +230,42 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           color: '#F59E0B',
           description: 'Helpful hint' 
         },
+        { 
+          id: 'hint-bubble', 
+          name: 'Hint Bubble', 
+          icon: Lightbulb, 
+          color: '#FCD34D',
+          description: 'Contextual hint with icon' 
+        },
       ],
     },
   ];
 
-  // Interactive Components
+  // Interactive Components organized by age groups
   const interactiveComponentCategories = [
     {
-      name: 'Interactive Games',
+      name: '🐣 Toddlers (3-5 years)',
       items: [
         { 
-          id: 'tap-image', 
-          name: 'Tap Image', 
+          id: 'magnetic-playground', 
+          name: '🧲 Magnetic Playground', 
           icon: Hand, 
+          color: '#FF6B9D',
+          description: 'Large items with magnetic attraction and animal helpers'
+        },
+        { 
+          id: 'coloring-canvas', 
+          name: '🎨 Coloring Canvas', 
+          icon: Paintbrush, 
+          color: '#FF6B9D',
+          description: 'Color pictures with big brushes and bright colors' 
+        },
+        { 
+          id: 'sticker-scene', 
+          name: '🎭 Sticker Scene', 
+          icon: Sticker, 
           color: '#8B5CF6',
-          description: 'Interactive image with sounds' 
-        },
-        { 
-          id: 'simple-drag-drop', 
-          name: 'Drag & Drop', 
-          icon: Move, 
-          color: '#EC4899',
-          description: 'Drag items to matching targets' 
-        },
-        { 
-          id: 'color-matcher', 
-          name: 'Color Match', 
-          icon: Palette, 
-          color: '#F59E0B',
-          description: 'Learn colors with voice' 
+          description: 'Create stories with fun stickers' 
         },
         { 
           id: 'simple-counter', 
@@ -243,11 +275,63 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           description: 'Count objects with voice' 
         },
         { 
+          id: 'color-matcher', 
+          name: 'Color Match', 
+          icon: Palette, 
+          color: '#F59E0B',
+          description: 'Learn colors with voice' 
+        },
+        { 
+          id: 'tap-image', 
+          name: 'Tap Image', 
+          icon: Hand, 
+          color: '#8B5CF6',
+          description: 'Interactive image with sounds' 
+        },
+      ],
+    },
+    {
+      name: '🎨 Preschoolers (6-7 years)',
+      items: [
+        { 
           id: 'memory-cards', 
           name: 'Memory Game', 
           icon: Brain, 
           color: '#6366F1',
           description: 'Match pairs memory game' 
+        },
+        { 
+          id: 'simple-puzzle', 
+          name: 'Puzzle', 
+          icon: Puzzle, 
+          color: '#EC4899',
+          description: 'Complete picture puzzles' 
+        },
+        { 
+          id: 'shape-tracer', 
+          name: 'Trace Shape', 
+          icon: PenTool, 
+          color: '#EF4444',
+          description: 'Trace shapes with finger' 
+        },
+        { 
+          id: 'emotion-recognizer', 
+          name: 'Emotions', 
+          icon: Smile, 
+          color: '#F97316',
+          description: 'Recognize feelings' 
+        },
+      ],
+    },
+    {
+      name: '📚 Elementary (8-9 years)',
+      items: [
+        { 
+          id: 'simple-drag-drop', 
+          name: 'Drag & Drop', 
+          icon: Move, 
+          color: '#EC4899',
+          description: 'Drag items to matching targets' 
         },
         { 
           id: 'sorting-game', 
@@ -264,18 +348,89 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           description: 'Put steps in order' 
         },
         { 
-          id: 'shape-tracer', 
-          name: 'Trace Shape', 
-          icon: PenTool, 
-          color: '#EF4444',
-          description: 'Trace shapes with finger' 
+          id: 'pattern-builder', 
+          name: 'Patterns', 
+          icon: Grid3x3, 
+          color: '#14B8A6',
+          description: 'Complete repeating patterns' 
+        },
+      ],
+    },
+    {
+      name: '🎯 Middle School (10-13 years)',
+      items: [
+        { 
+          id: 'categorization-grid', 
+          name: 'Categorization', 
+          icon: FolderKanban, 
+          color: '#10B981',
+          description: 'Sort items into categories' 
         },
         { 
-          id: 'emotion-recognizer', 
-          name: 'Emotions', 
-          icon: Smile, 
-          color: '#F97316',
-          description: 'Recognize feelings' 
+          id: 'cause-effect', 
+          name: 'Cause & Effect', 
+          icon: Zap, 
+          color: '#F59E0B',
+          description: 'Match causes to effects' 
+        },
+        { 
+          id: 'timeline-builder', 
+          name: 'Timeline', 
+          icon: Calendar, 
+          color: '#8B5CF6',
+          description: 'Build chronological timelines' 
+        },
+        { 
+          id: 'timer-challenge', 
+          name: 'Timer Challenge', 
+          icon: Timer, 
+          color: '#EF4444',
+          description: 'Timed activities and tasks' 
+        },
+      ],
+    },
+    {
+      name: '🎓 Teens (14-18 years)',
+      items: [
+        { 
+          id: 'word-builder', 
+          name: 'Word Builder', 
+          icon: Type, 
+          color: '#6366F1',
+          description: 'Build words from letters' 
+        },
+        { 
+          id: 'open-question', 
+          name: 'Open Question', 
+          icon: MessageCircle, 
+          color: '#EC4899',
+          description: 'Answer open-ended questions' 
+        },
+        { 
+          id: 'drawing-canvas', 
+          name: 'Drawing', 
+          icon: Paintbrush, 
+          color: '#F59E0B',
+          description: 'Free drawing and sketching' 
+        },
+        { 
+          id: 'dialog-roleplay', 
+          name: 'Dialog Roleplay', 
+          icon: MessageSquareText, 
+          color: '#6366F1',
+          description: 'Interactive conversations' 
+        },
+      ],
+    },
+    {
+      name: '🎮 Special Interactive',
+      items: [
+        { 
+          id: 'animated-mascot', 
+          name: '🐰 Animated Mascot', 
+          icon: Sparkles, 
+          color: '#FFD700',
+          description: 'Helpful animated character' 
         },
         { 
           id: 'sound-matcher', 
@@ -285,25 +440,11 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           description: 'Match sounds to pictures' 
         },
         { 
-          id: 'simple-puzzle', 
-          name: 'Puzzle', 
-          icon: Puzzle, 
-          color: '#EC4899',
-          description: 'Complete picture puzzles' 
-        },
-        { 
-          id: 'pattern-builder', 
-          name: 'Patterns', 
-          icon: Grid3x3, 
-          color: '#14B8A6',
-          description: 'Complete repeating patterns' 
-        },
-        { 
-          id: 'cause-effect', 
-          name: 'Cause & Effect', 
-          icon: Zap, 
-          color: '#F59E0B',
-          description: 'Match causes to effects' 
+          id: 'sparkle-reward', 
+          name: '✨ Sparkle Reward', 
+          icon: Sparkles, 
+          color: '#FFD700',
+          description: 'Celebration with fireworks' 
         },
         { 
           id: 'reward-collector', 
@@ -577,22 +718,52 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 ),
               }))
               .filter((category) => category.items.length > 0)
-              .map((category) => (
+              .map((category) => {
+                const isCollapsed = collapsedCategories.has(category.name);
+                return (
                 <Box key={category.name}>
-                  <Typography
-                    variant="caption"
+                  <Box
+                    onClick={() => toggleCategoryCollapse(category.name)}
                     sx={{
-                      fontWeight: 700,
-                      color: theme.palette.text.secondary,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      fontSize: '0.7rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
                       mb: 1,
-                      display: 'block',
+                      p: 0.5,
+                      borderRadius: '6px',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                      },
                     }}
                   >
-                    {category.name}
-                  </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 700,
+                        color: theme.palette.text.secondary,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        fontSize: '0.7rem',
+                      }}
+                    >
+                      {category.name}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      sx={{
+                        width: 20,
+                        height: 20,
+                        color: theme.palette.text.secondary,
+                        transition: 'transform 0.2s',
+                        transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)',
+                      }}
+                    >
+                      {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                    </IconButton>
+                  </Box>
+                  {!isCollapsed && (
                   <Stack spacing={0.75}>
                     {category.items.map((item) => {
                       const IconComponent = item.icon;
@@ -675,8 +846,10 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                       );
                     })}
                   </Stack>
+                  )}
                 </Box>
-              ))}
+              );
+              })}
           </Stack>
         ) : (
           // Collapsed view - Only icons

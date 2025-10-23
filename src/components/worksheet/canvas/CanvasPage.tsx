@@ -4,6 +4,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Box, Paper, useTheme, alpha, Typography, IconButton, Tooltip } from '@mui/material';
 import { GripVertical } from 'lucide-react';
 import { CanvasElement } from '@/types/canvas-element';
+import InteractivePreviewDialog from './interactive/InteractivePreviewDialog';
+import InteractivePlayButton from './interactive/InteractivePlayButton';
 import TitleBlock from './atomic/TitleBlock';
 import BodyText from './atomic/BodyText';
 import InstructionsBox from './atomic/InstructionsBox';
@@ -19,10 +21,17 @@ import Divider from './atomic/Divider';
 import BulletList from './atomic/BulletList';
 import NumberedList from './atomic/NumberedList';
 import Table from './atomic/Table';
+import ImageStory from './atomic/ImageStory';
+import HintBubble from './atomic/HintBubble';
 // Interactive components
 import TapImage from './interactive/TapImage';
 import SimpleDragAndDrop from './interactive/SimpleDragAndDrop';
 import ColorMatcher from './interactive/ColorMatcher';
+import ColoringCanvas from './interactive/ColoringCanvas';
+import StickerScene from './interactive/StickerScene';
+import GlowHighlight from './interactive/GlowHighlight';
+import AnimatedMascot from './interactive/AnimatedMascot';
+import SparkleReward from './interactive/SparkleReward';
 import SimpleCounter from './interactive/SimpleCounter';
 import MemoryCards from './interactive/MemoryCards';
 import SortingGame from './interactive/SortingGame';
@@ -48,6 +57,8 @@ import StoryBuilder from './interactive/StoryBuilder';
 import CategorizationGrid from './interactive/CategorizationGrid';
 import InteractiveBoard from './interactive/InteractiveBoard';
 import ObjectBuilder from './interactive/ObjectBuilder';
+// Age-specific components
+import AgeSpecificRenderer, { isAgeSpecificComponent, getAgeSpecificDefaultProperties } from './interactive/AgeSpecificRenderer';
 
 interface PageBackground {
   type: 'solid' | 'gradient' | 'pattern' | 'image';
@@ -141,13 +152,20 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
   const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(null);
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [crossPageDropIndex, setCrossPageDropIndex] = useState<number | null>(null);
+  
+  // Interactive preview state
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
 
   // Component type definitions
   const INTERACTIVE_COMPONENT_TYPES = [
     'tap-image', 'simple-drag-drop', 'color-matcher', 'simple-counter', 
     'memory-cards', 'sorting-game', 'sequence-builder', 'shape-tracer', 
     'emotion-recognizer', 'sound-matcher', 'simple-puzzle', 'pattern-builder', 
-    'cause-effect', 'reward-collector', 'voice-recorder'
+    'cause-effect', 'reward-collector', 'voice-recorder', 'magnetic-playground',
+    'coloring-canvas', 'sticker-scene', 'glow-highlight', 'animated-mascot',
+    'sparkle-reward', 'flashcards', 'word-builder', 'open-question', 
+    'drawing-canvas', 'dialog-roleplay', 'video-chat', 'progress-tracker',
+    'scene-explorer', 'simple-drag-and-drop', 'match-pairs'
   ];
 
   const PDF_COMPONENT_TYPES = [
@@ -156,6 +174,11 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     'bullet-list', 'numbered-list', 'true-false', 'short-answer', 
     'table', 'divider'
   ];
+
+  // Handle preview dialog
+  const handleClosePreview = () => {
+    setPreviewDialogOpen(false);
+  };
 
   // Helper: Check if component can be dropped on this page
   const canDropOnThisPage = (componentType: string): boolean => {
@@ -702,18 +725,32 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
       >
         <span>Page {pageNumber}{title && title !== `Page ${pageNumber}` ? ` - ${title}` : ''}</span>
         {pageType === 'interactive' && (
-          <span
-            style={{
-              fontSize: '10px',
-              padding: '2px 8px',
-              borderRadius: '12px',
-              backgroundColor: '#10B981',
-              color: 'white',
-              fontWeight: 700,
-            }}
-          >
-            ⚡ Interactive
-          </span>
+          <>
+            <span
+              style={{
+                fontSize: '10px',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                backgroundColor: '#10B981',
+                color: 'white',
+                fontWeight: 700,
+              }}
+            >
+              ⚡ Interactive
+            </span>
+            {!isPlayMode && elements.length > 0 && (
+              <Box sx={{ ml: 'auto' }}>
+                <InteractivePlayButton
+                  onClick={() => {
+                    // Open preview with all page elements
+                    setPreviewDialogOpen(true);
+                  }}
+                  size="small"
+                  position="top-right"
+                />
+              </Box>
+            )}
+          </>
         )}
       </Box>
 
@@ -946,6 +983,38 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
         })}
       </Box>
 
+      {/* Interactive Preview Dialog */}
+      <InteractivePreviewDialog
+        open={previewDialogOpen}
+        onClose={handleClosePreview}
+        elementType="interactive-page"
+        title={title || `Page ${pageNumber}`}
+      >
+        <Box
+          sx={{
+            width: '100%',
+            maxWidth: '800px',
+            minHeight: '400px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3,
+            p: 4,
+          }}
+        >
+          {elements.map((element) => (
+            <Box key={element.id}>
+              {renderElement(
+                element,
+                false, // Not selected in preview mode
+                () => {}, // No edit in preview mode
+                () => {}, // No select in preview mode
+                ageGroup
+              )}
+            </Box>
+          ))}
+        </Box>
+      </InteractivePreviewDialog>
+
     </Paper>
   );
 };
@@ -1172,6 +1241,86 @@ function renderElement(
           onFocus={() => onSelect(element.id)}
         />
       );
+
+    case 'image-story':
+      return (
+        <ImageStory
+          scenes={element.properties.scenes}
+          title={element.properties.title || 'Picture Story'}
+          showNavigation={element.properties.showNavigation ?? true}
+          showCaptions={element.properties.showCaptions ?? true}
+          layout={element.properties.layout || 'vertical'}
+          mode={element.properties.mode || 'interactive'}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+
+    case 'hint-bubble':
+      return (
+        <HintBubble
+          text={element.properties.text || '💡 This is a helpful hint!'}
+          type={element.properties.type || 'tip'}
+          icon={element.properties.icon || 'lightbulb'}
+          size={element.properties.size || 'medium'}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+
+    case 'animated-mascot':
+      return (
+        <AnimatedMascot
+          character={element.properties.character || '🐰'}
+          size={element.properties.size || 'medium'}
+          emotion={element.properties.emotion || 'happy'}
+          message={element.properties.message}
+          showMessage={element.properties.showMessage ?? false}
+          position={element.properties.position || 'bottom-right'}
+          entrance={element.properties.entrance || 'bounce'}
+          autoGesture={element.properties.autoGesture ?? true}
+          gestureInterval={element.properties.gestureInterval || 3000}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+        />
+      );
+
+    case 'sparkle-reward':
+      return (
+        <SparkleReward
+          type={element.properties.type || 'star'}
+          text={element.properties.text || 'Amazing! 🎉'}
+          size={element.properties.size || 'large'}
+          color={element.properties.color}
+          intensity={element.properties.intensity || 'high'}
+          duration={element.properties.duration || 3000}
+          autoShow={element.properties.autoShow ?? true}
+          autoHide={element.properties.autoHide ?? true}
+          autoHideDelay={element.properties.autoHideDelay || 3000}
+          soundEnabled={element.properties.soundEnabled ?? true}
+          soundType={element.properties.soundType || 'success'}
+          hapticEnabled={element.properties.hapticEnabled ?? true}
+          hapticIntensity={element.properties.hapticIntensity || 'heavy'}
+          confettiEnabled={element.properties.confettiEnabled ?? true}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+          onComplete={() => {
+            console.log('Reward animation completed!');
+          }}
+        />
+      );
     // Interactive components
     case 'tap-image':
       return (
@@ -1228,6 +1377,46 @@ function renderElement(
           onFocus={() => onSelect(element.id)}
         />
       );
+    case 'coloring-canvas':
+      return (
+        <ColoringCanvas
+          svgContent={element.properties.svgContent}
+          svgPath={element.properties.svgPath}
+          colors={element.properties.colors}
+          brushSize={element.properties.brushSize || 2}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+          onComplete={(imageData) => {
+            console.log('Coloring completed!', imageData);
+          }}
+        />
+      );
+
+    case 'sticker-scene':
+      return (
+        <StickerScene
+          backgroundUrl={element.properties.backgroundUrl}
+          backgroundColor={element.properties.backgroundColor}
+          stickers={element.properties.stickers}
+          maxStickers={element.properties.maxStickers || 50}
+          allowRotation={element.properties.allowRotation ?? true}
+          allowScale={element.properties.allowScale ?? true}
+          ageGroup={ageGroup}
+          isSelected={isSelected}
+          onEdit={(properties) => {
+            onEdit(element.id, { ...element.properties, ...properties });
+          }}
+          onFocus={() => onSelect(element.id)}
+          onComplete={(sceneData) => {
+            console.log('Scene completed!', sceneData);
+          }}
+        />
+      );
+
     case 'color-matcher':
       return (
         <ColorMatcher
@@ -1614,6 +1803,19 @@ function renderElement(
         />
       );
     default:
+      // Check if it's an age-specific component
+      if (isAgeSpecificComponent(element.type)) {
+        return (
+          <AgeSpecificRenderer
+            element={element}
+            ageGroup={ageGroup as any}
+            isSelected={isSelected}
+            onEdit={onEdit}
+            onSelect={onSelect}
+          />
+        );
+      }
+      
       return (
         <Box sx={{ p: 2, border: '2px dashed red', borderRadius: '8px' }}>
           <Typography sx={{ color: 'red', fontSize: '14px', fontWeight: 600 }}>
@@ -1777,6 +1979,74 @@ function getDefaultProperties(type: string) {
         fontSize: 13,
         textAlign: 'left',
       };
+
+    case 'image-story':
+      return {
+        title: 'Picture Story',
+        showNavigation: true,
+        showCaptions: true,
+        layout: 'vertical',
+        mode: 'interactive',
+        scenes: [
+          {
+            id: 'scene1',
+            imageUrl: 'https://images.pexels.com/photos/7821688/pexels-photo-7821688.jpeg?auto=compress&cs=tinysrgb&w=400',
+            title: 'Scene 1',
+            caption: 'Once upon a time...',
+          },
+          {
+            id: 'scene2',
+            imageUrl: 'https://images.pexels.com/photos/7821695/pexels-photo-7821695.jpeg?auto=compress&cs=tinysrgb&w=400',
+            title: 'Scene 2',
+            caption: 'Something amazing happened...',
+          },
+          {
+            id: 'scene3',
+            imageUrl: 'https://images.pexels.com/photos/7821706/pexels-photo-7821706.jpeg?auto=compress&cs=tinysrgb&w=400',
+            title: 'Scene 3',
+            caption: 'And they lived happily ever after!',
+          },
+        ],
+      };
+
+    case 'hint-bubble':
+      return {
+        text: '💡 Remember to read carefully and take your time!',
+        type: 'tip',
+        icon: 'lightbulb',
+        size: 'medium',
+      };
+
+    case 'animated-mascot':
+      return {
+        character: '🐰',
+        size: 'medium',
+        emotion: 'happy',
+        message: undefined,
+        showMessage: false,
+        position: 'bottom-right',
+        entrance: 'bounce',
+        autoGesture: true,
+        gestureInterval: 3000,
+      };
+
+    case 'sparkle-reward':
+      return {
+        type: 'star',
+        text: 'Excellent Work! ⭐',
+        size: 'large',
+        color: undefined, // Will use default based on type
+        intensity: 'high',
+        duration: 3000,
+        autoShow: true,
+        autoHide: true,
+        autoHideDelay: 3000,
+        soundEnabled: true,
+        soundType: 'success',
+        hapticEnabled: true,
+        hapticIntensity: 'heavy',
+        confettiEnabled: true,
+      };
     // Interactive components
     case 'tap-image':
       return {
@@ -1820,6 +2090,27 @@ function getDefaultProperties(type: string) {
         difficulty: 'easy',
         ageStyle: 'elementary', // Default age style
       };
+    case 'coloring-canvas':
+      return {
+        colors: [
+          '#FF6B9D', '#FFA07A', '#FFD700', '#98FB98', 
+          '#87CEEB', '#DDA0DD', '#F0E68C', '#FFA500',
+          '#FF69B4', '#7B68EE', '#48D1CC', '#F08080'
+        ],
+        brushSize: 2,
+        svgContent: undefined, // Will use default flower SVG
+      };
+
+    case 'sticker-scene':
+      return {
+        backgroundColor: '#E3F2FD',
+        backgroundUrl: undefined,
+        stickers: undefined, // Will use default stickers
+        maxStickers: 50,
+        allowRotation: true,
+        allowScale: true,
+      };
+    
     case 'color-matcher':
       return {
         colors: [
@@ -1973,6 +2264,13 @@ function getDefaultProperties(type: string) {
         autoPlay: false,
       };
     default:
+      // Check if it's an age-specific component
+      if (isAgeSpecificComponent(type)) {
+        // We need an age group to generate default properties
+        // For now, use a default age group - this should be passed from the context
+        const defaultAgeGroup = '8-9'; // This should come from the lesson/page context
+        return getAgeSpecificDefaultProperties(type as any, defaultAgeGroup as any);
+      }
       return {};
   }
 }
