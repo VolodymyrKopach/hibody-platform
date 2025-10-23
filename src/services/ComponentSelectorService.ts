@@ -311,11 +311,11 @@ export class ComponentSelectorService {
 
 // Pre-register component definitions (will be populated by actual components)
 export const COMPONENT_DEFINITIONS: Record<string, ComponentDefinition> = {
-  // Toddlers (3-5)
+  // Toddlers (3-5 years ONLY)
   'magnetic-playground': {
     type: 'magnetic-playground',
-    name: '🧲 Magnetic Playground',
-    description: 'Large, colorful items that magnetically snap to targets with cute animal helpers',
+    name: '🧲 Magnetic Playground (3-5 years)',
+    description: 'Large, colorful items that magnetically snap to targets with cute animal helpers. Specifically designed for toddlers.',
     icon: '🧲',
     ageGroup: '3-5',
     difficulty: 'easy',

@@ -1464,15 +1464,15 @@ export const INTERACTIVE_PROPERTIES_SCHEMAS: ComponentPropertySchema[] = [
     ],
   },
 
-  // Magnetic Playground (Toddlers 3-5)
+  // Magnetic Playground (Toddlers 3-5 ONLY)
   // Note: This component uses a specialized editor (MagneticPlaygroundEditor)
   // The schema here is just for reference; actual editing is done through the custom UI
   {
     componentType: 'magnetic-playground',
-    componentName: 'Magnetic Playground',
+    componentName: 'Magnetic Playground (3-5 years)',
     category: 'interactive',
     icon: '🧲',
-    suitableAgeStyles: ['toddler'], // Specifically designed for toddlers
+    suitableAgeStyles: ['toddler'], // Specifically designed for toddlers (3-5 years ONLY)
     properties: [], // Properties are managed by MagneticPlaygroundEditor
   },
 ];
