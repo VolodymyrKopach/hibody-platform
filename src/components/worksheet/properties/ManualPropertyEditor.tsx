@@ -31,6 +31,7 @@ import { VisualChipSelector, ChipOption } from './VisualChipSelector';
 import { AgeStyleName } from '@/types/interactive-age-styles';
 import { getAllAgeStyles, AGE_STYLE_LABELS } from '@/constants/interactive-age-styles';
 import DragDropPropertyEditor from './DragDropPropertyEditor';
+import MagneticPlaygroundEditor from './MagneticPlaygroundEditor';
 
 interface ManualPropertyEditorProps {
   schema: ComponentPropertySchema;
@@ -58,6 +59,17 @@ const ManualPropertyEditor: React.FC<ManualPropertyEditorProps> = ({
   if (schema.componentType === 'simple-drag-drop') {
     return (
       <DragDropPropertyEditor
+        properties={properties}
+        onChange={onChange}
+        onSwitchToAI={onSwitchToAI}
+      />
+    );
+  }
+
+  // Use specialized editor for magnetic-playground component
+  if (schema.componentType === 'magnetic-playground') {
+    return (
+      <MagneticPlaygroundEditor
         properties={properties}
         onChange={onChange}
         onSwitchToAI={onSwitchToAI}

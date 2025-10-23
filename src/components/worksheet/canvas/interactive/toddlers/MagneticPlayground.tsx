@@ -39,6 +39,7 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const targetRefs = useRef<Map<string, HTMLElement>>(new Map());
   const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const celebrationShownRef = useRef(false); // Track if celebration was already shown
 
   // Get available (not placed) items
   const availableItems = data.items.filter(item => 
@@ -145,11 +146,22 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
     return () => clearTimeout(timer);
   }, [data.animalHelper]);
 
-  // Handle magnetic attraction and placement
-  const handleItemDrag = (itemId: string, position: { x: number; y: number }) => {
-    if (!containerRef.current) return;
+  // Reset celebration state when data changes (user edited items/targets)
+  useEffect(() => {
+    celebrationShownRef.current = false;
+    setShowCelebration(false);
+  }, [data.items, data.targets]);
+
+  // Find closest target and calculate distance
+  const findClosestTarget = (absolutePosition: { x: number; y: number }) => {
+    if (!containerRef.current) return null;
 
     const containerRect = containerRef.current.getBoundingClientRect();
+    
+    // Convert absolute position to relative position within container
+    const relativeX = absolutePosition.x - containerRect.left;
+    const relativeY = absolutePosition.y - containerRect.top;
+    
     let closestTarget: string | null = null;
     let minDistance = Infinity;
 
@@ -160,8 +172,8 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
       const targetCenterY = targetRect.top - containerRect.top + targetRect.height / 2;
 
       const distance = Math.sqrt(
-        Math.pow(position.x - targetCenterX, 2) + 
-        Math.pow(position.y - targetCenterY, 2)
+        Math.pow(relativeX - targetCenterX, 2) + 
+        Math.pow(relativeY - targetCenterY, 2)
       );
 
       if (distance < minDistance) {
@@ -170,55 +182,92 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
       }
     });
 
-    // Magnetic attraction
-    if (closestTarget && minDistance < data.magneticStrength) {
-      const item = data.items.find(i => i.id === itemId);
-      if (!item) return;
+    return { closestTarget, minDistance };
+  };
 
-      const isCorrect = item.correctTarget === closestTarget;
-      
-      // Place the item
-      setPlacedItems(prev => [
-        ...prev.filter(p => p.itemId !== itemId && p.targetId !== closestTarget),
-        { 
-          itemId, 
-          targetId: closestTarget!, 
-          isCorrect,
-          placedAt: Date.now()
-        }
-      ]);
+  // Handle item placement
+  const placeItem = (itemId: string, targetId: string, position: { x: number; y: number }) => {
+    const item = data.items.find(i => i.id === itemId);
+    if (!item) return;
 
-      // Feedback
-      if (isCorrect) {
-        soundService.playCorrect();
-        triggerHaptic('success');
-        setAnimalHelperMessage(getAnimalHelperMessage(true, item.label));
-        
-        // Mini celebration
-        confetti({
-          particleCount: 30,
-          spread: 50,
-          origin: { 
-            x: position.x / window.innerWidth,
-            y: position.y / window.innerHeight 
-          },
-          colors: ['#FFD700', '#FF69B4', '#00CED1', '#98FB98'],
-        });
-      } else {
-        soundService.playError();
-        triggerHaptic('error');
-        setAnimalHelperMessage(getAnimalHelperMessage(false, item.label));
+    const isCorrect = item.correctTarget === targetId;
+    
+    // Place the item - allow multiple items on same target
+    // Only remove this item from its previous position
+    setPlacedItems(prev => [
+      ...prev.filter(p => p.itemId !== itemId),
+      { 
+        itemId, 
+        targetId, 
+        isCorrect,
+        placedAt: Date.now()
       }
+    ]);
 
-      // Clear message after 2 seconds
-      setTimeout(() => setAnimalHelperMessage(''), 2000);
+    // Feedback
+    if (isCorrect) {
+      soundService.playCorrect();
+      triggerHaptic('success');
+      setAnimalHelperMessage(getAnimalHelperMessage(true, item.label));
+      
+      // Mini celebration
+      confetti({
+        particleCount: 30,
+        spread: 50,
+        origin: { 
+          x: position.x / window.innerWidth,
+          y: position.y / window.innerHeight 
+        },
+        colors: ['#FFD700', '#FF69B4', '#00CED1', '#98FB98'],
+      });
+    } else {
+      soundService.playError();
+      triggerHaptic('error');
+      setAnimalHelperMessage(getAnimalHelperMessage(false, item.label));
+    }
+
+    // Clear message after 2 seconds
+    setTimeout(() => setAnimalHelperMessage(''), 2000);
+  };
+
+  // Handle drag end - place item if close enough to target
+  const handleDragEnd = (itemId: string, position: { x: number; y: number }) => {
+    const result = findClosestTarget(position);
+    if (!result) {
+      console.log('❌ Container ref not found');
+      return;
+    }
+
+    const { closestTarget, minDistance } = result;
+    
+    // Use default magnetic strength if not set
+    const magneticStrength = data.magneticStrength || 100;
+
+    console.log('🧲 Drag end:', { 
+      itemId, 
+      closestTarget, 
+      minDistance: Math.round(minDistance), 
+      magneticStrength,
+      willSnap: minDistance < magneticStrength 
+    });
+
+    // Magnetic attraction - snap to target if close enough
+    if (closestTarget && minDistance < magneticStrength) {
+      console.log('✅ Placing item on target');
+      placeItem(itemId, closestTarget, position);
+    } else {
+      console.log(`❌ Too far from target (${Math.round(minDistance)}px > ${magneticStrength}px)`);
     }
   };
 
   // Handle completion celebration
   useEffect(() => {
-    if (allCorrect && placedItems.length > 0) {
+    // Only show celebration once when all items are correctly placed
+    if (allCorrect && placedItems.length > 0 && !celebrationShownRef.current) {
+      celebrationShownRef.current = true; // Mark as shown
       setShowCelebration(true);
+      
+      console.log('🎉 Game completed! Showing celebration...');
       
       // Major celebration
       confetti({
@@ -241,6 +290,11 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
       
       setAnimalHelperMessage(finalMessages[data.animalHelper] || finalMessages.bunny);
 
+      // Auto-hide celebration after 4 seconds
+      const timer = setTimeout(() => {
+        setShowCelebration(false);
+      }, 4000);
+
       if (onComplete) {
         onComplete({
           completed: true,
@@ -249,6 +303,8 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
           timeSpent: Math.max(...placedItems.map(p => p.placedAt)) - Math.min(...placedItems.map(p => p.placedAt)),
         });
       }
+
+      return () => clearTimeout(timer);
     }
   }, [allCorrect, placedItems, data.animalHelper, onComplete]);
 
@@ -262,7 +318,8 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
         drag
         dragMomentum={false}
         dragElastic={0.2}
-        onDrag={(_, info) => handleItemDrag(item.id, info.point)}
+        onDragEnd={(_, info) => handleDragEnd(item.id, info.point)}
+        dragSnapToOrigin={false}
         whileDrag={{ 
           scale: 1.2, 
           zIndex: 100,
@@ -332,18 +389,34 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
           </Box>
 
           {/* Item image */}
-          <Box
-            component="img"
-            src={item.imageUrl}
-            alt={item.label || 'Drag item'}
-            sx={{
-              width: '80%',
-              height: '70%',
-              objectFit: 'contain',
-              pointerEvents: 'none',
-              filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.2))',
-            }}
-          />
+          {item.imageUrl ? (
+            <Box
+              component="img"
+              src={item.imageUrl}
+              alt={item.label || 'Drag item'}
+              sx={{
+                width: '80%',
+                height: '70%',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+                filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.2))',
+              }}
+            />
+          ) : (
+            <Box
+              sx={{
+                width: '80%',
+                height: '70%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FF1493',
+                fontSize: '3rem',
+              }}
+            >
+              ❓
+            </Box>
+          )}
 
           {/* Item label */}
           {item.label && (
@@ -368,8 +441,10 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
   };
 
   const renderDropTarget = (target: ToddlerComponents.ToddlerDropTarget) => {
-    const placedItem = placedItems.find(p => p.targetId === target.id);
-    const isCompleted = placedItem?.isCorrect;
+    // Get all items placed on this target
+    const placedItemsOnTarget = placedItems.filter(p => p.targetId === target.id);
+    const hasItems = placedItemsOnTarget.length > 0;
+    const allCorrectOnTarget = hasItems && placedItemsOnTarget.every(p => p.isCorrect);
     
     return (
       <Box
@@ -415,19 +490,19 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
             p: 2,
             backgroundColor: target.backgroundColor || '#FFF9E6',
             border: '4px solid',
-            borderColor: isCompleted ? '#4CAF50' : '#FEC84E',
+            borderColor: allCorrectOnTarget ? '#4CAF50' : '#FEC84E',
             borderRadius: '32px',
             position: 'relative',
             zIndex: 1,
             transition: 'all 0.3s ease',
-            ...(isCompleted && {
+            ...(allCorrectOnTarget && {
               boxShadow: '0 0 20px rgba(76, 175, 80, 0.5)',
               transform: 'scale(1.05)',
             }),
           }}
         >
           {/* Target background image */}
-          {target.imageUrl && !placedItem && (
+          {target.imageUrl && !hasItems && (
             <Box
               component="img"
               src={target.imageUrl}
@@ -442,41 +517,80 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
             />
           )}
 
-          {/* Placed item */}
-          {placedItem && (
-            <motion.div
-              initial={{ scale: 0.5, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ 
-                type: 'spring', 
-                stiffness: 300, 
-                damping: 20,
-                duration: 0.6,
-              }}
-              style={{
+          {/* Placed items - show all items on this target */}
+          {hasItems && (
+            <Box
+              sx={{
                 width: '100%',
                 height: '100%',
                 display: 'flex',
+                flexWrap: 'wrap',
                 alignItems: 'center',
                 justifyContent: 'center',
+                gap: 0.5,
+                p: 1,
               }}
             >
-              <Box
-                component="img"
-                src={data.items.find(i => i.id === placedItem.itemId)?.imageUrl}
-                alt="Placed item"
-                sx={{
-                  width: '85%',
-                  height: '85%',
-                  objectFit: 'contain',
-                  filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))',
-                }}
-              />
-            </motion.div>
+              {placedItemsOnTarget.map((placedItem, index) => {
+                const placedItemData = data.items.find(i => i.id === placedItem.itemId);
+                const itemImageUrl = placedItemData?.imageUrl;
+                
+                return (
+                  <motion.div
+                    key={placedItem.itemId}
+                    initial={{ scale: 0.5, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ 
+                      type: 'spring', 
+                      stiffness: 300, 
+                      damping: 20,
+                      duration: 0.6,
+                      delay: index * 0.1,
+                    }}
+                    style={{
+                      flex: placedItemsOnTarget.length === 1 ? '1 1 100%' : '0 0 45%',
+                      maxWidth: placedItemsOnTarget.length === 1 ? '100%' : '45%',
+                      aspectRatio: '1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {itemImageUrl ? (
+                      <Box
+                        component="img"
+                        src={itemImageUrl}
+                        alt={placedItemData?.label || 'Placed item'}
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))',
+                        }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#4CAF50',
+                          fontSize: '2rem',
+                        }}
+                      >
+                        ✓
+                      </Box>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </Box>
           )}
 
-          {/* Success indicator */}
-          {isCompleted && (
+          {/* Success indicator - show count badge */}
+          {allCorrectOnTarget && (
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
@@ -494,9 +608,25 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
                 borderRadius: '50%',
                 padding: '8px',
                 boxShadow: '0 4px 8px rgba(76, 175, 80, 0.3)',
+                minWidth: placedItemsOnTarget.length > 1 ? '40px' : 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <Heart size={24} color="white" fill="white" />
+              {placedItemsOnTarget.length > 1 ? (
+                <Typography 
+                  sx={{ 
+                    color: 'white', 
+                    fontWeight: 800, 
+                    fontSize: '18px',
+                  }}
+                >
+                  {placedItemsOnTarget.length}
+                </Typography>
+              ) : (
+                <Heart size={24} color="white" fill="white" />
+              )}
             </motion.div>
           )}
 
@@ -507,7 +637,7 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
               position: 'absolute',
               bottom: 8,
               fontWeight: 800,
-              color: isCompleted ? '#4CAF50' : '#F57C00',
+              color: allCorrectOnTarget ? '#4CAF50' : '#F57C00',
               textAlign: 'center',
               fontSize: '16px',
               textShadow: '1px 1px 2px rgba(255,255,255,0.8)',
@@ -530,7 +660,7 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
       onFocus={onFocus}
       onComplete={onComplete}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <Box ref={containerRef} sx={{ display: 'flex', flexDirection: 'column', gap: 4, position: 'relative' }}>
         {/* Animal helper message */}
         <AnimatePresence>
           {animalHelperMessage && (
@@ -584,11 +714,11 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
               exit={{ opacity: 0, scale: 0.5 }}
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
               style={{
-                position: 'absolute',
+                position: 'fixed',
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                zIndex: 300,
+                zIndex: 1000,
               }}
             >
               <Paper
