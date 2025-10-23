@@ -486,67 +486,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               />
             </Box>
 
-            {/* Format Preset - Read Only */}
-            <Box>
-              <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>
-                Format
-              </Typography>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 1.5,
-                  borderRadius: '10px',
-                  background: alpha(theme.palette.primary.main, 0.05),
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Typography sx={{ fontSize: '1.2rem' }}>📄</Typography>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: theme.palette.primary.main }}>
-                      A4 Portrait
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                      210 × 297 mm (794 × 1123 px)
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Paper>
-            </Box>
-
-            {/* Position */}
-            <Box>
-              <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
-                Position
-              </Typography>
-              <Stack direction="row" spacing={1}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                    X
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    defaultValue={Math.round(pageData.x)}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.875rem' } }}
-                  />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                    Y
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    defaultValue={Math.round(pageData.y)}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.875rem' } }}
-                  />
-                </Box>
-              </Stack>
-            </Box>
-
             {/* Background */}
             <Box>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
