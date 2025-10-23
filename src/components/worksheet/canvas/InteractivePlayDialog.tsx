@@ -627,8 +627,8 @@ const InteractivePlayDialog: React.FC<InteractivePlayDialogProps> = ({
           <Fade in={open} timeout={500}>
             <Box
               sx={{
-                width: '100%',
                 maxWidth: pageWidth,
+                width: pageWidth,
                 minHeight: `calc(100vh - ${64 + 32}px)`, // Full height minus header and padding
                 transform: `scale(${zoom})`,
                 transformOrigin: 'top center',
@@ -636,6 +636,7 @@ const InteractivePlayDialog: React.FC<InteractivePlayDialogProps> = ({
                 padding: pageType === 'pdf' ? 6 : 4,
                 display: 'flex',
                 flexDirection: 'column',
+                alignItems: 'center',
                 gap: 4,
               }}
             >
