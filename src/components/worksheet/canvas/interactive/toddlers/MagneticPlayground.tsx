@@ -5,7 +5,7 @@ import { Box, Typography, Paper } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Star, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { BaseDragDrop } from '../shared/BaseDragDrop';
+import { ToddlerDragDrop } from '../shared/ToddlerDragDrop';
 import { AgeSpecificProps } from '../shared/SharedTypes';
 import { ToddlerComponents } from '@/types/age-group-data';
 import { soundService } from '@/services/interactive/SoundService';
@@ -652,9 +652,8 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
   };
 
   return (
-    <BaseDragDrop
+    <ToddlerDragDrop
       data={data}
-      ageGroup="3-5"
       isSelected={isSelected}
       onEdit={onEdit}
       onFocus={onFocus}
@@ -809,7 +808,7 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
           </Box>
         )}
       </Box>
-    </BaseDragDrop>
+    </ToddlerDragDrop>
   );
 };
 
