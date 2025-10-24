@@ -14,9 +14,9 @@ export const TODDLER_DRAG_DROP_STYLE: DragDropAgeStyle = {
   suitableForAges: ['3-5'],
   
   elementSize: {
-    item: 120,           // Very large items
-    target: 140,         // Even larger targets for easy dropping
-    gap: 24,             // Large spacing
+    item: 150,           // ДУЖЕ великі items для малюків 2-5 років
+    target: 180,         // Ще більші targets для легкого дропу
+    gap: 32,             // Великий spacing
   },
   
   typography: {
@@ -26,13 +26,13 @@ export const TODDLER_DRAG_DROP_STYLE: DragDropAgeStyle = {
   },
   
   colors: {
-    itemBg: '#FFE5F1',          // Soft pink
-    itemBorder: '#FF6B9D',      // Bright pink
-    targetBg: '#FFF5E1',        // Soft yellow
-    targetBorder: '#FEC84E',    // Bright yellow
-    targetHover: '#FED97D',     // Lighter yellow on hover
-    success: '#68D391',         // Bright green
-    error: '#FC8181',           // Soft red
+    itemBg: '#FFE5F1',          // Яскравий рожевий
+    itemBorder: '#FF69B4',      // Hot pink
+    targetBg: '#FFE66D',        // Яскравий жовтий
+    targetBorder: '#FFB700',    // Яскравий золотий
+    targetHover: '#FFD93D',     // Яскравий жовтий hover
+    success: '#4ECDC4',         // Яскравий бірюзовий
+    error: '#FF6B6B',           // Яскравий червоний (але м'який)
   },
   
   borders: {
