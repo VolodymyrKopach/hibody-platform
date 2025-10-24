@@ -13,7 +13,6 @@ import TapImageProgress from './TapImageProgress';
 import TapImageMascot from './TapImageMascot';
 import TapImageHint from './TapImageHint';
 import TapImageCelebration from './TapImageCelebration';
-import TapImageAmbient from './TapImageAmbient';
 import TapImageTutorial from './TapImageTutorial';
 import { TapImageProps, TapImageMode, GameState, TapImageItem } from './types';
 
@@ -125,8 +124,13 @@ const TapImage: React.FC<TapImageProps> = ({
       // Remove emojis from text before speaking
       const textWithoutEmojis = text.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim();
       
-      const ageStyleName = ageStyleProp || 'toddler';
-      await speakForAge(textWithoutEmojis, ageStyleName, voiceLanguage);
+      // Map age style to supported voice styles
+      const voiceAgeStyle: 'toddler' | 'preschool' | 'elementary' = 
+        ageStyleProp === 'preschool' ? 'preschool' :
+        ageStyleProp === 'elementary' ? 'elementary' :
+        'toddler'; // Default for toddler, middle, teen
+      
+      await speakForAge(textWithoutEmojis, voiceAgeStyle, voiceLanguage);
       
       isSpeakingRef.current = false;
     } catch (error) {
@@ -684,7 +688,7 @@ const TapImage: React.FC<TapImageProps> = ({
           ? `0 16px 48px ${alpha(colorPsychology.primary, 0.3)}, 0 0 0 8px ${alpha(colorPsychology.primary, 0.1)}`
           : '0 12px 40px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.03)',
         transition: `all ${baseStyle.animations.duration}ms ${baseStyle.animations.easing}`,
-        overflow: 'visible',
+        overflow: 'hidden', // ← КЛЮЧОВЕ: обмежуємо ambient particles межами компонента
         // Dotted playful pattern
         '&::before': {
           content: '""',
@@ -699,9 +703,6 @@ const TapImage: React.FC<TapImageProps> = ({
       }}
       onClick={onFocus}
     >
-      {/* Ambient floating particles */}
-      {!isSelected && <TapImageAmbient enabled intensity="medium" />}
-
       {/* Audio toggle button (play mode only) */}
       {!isSelected && (
         <Box sx={{ position: 'relative' }}>
@@ -890,4 +891,3 @@ const TapImage: React.FC<TapImageProps> = ({
 };
 
 export default TapImage;
-

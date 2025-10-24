@@ -235,20 +235,6 @@ export const ToddlerDragDrop: React.FC<ToddlerDragDropProps & { children: React.
           } : {},
         }}
       >
-        {/* Decorative elements for toddlers */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            fontSize: '2rem',
-            opacity: 0.3,
-            pointerEvents: 'none',
-          }}
-        >
-          🌟✨🎈
-        </Box>
-
         {children}
       </Box>
     </ToddlerDragDropContext.Provider>

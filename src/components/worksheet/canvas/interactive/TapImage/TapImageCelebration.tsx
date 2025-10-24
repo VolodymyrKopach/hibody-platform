@@ -64,12 +64,14 @@ const TapImageCelebration: React.FC<TapImageCelebrationProps> = ({
           </style>
 
           {/* 🎊 Confetti explosion */}
-          {Array.from({ length: 100 }).map((_, i) => {
+          {Array.from({ length: 150 }).map((_, i) => {
             const randomColor = partyColors[Math.floor(Math.random() * partyColors.length)];
-            const randomX = (Math.random() - 0.5) * 200;
-            const randomY = -100 - Math.random() * 100;
+            const angle = (Math.random() * 360) * (Math.PI / 180);
+            const velocity = 100 + Math.random() * 300;
+            const randomX = Math.cos(angle) * velocity;
+            const randomY = Math.sin(angle) * velocity;
             const randomRotate = Math.random() * 720;
-            const randomDelay = Math.random() * 0.5;
+            const randomDelay = Math.random() * 0.3;
 
             return (
               <motion.div
@@ -79,26 +81,30 @@ const TapImageCelebration: React.FC<TapImageCelebrationProps> = ({
                   y: 0,
                   rotate: 0,
                   opacity: 1,
+                  scale: 1,
                 }}
                 animate={{
                   x: randomX,
                   y: randomY,
                   rotate: randomRotate,
-                  opacity: [1, 1, 0],
+                  opacity: [1, 1, 0.8, 0],
+                  scale: [1, 1.2, 0.8, 0.5],
                 }}
                 transition={{
-                  duration: 2 + Math.random(),
+                  duration: 2.5 + Math.random() * 0.5,
                   delay: randomDelay,
-                  ease: 'easeOut',
+                  ease: [0.25, 0.1, 0.25, 1],
                 }}
                 style={{
                   position: 'absolute',
-                  width: 12,
-                  height: 12,
+                  width: Math.random() > 0.7 ? 16 : 12,
+                  height: Math.random() > 0.7 ? 16 : 12,
                   background: randomColor,
                   borderRadius: Math.random() > 0.5 ? '50%' : '2px',
                   left: '50%',
                   top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  boxShadow: `0 0 8px ${randomColor}`,
                 }}
               />
             );

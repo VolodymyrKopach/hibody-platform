@@ -210,15 +210,24 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
       triggerHaptic('success');
       setAnimalHelperMessage(getAnimalHelperMessage(true, item.label));
       
-      // Mini celebration
-      confetti({
-        particleCount: 30,
-        spread: 50,
+      // Mini celebration - fire from center with spread
+      // Use a global canvas to avoid being constrained by parent container
+      const myConfetti = confetti.create(undefined, { 
+        resize: true,
+        useWorker: true 
+      });
+      
+      myConfetti({
+        particleCount: 50,
+        spread: 70,
         origin: { 
-          x: position.x / window.innerWidth,
-          y: position.y / window.innerHeight 
+          x: 0.5,  // Center horizontally
+          y: 0.5   // Center vertically
         },
         colors: ['#FFD700', '#FF69B4', '#00CED1', '#98FB98'],
+        startVelocity: 30,
+        gravity: 1,
+        ticks: 100,
       });
     } else {
       soundService.playError();
@@ -269,13 +278,46 @@ const MagneticPlayground: React.FC<MagneticPlaygroundProps> = ({
       
       console.log('🎉 Game completed! Showing celebration...');
       
-      // Major celebration
-      confetti({
-        particleCount: 150,
-        spread: 100,
-        origin: { y: 0.6 },
-        colors: ['#FFD700', '#FF69B4', '#00CED1', '#98FB98', '#DDA0DD'],
+      // Major celebration - multiple bursts!
+      // Create a global confetti instance to avoid being constrained by parent container
+      const myConfetti = confetti.create(undefined, { 
+        resize: true,
+        useWorker: true 
       });
+      
+      const duration = 3000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { 
+        startVelocity: 30, 
+        spread: 360, 
+        ticks: 60, 
+        zIndex: 10000,
+        colors: ['#FFD700', '#FF69B4', '#00CED1', '#98FB98', '#DDA0DD']
+      };
+
+      const interval = setInterval(() => {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        
+        // Fire from left
+        myConfetti({
+          ...defaults,
+          particleCount,
+          origin: { x: 0.2, y: 0.6 }
+        });
+        
+        // Fire from right
+        myConfetti({
+          ...defaults,
+          particleCount,
+          origin: { x: 0.8, y: 0.6 }
+        });
+      }, 250);
 
       soundService.playSuccess();
       triggerHaptic('success');
