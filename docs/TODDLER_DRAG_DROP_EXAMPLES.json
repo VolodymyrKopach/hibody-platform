@@ -1,0 +1,434 @@
+{
+  "toddler_themes": [
+    {
+      "id": "feed-animals",
+      "name": "🐶 Нагодуй тваринок",
+      "description": "Дай кожній тваринці її улюблену їжу",
+      "difficulty": "easy",
+      "config": {
+        "ageStyle": "toddler",
+        "layout": "horizontal",
+        "snapDistance": 120,
+        "items": [
+          {
+            "id": "bone",
+            "imageUrl": "url-to-bone-image",
+            "correctTarget": "dog",
+            "label": "Кістка",
+            "emoji": "🦴"
+          },
+          {
+            "id": "fish",
+            "imageUrl": "url-to-fish-image",
+            "correctTarget": "cat",
+            "label": "Рибка",
+            "emoji": "🐟"
+          },
+          {
+            "id": "honey",
+            "imageUrl": "url-to-honey-image",
+            "correctTarget": "bear",
+            "label": "Мед",
+            "emoji": "🍯"
+          }
+        ],
+        "targets": [
+          {
+            "id": "dog",
+            "label": "Песик",
+            "backgroundColor": "#FFE5B4",
+            "character": "🐶",
+            "celebrationText": "Woof! Yummy!"
+          },
+          {
+            "id": "cat",
+            "label": "Котик",
+            "backgroundColor": "#FFE5F1",
+            "character": "🐱",
+            "celebrationText": "Meow! Tasty!"
+          },
+          {
+            "id": "bear",
+            "label": "Ведмідь",
+            "backgroundColor": "#E8DCC4",
+            "character": "🐻",
+            "celebrationText": "Yum yum!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "rainbow-colors",
+      "name": "🌈 Кольорова веселка",
+      "description": "Підбери правильний колір до кожної хмаринки",
+      "difficulty": "easy",
+      "config": {
+        "ageStyle": "toddler",
+        "layout": "horizontal",
+        "snapDistance": 120,
+        "items": [
+          {
+            "id": "red-heart",
+            "imageUrl": "url-to-red-item",
+            "correctTarget": "red-cloud",
+            "label": "Червоне",
+            "emoji": "❤️"
+          },
+          {
+            "id": "yellow-star",
+            "imageUrl": "url-to-yellow-item",
+            "correctTarget": "yellow-cloud",
+            "label": "Жовте",
+            "emoji": "⭐"
+          },
+          {
+            "id": "blue-wave",
+            "imageUrl": "url-to-blue-item",
+            "correctTarget": "blue-cloud",
+            "label": "Синє",
+            "emoji": "💙"
+          }
+        ],
+        "targets": [
+          {
+            "id": "red-cloud",
+            "label": "Червона хмаринка",
+            "backgroundColor": "#FFB3BA",
+            "character": "☁️",
+            "celebrationText": "Red! YES!"
+          },
+          {
+            "id": "yellow-cloud",
+            "label": "Жовта хмаринка",
+            "backgroundColor": "#FFFFBA",
+            "character": "☁️",
+            "celebrationText": "Yellow! WOW!"
+          },
+          {
+            "id": "blue-cloud",
+            "label": "Синя хмаринка",
+            "backgroundColor": "#BAE1FF",
+            "character": "☁️",
+            "celebrationText": "Blue! COOL!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "shapes-basics",
+      "name": "🔺 Вивчаємо форми",
+      "description": "Знайди місце для кожної фігури",
+      "difficulty": "easy",
+      "config": {
+        "ageStyle": "toddler",
+        "layout": "horizontal",
+        "snapDistance": 120,
+        "items": [
+          {
+            "id": "circle",
+            "imageUrl": "url-to-circle",
+            "correctTarget": "circle-spot",
+            "label": "Коло",
+            "emoji": "⭕"
+          },
+          {
+            "id": "square",
+            "imageUrl": "url-to-square",
+            "correctTarget": "square-spot",
+            "label": "Квадрат",
+            "emoji": "⬜"
+          },
+          {
+            "id": "triangle",
+            "imageUrl": "url-to-triangle",
+            "correctTarget": "triangle-spot",
+            "label": "Трикутник",
+            "emoji": "🔺"
+          }
+        ],
+        "targets": [
+          {
+            "id": "circle-spot",
+            "label": "Коло",
+            "backgroundColor": "#FFE5E5",
+            "character": "⭕",
+            "celebrationText": "Round! Yes!"
+          },
+          {
+            "id": "square-spot",
+            "label": "Квадрат",
+            "backgroundColor": "#E5FFE5",
+            "character": "⬜",
+            "celebrationText": "Square! Good!"
+          },
+          {
+            "id": "triangle-spot",
+            "label": "Трикутник",
+            "backgroundColor": "#E5E5FF",
+            "character": "🔺",
+            "celebrationText": "Triangle! WOW!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fruit-basket",
+      "name": "🧺 Фруктова корзинка",
+      "description": "Збери фрукти у кошик",
+      "difficulty": "easy",
+      "config": {
+        "ageStyle": "toddler",
+        "layout": "horizontal",
+        "snapDistance": 120,
+        "items": [
+          {
+            "id": "apple",
+            "imageUrl": "url-to-apple",
+            "correctTarget": "basket",
+            "label": "Яблуко",
+            "emoji": "🍎"
+          },
+          {
+            "id": "banana",
+            "imageUrl": "url-to-banana",
+            "correctTarget": "basket",
+            "label": "Банан",
+            "emoji": "🍌"
+          },
+          {
+            "id": "orange",
+            "imageUrl": "url-to-orange",
+            "correctTarget": "basket",
+            "label": "Апельсин",
+            "emoji": "🍊"
+          }
+        ],
+        "targets": [
+          {
+            "id": "basket",
+            "label": "Кошик для фруктів",
+            "backgroundColor": "#F4E4C1",
+            "character": "🧺",
+            "celebrationText": "Yummy fruits!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "happy-faces",
+      "name": "😊 Веселі емоції",
+      "description": "Підбери правильну емоцію",
+      "difficulty": "easy",
+      "config": {
+        "ageStyle": "toddler",
+        "layout": "horizontal",
+        "snapDistance": 120,
+        "items": [
+          {
+            "id": "happy-toy",
+            "imageUrl": "url-to-happy-item",
+            "correctTarget": "happy-face",
+            "label": "Радість",
+            "emoji": "🎉"
+          },
+          {
+            "id": "love-toy",
+            "imageUrl": "url-to-love-item",
+            "correctTarget": "love-face",
+            "label": "Любов",
+            "emoji": "💖"
+          },
+          {
+            "id": "surprised-toy",
+            "imageUrl": "url-to-surprised-item",
+            "correctTarget": "surprised-face",
+            "label": "Здивування",
+            "emoji": "✨"
+          }
+        ],
+        "targets": [
+          {
+            "id": "happy-face",
+            "label": "Щасливий",
+            "backgroundColor": "#FFFACD",
+            "character": "😊",
+            "celebrationText": "Happy! YAY!"
+          },
+          {
+            "id": "love-face",
+            "label": "Закоханий",
+            "backgroundColor": "#FFE5EC",
+            "character": "🥰",
+            "celebrationText": "Love it!"
+          },
+          {
+            "id": "surprised-face",
+            "label": "Здивований",
+            "backgroundColor": "#E5F0FF",
+            "character": "😮",
+            "celebrationText": "WOW!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vehicles-where",
+      "name": "🚗 Де їздить транспорт?",
+      "description": "Підбери місце для кожного транспорту",
+      "difficulty": "easy",
+      "config": {
+        "ageStyle": "toddler",
+        "layout": "horizontal",
+        "snapDistance": 120,
+        "items": [
+          {
+            "id": "car",
+            "imageUrl": "url-to-car",
+            "correctTarget": "road",
+            "label": "Машинка",
+            "emoji": "🚗"
+          },
+          {
+            "id": "plane",
+            "imageUrl": "url-to-plane",
+            "correctTarget": "sky",
+            "label": "Літак",
+            "emoji": "✈️"
+          },
+          {
+            "id": "boat",
+            "imageUrl": "url-to-boat",
+            "correctTarget": "water",
+            "label": "Кораблик",
+            "emoji": "⛵"
+          }
+        ],
+        "targets": [
+          {
+            "id": "road",
+            "label": "Дорога",
+            "backgroundColor": "#D3D3D3",
+            "character": "🛣️",
+            "celebrationText": "On road!"
+          },
+          {
+            "id": "sky",
+            "label": "Небо",
+            "backgroundColor": "#ADD8E6",
+            "character": "☁️",
+            "celebrationText": "In sky!"
+          },
+          {
+            "id": "water",
+            "label": "Вода",
+            "backgroundColor": "#B0E0E6",
+            "character": "🌊",
+            "celebrationText": "On water!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "big-small",
+      "name": "📏 Великий та маленький",
+      "description": "Розбери предмети за розміром",
+      "difficulty": "easy",
+      "config": {
+        "ageStyle": "toddler",
+        "layout": "horizontal",
+        "snapDistance": 120,
+        "items": [
+          {
+            "id": "big-ball",
+            "imageUrl": "url-to-big-ball",
+            "correctTarget": "big-box",
+            "label": "Великий м'яч",
+            "emoji": "🏀"
+          },
+          {
+            "id": "small-ball",
+            "imageUrl": "url-to-small-ball",
+            "correctTarget": "small-box",
+            "label": "Маленький м'яч",
+            "emoji": "⚽"
+          }
+        ],
+        "targets": [
+          {
+            "id": "big-box",
+            "label": "Велика коробка",
+            "backgroundColor": "#FFE4B5",
+            "character": "📦",
+            "celebrationText": "BIG!"
+          },
+          {
+            "id": "small-box",
+            "label": "Маленька коробка",
+            "backgroundColor": "#FFDAB9",
+            "character": "📦",
+            "celebrationText": "Small!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "day-night",
+      "name": "🌞 День і ніч",
+      "description": "Що належить дню, а що ночі?",
+      "difficulty": "easy",
+      "config": {
+        "ageStyle": "toddler",
+        "layout": "horizontal",
+        "snapDistance": 120,
+        "items": [
+          {
+            "id": "sun",
+            "imageUrl": "url-to-sun",
+            "correctTarget": "day",
+            "label": "Сонечко",
+            "emoji": "☀️"
+          },
+          {
+            "id": "moon",
+            "imageUrl": "url-to-moon",
+            "correctTarget": "night",
+            "label": "Місяць",
+            "emoji": "🌙"
+          },
+          {
+            "id": "star",
+            "imageUrl": "url-to-star",
+            "correctTarget": "night",
+            "label": "Зірка",
+            "emoji": "⭐"
+          }
+        ],
+        "targets": [
+          {
+            "id": "day",
+            "label": "День",
+            "backgroundColor": "#FFFACD",
+            "character": "🌞",
+            "celebrationText": "Daytime!"
+          },
+          {
+            "id": "night",
+            "label": "Ніч",
+            "backgroundColor": "#4A4A68",
+            "character": "🌛",
+            "celebrationText": "Nighttime!"
+          }
+        ]
+      }
+    }
+  ],
+  "notes": {
+    "imageUrl": "Можна використовувати URL згенеровані AI або завантажені фото",
+    "emoji": "Завжди додавайте emoji для toddler mode - це робить гру цікавішою",
+    "character": "Персонажі роблять target zones живими та цікавими",
+    "celebrationText": "Короткі позитивні фрази підбадьорюють дітей",
+    "snapDistance": "120px для малюків - легко потрапити в ціль",
+    "backgroundColor": "Використовуйте пастельні кольори для комфорту очей"
+  }
+}
+
