@@ -134,8 +134,8 @@ const TestComponentsPage: React.FC = () => {
     },
     {
       id: 'drag-drop-toddler',
-      name: 'Drag & Drop (Малюки)',
-      description: 'Великі предмети з магнітним притягуванням',
+      name: 'Drag & Drop (Малюки) - 🐶 Нагодуй тваринок',
+      description: 'Великі яскраві елементи, милі персонажі, крейзі анімації!',
       icon: <Move size={24} />,
       type: 'interactive',
       ageGroups: ['3-5'],
@@ -143,23 +143,113 @@ const TestComponentsPage: React.FC = () => {
         <SimpleDragAndDrop
           items={[
             {
-              id: 'apple',
-              imageUrl: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=250',
-              correctTarget: 'fruits',
-              label: '🍎',
+              id: 'bone',
+              imageUrl: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=250',
+              correctTarget: 'dog',
+              label: 'Кістка',
+              emoji: '🦴',
             },
             {
-              id: 'banana',
-              imageUrl: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=250',
-              correctTarget: 'fruits',
-              label: '🍌',
+              id: 'fish',
+              imageUrl: 'https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=250',
+              correctTarget: 'cat',
+              label: 'Рибка',
+              emoji: '🐟',
+            },
+            {
+              id: 'honey',
+              imageUrl: 'https://images.unsplash.com/photo-1587049352846-4a222e784538?w=250',
+              correctTarget: 'bear',
+              label: 'Мед',
+              emoji: '🍯',
             },
           ]}
           targets={[
             {
-              id: 'fruits',
-              label: 'Фрукти 🍎',
-              backgroundColor: '#FFD700',
+              id: 'dog',
+              label: 'Песик',
+              backgroundColor: '#FFE5B4',
+              character: '🐶',
+              celebrationText: 'Woof! Yummy!',
+            },
+            {
+              id: 'cat',
+              label: 'Котик',
+              backgroundColor: '#FFE5F1',
+              character: '🐱',
+              celebrationText: 'Meow! Tasty!',
+            },
+            {
+              id: 'bear',
+              label: 'Ведмідь',
+              backgroundColor: '#E8DCC4',
+              character: '🐻',
+              celebrationText: 'Yum yum!',
+            },
+          ]}
+          layout="horizontal"
+          difficulty="easy"
+          snapDistance={120}
+          ageStyle="toddler"
+        />
+      ),
+    },
+    {
+      id: 'drag-drop-toddler-colors',
+      name: 'Drag & Drop (Малюки) - 🌈 Кольорова веселка',
+      description: 'Навчання кольорів через гру з веселими хмаринками',
+      icon: <Palette size={24} />,
+      type: 'interactive',
+      ageGroups: ['3-5'],
+      component: (
+        <SimpleDragAndDrop
+          items={[
+            {
+              id: 'red-heart',
+              imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=250',
+              correctTarget: 'red-cloud',
+              label: 'Червоне',
+              emoji: '❤️',
+            },
+            {
+              id: 'yellow-star',
+              imageUrl: 'https://images.unsplash.com/photo-1519791883288-dc8bd696e667?w=250',
+              correctTarget: 'yellow-cloud',
+              label: 'Жовте',
+              emoji: '⭐',
+            },
+            {
+              id: 'blue-wave',
+              imageUrl: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=250',
+              correctTarget: 'blue-cloud',
+              label: 'Синє',
+              emoji: '💙',
+            },
+          ]}
+          targets={[
+            {
+              id: 'red-cloud',
+              label: 'Червона хмаринка',
+              backgroundColor: '#FFB3BA',
+              character: '☁️',
+              celebrationText: 'Red! YES!',
+              idleAnimation: 'bounce',
+            },
+            {
+              id: 'yellow-cloud',
+              label: 'Жовта хмаринка',
+              backgroundColor: '#FFFFBA',
+              character: '☁️',
+              celebrationText: 'Yellow! WOW!',
+              idleAnimation: 'pulse',
+            },
+            {
+              id: 'blue-cloud',
+              label: 'Синя хмаринка',
+              backgroundColor: '#BAE1FF',
+              character: '☁️',
+              celebrationText: 'Blue! COOL!',
+              idleAnimation: 'wiggle',
             },
           ]}
           layout="horizontal"
