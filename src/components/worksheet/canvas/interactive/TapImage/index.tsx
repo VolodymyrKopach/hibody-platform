@@ -671,12 +671,17 @@ const TapImage: React.FC<TapImageProps> = ({
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'center',
+        width: '100%',
+        maxWidth: 1000,
+        mx: 'auto',
         gap: baseStyle.sizes.gap * 0.5, // Компактніше
         p: baseStyle.sizes.padding * 1.5, // Менше padding
         borderRadius: `${baseStyle.borders.radius * 3}px`,
         // 🌈 Playful gradient background
         background: isSelected
           ? `linear-gradient(135deg, ${alpha(colorPsychology.primary, 0.15)}, ${alpha(colorPsychology.secondary, 0.15)})`
+          : ageStyleProp === 'toddler'
+          ? 'linear-gradient(135deg, #87CEEB 0%, #98FB98 30%, #FFE4B5 60%, #F0E68C 100%)'
           : `linear-gradient(135deg, 
               ${alpha('#FFF5F7', 0.8)} 0%, 
               ${alpha('#E0F2FE', 0.8)} 50%, 

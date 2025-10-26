@@ -735,6 +735,8 @@ const SimpleDragAndDrop: React.FC<SimpleDragAndDropProps> = ({
       sx={{
         position: 'relative',
         width: '100%',
+        maxWidth: 1000,
+        mx: 'auto',
         minHeight: isToddlerMode ? 500 : 400,
         p: isToddlerMode ? 5 : 3,
         border: isSelected ? '2px solid' : '2px solid transparent',

@@ -23,6 +23,7 @@ interface ColorMatcherProps {
   autoVoice?: boolean; // Automatically speak color name
   theme?: ThemeName;
   ageGroup?: string;
+  ageStyle?: 'toddler' | 'preschool' | 'elementary'; // New prop for age-specific styling
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;
@@ -34,6 +35,7 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
   showNames = true,
   autoVoice = true,
   theme: themeName,
+  ageStyle = 'preschool',
   isSelected,
   onEdit,
   onFocus,
@@ -46,6 +48,7 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
 
   const isSingleMode = mode === 'single';
   const currentColor = isSingleMode ? colors[currentColorIndex] : null;
+  const isToddlerMode = ageStyle === 'toddler';
 
   // Check if all colors are selected in multiple mode
   useEffect(() => {
@@ -155,6 +158,8 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
     const isSelectedInMultipleMode = selectedColors.has(index);
     const isHovered = hoveredIndex === index;
     const shouldGlow = (isSingleMode && isTargetInSingleMode) || isHovered;
+    
+    const circleSize = isToddlerMode ? 200 : 150;
 
     return (
       <Box
@@ -189,8 +194,19 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
 
         {/* Color circle */}
         <motion.div
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
+          // Idle animation for toddler mode - attract attention!
+          animate={isToddlerMode && !isSelectedInMultipleMode ? {
+            scale: [1, 1.1, 1],
+            y: [0, -8, 0],
+          } : {}}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: index * 0.2, // Stagger animations
+          }}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9, rotate: -5 }}
           onClick={() => handleColorClick(index, color)}
           style={{
             cursor: 'pointer',
@@ -201,20 +217,22 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
           <Paper
             elevation={isHovered ? 8 : 4}
             sx={{
-              width: 150,
-              height: 150,
+              width: circleSize,
+              height: circleSize,
               borderRadius: '50%',
               backgroundColor: color.hex,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '6px solid',
+              border: isToddlerMode ? '8px solid' : '6px solid',
               borderColor: isTargetInSingleMode 
-                ? 'warning.main' 
+                ? '#FFD93D'
                 : isSelectedInMultipleMode 
-                ? 'success.main' 
+                ? '#51CF66'
                 : 'white',
-              boxShadow: shouldGlow 
+              boxShadow: isToddlerMode
+                ? `0 12px 24px ${color.hex}66, 0 4px 8px rgba(255, 215, 0, 0.3)`
+                : shouldGlow 
                 ? `0 0 30px ${color.hex}` 
                 : undefined,
               transition: 'all 0.3s',
@@ -228,13 +246,13 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               >
-                <Star size={60} fill="white" color="white" />
+                <Star size={isToddlerMode ? 80 : 60} fill="white" color="white" />
               </motion.div>
             )}
           </Paper>
 
           {/* Color name */}
-          {showNames && (
+          {showNames && !isToddlerMode && (
             <Typography
               variant="h6"
               sx={{
@@ -243,6 +261,23 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
                 fontWeight: 700,
                 color: 'text.primary',
                 textTransform: 'capitalize',
+              }}
+            >
+              {color.name}
+            </Typography>
+          )}
+          
+          {/* Large emoji label for toddler mode */}
+          {showNames && isToddlerMode && (
+            <Typography
+              sx={{
+                mt: 2,
+                textAlign: 'center',
+                fontSize: 32,
+                fontWeight: 800,
+                fontFamily: "'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif",
+                color: color.hex,
+                textShadow: '2px 2px 4px rgba(255, 255, 255, 0.8)',
               }}
             >
               {color.name}
@@ -259,19 +294,195 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
       sx={{
         position: 'relative',
         width: '100%',
-        minHeight: 350,
-        p: 3,
+        maxWidth: 1000,
+        mx: 'auto',
+        minHeight: isToddlerMode ? 550 : 350,
+        p: isToddlerMode ? 5 : 3,
         border: isSelected ? '2px solid' : '2px solid transparent',
         borderColor: 'primary.main',
-        borderRadius: 2,
-        backgroundColor: 'grey.50',
+        borderRadius: isToddlerMode ? 4 : 2,
+        background: isToddlerMode
+          ? 'linear-gradient(135deg, #87CEEB 0%, #98FB98 30%, #FFE4B5 60%, #F0E68C 100%)'
+          : 'linear-gradient(135deg, #FAFAFA 0%, #F0F4F8 100%)',
         cursor: onFocus ? 'pointer' : 'default',
+        overflow: 'hidden',
+        
+        // Pattern overlay for toddler mode
+        '&::before': isToddlerMode ? {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.3) 2px, transparent 2px), radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.2) 1px, transparent 1px)',
+          backgroundSize: '50px 50px, 30px 30px',
+          pointerEvents: 'none',
+          zIndex: 0,
+        } : {},
       }}
     >
+      {/* Decorative background elements for toddler mode */}
+      {isToddlerMode && (
+        <>
+          <motion.div
+            animate={{
+              x: [0, 20, 0],
+              opacity: [0.15, 0.25, 0.15],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{
+              position: 'absolute',
+              top: 20,
+              left: 30,
+              fontSize: '50px',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+          >
+            ☁️
+          </motion.div>
+
+          <motion.div
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.15, 0.3, 0.15],
+              rotate: [0, 15, 0],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{
+              position: 'absolute',
+              top: 40,
+              right: 40,
+              fontSize: '35px',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+          >
+            ⭐
+          </motion.div>
+
+          <motion.div
+            animate={{
+              scale: [1, 1.05, 1],
+              opacity: [0.2, 0.3, 0.2],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{
+              position: 'absolute',
+              bottom: 30,
+              left: 50,
+              fontSize: '40px',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+          >
+            🌈
+          </motion.div>
+
+          <motion.div
+            animate={{
+              x: [0, -15, 0],
+              opacity: [0.15, 0.25, 0.15],
+            }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{
+              position: 'absolute',
+              bottom: 50,
+              right: 60,
+              fontSize: '50px',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+          >
+            ☁️
+          </motion.div>
+        </>
+      )}
+
       {/* Instruction header */}
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {isSingleMode && currentColor && !isCompleted && (
+          {/* Toddler mode - emoji instructions instead of text */}
+          {isToddlerMode && isSingleMode && currentColor && !isCompleted && (
+            <motion.div
+              animate={{
+                scale: [1, 1.15, 1],
+                y: [0, -5, 0],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Typography
+                  sx={{
+                    fontSize: 48,
+                    fontWeight: 800,
+                    fontFamily: "'Comic Sans MS', cursive",
+                  }}
+                >
+                  👆
+                </Typography>
+                <Box
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: '50%',
+                    backgroundColor: currentColor.hex,
+                    border: '6px solid #FFD93D',
+                    boxShadow: `0 8px 16px ${currentColor.hex}66`,
+                  }}
+                />
+              </Box>
+            </motion.div>
+          )}
+
+          {/* Toddler mode - multiple colors */}
+          {isToddlerMode && !isSingleMode && !isCompleted && (
+            <motion.div
+              animate={{
+                scale: [1, 1.15, 1],
+                rotate: [0, 5, -5, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: 60,
+                  fontWeight: 800,
+                  fontFamily: "'Comic Sans MS', cursive",
+                }}
+              >
+                👆🎨✨
+              </Typography>
+            </motion.div>
+          )}
+
+          {/* Regular mode instructions */}
+          {!isToddlerMode && isSingleMode && currentColor && !isCompleted && (
             <>
               <Typography variant="h5" fontWeight={700} color="primary">
                 Find: {currentColor.name}
@@ -285,7 +496,7 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
               </IconButton>
             </>
           )}
-          {!isSingleMode && !isCompleted && (
+          {!isToddlerMode && !isSingleMode && !isCompleted && (
             <Typography variant="h5" fontWeight={700} color="primary">
               Tap each color!
             </Typography>
@@ -305,10 +516,12 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
         sx={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: 4,
+          gap: isToddlerMode ? 6 : 4,
           justifyContent: 'center',
           alignItems: 'center',
-          minHeight: 200,
+          minHeight: isToddlerMode ? 300 : 200,
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         {colors.map((color, index) => renderColorCircle(color, index))}
@@ -316,27 +529,59 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
 
       {/* Progress indicator (single mode) */}
       {isSingleMode && !isCompleted && (
-        <Box sx={{ mt: 3, textAlign: 'center' }}>
-          <Typography variant="body1" color="text.secondary">
-            Color {currentColorIndex + 1} of {colors.length}
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 1 }}>
-            {colors.map((_, index) => (
-              <Box
-                key={index}
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: '50%',
-                  backgroundColor: index < currentColorIndex 
-                    ? 'success.main' 
-                    : index === currentColorIndex 
-                    ? 'warning.main' 
-                    : 'grey.300',
-                }}
-              />
-            ))}
-          </Box>
+        <Box sx={{ mt: 3, textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          {/* Stars for toddler mode */}
+          {isToddlerMode ? (
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 2 }}>
+              {colors.map((_, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ scale: 0 }}
+                  animate={{ 
+                    scale: index < currentColorIndex ? 1 : 0.5,
+                    opacity: index < currentColorIndex ? 1 : 0.3,
+                  }}
+                  transition={{ 
+                    delay: index * 0.1,
+                    type: 'spring',
+                    bounce: 0.5,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      fontSize: index < currentColorIndex ? 60 : 40,
+                      filter: index < currentColorIndex ? 'none' : 'grayscale(100%)',
+                    }}
+                  >
+                    ⭐
+                  </Box>
+                </motion.div>
+              ))}
+            </Box>
+          ) : (
+            <>
+              <Typography variant="body1" color="text.secondary">
+                Color {currentColorIndex + 1} of {colors.length}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 1 }}>
+                {colors.map((_, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      backgroundColor: index < currentColorIndex 
+                        ? 'success.main' 
+                        : index === currentColorIndex 
+                        ? 'warning.main' 
+                        : 'grey.300',
+                    }}
+                  />
+                ))}
+              </Box>
+            </>
+          )}
         </Box>
       )}
 
@@ -344,11 +589,12 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
       <AnimatePresence>
         {isCompleted && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
+            initial={{ scale: 0, y: -50 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0, y: 50 }}
+            transition={{ type: 'spring', bounce: 0.5 }}
             style={{
-              position: 'absolute',
+              position: 'fixed',
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
@@ -358,31 +604,66 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
             <Paper
               elevation={8}
               sx={{
-                px: 5,
-                py: 3,
-                backgroundColor: 'success.main',
+                px: isToddlerMode ? 6 : 5,
+                py: isToddlerMode ? 5 : 3,
+                background: isToddlerMode
+                  ? 'linear-gradient(135deg, #FFD93D 0%, #FF6B9D 50%, #4DABF7 100%)'
+                  : 'linear-gradient(135deg, #51CF66 0%, #4ECDC4 100%)',
                 color: 'white',
-                borderRadius: 3,
+                borderRadius: isToddlerMode ? 6 : 3,
+                border: '6px solid #FFFFFF',
+                boxShadow: '0 20px 60px rgba(255, 107, 157, 0.6)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: 1,
+                gap: isToddlerMode ? 2 : 1,
               }}
             >
-              <Sparkles size={48} />
-              <Typography variant="h4" fontWeight={700}>
-                Amazing! 🎨
-              </Typography>
-              <Typography variant="body1">
-                You know all the colors!
-              </Typography>
+              {isToddlerMode ? (
+                <>
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      rotate: [0, -10, 10, 0],
+                    }}
+                    transition={{
+                      duration: 0.6,
+                      repeat: Infinity,
+                    }}
+                  >
+                    <Box sx={{ fontSize: 120, lineHeight: 1 }}>
+                      🎨
+                    </Box>
+                  </motion.div>
+                  <Typography
+                    variant="h3"
+                    sx={{
+                      fontWeight: 800,
+                      fontFamily: "'Comic Sans MS', cursive",
+                      textShadow: '3px 3px 6px rgba(0, 0, 0, 0.3)',
+                    }}
+                  >
+                    WOW! 🎉
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={48} />
+                  <Typography variant="h4" fontWeight={700}>
+                    Amazing! 🎨
+                  </Typography>
+                  <Typography variant="body1">
+                    You know all the colors!
+                  </Typography>
+                </>
+              )}
             </Paper>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Hint */}
-      {!isCompleted && (
+      {!isCompleted && !isToddlerMode && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -395,12 +676,39 @@ const ColorMatcher: React.FC<ColorMatcherProps> = ({
               textAlign: 'center',
               color: 'text.secondary',
               fontStyle: 'italic',
+              position: 'relative',
+              zIndex: 1,
             }}
           >
             {isSingleMode 
               ? '💡 Tap the color that matches!' 
               : '💡 Tap all the colors to hear their names'}
           </Typography>
+        </motion.div>
+      )}
+      
+      {/* Encouragement for toddler mode - emoji only */}
+      {!isCompleted && isToddlerMode && (
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 5, -5, 0],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            delay: 1,
+          }}
+          style={{
+            marginTop: '24px',
+            textAlign: 'center',
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >
+          <Box sx={{ fontSize: '60px', lineHeight: 1 }}>
+            💪✨🎉
+          </Box>
         </motion.div>
       )}
     </Box>

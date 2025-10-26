@@ -25,6 +25,7 @@ interface DrawingCanvasProps {
   colorPalette?: string[];
   brushSizes?: number[];
   ageGroup?: string;
+  ageStyle?: 'toddler' | 'preschool' | 'elementary';
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;
@@ -34,9 +35,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   backgroundImage,
   canvasSize = 'medium',
   tools = ['brush', 'eraser'],
-  colorPalette = ['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'],
-  brushSizes = [2, 5, 10, 15, 20],
+  colorPalette: colorPaletteProp,
+  brushSizes: brushSizesProp,
   ageGroup,
+  ageStyle = 'preschool',
   isSelected,
   onEdit,
   onFocus,
@@ -44,6 +46,19 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentTool, setCurrentTool] = useState<Tool>('brush');
+  
+  const isToddlerMode = ageStyle === 'toddler';
+  
+  // Toddler-friendly colors - bright and saturated
+  const colorPalette = colorPaletteProp ?? (isToddlerMode 
+    ? ['#FF6B9D', '#FFD93D', '#4DABF7', '#51CF66', '#FF8C42', '#B197FC']
+    : ['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF']);
+  
+  // Toddler-friendly brush sizes - larger
+  const brushSizes = brushSizesProp ?? (isToddlerMode 
+    ? [8, 12, 16, 20, 24]
+    : [2, 5, 10, 15, 20]);
+  
   const [currentColor, setCurrentColor] = useState(colorPalette[0]);
   const [brushSize, setBrushSize] = useState(brushSizes[1] || 5);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -224,6 +239,8 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       sx={{
         position: 'relative',
         width: '100%',
+        maxWidth: 1000,
+        mx: 'auto',
         minHeight: 600,
         p: 3,
         border: isSelected ? '2px solid' : '2px solid transparent',

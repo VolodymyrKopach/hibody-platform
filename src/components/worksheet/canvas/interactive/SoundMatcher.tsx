@@ -21,6 +21,7 @@ interface SoundMatcherProps {
   mode?: 'identify' | 'match';
   autoPlayFirst?: boolean;
   ageGroup?: string;
+  ageStyle?: 'toddler' | 'preschool' | 'elementary';
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;
@@ -30,6 +31,7 @@ const SoundMatcher: React.FC<SoundMatcherProps> = ({
   items = [],
   mode = 'identify',
   autoPlayFirst = true,
+  ageStyle = 'preschool',
   isSelected,
   onEdit,
   onFocus,
@@ -41,6 +43,7 @@ const SoundMatcher: React.FC<SoundMatcherProps> = ({
   const [playingSound, setPlayingSound] = useState<string | null>(null);
 
   const currentItem = items[currentItemIndex];
+  const isToddlerMode = ageStyle === 'toddler';
 
   // Auto-play sound when item changes
   React.useEffect(() => {
@@ -143,21 +146,70 @@ const SoundMatcher: React.FC<SoundMatcherProps> = ({
       sx={{
         position: 'relative',
         width: '100%',
-        minHeight: 500,
-        p: 3,
+        maxWidth: 1000,
+        mx: 'auto',
+        minHeight: isToddlerMode ? 600 : 500,
+        p: isToddlerMode ? 5 : 3,
         border: isSelected ? '2px solid' : '2px solid transparent',
         borderColor: 'primary.main',
-        borderRadius: 2,
-        backgroundColor: 'grey.50',
+        borderRadius: isToddlerMode ? 4 : 2,
+        background: isToddlerMode
+          ? 'linear-gradient(135deg, #87CEEB 0%, #98FB98 30%, #FFE4B5 60%, #F0E68C 100%)'
+          : 'linear-gradient(135deg, #FAFAFA 0%, #F0F4F8 100%)',
         cursor: onFocus ? 'pointer' : 'default',
+        overflow: 'hidden',
+        
+        '&::before': isToddlerMode ? {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.3) 2px, transparent 2px), radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.2) 1px, transparent 1px)',
+          backgroundSize: '50px 50px, 30px 30px',
+          pointerEvents: 'none',
+          zIndex: 0,
+        } : {},
       }}
     >
+      {/* Decorative background for toddler */}
+      {isToddlerMode && (
+        <>
+          <motion.div
+            animate={{ x: [0, 20, 0], opacity: [0.15, 0.25, 0.15] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ position: 'absolute', top: 20, left: 30, fontSize: '50px', pointerEvents: 'none', zIndex: 0 }}
+          >
+            ☁️
+          </motion.div>
+          <motion.div
+            animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.3, 0.15] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            style={{ position: 'absolute', top: 40, right: 40, fontSize: '35px', pointerEvents: 'none', zIndex: 0 }}
+          >
+            ⭐
+          </motion.div>
+        </>
+      )}
+
       {/* Header */}
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
         <Box>
-          <Typography variant="h5" fontWeight={700} color="primary">
-            {isCompleted ? '🎵 All Sounds Matched!' : 'Listen and Find!'}
-          </Typography>
+          {isToddlerMode ? (
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <Typography sx={{ fontSize: 60, fontFamily: "'Comic Sans MS', cursive" }}>
+                {isCompleted ? '🎉' : '👂🔊'}
+              </Typography>
+            </motion.div>
+          ) : (
+            <Typography variant="h5" fontWeight={700} color="primary">
+              {isCompleted ? '🎵 All Sounds Matched!' : 'Listen and Find!'}
+            </Typography>
+          )}
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             {isCompleted 
               ? `You matched ${correctCount} out of ${items.length} sounds!` 

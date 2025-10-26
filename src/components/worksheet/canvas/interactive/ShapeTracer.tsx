@@ -21,6 +21,7 @@ interface ShapeTracerProps {
   guideColor?: string;
   traceColor?: string;
   ageGroup?: string;
+  ageStyle?: 'toddler' | 'preschool' | 'elementary';
   isSelected?: boolean;
   onEdit?: (properties: any) => void;
   onFocus?: () => void;
@@ -30,9 +31,10 @@ const ShapeTracer: React.FC<ShapeTracerProps> = ({
   shapePath = 'M 50,50 L 150,50 L 150,150 L 50,150 Z', // Default: square
   shapeName = 'Shape',
   difficulty = 'easy',
-  strokeWidth = 8,
-  guideColor = '#3B82F6',
-  traceColor = '#10B981',
+  strokeWidth: strokeWidthProp,
+  guideColor: guideColorProp,
+  traceColor: traceColorProp,
+  ageStyle = 'preschool',
   isSelected,
   onEdit,
   onFocus,
@@ -44,8 +46,14 @@ const ShapeTracer: React.FC<ShapeTracerProps> = ({
   const [showGuide, setShowGuide] = useState(difficulty === 'easy');
   const [points, setPoints] = useState<Point[]>([]);
 
+  const isToddlerMode = ageStyle === 'toddler';
   const canvasSize = 400;
   const completionThreshold = difficulty === 'easy' ? 70 : difficulty === 'medium' ? 80 : 90;
+  
+  // Age-appropriate stroke width and colors
+  const strokeWidth = strokeWidthProp ?? (isToddlerMode ? 16 : 8);
+  const guideColor = guideColorProp ?? (isToddlerMode ? '#FF6B9D' : '#3B82F6');
+  const traceColor = traceColorProp ?? (isToddlerMode ? '#FFD93D' : '#10B981');
 
   // Initialize canvas
   useEffect(() => {
@@ -197,6 +205,8 @@ const ShapeTracer: React.FC<ShapeTracerProps> = ({
       sx={{
         position: 'relative',
         width: '100%',
+        maxWidth: 1000,
+        mx: 'auto',
         minHeight: 550,
         p: 3,
         border: isSelected ? '2px solid' : '2px solid transparent',

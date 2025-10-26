@@ -364,21 +364,22 @@ const TestComponentsPage: React.FC = () => {
     {
       id: 'color-matcher-toddler',
       name: 'Color Matcher (Малюки)',
-      description: 'Натискайте на яскраві великі кольори',
+      description: 'Натискайте на яскраві великі кольори-бульбашки!',
       icon: <Palette size={24} />,
       type: 'interactive',
       ageGroups: ['3-5'],
       component: (
         <ColorMatcher
           colors={[
-            { name: 'Червоний ❤️', hex: '#FF0000', voicePrompt: 'Red' },
-            { name: 'Синій 💙', hex: '#0000FF', voicePrompt: 'Blue' },
-            { name: 'Жовтий ⭐', hex: '#FFD700', voicePrompt: 'Yellow' },
+            { name: 'Червоний ❤️', hex: '#FF6B6B', voicePrompt: 'Red' },
+            { name: 'Синій 💙', hex: '#4DABF7', voicePrompt: 'Blue' },
+            { name: 'Жовтий ⭐', hex: '#FFD93D', voicePrompt: 'Yellow' },
           ]}
           mode="single"
           showNames={true}
           autoVoice={false}
           theme="rainbow"
+          ageStyle="toddler"
         />
       ),
     },
@@ -408,7 +409,7 @@ const TestComponentsPage: React.FC = () => {
     {
       id: 'counter-toddler',
       name: 'Simple Counter (Малюки)',
-      description: 'Порахуйте до 3 - великі картинки',
+      description: 'Порахуйте до 3 - великі стрибаючі картинки з емоджі цифрами!',
       icon: <Hash size={24} />,
       type: 'interactive',
       ageGroups: ['3-5'],
@@ -428,6 +429,7 @@ const TestComponentsPage: React.FC = () => {
           celebrationAtEnd={true}
           showProgress={true}
           theme="ocean"
+          ageStyle="toddler"
         />
       ),
     },
@@ -535,7 +537,7 @@ const TestComponentsPage: React.FC = () => {
     {
       id: 'shape-tracer-toddler',
       name: 'Shape Tracer (Малюки)',
-      description: 'Обводьте великі прості форми',
+      description: 'Обводьте великі прості форми товстими яскравими лініями!',
       icon: <Shapes size={24} />,
       type: 'interactive',
       ageGroups: ['3-5'],
@@ -544,9 +546,7 @@ const TestComponentsPage: React.FC = () => {
           shapePath="M 50,50 L 150,50 L 150,150 L 50,150 Z"
           shapeName="Квадрат ⬜"
           difficulty="easy"
-          strokeWidth={12}
-          guideColor="#FF6B9D"
-          traceColor="#FFD700"
+          ageStyle="toddler"
         />
       ),
     },
@@ -630,7 +630,7 @@ const TestComponentsPage: React.FC = () => {
     {
       id: 'sound-matcher-toddler',
       name: 'Sound Matcher (Малюки)',
-      description: 'Слухайте звуки тварин - великі картинки',
+      description: 'Слухайте звуки тварин - великі веселі картинки з анімацією!',
       icon: <Volume2 size={24} />,
       type: 'interactive',
       ageGroups: ['3-5'],
@@ -652,6 +652,7 @@ const TestComponentsPage: React.FC = () => {
           ]}
           mode="identify"
           autoPlayFirst={false}
+          ageStyle="toddler"
         />
       ),
     },
@@ -724,7 +725,7 @@ const TestComponentsPage: React.FC = () => {
     {
       id: 'drawing-canvas-toddler',
       name: 'Drawing Canvas (Малюки)',
-      description: 'Малюйте великими пензлями',
+      description: 'Малюйте пальцями великими яскравими кольорами!',
       icon: <Palette size={24} />,
       type: 'interactive',
       ageGroups: ['3-5'],
@@ -732,8 +733,7 @@ const TestComponentsPage: React.FC = () => {
         <DrawingCanvas
           canvasSize="large"
           tools={['brush']}
-          colorPalette={['#FF0000', '#0000FF', '#FFFF00', '#00FF00']}
-          brushSizes={[15, 20, 25]}
+          ageStyle="toddler"
         />
       ),
     },
@@ -1280,90 +1280,88 @@ const TestComponentsPage: React.FC = () => {
               </Typography>
             </Paper>
 
-            <Grid container spacing={3}>
+            <Stack spacing={3}>
               {group.components.map((demo) => (
-                <Grid item xs={12} md={6} xl={4} key={demo.id}>
-                  <Card
-                    elevation={3}
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      borderRadius: 3,
-                      transition: 'transform 0.2s, box-shadow 0.2s',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: 6,
-                      },
-                    }}
-                  >
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      {/* Header */}
-                      <Stack direction="row" spacing={2} alignItems="center" mb={2}>
-                        <Box
-                          sx={{
-                            p: 1.5,
-                            borderRadius: 2,
-                            bgcolor: 'primary.light',
-                            color: 'primary.contrastText',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          {demo.icon}
-                        </Box>
-                        <Box flexGrow={1}>
-                          <Typography variant="h6" fontWeight="bold" gutterBottom>
-                            {demo.name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {demo.description}
-                          </Typography>
-                        </Box>
-                      </Stack>
-
-                      {/* Type Badge */}
-                      <Stack direction="row" spacing={1} mb={2} flexWrap="wrap" gap={1}>
-                        <Chip
-                          label={demo.type === 'interactive' ? 'Інтерактивний' : 'Звичайний'}
-                          size="small"
-                          color={demo.type === 'interactive' ? 'primary' : 'default'}
-                          icon={demo.type === 'interactive' ? <Sparkles size={14} /> : undefined}
-                        />
-                        {demo.ageGroups.map((age) => (
-                          <Chip
-                            key={age}
-                            label={`${age} років`}
-                            size="small"
-                            variant="outlined"
-                            color="secondary"
-                          />
-                        ))}
-                      </Stack>
-
-                      <Divider sx={{ my: 2 }} />
-
-                      {/* Component Preview */}
+                <Card
+                  key={demo.id}
+                  elevation={3}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    borderRadius: 3,
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: 6,
+                    },
+                  }}
+                >
+                  <CardContent>
+                    {/* Header */}
+                    <Stack direction="row" spacing={2} alignItems="center" mb={2}>
                       <Box
                         sx={{
-                          minHeight: 300,
-                          bgcolor: '#f9fafb',
+                          p: 1.5,
                           borderRadius: 2,
-                          p: 2,
+                          bgcolor: 'primary.light',
+                          color: 'primary.contrastText',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          overflow: 'hidden',
                         }}
                       >
-                        {demo.component}
+                        {demo.icon}
                       </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
+                      <Box flexGrow={1}>
+                        <Typography variant="h6" fontWeight="bold" gutterBottom>
+                          {demo.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {demo.description}
+                        </Typography>
+                      </Box>
+                    </Stack>
+
+                    {/* Type Badge */}
+                    <Stack direction="row" spacing={1} mb={2} flexWrap="wrap" gap={1}>
+                      <Chip
+                        label={demo.type === 'interactive' ? 'Інтерактивний' : 'Звичайний'}
+                        size="small"
+                        color={demo.type === 'interactive' ? 'primary' : 'default'}
+                        icon={demo.type === 'interactive' ? <Sparkles size={14} /> : undefined}
+                      />
+                      {demo.ageGroups.map((age) => (
+                        <Chip
+                          key={age}
+                          label={`${age} років`}
+                          size="small"
+                          variant="outlined"
+                          color="secondary"
+                        />
+                      ))}
+                    </Stack>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    {/* Component Preview */}
+                    <Box
+                      sx={{
+                        minHeight: 300,
+                        bgcolor: '#f9fafb',
+                        borderRadius: 2,
+                        p: 2,
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {demo.component}
+                    </Box>
+                  </CardContent>
+                </Card>
               ))}
-            </Grid>
+            </Stack>
           </Box>
         ))}
 
