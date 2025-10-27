@@ -1,0 +1,4518 @@
+{
+  "categories": [
+    {
+      "id": "educational",
+      "name": "Освітні",
+      "emoji": "📚",
+      "items": [
+        {
+          "id": "number-0",
+          "name": "Цифра 0",
+          "nameEn": "Number 0",
+          "category": "educational",
+          "icon": "Number0",
+          "tags": [
+            "цифра",
+            "число",
+            "математика",
+            "нуль"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "number-1",
+          "name": "Цифра 1",
+          "nameEn": "Number 1",
+          "category": "educational",
+          "icon": "Number1",
+          "tags": [
+            "цифра",
+            "число",
+            "математика"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "number-2",
+          "name": "Цифра 2",
+          "nameEn": "Number 2",
+          "category": "educational",
+          "icon": "Number2",
+          "tags": [
+            "цифра",
+            "число",
+            "математика"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "number-3",
+          "name": "Цифра 3",
+          "nameEn": "Number 3",
+          "category": "educational",
+          "icon": "Number3",
+          "tags": [
+            "цифра",
+            "число",
+            "математика"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "number-4",
+          "name": "Цифра 4",
+          "nameEn": "Number 4",
+          "category": "educational",
+          "icon": "Number4",
+          "tags": [
+            "цифра",
+            "число",
+            "математика"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "number-5",
+          "name": "Цифра 5",
+          "nameEn": "Number 5",
+          "category": "educational",
+          "icon": "Number5",
+          "tags": [
+            "цифра",
+            "число",
+            "математика"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "number-6",
+          "name": "Цифра 6",
+          "nameEn": "Number 6",
+          "category": "educational",
+          "icon": "Number6",
+          "tags": [
+            "цифра",
+            "число",
+            "математика"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "number-7",
+          "name": "Цифра 7",
+          "nameEn": "Number 7",
+          "category": "educational",
+          "icon": "Number7",
+          "tags": [
+            "цифра",
+            "число",
+            "математика"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "number-8",
+          "name": "Цифра 8",
+          "nameEn": "Number 8",
+          "category": "educational",
+          "icon": "Number8",
+          "tags": [
+            "цифра",
+            "число",
+            "математика"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "number-9",
+          "name": "Цифра 9",
+          "nameEn": "Number 9",
+          "category": "educational",
+          "icon": "Number9",
+          "tags": [
+            "цифра",
+            "число",
+            "математика"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "plus",
+          "name": "Плюс",
+          "nameEn": "Plus",
+          "category": "educational",
+          "icon": "Plus",
+          "tags": [
+            "математика",
+            "плюс",
+            "додавання"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "minus",
+          "name": "Мінус",
+          "nameEn": "Minus",
+          "category": "educational",
+          "icon": "Minus",
+          "tags": [
+            "математика",
+            "мінус",
+            "віднімання"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "equals",
+          "name": "Дорівнює",
+          "nameEn": "Equals",
+          "category": "educational",
+          "icon": "Equal",
+          "tags": [
+            "математика",
+            "дорівнює"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "multiply",
+          "name": "Множення",
+          "nameEn": "Multiply",
+          "category": "educational",
+          "icon": "X",
+          "tags": [
+            "математика",
+            "множення"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "divide",
+          "name": "Ділення",
+          "nameEn": "Divide",
+          "category": "educational",
+          "icon": "Divide",
+          "tags": [
+            "математика",
+            "ділення"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "circle-shape",
+          "name": "Коло",
+          "nameEn": "Circle",
+          "category": "educational",
+          "icon": "Circle",
+          "tags": [
+            "геометрія",
+            "форма",
+            "коло"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "square-shape",
+          "name": "Квадрат",
+          "nameEn": "Square",
+          "category": "educational",
+          "icon": "Square",
+          "tags": [
+            "геометрія",
+            "форма",
+            "квадрат"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "triangle-shape",
+          "name": "Трикутник",
+          "nameEn": "Triangle",
+          "category": "educational",
+          "icon": "Triangle",
+          "tags": [
+            "геометрія",
+            "форма",
+            "трикутник"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "star-shape",
+          "name": "Зірка",
+          "nameEn": "Star",
+          "category": "educational",
+          "icon": "Star",
+          "tags": [
+            "геометрія",
+            "форма",
+            "зірка"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "heart-shape",
+          "name": "Серце",
+          "nameEn": "Heart",
+          "category": "educational",
+          "icon": "Heart",
+          "tags": [
+            "геометрія",
+            "форма",
+            "серце"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "hexagon-shape",
+          "name": "Шестикутник",
+          "nameEn": "Hexagon",
+          "category": "educational",
+          "icon": "Hexagon",
+          "tags": [
+            "геометрія",
+            "форма",
+            "шестикутник"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "pentagon-shape",
+          "name": "П'ятикутник",
+          "nameEn": "Pentagon",
+          "category": "educational",
+          "icon": "Pentagon",
+          "tags": [
+            "геометрія",
+            "форма",
+            "п'ятикутник"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "diamond-shape",
+          "name": "Ромб",
+          "nameEn": "Diamond",
+          "category": "educational",
+          "icon": "Diamond",
+          "tags": [
+            "геометрія",
+            "форма",
+            "ромб"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "animals",
+      "name": "Тварини",
+      "emoji": "🐾",
+      "items": [
+        {
+          "id": "cat",
+          "name": "Кіт",
+          "nameEn": "Cat",
+          "category": "animals",
+          "icon": "Cat",
+          "tags": [
+            "тварина",
+            "кіт",
+            "домашня"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "dog",
+          "name": "Собака",
+          "nameEn": "Dog",
+          "category": "animals",
+          "icon": "Dog",
+          "tags": [
+            "тварина",
+            "собака",
+            "домашня"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "fish",
+          "name": "Риба",
+          "nameEn": "Fish",
+          "category": "animals",
+          "icon": "Fish",
+          "tags": [
+            "тварина",
+            "риба",
+            "водна"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "bug",
+          "name": "Комаха",
+          "nameEn": "Bug",
+          "category": "animals",
+          "icon": "Bug",
+          "tags": [
+            "тварина",
+            "комаха",
+            "жук"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "butterfly",
+          "name": "Метелик",
+          "nameEn": "Butterfly",
+          "category": "animals",
+          "icon": "Bug",
+          "tags": [
+            "комаха",
+            "метелик"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "bee",
+          "name": "Бджола",
+          "nameEn": "Bee",
+          "category": "animals",
+          "icon": "Bug",
+          "tags": [
+            "комаха",
+            "бджола"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "spider",
+          "name": "Павук",
+          "nameEn": "Spider",
+          "category": "animals",
+          "icon": "Bug",
+          "tags": [
+            "комаха",
+            "павук"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "ant",
+          "name": "Мураха",
+          "nameEn": "Ant",
+          "category": "animals",
+          "icon": "Bug",
+          "tags": [
+            "комаха",
+            "мураха"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "nature",
+      "name": "Природа",
+      "emoji": "🌿",
+      "items": [
+        {
+          "id": "tree",
+          "name": "Дерево",
+          "nameEn": "Tree",
+          "category": "nature",
+          "icon": "ChristmasTree",
+          "tags": [
+            "природа",
+            "дерево",
+            "рослина"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "flower",
+          "name": "Квітка",
+          "nameEn": "Flower",
+          "category": "nature",
+          "icon": "Flower",
+          "tags": [
+            "природа",
+            "квітка",
+            "рослина"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "sun",
+          "name": "Сонце",
+          "nameEn": "Sun",
+          "category": "nature",
+          "icon": "Sun",
+          "tags": [
+            "природа",
+            "сонце",
+            "погода"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "cloud",
+          "name": "Хмара",
+          "nameEn": "Cloud",
+          "category": "nature",
+          "icon": "Cloud",
+          "tags": [
+            "природа",
+            "хмара",
+            "погода"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "moon",
+          "name": "Місяць",
+          "nameEn": "Moon",
+          "category": "nature",
+          "icon": "Moon",
+          "tags": [
+            "природа",
+            "місяць",
+            "ніч"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "leaf",
+          "name": "Листок",
+          "nameEn": "Leaf",
+          "category": "nature",
+          "icon": "Leaf",
+          "tags": [
+            "природа",
+            "листок",
+            "рослина"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "mountain",
+          "name": "Гора",
+          "nameEn": "Mountain",
+          "category": "nature",
+          "icon": "Mountain",
+          "tags": [
+            "природа",
+            "гора",
+            "ландшафт"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "rainbow",
+          "name": "Веселка",
+          "nameEn": "Rainbow",
+          "category": "nature",
+          "icon": "Rainbow",
+          "tags": [
+            "природа",
+            "веселка",
+            "погода"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "star-sky",
+          "name": "Зірка небесна",
+          "nameEn": "Star",
+          "category": "nature",
+          "icon": "Star",
+          "tags": [
+            "природа",
+            "зірка",
+            "космос"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "droplet",
+          "name": "Крапля",
+          "nameEn": "Droplet",
+          "category": "nature",
+          "icon": "Droplet",
+          "tags": [
+            "природа",
+            "вода",
+            "дощ"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "snowflake",
+          "name": "Сніжинка",
+          "nameEn": "Snowflake",
+          "category": "nature",
+          "icon": "Snowflake",
+          "tags": [
+            "природа",
+            "сніг",
+            "зима"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "lightning",
+          "name": "Блискавка",
+          "nameEn": "Lightning",
+          "category": "nature",
+          "icon": "BoltFilled",
+          "tags": [
+            "природа",
+            "блискавка",
+            "погода"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "cactus",
+          "name": "Кактус",
+          "nameEn": "Cactus",
+          "category": "nature",
+          "icon": "Plant",
+          "tags": [
+            "природа",
+            "кактус",
+            "рослина"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "volcano",
+          "name": "Вулкан",
+          "nameEn": "Volcano",
+          "category": "nature",
+          "icon": "Flame",
+          "tags": [
+            "природа",
+            "вулкан",
+            "гора"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "earth",
+          "name": "Земля",
+          "nameEn": "Earth",
+          "category": "nature",
+          "icon": "Globe",
+          "tags": [
+            "природа",
+            "земля",
+            "планета"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "food",
+      "name": "Їжа",
+      "emoji": "🍎",
+      "items": [
+        {
+          "id": "apple",
+          "name": "Яблуко",
+          "nameEn": "Apple",
+          "category": "food",
+          "icon": "Apple",
+          "tags": [
+            "їжа",
+            "фрукт",
+            "яблуко"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "cherry",
+          "name": "Вишня",
+          "nameEn": "Cherry",
+          "category": "food",
+          "icon": "Cherry",
+          "tags": [
+            "їжа",
+            "фрукт",
+            "вишня"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "carrot",
+          "name": "Морква",
+          "nameEn": "Carrot",
+          "category": "food",
+          "icon": "Carrot",
+          "tags": [
+            "їжа",
+            "овоч",
+            "морква"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "candy",
+          "name": "Цукерка",
+          "nameEn": "Candy",
+          "category": "food",
+          "icon": "Candy",
+          "tags": [
+            "їжа",
+            "солодощі",
+            "цукерка"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "icecream",
+          "name": "Морозиво",
+          "nameEn": "Ice Cream",
+          "category": "food",
+          "icon": "IceCream",
+          "tags": [
+            "їжа",
+            "солодощі",
+            "морозиво"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "milk",
+          "name": "Молоко",
+          "nameEn": "Milk",
+          "category": "food",
+          "icon": "Milk",
+          "tags": [
+            "їжа",
+            "напій",
+            "молоко"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "bread",
+          "name": "Хліб",
+          "nameEn": "Bread",
+          "category": "food",
+          "icon": "Wheat",
+          "tags": [
+            "їжа",
+            "хліб"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "pizza",
+          "name": "Піца",
+          "nameEn": "Pizza",
+          "category": "food",
+          "icon": "Pizza",
+          "tags": [
+            "їжа",
+            "піца"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "cookie",
+          "name": "Печиво",
+          "nameEn": "Cookie",
+          "category": "food",
+          "icon": "Cookie",
+          "tags": [
+            "їжа",
+            "солодощі",
+            "печиво"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "coffee",
+          "name": "Кава",
+          "nameEn": "Coffee",
+          "category": "food",
+          "icon": "Coffee",
+          "tags": [
+            "їжа",
+            "напій",
+            "кава"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "transport",
+      "name": "Транспорт",
+      "emoji": "🚗",
+      "items": [
+        {
+          "id": "car",
+          "name": "Машина",
+          "nameEn": "Car",
+          "category": "transport",
+          "icon": "Car",
+          "tags": [
+            "транспорт",
+            "машина",
+            "авто"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "plane",
+          "name": "Літак",
+          "nameEn": "Plane",
+          "category": "transport",
+          "icon": "Plane",
+          "tags": [
+            "транспорт",
+            "літак",
+            "авіа"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "ship",
+          "name": "Корабель",
+          "nameEn": "Ship",
+          "category": "transport",
+          "icon": "Ship",
+          "tags": [
+            "транспорт",
+            "корабель",
+            "море"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "bike",
+          "name": "Велосипед",
+          "nameEn": "Bike",
+          "category": "transport",
+          "icon": "Bike",
+          "tags": [
+            "транспорт",
+            "велосипед"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "bus",
+          "name": "Автобус",
+          "nameEn": "Bus",
+          "category": "transport",
+          "icon": "Bus",
+          "tags": [
+            "транспорт",
+            "автобус"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "rocket",
+          "name": "Ракета",
+          "nameEn": "Rocket",
+          "category": "transport",
+          "icon": "Rocket",
+          "tags": [
+            "транспорт",
+            "ракета",
+            "космос"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "ambulance",
+          "name": "Швидка",
+          "nameEn": "Ambulance",
+          "category": "transport",
+          "icon": "Ambulance",
+          "tags": [
+            "транспорт",
+            "швидка",
+            "медицина"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "emotions",
+      "name": "Емоції",
+      "emoji": "😊",
+      "items": [
+        {
+          "id": "love",
+          "name": "Любов",
+          "nameEn": "Love",
+          "category": "emotions",
+          "icon": "Heart",
+          "tags": [
+            "емоція",
+            "любов",
+            "серце"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "thinking",
+          "name": "Роздуми",
+          "nameEn": "Thinking",
+          "category": "emotions",
+          "icon": "Brain",
+          "tags": [
+            "емоція",
+            "думка",
+            "роздуми"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "home",
+      "name": "Будинок",
+      "emoji": "🏠",
+      "items": [
+        {
+          "id": "door",
+          "name": "Двері",
+          "nameEn": "Door",
+          "category": "home",
+          "icon": "Door",
+          "tags": [
+            "будинок",
+            "двері"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "table",
+          "name": "Стіл",
+          "nameEn": "Table",
+          "category": "home",
+          "icon": "Table",
+          "tags": [
+            "меблі",
+            "стіл"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "chair",
+          "name": "Стілець",
+          "nameEn": "Chair",
+          "category": "home",
+          "icon": "Armchair",
+          "tags": [
+            "меблі",
+            "стілець"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "lamp",
+          "name": "Лампа",
+          "nameEn": "Lamp",
+          "category": "home",
+          "icon": "Lamp",
+          "tags": [
+            "будинок",
+            "лампа",
+            "світло"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "clock",
+          "name": "Годинник",
+          "nameEn": "Clock",
+          "category": "home",
+          "icon": "Clock",
+          "tags": [
+            "будинок",
+            "годинник",
+            "час"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "book",
+          "name": "Книга",
+          "nameEn": "Book",
+          "category": "home",
+          "icon": "Book",
+          "tags": [
+            "освіта",
+            "книга"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "pencil",
+          "name": "Олівець",
+          "nameEn": "Pencil",
+          "category": "home",
+          "icon": "Pencil",
+          "tags": [
+            "освіта",
+            "олівець"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "scissors",
+          "name": "Ножиці",
+          "nameEn": "Scissors",
+          "category": "home",
+          "icon": "Scissors",
+          "tags": [
+            "інструмент",
+            "ножиці"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "ruler",
+          "name": "Лінійка",
+          "nameEn": "Ruler",
+          "category": "home",
+          "icon": "Ruler",
+          "tags": [
+            "освіта",
+            "лінійка"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "backpack",
+          "name": "Рюкзак",
+          "nameEn": "Backpack",
+          "category": "home",
+          "icon": "Backpack",
+          "tags": [
+            "освіта",
+            "рюкзак"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "umbrella",
+          "name": "Парасолька",
+          "nameEn": "Umbrella",
+          "category": "home",
+          "icon": "Umbrella",
+          "tags": [
+            "річ",
+            "парасолька"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "key",
+          "name": "Ключ",
+          "nameEn": "Key",
+          "category": "home",
+          "icon": "Key",
+          "tags": [
+            "річ",
+            "ключ"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "gift",
+          "name": "Подарунок",
+          "nameEn": "Gift",
+          "category": "home",
+          "icon": "Gift",
+          "tags": [
+            "річ",
+            "подарунок"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "phone",
+          "name": "Телефон",
+          "nameEn": "Phone",
+          "category": "home",
+          "icon": "Phone",
+          "tags": [
+            "техніка",
+            "телефон"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "camera",
+          "name": "Камера",
+          "nameEn": "Camera",
+          "category": "home",
+          "icon": "Camera",
+          "tags": [
+            "техніка",
+            "камера"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "sports",
+      "name": "Спорт",
+      "emoji": "⚽",
+      "items": [
+        {
+          "id": "ball",
+          "name": "М'яч",
+          "nameEn": "Ball",
+          "category": "sports",
+          "icon": "Circle",
+          "tags": [
+            "спорт",
+            "м'яч"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "trophy",
+          "name": "Кубок",
+          "nameEn": "Trophy",
+          "category": "sports",
+          "icon": "Trophy",
+          "tags": [
+            "спорт",
+            "кубок",
+            "перемога"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "medal",
+          "name": "Медаль",
+          "nameEn": "Medal",
+          "category": "sports",
+          "icon": "Medal",
+          "tags": [
+            "спорт",
+            "медаль",
+            "перемога"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "target",
+          "name": "Мішень",
+          "nameEn": "Target",
+          "category": "sports",
+          "icon": "Target",
+          "tags": [
+            "спорт",
+            "мішень"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "skateboard",
+          "name": "Скейтборд",
+          "nameEn": "Skateboard",
+          "category": "sports",
+          "icon": "Bike",
+          "tags": [
+            "спорт",
+            "скейтборд"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "music",
+      "name": "Музика",
+      "emoji": "🎵",
+      "items": [
+        {
+          "id": "music-note",
+          "name": "Нота",
+          "nameEn": "Music Note",
+          "category": "music",
+          "icon": "Music",
+          "tags": [
+            "музика",
+            "нота"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "piano",
+          "name": "Піаніно",
+          "nameEn": "Piano",
+          "category": "music",
+          "icon": "Piano",
+          "tags": [
+            "музика",
+            "піаніно",
+            "інструмент"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "detailed"
+        },
+        {
+          "id": "mic",
+          "name": "Мікрофон",
+          "nameEn": "Microphone",
+          "category": "music",
+          "icon": "Microphone",
+          "tags": [
+            "музика",
+            "мікрофон"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "headphones",
+          "name": "Навушники",
+          "nameEn": "Headphones",
+          "category": "music",
+          "icon": "Headphones",
+          "tags": [
+            "музика",
+            "навушники"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "radio",
+          "name": "Радіо",
+          "nameEn": "Radio",
+          "category": "music",
+          "icon": "Radio",
+          "tags": [
+            "музика",
+            "радіо"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "trumpet",
+          "name": "Труба",
+          "nameEn": "Trumpet",
+          "category": "music",
+          "icon": "Music",
+          "tags": [
+            "музика",
+            "труба",
+            "інструмент"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "body",
+      "name": "Тіло",
+      "emoji": "👤",
+      "items": [
+        {
+          "id": "eye",
+          "name": "Око",
+          "nameEn": "Eye",
+          "category": "body",
+          "icon": "Eye",
+          "tags": [
+            "тіло",
+            "око"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "ear",
+          "name": "Вухо",
+          "nameEn": "Ear",
+          "category": "body",
+          "icon": "Ear",
+          "tags": [
+            "тіло",
+            "вухо"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "nose",
+          "name": "Ніс",
+          "nameEn": "Nose",
+          "category": "body",
+          "icon": "Triangle",
+          "tags": [
+            "тіло",
+            "ніс"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "brain",
+          "name": "Мозок",
+          "nameEn": "Brain",
+          "category": "body",
+          "icon": "Brain",
+          "tags": [
+            "тіло",
+            "мозок"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "heart-body",
+          "name": "Серце (орган)",
+          "nameEn": "Heart",
+          "category": "body",
+          "icon": "Heart",
+          "tags": [
+            "тіло",
+            "серце",
+            "орган"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "fingerprint",
+          "name": "Відбиток",
+          "nameEn": "Fingerprint",
+          "category": "body",
+          "icon": "Fingerprint",
+          "tags": [
+            "тіло",
+            "відбиток"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "professions",
+      "name": "Професії",
+      "emoji": "👷",
+      "items": [
+        {
+          "id": "doctor",
+          "name": "Лікар",
+          "nameEn": "Doctor",
+          "category": "professions",
+          "icon": "Stethoscope",
+          "tags": [
+            "професія",
+            "лікар"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "police",
+          "name": "Поліцейський",
+          "nameEn": "Police",
+          "category": "professions",
+          "icon": "ShieldCheck",
+          "tags": [
+            "професія",
+            "поліція"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "firefighter",
+          "name": "Пожежник",
+          "nameEn": "Firefighter",
+          "category": "professions",
+          "icon": "Flame",
+          "tags": [
+            "професія",
+            "пожежник"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "chef",
+          "name": "Кухар",
+          "nameEn": "Chef",
+          "category": "professions",
+          "icon": "ChefHat",
+          "tags": [
+            "професія",
+            "кухар"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "artist",
+          "name": "Художник",
+          "nameEn": "Artist",
+          "category": "professions",
+          "icon": "Palette",
+          "tags": [
+            "професія",
+            "художник"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "builder",
+          "name": "Будівельник",
+          "nameEn": "Builder",
+          "category": "professions",
+          "icon": "Hammer",
+          "tags": [
+            "професія",
+            "будівельник"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "astronaut",
+          "name": "Астронавт",
+          "nameEn": "Astronaut",
+          "category": "professions",
+          "icon": "Rocket",
+          "tags": [
+            "професія",
+            "астронавт",
+            "космос"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "pilot",
+          "name": "Пілот",
+          "nameEn": "Pilot",
+          "category": "professions",
+          "icon": "Plane",
+          "tags": [
+            "професія",
+            "пілот"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "weather",
+      "name": "Погода",
+      "emoji": "🌤️",
+      "items": [
+        {
+          "id": "sunny",
+          "name": "Сонячно",
+          "nameEn": "Sunny",
+          "category": "weather",
+          "icon": "Sun",
+          "tags": [
+            "погода",
+            "сонце",
+            "сонячно"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "cloudy",
+          "name": "Хмарно",
+          "nameEn": "Cloudy",
+          "category": "weather",
+          "icon": "Cloud",
+          "tags": [
+            "погода",
+            "хмари",
+            "хмарно"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "rainy",
+          "name": "Дощ",
+          "nameEn": "Rain",
+          "category": "weather",
+          "icon": "CloudRain",
+          "tags": [
+            "погода",
+            "дощ"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "snowy",
+          "name": "Сніг",
+          "nameEn": "Snow",
+          "category": "weather",
+          "icon": "CloudSnow",
+          "tags": [
+            "погода",
+            "сніг"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "stormy",
+          "name": "Гроза",
+          "nameEn": "Storm",
+          "category": "weather",
+          "icon": "BoltFilled",
+          "tags": [
+            "погода",
+            "гроза",
+            "блискавка"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "windy",
+          "name": "Вітер",
+          "nameEn": "Wind",
+          "category": "weather",
+          "icon": "Wind",
+          "tags": [
+            "погода",
+            "вітер"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "foggy",
+          "name": "Туман",
+          "nameEn": "Fog",
+          "category": "weather",
+          "icon": "CloudFog",
+          "tags": [
+            "погода",
+            "туман"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "thermometer",
+          "name": "Термометр",
+          "nameEn": "Thermometer",
+          "category": "weather",
+          "icon": "Thermometer",
+          "tags": [
+            "погода",
+            "температура",
+            "термометр"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "letters-en",
+      "name": "Літери (A-Z)",
+      "emoji": "🅰️",
+      "items": [
+        {
+          "id": "letter-en-a",
+          "name": "Літера A",
+          "nameEn": "Letter A",
+          "category": "letters-en",
+          "icon": "LetterA",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "a"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-b",
+          "name": "Літера B",
+          "nameEn": "Letter B",
+          "category": "letters-en",
+          "icon": "LetterB",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "b"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-c",
+          "name": "Літера C",
+          "nameEn": "Letter C",
+          "category": "letters-en",
+          "icon": "LetterC",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "c"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-d",
+          "name": "Літера D",
+          "nameEn": "Letter D",
+          "category": "letters-en",
+          "icon": "LetterD",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "d"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-e",
+          "name": "Літера E",
+          "nameEn": "Letter E",
+          "category": "letters-en",
+          "icon": "LetterE",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "e"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-f",
+          "name": "Літера F",
+          "nameEn": "Letter F",
+          "category": "letters-en",
+          "icon": "LetterF",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "f"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-g",
+          "name": "Літера G",
+          "nameEn": "Letter G",
+          "category": "letters-en",
+          "icon": "LetterG",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "g"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-h",
+          "name": "Літера H",
+          "nameEn": "Letter H",
+          "category": "letters-en",
+          "icon": "LetterH",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "h"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-i",
+          "name": "Літера I",
+          "nameEn": "Letter I",
+          "category": "letters-en",
+          "icon": "LetterI",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "i"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-j",
+          "name": "Літера J",
+          "nameEn": "Letter J",
+          "category": "letters-en",
+          "icon": "LetterJ",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "j"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-k",
+          "name": "Літера K",
+          "nameEn": "Letter K",
+          "category": "letters-en",
+          "icon": "LetterK",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "k"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-l",
+          "name": "Літера L",
+          "nameEn": "Letter L",
+          "category": "letters-en",
+          "icon": "LetterL",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "l"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-m",
+          "name": "Літера M",
+          "nameEn": "Letter M",
+          "category": "letters-en",
+          "icon": "LetterM",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "m"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-n",
+          "name": "Літера N",
+          "nameEn": "Letter N",
+          "category": "letters-en",
+          "icon": "LetterN",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "n"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-o",
+          "name": "Літера O",
+          "nameEn": "Letter O",
+          "category": "letters-en",
+          "icon": "LetterO",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "o"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-p",
+          "name": "Літера P",
+          "nameEn": "Letter P",
+          "category": "letters-en",
+          "icon": "LetterP",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "p"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-q",
+          "name": "Літера Q",
+          "nameEn": "Letter Q",
+          "category": "letters-en",
+          "icon": "LetterQ",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "q"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-r",
+          "name": "Літера R",
+          "nameEn": "Letter R",
+          "category": "letters-en",
+          "icon": "LetterR",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "r"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-s",
+          "name": "Літера S",
+          "nameEn": "Letter S",
+          "category": "letters-en",
+          "icon": "LetterS",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "s"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-t",
+          "name": "Літера T",
+          "nameEn": "Letter T",
+          "category": "letters-en",
+          "icon": "LetterT",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "t"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-u",
+          "name": "Літера U",
+          "nameEn": "Letter U",
+          "category": "letters-en",
+          "icon": "LetterU",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "u"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-v",
+          "name": "Літера V",
+          "nameEn": "Letter V",
+          "category": "letters-en",
+          "icon": "LetterV",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "v"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-w",
+          "name": "Літера W",
+          "nameEn": "Letter W",
+          "category": "letters-en",
+          "icon": "LetterW",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "w"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-x",
+          "name": "Літера X",
+          "nameEn": "Letter X",
+          "category": "letters-en",
+          "icon": "LetterX",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "x"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-y",
+          "name": "Літера Y",
+          "nameEn": "Letter Y",
+          "category": "letters-en",
+          "icon": "LetterY",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "y"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "letter-en-z",
+          "name": "Літера Z",
+          "nameEn": "Letter Z",
+          "category": "letters-en",
+          "icon": "LetterZ",
+          "tags": [
+            "літера",
+            "алфавіт",
+            "англійська",
+            "z"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "colors",
+      "name": "Кольори",
+      "emoji": "🎨",
+      "items": [
+        {
+          "id": "color-red",
+          "name": "Червоний",
+          "nameEn": "Red",
+          "category": "colors",
+          "icon": "Circle",
+          "tags": [
+            "колір",
+            "червоний"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "color-blue",
+          "name": "Синій",
+          "nameEn": "Blue",
+          "category": "colors",
+          "icon": "Circle",
+          "tags": [
+            "колір",
+            "синій"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "color-yellow",
+          "name": "Жовтий",
+          "nameEn": "Yellow",
+          "category": "colors",
+          "icon": "Circle",
+          "tags": [
+            "колір",
+            "жовтий"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "color-green",
+          "name": "Зелений",
+          "nameEn": "Green",
+          "category": "colors",
+          "icon": "Circle",
+          "tags": [
+            "колір",
+            "зелений"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "color-orange",
+          "name": "Помаранчевий",
+          "nameEn": "Orange",
+          "category": "colors",
+          "icon": "Circle",
+          "tags": [
+            "колір",
+            "помаранчевий"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "color-purple",
+          "name": "Фіолетовий",
+          "nameEn": "Purple",
+          "category": "colors",
+          "icon": "Circle",
+          "tags": [
+            "колір",
+            "фіолетовий"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "color-pink",
+          "name": "Рожевий",
+          "nameEn": "Pink",
+          "category": "colors",
+          "icon": "Circle",
+          "tags": [
+            "колір",
+            "рожевий"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "color-brown",
+          "name": "Коричневий",
+          "nameEn": "Brown",
+          "category": "colors",
+          "icon": "Circle",
+          "tags": [
+            "колір",
+            "коричневий"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "color-black",
+          "name": "Чорний",
+          "nameEn": "Black",
+          "category": "colors",
+          "icon": "Circle",
+          "tags": [
+            "колір",
+            "чорний"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "color-white",
+          "name": "Білий",
+          "nameEn": "White",
+          "category": "colors",
+          "icon": "Circle",
+          "tags": [
+            "колір",
+            "білий"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "color-gray",
+          "name": "Сірий",
+          "nameEn": "Gray",
+          "category": "colors",
+          "icon": "Circle",
+          "tags": [
+            "колір",
+            "сірий"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "color-gold",
+          "name": "Золотий",
+          "nameEn": "Gold",
+          "category": "colors",
+          "icon": "Sparkles",
+          "tags": [
+            "колір",
+            "золотий"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "clothes",
+      "name": "Одяг",
+      "emoji": "👕",
+      "items": [
+        {
+          "id": "tshirt",
+          "name": "Футболка",
+          "nameEn": "T-shirt",
+          "category": "clothes",
+          "icon": "Shirt",
+          "tags": [
+            "одяг",
+            "футболка"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "pants",
+          "name": "Штани",
+          "nameEn": "Pants",
+          "category": "clothes",
+          "icon": "Shirt",
+          "tags": [
+            "одяг",
+            "штани"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "dress",
+          "name": "Сукня",
+          "nameEn": "Dress",
+          "category": "clothes",
+          "icon": "Shirt",
+          "tags": [
+            "одяг",
+            "сукня"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "jacket",
+          "name": "Куртка",
+          "nameEn": "Jacket",
+          "category": "clothes",
+          "icon": "Shirt",
+          "tags": [
+            "одяг",
+            "куртка"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "scarf",
+          "name": "Шарф",
+          "nameEn": "Scarf",
+          "category": "clothes",
+          "icon": "Wind",
+          "tags": [
+            "одяг",
+            "шарф"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "belt",
+          "name": "Пояс",
+          "nameEn": "Belt",
+          "category": "clothes",
+          "icon": "Minus",
+          "tags": [
+            "одяг",
+            "пояс"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "sweater",
+          "name": "Светр",
+          "nameEn": "Sweater",
+          "category": "clothes",
+          "icon": "Shirt",
+          "tags": [
+            "одяг",
+            "светр"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "skirt",
+          "name": "Спідниця",
+          "nameEn": "Skirt",
+          "category": "clothes",
+          "icon": "Shirt",
+          "tags": [
+            "одяг",
+            "спідниця"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "dishes",
+      "name": "Посуд",
+      "emoji": "🍽️",
+      "items": [
+        {
+          "id": "plate",
+          "name": "Тарілка",
+          "nameEn": "Plate",
+          "category": "dishes",
+          "icon": "Circle",
+          "tags": [
+            "посуд",
+            "тарілка"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "cup",
+          "name": "Чашка",
+          "nameEn": "Cup",
+          "category": "dishes",
+          "icon": "Coffee",
+          "tags": [
+            "посуд",
+            "чашка"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "kettle",
+          "name": "Чайник",
+          "nameEn": "Kettle",
+          "category": "dishes",
+          "icon": "Coffee",
+          "tags": [
+            "посуд",
+            "чайник"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "bottle",
+          "name": "Пляшка",
+          "nameEn": "Bottle",
+          "category": "dishes",
+          "icon": "Milk",
+          "tags": [
+            "посуд",
+            "пляшка"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "space",
+      "name": "Космос",
+      "emoji": "🚀",
+      "items": [
+        {
+          "id": "earth-planet",
+          "name": "Планета Земля",
+          "nameEn": "Earth",
+          "category": "space",
+          "icon": "Globe",
+          "tags": [
+            "космос",
+            "земля",
+            "планета"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "moon-space",
+          "name": "Місяць",
+          "nameEn": "Moon",
+          "category": "space",
+          "icon": "Moon",
+          "tags": [
+            "космос",
+            "місяць"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "mars",
+          "name": "Марс",
+          "nameEn": "Mars",
+          "category": "space",
+          "icon": "Circle",
+          "tags": [
+            "космос",
+            "марс",
+            "планета"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "saturn",
+          "name": "Сатурн",
+          "nameEn": "Saturn",
+          "category": "space",
+          "icon": "Circle",
+          "tags": [
+            "космос",
+            "сатурн",
+            "планета"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "star-space",
+          "name": "Зірка",
+          "nameEn": "Star",
+          "category": "space",
+          "icon": "Star",
+          "tags": [
+            "космос",
+            "зірка"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "comet",
+          "name": "Комета",
+          "nameEn": "Comet",
+          "category": "space",
+          "icon": "Sparkles",
+          "tags": [
+            "космос",
+            "комета"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "satellite",
+          "name": "Супутник",
+          "nameEn": "Satellite",
+          "category": "space",
+          "icon": "Satellite",
+          "tags": [
+            "космос",
+            "супутник"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "detailed"
+        },
+        {
+          "id": "ufo",
+          "name": "НЛО",
+          "nameEn": "UFO",
+          "category": "space",
+          "icon": "Circle",
+          "tags": [
+            "космос",
+            "нло"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "telescope",
+          "name": "Телескоп",
+          "nameEn": "Telescope",
+          "category": "space",
+          "icon": "Telescope",
+          "tags": [
+            "космос",
+            "телескоп"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "asteroid",
+          "name": "Астероїд",
+          "nameEn": "Asteroid",
+          "category": "space",
+          "icon": "Circle",
+          "tags": [
+            "космос",
+            "астероїд"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "solar-system",
+          "name": "Сонячна система",
+          "nameEn": "Solar System",
+          "category": "space",
+          "icon": "Sun",
+          "tags": [
+            "космос",
+            "сонячна система"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "detailed"
+        },
+        {
+          "id": "rocket-space",
+          "name": "Ракета",
+          "nameEn": "Rocket",
+          "category": "space",
+          "icon": "Rocket",
+          "tags": [
+            "космос",
+            "ракета"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "underwater",
+      "name": "Підводний світ",
+      "emoji": "🐠",
+      "items": [
+        {
+          "id": "dolphin",
+          "name": "Дельфін",
+          "nameEn": "Dolphin",
+          "category": "underwater",
+          "icon": "Fish",
+          "tags": [
+            "підводний",
+            "дельфін",
+            "море"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "whale",
+          "name": "Кит",
+          "nameEn": "Whale",
+          "category": "underwater",
+          "icon": "Fish",
+          "tags": [
+            "підводний",
+            "кит",
+            "море"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "shark",
+          "name": "Акула",
+          "nameEn": "Shark",
+          "category": "underwater",
+          "icon": "Fish",
+          "tags": [
+            "підводний",
+            "акула",
+            "море"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "octopus",
+          "name": "Восьминіг",
+          "nameEn": "Octopus",
+          "category": "underwater",
+          "icon": "Bug",
+          "tags": [
+            "підводний",
+            "восьминіг",
+            "море"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "starfish",
+          "name": "Морська зірка",
+          "nameEn": "Starfish",
+          "category": "underwater",
+          "icon": "Star",
+          "tags": [
+            "підводний",
+            "зірка",
+            "море"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "crab",
+          "name": "Краб",
+          "nameEn": "Crab",
+          "category": "underwater",
+          "icon": "Bug",
+          "tags": [
+            "підводний",
+            "краб",
+            "море"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "jellyfish",
+          "name": "Медуза",
+          "nameEn": "Jellyfish",
+          "category": "underwater",
+          "icon": "Droplet",
+          "tags": [
+            "підводний",
+            "медуза",
+            "море"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "seahorse",
+          "name": "Морський коник",
+          "nameEn": "Seahorse",
+          "category": "underwater",
+          "icon": "Fish",
+          "tags": [
+            "підводний",
+            "коник",
+            "море"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "holidays",
+      "name": "Свята",
+      "emoji": "🎄",
+      "items": [
+        {
+          "id": "snowman",
+          "name": "Сніговик",
+          "nameEn": "Snowman",
+          "category": "holidays",
+          "icon": "Snowflake",
+          "tags": [
+            "свято",
+            "сніговик",
+            "зима"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "gift-box",
+          "name": "Подарунок",
+          "nameEn": "Gift",
+          "category": "holidays",
+          "icon": "Gift",
+          "tags": [
+            "свято",
+            "подарунок"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "candle",
+          "name": "Свічка",
+          "nameEn": "Candle",
+          "category": "holidays",
+          "icon": "Flame",
+          "tags": [
+            "свято",
+            "свічка"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "birthday-cake",
+          "name": "Торт зі свічками",
+          "nameEn": "Birthday Cake",
+          "category": "holidays",
+          "icon": "Cake",
+          "tags": [
+            "свято",
+            "торт",
+            "день народження"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "valentine-heart",
+          "name": "Серце-валентинка",
+          "nameEn": "Valentine Heart",
+          "category": "holidays",
+          "icon": "Heart",
+          "tags": [
+            "свято",
+            "серце",
+            "валентинка"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "flag-ua",
+          "name": "Прапор",
+          "nameEn": "Flag",
+          "category": "holidays",
+          "icon": "Flag",
+          "tags": [
+            "свято",
+            "прапор"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "garland",
+          "name": "Гірлянда",
+          "nameEn": "Garland",
+          "category": "holidays",
+          "icon": "Sparkles",
+          "tags": [
+            "свято",
+            "гірлянда"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "balloon-party",
+          "name": "Куля",
+          "nameEn": "Balloon",
+          "category": "holidays",
+          "icon": "Circle",
+          "tags": [
+            "свято",
+            "куля",
+            "день народження"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "confetti",
+          "name": "Конфеті",
+          "nameEn": "Confetti",
+          "category": "holidays",
+          "icon": "Sparkles",
+          "tags": [
+            "свято",
+            "конфеті"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "name": "Інструменти",
+      "emoji": "🔧",
+      "items": [
+        {
+          "id": "hammer",
+          "name": "Молоток",
+          "nameEn": "Hammer",
+          "category": "tools",
+          "icon": "Hammer",
+          "tags": [
+            "інструмент",
+            "молоток"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "nail",
+          "name": "Цвях",
+          "nameEn": "Nail",
+          "category": "tools",
+          "icon": "Minus",
+          "tags": [
+            "інструмент",
+            "цвях"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "bolt",
+          "name": "Болт",
+          "nameEn": "Bolt",
+          "category": "tools",
+          "icon": "CircleDot",
+          "tags": [
+            "інструмент",
+            "болт"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "toolbox",
+          "name": "Ящик для інструментів",
+          "nameEn": "Toolbox",
+          "category": "tools",
+          "icon": "Package",
+          "tags": [
+            "інструмент",
+            "ящик"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "tape-measure",
+          "name": "Вимірювальна стрічка",
+          "nameEn": "Tape Measure",
+          "category": "tools",
+          "icon": "Ruler",
+          "tags": [
+            "інструмент",
+            "вимірювання"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "safety",
+      "name": "Безпека",
+      "emoji": "🛡️",
+      "items": [
+        {
+          "id": "traffic-light",
+          "name": "Світлофор",
+          "nameEn": "Traffic Light",
+          "category": "safety",
+          "icon": "CircleDot",
+          "tags": [
+            "безпека",
+            "світлофор",
+            "дорога"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "road-sign",
+          "name": "Дорожній знак",
+          "nameEn": "Road Sign",
+          "category": "safety",
+          "icon": "Triangle",
+          "tags": [
+            "безпека",
+            "знак",
+            "дорога"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "vest",
+          "name": "Жилет",
+          "nameEn": "Vest",
+          "category": "safety",
+          "icon": "Shirt",
+          "tags": [
+            "безпека",
+            "жилет"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "shield",
+          "name": "Щит",
+          "nameEn": "Shield",
+          "category": "safety",
+          "icon": "Shield",
+          "tags": [
+            "безпека",
+            "щит",
+            "захист"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "first-aid",
+          "name": "Аптечка",
+          "nameEn": "First Aid",
+          "category": "safety",
+          "icon": "Cross",
+          "tags": [
+            "безпека",
+            "аптечка",
+            "медицина"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "fire-extinguisher",
+          "name": "Вогнегасник",
+          "nameEn": "Fire Extinguisher",
+          "category": "safety",
+          "icon": "Flame",
+          "tags": [
+            "безпека",
+            "вогнегасник",
+            "пожежа"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "time",
+      "name": "Час",
+      "emoji": "⏰",
+      "items": [
+        {
+          "id": "wall-clock",
+          "name": "Годинник настінний",
+          "nameEn": "Wall Clock",
+          "category": "time",
+          "icon": "Clock",
+          "tags": [
+            "час",
+            "годинник"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "calendar",
+          "name": "Календар",
+          "nameEn": "Calendar",
+          "category": "time",
+          "icon": "Calendar",
+          "tags": [
+            "час",
+            "календар",
+            "дата"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "hourglass",
+          "name": "Пісочний годинник",
+          "nameEn": "Hourglass",
+          "category": "time",
+          "icon": "Hourglass",
+          "tags": [
+            "час",
+            "пісочний годинник"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "sundial",
+          "name": "Сонячний годинник",
+          "nameEn": "Sundial",
+          "category": "time",
+          "icon": "Sun",
+          "tags": [
+            "час",
+            "сонячний годинник"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "detailed"
+        }
+      ]
+    },
+    {
+      "id": "fantasy",
+      "name": "Казки",
+      "emoji": "🧚",
+      "items": [
+        {
+          "id": "princess",
+          "name": "Принцеса",
+          "nameEn": "Princess",
+          "category": "fantasy",
+          "icon": "Crown",
+          "tags": [
+            "казка",
+            "принцеса"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "prince",
+          "name": "Принц",
+          "nameEn": "Prince",
+          "category": "fantasy",
+          "icon": "Crown",
+          "tags": [
+            "казка",
+            "принц"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "king",
+          "name": "Король",
+          "nameEn": "King",
+          "category": "fantasy",
+          "icon": "Crown",
+          "tags": [
+            "казка",
+            "король"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "queen",
+          "name": "Королева",
+          "nameEn": "Queen",
+          "category": "fantasy",
+          "icon": "Crown",
+          "tags": [
+            "казка",
+            "королева"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "dragon",
+          "name": "Дракон",
+          "nameEn": "Dragon",
+          "category": "fantasy",
+          "icon": "Flame",
+          "tags": [
+            "казка",
+            "дракон"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "detailed"
+        },
+        {
+          "id": "wizard",
+          "name": "Чарівник",
+          "nameEn": "Wizard",
+          "category": "fantasy",
+          "icon": "Sparkles",
+          "tags": [
+            "казка",
+            "чарівник"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "magic-wand",
+          "name": "Чарівна паличка",
+          "nameEn": "Magic Wand",
+          "category": "fantasy",
+          "icon": "Wand",
+          "tags": [
+            "казка",
+            "паличка",
+            "магія"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "crown-item",
+          "name": "Корона",
+          "nameEn": "Crown",
+          "category": "fantasy",
+          "icon": "Crown",
+          "tags": [
+            "казка",
+            "корона"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "unicorn",
+          "name": "Єдиноріг",
+          "nameEn": "Unicorn",
+          "category": "fantasy",
+          "icon": "Sparkles",
+          "tags": [
+            "казка",
+            "єдиноріг"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    },
+    {
+      "id": "geography",
+      "name": "Географія",
+      "emoji": "🌍",
+      "items": [
+        {
+          "id": "globe-geo",
+          "name": "Глобус",
+          "nameEn": "Globe",
+          "category": "geography",
+          "icon": "Globe",
+          "tags": [
+            "географія",
+            "глобус",
+            "світ"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "map",
+          "name": "Карта",
+          "nameEn": "Map",
+          "category": "geography",
+          "icon": "Map",
+          "tags": [
+            "географія",
+            "карта"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "compass",
+          "name": "Компас",
+          "nameEn": "Compass",
+          "category": "geography",
+          "icon": "Compass",
+          "tags": [
+            "географія",
+            "компас",
+            "навігація"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "flag-geo",
+          "name": "Прапор",
+          "nameEn": "Flag",
+          "category": "geography",
+          "icon": "Flag",
+          "tags": [
+            "географія",
+            "прапор",
+            "країна"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "island",
+          "name": "Острів",
+          "nameEn": "Island",
+          "category": "geography",
+          "icon": "Circle",
+          "tags": [
+            "географія",
+            "острів"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "continent",
+          "name": "Континент",
+          "nameEn": "Continent",
+          "category": "geography",
+          "icon": "Map",
+          "tags": [
+            "географія",
+            "континент"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "desert",
+          "name": "Пустеля",
+          "nameEn": "Desert",
+          "category": "geography",
+          "icon": "Sun",
+          "tags": [
+            "географія",
+            "пустеля"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "symbols",
+      "name": "Символи",
+      "emoji": "➡️",
+      "items": [
+        {
+          "id": "arrow-up",
+          "name": "Стрілка вгору",
+          "nameEn": "Arrow Up",
+          "category": "symbols",
+          "icon": "ArrowUp",
+          "tags": [
+            "символ",
+            "стрілка",
+            "вгору"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "arrow-down",
+          "name": "Стрілка вниз",
+          "nameEn": "Arrow Down",
+          "category": "symbols",
+          "icon": "ArrowDown",
+          "tags": [
+            "символ",
+            "стрілка",
+            "вниз"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "arrow-left",
+          "name": "Стрілка вліво",
+          "nameEn": "Arrow Left",
+          "category": "symbols",
+          "icon": "ArrowLeft",
+          "tags": [
+            "символ",
+            "стрілка",
+            "вліво"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "arrow-right",
+          "name": "Стрілка вправо",
+          "nameEn": "Arrow Right",
+          "category": "symbols",
+          "icon": "ArrowRight",
+          "tags": [
+            "символ",
+            "стрілка",
+            "вправо"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "check",
+          "name": "Галочка",
+          "nameEn": "Check",
+          "category": "symbols",
+          "icon": "Check",
+          "tags": [
+            "символ",
+            "галочка",
+            "так"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "x-mark",
+          "name": "Хрестик",
+          "nameEn": "X",
+          "category": "symbols",
+          "icon": "X",
+          "tags": [
+            "символ",
+            "хрестик",
+            "ні"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "star-symbol",
+          "name": "Зірка",
+          "nameEn": "Star",
+          "category": "symbols",
+          "icon": "Star",
+          "tags": [
+            "символ",
+            "зірка"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "question",
+          "name": "Питання",
+          "nameEn": "Question",
+          "category": "symbols",
+          "icon": "HelpCircle",
+          "tags": [
+            "символ",
+            "питання"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "exclamation",
+          "name": "Оклик",
+          "nameEn": "Exclamation",
+          "category": "symbols",
+          "icon": "AlertCircle",
+          "tags": [
+            "символ",
+            "оклик"
+          ],
+          "ageGroups": [
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "heart-symbol",
+          "name": "Серце",
+          "nameEn": "Heart",
+          "category": "symbols",
+          "icon": "Heart",
+          "tags": [
+            "символ",
+            "серце"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "star-filled",
+          "name": "Зірка заповнена",
+          "nameEn": "Star Filled",
+          "category": "symbols",
+          "icon": "Star",
+          "tags": [
+            "символ",
+            "зірка",
+            "заповнена"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7",
+            "8-9"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "circle-filled",
+          "name": "Коло заповнене",
+          "nameEn": "Circle Filled",
+          "category": "symbols",
+          "icon": "Circle",
+          "tags": [
+            "символ",
+            "коло",
+            "заповнене"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "square-filled",
+          "name": "Квадрат заповнений",
+          "nameEn": "Square Filled",
+          "category": "symbols",
+          "icon": "Square",
+          "tags": [
+            "символ",
+            "квадрат",
+            "заповнений"
+          ],
+          "ageGroups": [
+            "3-5",
+            "6-7"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "settings",
+          "name": "Налаштування",
+          "nameEn": "Settings",
+          "category": "symbols",
+          "icon": "Settings",
+          "tags": [
+            "символ",
+            "налаштування"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "math-advanced",
+      "name": "Математика",
+      "emoji": "🔢",
+      "items": [
+        {
+          "id": "percent",
+          "name": "Відсоток",
+          "nameEn": "Percent",
+          "category": "math-advanced",
+          "icon": "Percentage",
+          "tags": [
+            "математика",
+            "відсоток"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "greater",
+          "name": "Більше",
+          "nameEn": "Greater",
+          "category": "math-advanced",
+          "icon": "ChevronRight",
+          "tags": [
+            "математика",
+            "більше"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "less",
+          "name": "Менше",
+          "nameEn": "Less",
+          "category": "math-advanced",
+          "icon": "ChevronLeft",
+          "tags": [
+            "математика",
+            "менше"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "not-equal",
+          "name": "Не дорівнює",
+          "nameEn": "Not Equal",
+          "category": "math-advanced",
+          "icon": "EqualNot",
+          "tags": [
+            "математика",
+            "не дорівнює"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "infinity",
+          "name": "Нескінченність",
+          "nameEn": "Infinity",
+          "category": "math-advanced",
+          "icon": "Infinity",
+          "tags": [
+            "математика",
+            "нескінченність"
+          ],
+          "ageGroups": [
+            "12-13",
+            "14-15"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "square-root",
+          "name": "Квадратний корінь",
+          "nameEn": "Square Root",
+          "category": "math-advanced",
+          "icon": "SquareRoot",
+          "tags": [
+            "математика",
+            "корінь"
+          ],
+          "ageGroups": [
+            "12-13",
+            "14-15"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "pi",
+          "name": "Пі",
+          "nameEn": "Pi",
+          "category": "math-advanced",
+          "icon": "Circle",
+          "tags": [
+            "математика",
+            "пі"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "degree",
+          "name": "Градус",
+          "nameEn": "Degree",
+          "category": "math-advanced",
+          "icon": "Circle",
+          "tags": [
+            "математика",
+            "градус",
+            "кут"
+          ],
+          "ageGroups": [
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "plus-minus",
+          "name": "Плюс-мінус",
+          "nameEn": "Plus Minus",
+          "category": "math-advanced",
+          "icon": "MathSymbols",
+          "tags": [
+            "математика",
+            "плюс-мінус"
+          ],
+          "ageGroups": [
+            "12-13",
+            "14-15"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "fraction-half",
+          "name": "Одна друга",
+          "nameEn": "One Half",
+          "category": "math-advanced",
+          "icon": "Slash",
+          "tags": [
+            "математика",
+            "дріб",
+            "половина"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        }
+      ]
+    },
+    {
+      "id": "shapes-3d",
+      "name": "3D Форми",
+      "emoji": "🧊",
+      "items": [
+        {
+          "id": "cube",
+          "name": "Куб",
+          "nameEn": "Cube",
+          "category": "shapes-3d",
+          "icon": "Box",
+          "tags": [
+            "3d",
+            "форма",
+            "куб"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "sphere",
+          "name": "Сфера",
+          "nameEn": "Sphere",
+          "category": "shapes-3d",
+          "icon": "Circle",
+          "tags": [
+            "3d",
+            "форма",
+            "сфера"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "simple"
+        },
+        {
+          "id": "cone",
+          "name": "Конус",
+          "nameEn": "Cone",
+          "category": "shapes-3d",
+          "icon": "Triangle",
+          "tags": [
+            "3d",
+            "форма",
+            "конус"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "cylinder",
+          "name": "Циліндр",
+          "nameEn": "Cylinder",
+          "category": "shapes-3d",
+          "icon": "Circle",
+          "tags": [
+            "3d",
+            "форма",
+            "циліндр"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11"
+          ],
+          "complexity": "medium"
+        },
+        {
+          "id": "pyramid",
+          "name": "Піраміда",
+          "nameEn": "Pyramid",
+          "category": "shapes-3d",
+          "icon": "Triangle",
+          "tags": [
+            "3d",
+            "форма",
+            "піраміда"
+          ],
+          "ageGroups": [
+            "8-9",
+            "10-11",
+            "12-13"
+          ],
+          "complexity": "medium"
+        }
+      ]
+    }
+  ]
+}

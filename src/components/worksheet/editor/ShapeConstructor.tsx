@@ -49,6 +49,13 @@ import { toPng } from 'html-to-image';
 import { svgLayerService } from '@/services/images/SvgLayerService';
 import { svgToObjectsService } from '@/services/images/SvgToObjectsService';
 import { SvgLayer } from '@/types/svg';
+import ImageLibraryPanel from './ImageLibraryPanel';
+import * as LucideIcons from 'lucide-react';
+import { 
+  getAgeGroupPromptModifier, 
+  getAgeGroupSuggestions,
+  enhancePromptForAge 
+} from '@/utils/ageGroupPromptHelper';
 
 type Tool = 'select' | 'circle' | 'square' | 'triangle' | 'line' | 'brush';
 type ResizeHandle = 'nw' | 'ne' | 'sw' | 'se' | null;
@@ -148,6 +155,15 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
   const [isSvgLoading, setIsSvgLoading] = useState(false);
   const svgBlobUrlRef = useRef<string | null>(null);
   const svgImageRef = useRef<HTMLImageElement | null>(null);
+  const [currentAgeGroup, setCurrentAgeGroup] = useState<string>('8-9');
+  
+  // AI Variants
+  const [aiVariants, setAiVariants] = useState<{ svg: string; id: string }[]>([]);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [variantGenerationProgress, setVariantGenerationProgress] = useState<number>(0);
+  
+  // Image Library
+  const [showLibraryPanel, setShowLibraryPanel] = useState(false);
   
   // SVG Layers
   const [svgLayers, setSvgLayers] = useState<SvgLayer[]>([]);
@@ -1207,81 +1223,84 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
 
   const startAIGeneration = async () => {
     setIsGeneratingAI(true);
+    setAiVariants([]);
+    setSelectedVariantId(null);
+    setVariantGenerationProgress(0);
 
     try {
-      console.log('🎨 Starting SVG generation via Gemini...', {
+      console.log('🎨 Starting SVG generation (4 variants) via Gemini...', {
         prompt: aiPrompt.substring(0, 50) + '...',
         complexity: svgComplexity,
-        style: svgStyle
+        style: svgStyle,
+        ageGroup: currentAgeGroup
       });
+
+      // Enhance prompt with age modifiers
+      const enhancedPrompt = enhancePromptForAge(aiPrompt, currentAgeGroup, svgComplexity);
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-      const response = await fetch('/api/images/generate-svg', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: aiPrompt,
-          width: 1000,
-          height: 1000,
-          complexity: svgComplexity,
-          style: svgStyle,
-        }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success && data.svg) {
-        // Validate SVG size before setting
-        const svgSizeKB = data.svg.length / 1024;
-        if (svgSizeKB > 500) {
-          throw new Error(`Згенерований SVG занадто великий (${svgSizeKB.toFixed(0)}KB). Спробуйте простіший опис.`);
-        }
-
-        console.log('✅ SVG generated successfully via Gemini', {
-          svgLength: data.svg.length,
-          sizeKB: svgSizeKB.toFixed(2)
-        });
-        
-        // Clear previous objects and SVG before adding new ones
-        setObjects([]);
-        setGeneratedSvg('');
-        setSvgLayers([]);
-        setSelectedObjectId(null);
-        
-        // Immediately convert SVG to objects (no intermediate SVG layers step)
+      const variants: { svg: string; id: string }[] = [];
+      
+      // Generate 4 variants sequentially
+      for (let i = 0; i < 4; i++) {
         try {
-          const layers = svgLayerService.parseSvgIntoLayers(data.svg);
-          const newObjects = svgToObjectsService.convertAllLayersToObjects(layers, 0);
+          console.log(`🎨 Generating variant ${i + 1}/4...`);
+          setVariantGenerationProgress(i + 1);
           
-          if (newObjects.length > 0) {
-            setObjects(newObjects);
-            saveToHistory();
-            console.log(`✅ Auto-converted SVG to ${newObjects.length} objects`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+          const response = await fetch('/api/images/generate-svg', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              prompt: enhancedPrompt,
+              width: 1000,
+              height: 1000,
+              complexity: svgComplexity,
+              style: svgStyle,
+              seed: Math.random(), // Different seed for each variant
+            }),
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.svg) {
+              // Validate SVG size
+              const svgSizeKB = data.svg.length / 1024;
+              if (svgSizeKB < 500) {
+                variants.push({ svg: data.svg, id: crypto.randomUUID() });
+                console.log(`✅ Variant ${i + 1} generated successfully`);
+              } else {
+                console.warn(`⚠️ Variant ${i + 1} too large (${svgSizeKB.toFixed(0)}KB), skipping`);
+              }
+            }
+          } else {
+            console.warn(`⚠️ Variant ${i + 1} failed`);
           }
         } catch (error) {
-          console.error('Failed to convert SVG to objects:', error);
-          setAlertDialog({
-            open: true,
-            title: '⚠️ Помилка конвертації',
-            message: 'Згенеровано SVG, але не вдалося конвертувати в об\'єкти',
-            severity: 'error',
-          });
+          console.error(`❌ Variant ${i + 1} error:`, error);
+          // Continue with next variant even if one fails
         }
-      } else {
-        throw new Error(data.error || 'Не вдалося згенерувати SVG');
       }
+
+      if (variants.length === 0) {
+        throw new Error('Не вдалося згенерувати жодного варіанту');
+      }
+
+      setAiVariants(variants);
+      
+      // Auto-select first variant
+      if (variants.length > 0) {
+        await handleSelectVariant(variants[0]);
+      }
+      
+      console.log(`✅ Generated ${variants.length} variants successfully`);
+      
     } catch (error) {
       console.error('❌ SVG generation error:', error);
       
@@ -1305,6 +1324,92 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
       });
     } finally {
       setIsGeneratingAI(false);
+      setVariantGenerationProgress(0);
+    }
+  };
+
+  const handleSelectVariant = async (variant: { svg: string; id: string }) => {
+    setSelectedVariantId(variant.id);
+    
+    // Clear previous objects and SVG
+    setObjects([]);
+    setGeneratedSvg('');
+    setSvgLayers([]);
+    setSelectedObjectId(null);
+    
+    // Convert SVG to objects
+    try {
+      const layers = svgLayerService.parseSvgIntoLayers(variant.svg);
+      const newObjects = svgToObjectsService.convertAllLayersToObjects(layers, 0);
+      
+      if (newObjects.length > 0) {
+        setObjects(newObjects);
+        saveToHistory();
+        console.log(`✅ Converted variant to ${newObjects.length} objects`);
+      }
+    } catch (error) {
+      console.error('Failed to convert variant:', error);
+      setAlertDialog({
+        open: true,
+        title: '⚠️ Помилка конвертації',
+        message: 'Не вдалося конвертувати варіант в об\'єкти',
+        severity: 'error',
+      });
+    }
+  };
+
+  const handleModifyComplexity = async (direction: 'simpler' | 'more-complex') => {
+    const modifiedPrompt = direction === 'simpler'
+      ? `${aiPrompt}. Make it SIMPLER, with fewer details, basic shapes only, minimal elements`
+      : `${aiPrompt}. Make it MORE DETAILED, add more elements, textures, and complexity`;
+    
+    setAiPrompt(modifiedPrompt);
+    
+    // Clear variants and regenerate
+    setAiVariants([]);
+    setSelectedVariantId(null);
+    
+    // Trigger regeneration
+    await handleGenerateAI();
+  };
+
+  const handleAddLibraryItem = async (iconName: string, itemName: string) => {
+    try {
+      // Get the lucide icon component
+      const IconComponent = (LucideIcons as any)[iconName];
+      if (!IconComponent) {
+        throw new Error('Icon not found');
+      }
+      
+      // Create a simple SVG from the lucide icon
+      // We'll create a basic shape object instead of complex SVG parsing
+      const newObject: ShapeObject = {
+        id: crypto.randomUUID(),
+        type: 'path',
+        x: 400,
+        y: 400,
+        width: 200,
+        height: 200,
+        color: currentColor,
+        strokeWidth: brushSize,
+        fillColor: currentFillColor,
+        fillOpacity: currentFillOpacity,
+        order: getNextOrder(),
+        originalSvgType: itemName,
+      };
+      
+      setObjects(prev => [...prev, newObject]);
+      saveToHistory();
+      
+      console.log(`✅ Added library item: ${itemName}`);
+    } catch (error) {
+      console.error('Failed to add library item:', error);
+      setAlertDialog({
+        open: true,
+        title: '❌ Помилка',
+        message: 'Не вдалося додати елемент з бібліотеки',
+        severity: 'error',
+      });
     }
   };
 
@@ -1609,6 +1714,14 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
           </Box>
           <Box display="flex" gap={1}>
             <Button
+              variant={showLibraryPanel ? 'contained' : 'outlined'}
+              size="small"
+              startIcon={<Layers size={16} />}
+              onClick={() => setShowLibraryPanel(!showLibraryPanel)}
+            >
+              Бібліотека
+            </Button>
+            <Button
               variant={showAIPanel ? 'contained' : 'outlined'}
               size="small"
               startIcon={<Sparkles size={16} />}
@@ -1785,6 +1898,24 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
                 </Grid>
               </Grid>
 
+              {/* Age Group Suggestions */}
+              <Box sx={{ mt: 1.5, mb: 1.5 }}>
+                <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                  💡 Ідеї для віку {currentAgeGroup} років:
+                </Typography>
+                <Box display="flex" gap={0.5} flexWrap="wrap">
+                  {getAgeGroupSuggestions(currentAgeGroup).map((suggestion) => (
+                    <Chip
+                      key={suggestion}
+                      label={suggestion}
+                      size="small"
+                      onClick={() => setAiPrompt(suggestion)}
+                      sx={{ fontSize: '0.7rem', cursor: 'pointer' }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+
               {/* Prompt Input */}
               <Box display="flex" gap={1} alignItems="stretch">
                 <TextField
@@ -1821,56 +1952,146 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
                     },
                   }}
                 >
-                  {isGeneratingAI ? 'Генерація...' : 'Згенерувати'}
+                  {isGeneratingAI ? `Генерація (${variantGenerationProgress}/4)...` : 'Згенерувати 4 варіанти'}
                 </Button>
               </Box>
-              
-              {generatedSvg && (
-                <Button
-                  variant="text"
-                  size="small"
-                  onClick={handleClearAISvg}
-                  disabled={isGeneratingAI}
-                  startIcon={<Eraser size={14} />}
-                  sx={{
-                    mt: 1,
-                    color: 'text.secondary',
-                    textTransform: 'none',
-                    fontSize: '0.75rem',
-                  }}
-                >
-                  Очистити
-                </Button>
-              )}
-              
-              {/* Success Message */}
-              {generatedSvg && (
-                <Box mt={2}>
-                  <Box
-                    sx={{
-                      bgcolor: '#f0fdf4',
-                      border: '1px solid #86efac',
-                      borderRadius: 1,
-                      p: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                    }}
-                  >
-                    <Typography variant="body2" sx={{ fontSize: '1rem' }}>✅</Typography>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: '#166534',
-                        fontWeight: 500,
+
+              {/* Progress Indicator */}
+              {isGeneratingAI && variantGenerationProgress > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+                    Генерується варіант {variantGenerationProgress} з 4...
+                  </Typography>
+                  <Box sx={{ width: '100%', bgcolor: '#e0e0e0', borderRadius: 1, height: 8 }}>
+                    <Box
+                      sx={{
+                        width: `${(variantGenerationProgress / 4) * 100}%`,
+                        bgcolor: '#6366f1',
+                        height: '100%',
+                        borderRadius: 1,
+                        transition: 'width 0.3s',
                       }}
-                    >
-                      SVG згенеровано успішно
-                    </Typography>
+                    />
                   </Box>
                 </Box>
               )}
+
+              {/* Variants Display */}
+              {aiVariants.length > 0 && !isGeneratingAI && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" mb={1} fontWeight={600}>
+                    Виберіть варіант ({aiVariants.length}):
+                  </Typography>
+                  <Grid container spacing={1}>
+                    {aiVariants.map((variant, index) => (
+                      <Grid item xs={3} key={variant.id}>
+                        <Paper
+                          onClick={() => handleSelectVariant(variant)}
+                          sx={{
+                            p: 1,
+                            cursor: 'pointer',
+                            border: '3px solid',
+                            borderColor: selectedVariantId === variant.id ? '#6366f1' : '#ddd',
+                            borderRadius: 2,
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              borderColor: '#6366f1',
+                              transform: 'translateY(-2px)',
+                              boxShadow: 2,
+                            },
+                            bgcolor: 'white',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              height: 120,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              position: 'relative',
+                            }}
+                            dangerouslySetInnerHTML={{ __html: variant.svg }}
+                          />
+                          <Typography
+                            variant="caption"
+                            display="block"
+                            textAlign="center"
+                            fontWeight={selectedVariantId === variant.id ? 600 : 400}
+                            color={selectedVariantId === variant.id ? 'primary' : 'text.secondary'}
+                          >
+                            Варіант {index + 1}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              )}
+
+              {/* Complexity Modification Buttons */}
+              {aiVariants.length > 0 && !isGeneratingAI && (
+                <Box display="flex" gap={1} mt={2}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => handleModifyComplexity('simpler')}
+                    startIcon={<span>⬇️</span>}
+                    sx={{
+                      textTransform: 'none',
+                      borderColor: '#6366f1',
+                      color: '#6366f1',
+                      '&:hover': {
+                        borderColor: '#4f46e5',
+                        bgcolor: '#f0f0ff',
+                      },
+                    }}
+                  >
+                    Зробити простіше
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => handleModifyComplexity('more-complex')}
+                    startIcon={<span>⬆️</span>}
+                    sx={{
+                      textTransform: 'none',
+                      borderColor: '#6366f1',
+                      color: '#6366f1',
+                      '&:hover': {
+                        borderColor: '#4f46e5',
+                        bgcolor: '#f0f0ff',
+                      },
+                    }}
+                  >
+                    Зробити складніше
+                  </Button>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => {
+                      setAiVariants([]);
+                      setSelectedVariantId(null);
+                    }}
+                    startIcon={<Eraser size={14} />}
+                    sx={{
+                      ml: 'auto',
+                      color: 'text.secondary',
+                      textTransform: 'none',
+                    }}
+                  >
+                    Очистити варіанти
+                  </Button>
+                </Box>
+              )}
             </Paper>
+          )}
+
+          {/* Image Library Panel */}
+          {showLibraryPanel && (
+            <ImageLibraryPanel
+              onSelectItem={handleAddLibraryItem}
+              currentAgeGroup={currentAgeGroup}
+            />
           )}
 
           {/* Objects Layers Panel */}

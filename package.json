@@ -28,6 +28,7 @@
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.3",
+    "@tabler/icons-react": "^3.35.0",
     "@types/bcryptjs": "^3.0.0",
     "@zumer/snapdom": "^1.9.7",
     "bcryptjs": "^3.0.2",
