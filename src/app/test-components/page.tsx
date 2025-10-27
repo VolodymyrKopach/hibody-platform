@@ -35,6 +35,16 @@ import {
   Shapes,
   Heart,
   Volume2,
+  GitBranch,
+  Scissors,
+  LayoutGrid,
+  Edit3,
+  SortAsc,
+  TrendingUp,
+  Navigation,
+  Search,
+  Scale,
+  Grid3x3,
 } from 'lucide-react';
 
 // Import interactive components
@@ -54,6 +64,36 @@ import Flashcards from '@/components/worksheet/canvas/interactive/Flashcards';
 import WordBuilder from '@/components/worksheet/canvas/interactive/WordBuilder';
 import DrawingCanvas from '@/components/worksheet/canvas/interactive/DrawingCanvas';
 
+// Import non-interactive printable components
+
+// Import editor components
+import ComponentWithEditor from '@/components/worksheet/editor/ComponentWithEditor';
+import ItemsArrayEditor from '@/components/worksheet/editor/ItemsArrayEditor';
+
+// Toddler (2-3 years) - Ultra-simplified
+import ColoringPageSimple from '@/components/worksheet/canvas/non-interactive/toddler/ColoringPageSimple';
+import FlashcardSheetSimple from '@/components/worksheet/canvas/non-interactive/toddler/FlashcardSheetSimple';
+import MatchingSimple from '@/components/worksheet/canvas/non-interactive/toddler/MatchingSimple';
+import SortingSimple from '@/components/worksheet/canvas/non-interactive/toddler/SortingSimple';
+
+// Preschool (3-4 years)
+import ColoringPage from '@/components/worksheet/canvas/non-interactive/preschool/ColoringPage';
+import LineMatching from '@/components/worksheet/canvas/non-interactive/preschool/LineMatching';
+import CutoutPuzzle from '@/components/worksheet/canvas/non-interactive/preschool/CutoutPuzzle';
+import FlashcardSheet from '@/components/worksheet/canvas/non-interactive/preschool/FlashcardSheet';
+import TracingWorksheet from '@/components/worksheet/canvas/non-interactive/preschool/TracingWorksheet';
+import CountingWorksheet from '@/components/worksheet/canvas/non-interactive/preschool/CountingWorksheet';
+import ShapesTemplate from '@/components/worksheet/canvas/non-interactive/preschool/ShapesTemplate';
+import SortingWorksheet from '@/components/worksheet/canvas/non-interactive/preschool/SortingWorksheet';
+
+// Pre-K (4-5 years)
+import SequencePattern from '@/components/worksheet/canvas/non-interactive/pre-k/SequencePattern';
+import CombinedWorksheet from '@/components/worksheet/canvas/non-interactive/pre-k/CombinedWorksheet';
+import SimpleMaze from '@/components/worksheet/canvas/non-interactive/pre-k/SimpleMaze';
+import FindDifferences from '@/components/worksheet/canvas/non-interactive/pre-k/FindDifferences';
+import ComparisonSheet from '@/components/worksheet/canvas/non-interactive/pre-k/ComparisonSheet';
+import BingoCard from '@/components/worksheet/canvas/non-interactive/pre-k/BingoCard';
+
 interface ComponentDemo {
   id: string;
   name: string;
@@ -69,14 +109,398 @@ const TestComponentsPage: React.FC = () => {
   const [selectedAge, setSelectedAge] = useState<string>('all');
 
   const componentDemos: ComponentDemo[] = [
-    // ==================== 3-5 РОКІВ ====================
+    // ==================== 2-3 РОКИ (TODDLER) - УЛЬТРА-СПРОЩЕНІ ====================
+    {
+      id: 'coloring-page-simple',
+      name: 'Розмальовка (Малюки)',
+      description: '🧸 Дуже прості форми - тільки 2 картинки, БЕЗ тексту, лише емоджі',
+      icon: <Palette size={24} />,
+      type: 'standard',
+      ageGroups: ['2-3'],
+      component: (
+        <ComponentWithEditor
+          componentName="ColoringPageSimple"
+          initialProps={{
+            mascot: '🐼',
+            toolEmoji: '🖍️',
+            encouragementEmojis: ['👏', '⭐', '🎉'],
+            borderColor: '#FF6B9D',
+            shapeBorderColor: '#FFD700',
+            backgroundColor: '#FFFEF8',
+            strokeColor: '#000000',
+          }}
+          renderComponent={(props) => <ColoringPageSimple {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'flashcard-sheet-simple',
+      name: 'Картки (Малюки)',
+      description: '🧸 Тільки 4 великі картки з емоджі, без слів (опціонально)',
+      icon: <LayoutGrid size={24} />,
+      type: 'standard',
+      ageGroups: ['2-3'],
+      component: (
+        <ComponentWithEditor
+          componentName="FlashcardSheetSimple"
+          initialProps={{
+            mascot: '🦁',
+            borderColor: '#FF6B9D',
+            cardBorderColor: '#FF6B9D',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <FlashcardSheetSimple {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'matching-simple',
+      name: "З'єднай (Малюки)",
+      description: "🧸 З'єднай однакові картинки - тільки 2 пари",
+      icon: <GitBranch size={24} />,
+      type: 'standard',
+      ageGroups: ['2-3'],
+      component: (
+        <ComponentWithEditor
+          componentName="MatchingSimple"
+          initialProps={{
+            mascot: '🧸',
+            borderColor: '#4CAF50',
+            boxColor: '#4CAF50',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <MatchingSimple {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'sorting-simple',
+      name: 'Сортування (Малюки)',
+      description: '🧸 Розклади у 2 корзинки - дуже просто',
+      icon: <SortAsc size={24} />,
+      type: 'standard',
+      ageGroups: ['2-3'],
+      component: (
+        <ComponentWithEditor
+          componentName="SortingSimple"
+          initialProps={{
+            mascot: '🐨',
+            borderColor: '#9C27B0',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <SortingSimple {...props} />}
+        />
+      ),
+    },
+
+    // ==================== 3-4 РОКИ (PRESCHOOL) ====================
+    {
+      id: 'coloring-page',
+      name: 'Розмальовка',
+      description: '🎨 Розфарбуй картинки за підказками - 3 форми',
+      icon: <Palette size={24} />,
+      type: 'standard',
+      ageGroups: ['3-4'],
+      component: (
+        <ComponentWithEditor
+          componentName="ColoringPage"
+          initialProps={{
+            items: [
+              { shape: 'apple', label: 'Розфарбуй яблуко', colorHex: '#FF0000', color: 'Червоним', colorEmoji: '🔴', size: 220 },
+              { shape: 'sun', label: 'Розфарбуй сонечко', colorHex: '#FFEB3B', color: 'Жовтим', colorEmoji: '🟡', size: 200 },
+              { shape: 'heart', label: 'Розфарбуй серце', colorHex: '#FF69B4', color: 'Рожевим', colorEmoji: '🩷', size: 200 },
+            ],
+            title: '🎨 Розмальовка',
+            instruction: 'Розфарбуй картинки кольоровими олівцями! 🖍️',
+            mascot: '🐻',
+            borderColor: '#FF6B9D',
+            stepNumberColor: '#FF6B9D',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <ColoringPage {...props} />}
+          renderEditorFields={(props, onChange) => (
+            <ItemsArrayEditor
+              items={props.items || []}
+              onChange={(items) => onChange('items', items)}
+              maxItems={3}
+            />
+          )}
+        />
+      ),
+    },
+    {
+      id: 'line-matching',
+      name: "З'єднай лініями",
+      description: '📐 З\'єднуй парні предмети лініями - 3 пари',
+      icon: <GitBranch size={24} />,
+      type: 'standard',
+      ageGroups: ['3-4'],
+      component: (
+        <ComponentWithEditor
+          componentName="LineMatching"
+          initialProps={{
+            mascot: '🦁',
+            borderColor: '#4CAF50',
+            dotColor: '#FF6B9D',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <LineMatching {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'cutout-puzzle',
+      name: 'Пазл для вирізання',
+      description: '✂️ Виріж і склади картинку з 2-4 частин',
+      icon: <Scissors size={24} />,
+      type: 'standard',
+      ageGroups: ['3-4'],
+      component: (
+        <ComponentWithEditor
+          componentName="CutoutPuzzle"
+          initialProps={{
+            mascot: '🐼',
+            borderColor: '#FF9800',
+            pieceNumberColor: '#FF6B9D',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <CutoutPuzzle {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'flashcard-sheet',
+      name: 'Картки для вивчення',
+      description: '🎴 Картки зі словами та картинками - 6 штук',
+      icon: <LayoutGrid size={24} />,
+      type: 'standard',
+      ageGroups: ['3-4'],
+      component: (
+        <ComponentWithEditor
+          componentName="FlashcardSheet"
+          initialProps={{
+            mascot: '🦁',
+            borderColor: '#9C27B0',
+            cardBorderColor: '#9C27B0',
+            backgroundColor: '#F3E5F5',
+          }}
+          renderComponent={(props) => <FlashcardSheet {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'tracing-worksheet',
+      name: 'Обведи по пунктиру',
+      description: '✏️ Обведи цифри 1-3 та прості форми',
+      icon: <Edit3 size={24} />,
+      type: 'standard',
+      ageGroups: ['3-4'],
+      component: (
+        <ComponentWithEditor
+          componentName="TracingWorksheet"
+          initialProps={{
+            mascot: '🐼',
+            borderColor: '#4CAF50',
+            traceColor: '#4CAF50',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <TracingWorksheet {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'counting-worksheet',
+      name: 'Рахунок',
+      description: '🔢 Порахуй до 5 та виконай завдання',
+      icon: <Hash size={24} />,
+      type: 'standard',
+      ageGroups: ['3-4'],
+      component: (
+        <ComponentWithEditor
+          componentName="CountingWorksheet"
+          initialProps={{
+            mascot: '🐻',
+            borderColor: '#2196F3',
+            numberColor: '#2196F3',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <CountingWorksheet {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'shapes-template',
+      name: 'Форми та фігури',
+      description: '⭐ Знайди коло, квадрат, трикутник',
+      icon: <Shapes size={24} />,
+      type: 'standard',
+      ageGroups: ['3-4'],
+      component: (
+        <ComponentWithEditor
+          componentName="ShapesTemplate"
+          initialProps={{
+            mascot: '🦊',
+            borderColor: '#FF9800',
+            shapeColor: '#FF9800',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <ShapesTemplate {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'sorting-worksheet',
+      name: 'Сортування',
+      description: '📦 Розклади за 2-3 категоріями',
+      icon: <SortAsc size={24} />,
+      type: 'standard',
+      ageGroups: ['3-4'],
+      component: (
+        <ComponentWithEditor
+          componentName="SortingWorksheet"
+          initialProps={{
+            mascot: '🐨',
+            borderColor: '#4CAF50',
+            backgroundColor: '#E8F5E9',
+          }}
+          renderComponent={(props) => <SortingWorksheet {...props} />}
+        />
+      ),
+    },
+
+    // ==================== 4-5 РОКІВ (PRE-K) - СКЛАДНІШІ ====================
+    {
+      id: 'sequence-pattern',
+      name: 'Послідовності',
+      description: '🎯 Знайди закономірність A-B-C та продовж',
+      icon: <TrendingUp size={24} />,
+      type: 'standard',
+      ageGroups: ['4-5'],
+      component: (
+        <ComponentWithEditor
+          componentName="SequencePattern"
+          initialProps={{
+            mascot: '🎯',
+            borderColor: '#9C27B0',
+            taskBadgeColor: '#FF6B9D',
+            optionBorderColor: '#9C27B0',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <SequencePattern {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'combined-worksheet',
+      name: 'Комбінований аркуш',
+      description: '🎪 5 різних завдань на одній сторінці',
+      icon: <Sparkles size={24} />,
+      type: 'standard',
+      ageGroups: ['4-5'],
+      component: (
+        <ComponentWithEditor
+          componentName="CombinedWorksheet"
+          initialProps={{
+            mascot: '🎪',
+            borderColor: '#FF6B9D',
+            taskBadgeColor: '#FF6B9D',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <CombinedWorksheet {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'simple-maze',
+      name: 'Лабіринт',
+      description: '🗺️ Знайди шлях від старту до фінішу',
+      icon: <Navigation size={24} />,
+      type: 'standard',
+      ageGroups: ['4-5'],
+      component: (
+        <ComponentWithEditor
+          componentName="SimpleMaze"
+          initialProps={{
+            mascot: '🗺️',
+            borderColor: '#FFC107',
+            pathColor: '#E0E0E0',
+            guideLineColor: '#FFC107',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <SimpleMaze {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'find-differences',
+      name: 'Знайди відмінності',
+      description: '🔍 Знайди 5 відмінностей між картинками',
+      icon: <Search size={24} />,
+      type: 'standard',
+      ageGroups: ['4-5'],
+      component: (
+        <ComponentWithEditor
+          componentName="FindDifferences"
+          initialProps={{
+            mascot: '🔍',
+            borderColor: '#FF6B9D',
+            hintColor: '#FF6B9D',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <FindDifferences {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'comparison-sheet',
+      name: 'Порівняння',
+      description: '⚖️ Більше/менше, великий/малий, довгий/короткий',
+      icon: <Scale size={24} />,
+      type: 'standard',
+      ageGroups: ['4-5'],
+      component: (
+        <ComponentWithEditor
+          componentName="ComparisonSheet"
+          initialProps={{
+            mascot: '⚖️',
+            borderColor: '#8D6E63',
+            circleColor: '#8D6E63',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <ComparisonSheet {...props} />}
+        />
+      ),
+    },
+    {
+      id: 'bingo-card',
+      name: 'Бінго',
+      description: '🎲 Карти 3x3 для групової гри в бінго',
+      icon: <Grid3x3 size={24} />,
+      type: 'standard',
+      ageGroups: ['4-5'],
+      component: (
+        <ComponentWithEditor
+          componentName="BingoCard"
+          initialProps={{
+            mascot: '🎉',
+            borderColor: '#9C27B0',
+            cellBorderColor: '#9C27B0',
+            freeSpaceText: 'ВІЛЬНО!',
+            backgroundColor: '#FFFEF8',
+          }}
+          renderComponent={(props) => <BingoCard {...props} />}
+        />
+      ),
+    },
+
+    // ==================== ІНТЕРАКТИВНІ КОМПОНЕНТИ ====================
     {
       id: 'tap-image-toddler',
       name: 'Tap Image (Малюки)',
       description: 'Натискайте на великі яскраві картинки для збору зірок',
       icon: <MousePointer size={24} />,
       type: 'interactive',
-      ageGroups: ['3-5'],
+      ageGroups: ['2-5'],
       component: (
         <TapImage
           mode="simple"
@@ -138,7 +562,7 @@ const TestComponentsPage: React.FC = () => {
       description: 'Великі яскраві елементи, милі персонажі, крейзі анімації!',
       icon: <Move size={24} />,
       type: 'interactive',
-      ageGroups: ['3-5'],
+      ageGroups: ['2-5'],
       component: (
         <SimpleDragAndDrop
           items={[
@@ -200,7 +624,7 @@ const TestComponentsPage: React.FC = () => {
       description: 'Навчання кольорів через гру з веселими хмаринками',
       icon: <Palette size={24} />,
       type: 'interactive',
-      ageGroups: ['3-5'],
+      ageGroups: ['2-5'],
       component: (
         <SimpleDragAndDrop
           items={[
@@ -367,7 +791,7 @@ const TestComponentsPage: React.FC = () => {
       description: 'Натискайте на яскраві великі кольори-бульбашки!',
       icon: <Palette size={24} />,
       type: 'interactive',
-      ageGroups: ['3-5'],
+      ageGroups: ['2-5'],
       component: (
         <ColorMatcher
           colors={[
@@ -412,7 +836,7 @@ const TestComponentsPage: React.FC = () => {
       description: 'Порахуйте до 3 - великі стрибаючі картинки з емоджі цифрами!',
       icon: <Hash size={24} />,
       type: 'interactive',
-      ageGroups: ['3-5'],
+      ageGroups: ['2-5'],
       component: (
         <SimpleCounter
           objects={[
@@ -540,7 +964,7 @@ const TestComponentsPage: React.FC = () => {
       description: 'Обводьте великі прості форми товстими яскравими лініями!',
       icon: <Shapes size={24} />,
       type: 'interactive',
-      ageGroups: ['3-5'],
+      ageGroups: ['2-5'],
       component: (
         <ShapeTracer
           shapePath="M 50,50 L 150,50 L 150,150 L 50,150 Z"
@@ -561,9 +985,9 @@ const TestComponentsPage: React.FC = () => {
       component: (
         <SequenceBuilder
           steps={[
-            { id: 'step1', imageUrl: 'https://via.placeholder.com/180/FF6B6B/FFFFFF?text=1', order: 1, label: 'Крок 1' },
-            { id: 'step2', imageUrl: 'https://via.placeholder.com/180/4ECDC4/FFFFFF?text=2', order: 2, label: 'Крок 2' },
-            { id: 'step3', imageUrl: 'https://via.placeholder.com/180/45B7D1/FFFFFF?text=3', order: 3, label: 'Крок 3' },
+            { id: 'step1', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI0ZGNkI2QiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjQ4IiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj4xPC90ZXh0Pjwvc3ZnPg==', order: 1, label: 'Крок 1' },
+            { id: 'step2', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzRFQ0RDNCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjQ4IiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj4yPC90ZXh0Pjwvc3ZnPg==', order: 2, label: 'Крок 2' },
+            { id: 'step3', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzQ1QjdEMSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjQ4IiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj4zPC90ZXh0Pjwvc3ZnPg==', order: 3, label: 'Крок 3' },
           ]}
           showNumbers={true}
           difficulty="easy"
@@ -633,7 +1057,7 @@ const TestComponentsPage: React.FC = () => {
       description: 'Слухайте звуки тварин - великі веселі картинки з анімацією!',
       icon: <Volume2 size={24} />,
       type: 'interactive',
-      ageGroups: ['3-5'],
+      ageGroups: ['2-5'],
       component: (
         <SoundMatcher
           items={[
@@ -728,7 +1152,7 @@ const TestComponentsPage: React.FC = () => {
       description: 'Малюйте пальцями великими яскравими кольорами!',
       icon: <Palette size={24} />,
       type: 'interactive',
-      ageGroups: ['3-5'],
+      ageGroups: ['2-5'],
       component: (
         <DrawingCanvas
           canvasSize="large"
@@ -851,10 +1275,10 @@ const TestComponentsPage: React.FC = () => {
       component: (
         <SequenceBuilder
           steps={[
-            { id: 'step1', imageUrl: 'https://via.placeholder.com/150/FF6B6B/FFFFFF?text=1', order: 1, label: 'Крок 1' },
-            { id: 'step2', imageUrl: 'https://via.placeholder.com/150/4ECDC4/FFFFFF?text=2', order: 2, label: 'Крок 2' },
-            { id: 'step3', imageUrl: 'https://via.placeholder.com/150/45B7D1/FFFFFF?text=3', order: 3, label: 'Крок 3' },
-            { id: 'step4', imageUrl: 'https://via.placeholder.com/150/96CEB4/FFFFFF?text=4', order: 4, label: 'Крок 4' },
+            { id: 'step1', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI0ZGNkI2QiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjQwIiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj4xPC90ZXh0Pjwvc3ZnPg==', order: 1, label: 'Крок 1' },
+            { id: 'step2', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iIzRFQ0RDNCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjQwIiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj4yPC90ZXh0Pjwvc3ZnPg==', order: 2, label: 'Крок 2' },
+            { id: 'step3', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iIzQ1QjdEMSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjQwIiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj4zPC90ZXh0Pjwvc3ZnPg==', order: 3, label: 'Крок 3' },
+            { id: 'step4', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iIzk2Q0VCNCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjQwIiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj40PC90ZXh0Pjwvc3ZnPg==', order: 4, label: 'Крок 4' },
           ]}
           showNumbers={false}
           difficulty="medium"
@@ -1040,11 +1464,11 @@ const TestComponentsPage: React.FC = () => {
       component: (
         <SequenceBuilder
           steps={[
-            { id: 'step1', imageUrl: 'https://via.placeholder.com/120/FF6B6B/FFFFFF?text=1', order: 1, label: 'Крок 1' },
-            { id: 'step2', imageUrl: 'https://via.placeholder.com/120/4ECDC4/FFFFFF?text=2', order: 2, label: 'Крок 2' },
-            { id: 'step3', imageUrl: 'https://via.placeholder.com/120/45B7D1/FFFFFF?text=3', order: 3, label: 'Крок 3' },
-            { id: 'step4', imageUrl: 'https://via.placeholder.com/120/96CEB4/FFFFFF?text=4', order: 4, label: 'Крок 4' },
-            { id: 'step5', imageUrl: 'https://via.placeholder.com/120/F38181/FFFFFF?text=5', order: 5, label: 'Крок 5' },
+            { id: 'step1', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iI0ZGNkI2QiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjM2IiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj4xPC90ZXh0Pjwvc3ZnPg==', order: 1, label: 'Крок 1' },
+            { id: 'step2', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iIzRFQ0RDNCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjM2IiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj4yPC90ZXh0Pjwvc3ZnPg==', order: 2, label: 'Крок 2' },
+            { id: 'step3', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iIzQ1QjdEMSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjM2IiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj4zPC90ZXh0Pjwvc3ZnPg==', order: 3, label: 'Крок 3' },
+            { id: 'step4', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iIzk2Q0VCNCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjM2IiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj40PC90ZXh0Pjwvc3ZnPg==', order: 4, label: 'Крок 4' },
+            { id: 'step5', imageUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iI0YzODE4MSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjM2IiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj41PC90ZXh0Pjwvc3ZnPg==', order: 5, label: 'Крок 5' },
           ]}
           showNumbers={false}
           difficulty="medium"
@@ -1119,7 +1543,9 @@ const TestComponentsPage: React.FC = () => {
 
   const ageGroups = [
     { id: 'all', label: 'Всі вікові групи', icon: <Heart size={20} /> },
-    { id: '3-5', label: '3-5 років', icon: <Heart size={20} /> },
+    { id: '2-3', label: '2-3 роки (Малюки)', icon: <Heart size={20} /> },
+    { id: '3-4', label: '3-4 роки (Дошкільнята)', icon: <Heart size={20} /> },
+    { id: '4-5', label: '4-5 років (Старші дошкільнята)', icon: <Brain size={20} /> },
     { id: '6-7', label: '6-7 років', icon: <Brain size={20} /> },
     { id: '8-9', label: '8-9 років', icon: <Brain size={20} /> },
     { id: '10-13', label: '10-13 років', icon: <Brain size={20} /> },
@@ -1151,7 +1577,7 @@ const TestComponentsPage: React.FC = () => {
         py: 4,
       }}
     >
-      <Container maxWidth="xl">
+      <Container maxWidth={false} sx={{ maxWidth: 1900, mx: 'auto' }}>
         {/* Header */}
         <Paper
           elevation={3}
