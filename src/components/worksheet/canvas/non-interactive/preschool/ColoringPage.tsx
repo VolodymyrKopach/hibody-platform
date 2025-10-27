@@ -37,7 +37,7 @@ const ColoringPage: React.FC<ColoringPageProps> = ({
   mascot = '🐻',
   borderColor = '#FF6B9D',
   stepNumberColor = '#FF6B9D',
-  backgroundColor = '#FFFEF8',
+  backgroundColor = '#FFFFFF',
 }) => {
   // Validate: max 3 items for 3-4 years, clamp size
   const items = rawItems.slice(0, 3).map(item => ({
@@ -364,7 +364,7 @@ const ColoringPage: React.FC<ColoringPageProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: '#FFFEF8',
+                bgcolor: '#FFFFFF',
                 border: '4px solid #000000',
                 borderRadius: 2,
                 boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)',

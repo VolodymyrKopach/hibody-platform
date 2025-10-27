@@ -18,6 +18,13 @@ import {
   IconButton,
   Slider,
   Chip,
+  TextField,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Popover,
 } from '@mui/material';
 import {
   Trash2,
@@ -35,8 +42,13 @@ import {
   ArrowDown,
   Eraser,
   Pencil,
+  Sparkles,
+  Palette,
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
+import { svgLayerService } from '@/services/images/SvgLayerService';
+import { svgToObjectsService } from '@/services/images/SvgToObjectsService';
+import { SvgLayer } from '@/types/svg';
 
 type Tool = 'select' | 'circle' | 'square' | 'triangle' | 'line' | 'brush';
 type ResizeHandle = 'nw' | 'ne' | 'sw' | 'se' | null;
@@ -53,6 +65,9 @@ interface ShapeObject {
   fillColor?: string;
   fillOpacity?: number;
   points?: { x: number; y: number }[]; // For freehand drawing
+  pathData?: string; // For SVG path elements
+  originalSvgType?: string; // Track original SVG element type
+  order: number; // Z-index for layer ordering
 }
 
 interface ShapeConstructorProps {
@@ -72,13 +87,40 @@ const COLORS = [
   '#FFA500', // Помаранчевий
 ];
 
+// Extended color palette for picker
+const EXTENDED_COLORS = [
+  // Reds
+  '#FF0000', '#FF6B6B', '#FF3838', '#C92A2A', '#8B0000',
+  // Oranges
+  '#FFA500', '#FF8C00', '#FFB84D', '#FF7F00', '#CC5500',
+  // Yellows
+  '#FFFF00', '#FFD700', '#FFF44F', '#FFEB3B', '#F9A825',
+  // Greens
+  '#00FF00', '#4CAF50', '#00C853', '#2E7D32', '#1B5E20',
+  // Cyans
+  '#00FFFF', '#00BCD4', '#00ACC1', '#0097A7', '#006064',
+  // Blues
+  '#0000FF', '#2196F3', '#1976D2', '#1565C0', '#0D47A1',
+  // Purples
+  '#FF00FF', '#9C27B0', '#7B1FA2', '#6A1B9A', '#4A148C',
+  // Pinks
+  '#FFB3D9', '#FF69B4', '#FF1493', '#C71585', '#FF69B4',
+  // Browns
+  '#8B4513', '#A0522D', '#D2691E', '#CD853F', '#DEB887',
+  // Grays
+  '#000000', '#424242', '#757575', '#9E9E9E', '#E0E0E0',
+  // Whites & Light
+  '#FFFFFF', '#FAFAFA', '#F5F5F5', '#EEEEEE', '#BDBDBD',
+];
+
 const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSave }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [currentTool, setCurrentTool] = useState<Tool>('select');
   const [currentColor, setCurrentColor] = useState('#000000');
-  const [currentFillColor, setCurrentFillColor] = useState<string>('');
-  const [currentFillOpacity, setCurrentFillOpacity] = useState(0.3);
+  const [currentFillColor, setCurrentFillColor] = useState<string>('#FFFFFF'); // White fill by default
+  const [currentFillOpacity, setCurrentFillOpacity] = useState(1.0); // Full opacity
   const [brushSize, setBrushSize] = useState(10);
+  const [showLayersPanel, setShowLayersPanel] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
   const [cursorStyle, setCursorStyle] = useState('default');
@@ -96,6 +138,49 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
   const [history, setHistory] = useState<{ objects: ShapeObject[] }[]>([]);
   const [historyStep, setHistoryStep] = useState(-1);
 
+  // AI SVG Generation
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [generatedSvg, setGeneratedSvg] = useState<string>('');
+  const [showAIPanel, setShowAIPanel] = useState(false);
+  const [svgComplexity, setSvgComplexity] = useState<'simple' | 'medium' | 'detailed'>('medium');
+  const [svgStyle, setSvgStyle] = useState<'cartoon' | 'outline' | 'geometric' | 'realistic'>('outline');
+  const [isSvgLoading, setIsSvgLoading] = useState(false);
+  const svgBlobUrlRef = useRef<string | null>(null);
+  const svgImageRef = useRef<HTMLImageElement | null>(null);
+  
+  // SVG Layers
+  const [svgLayers, setSvgLayers] = useState<SvgLayer[]>([]);
+  
+  // Color Pickers
+  const [strokeColorAnchor, setStrokeColorAnchor] = useState<HTMLElement | null>(null);
+  const [fillColorAnchor, setFillColorAnchor] = useState<HTMLElement | null>(null);
+  
+  // Confirmation Dialogs
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    open: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+  
+  const [alertDialog, setAlertDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    severity: 'error' | 'warning' | 'info' | 'success';
+  }>({
+    open: false,
+    title: '',
+    message: '',
+    severity: 'info',
+  });
+
   // Initialize canvas
   useEffect(() => {
     if (!open) return;
@@ -110,6 +195,11 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
     setSelectedObjectId(null);
     setHistory([{ objects: [] }]);
     setHistoryStep(0);
+    setGeneratedSvg('');
+    setAiPrompt('');
+    setShowAIPanel(false);
+    setSvgLayers([]);
+    setShowLayersPanel(false);
     
     redrawCanvas();
   }, [open]);
@@ -161,26 +251,95 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
     if (!ctx) return;
 
     // Clear canvas
-    ctx.fillStyle = '#FFFEF8';
+    ctx.fillStyle = '#FFFFFF'; // White background
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw all objects
-    objects.forEach((obj) => {
+    // Draw generated AI SVG as background if exists
+    if (generatedSvg) {
+      // Use cached image if available
+      if (svgImageRef.current && svgImageRef.current.complete) {
+        ctx.drawImage(svgImageRef.current, 0, 0, canvas.width, canvas.height);
+        const sortedObjects = [...objects].sort((a, b) => a.order - b.order);
+        sortedObjects.forEach((obj) => {
+          drawObject(ctx, obj, obj.id === selectedObjectId);
+        });
+        setIsSvgLoading(false);
+      } else {
+        // Create new image only if needed
+        setIsSvgLoading(true);
+        
+        // Clean up previous blob URL
+        if (svgBlobUrlRef.current) {
+          URL.revokeObjectURL(svgBlobUrlRef.current);
+          svgBlobUrlRef.current = null;
+        }
+        
+        const img = new Image();
+        svgImageRef.current = img;
+        
+        const svgBlob = new Blob([generatedSvg], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        svgBlobUrlRef.current = url;
+        
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const sortedObjects = [...objects].sort((a, b) => a.order - b.order);
+          sortedObjects.forEach((obj) => {
+            drawObject(ctx, obj, obj.id === selectedObjectId);
+          });
+          setIsSvgLoading(false);
+        };
+        
+        img.onerror = () => {
+          console.error('❌ Failed to load SVG');
+          setIsSvgLoading(false);
+          // Draw objects anyway
+          const sortedObjects = [...objects].sort((a, b) => a.order - b.order);
+          sortedObjects.forEach((obj) => {
+            drawObject(ctx, obj, obj.id === selectedObjectId);
+          });
+        };
+        
+        img.src = url;
+      }
+      return;
+    }
+
+    // Draw all objects (sorted by order for correct z-index)
+    const sortedObjects = [...objects].sort((a, b) => a.order - b.order);
+    sortedObjects.forEach((obj) => {
       drawObject(ctx, obj, obj.id === selectedObjectId);
     });
-  }, [objects, selectedObjectId]);
+  }, [objects, selectedObjectId, generatedSvg]);
 
   useEffect(() => {
     redrawCanvas();
   }, [redrawCanvas]);
 
+  // Cleanup blob URL on unmount or when SVG changes
+  useEffect(() => {
+    return () => {
+      if (svgBlobUrlRef.current) {
+        URL.revokeObjectURL(svgBlobUrlRef.current);
+        svgBlobUrlRef.current = null;
+      }
+      svgImageRef.current = null;
+    };
+  }, [generatedSvg]);
+
+  // Helper: Get next order number for new objects
+  const getNextOrder = useCallback(() => {
+    if (objects.length === 0) return 0;
+    return Math.max(...objects.map(obj => obj.order)) + 1;
+  }, [objects]);
+
   const drawObject = (ctx: CanvasRenderingContext2D, obj: ShapeObject, isSelected: boolean) => {
     ctx.save();
     
-    // Draw fill if exists (not for path or line)
-    if (obj.fillColor && obj.fillOpacity && obj.fillOpacity > 0 && obj.type !== 'path' && obj.type !== 'line') {
+    // Draw fill if exists (not for line, path handles fill separately)
+    if (obj.fillColor && (obj.fillOpacity === undefined || obj.fillOpacity > 0) && obj.type !== 'line') {
       ctx.fillStyle = obj.fillColor;
-      ctx.globalAlpha = obj.fillOpacity;
+      ctx.globalAlpha = obj.fillOpacity !== undefined ? obj.fillOpacity : 1;
       
       switch (obj.type) {
         case 'circle':
@@ -246,7 +405,31 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
         break;
 
       case 'path':
-        if (obj.points && obj.points.length > 1) {
+        if (obj.pathData) {
+          // SVG path from AI
+          try {
+            const path2D = new Path2D(obj.pathData);
+            
+            // Apply translation for position
+            ctx.save();
+            ctx.translate(obj.x, obj.y);
+            
+            // Draw fill if exists
+            if (obj.fillColor && (obj.fillOpacity === undefined || obj.fillOpacity > 0)) {
+              ctx.fillStyle = obj.fillColor;
+              ctx.globalAlpha = obj.fillOpacity !== undefined ? obj.fillOpacity : 1;
+              ctx.fill(path2D);
+              ctx.globalAlpha = 1;
+            }
+            
+            // Draw stroke
+            ctx.stroke(path2D);
+            ctx.restore();
+          } catch (error) {
+            console.error('Failed to render path:', error);
+          }
+        } else if (obj.points && obj.points.length > 1) {
+          // Freehand brush path
           ctx.beginPath();
           ctx.moveTo(obj.points[0].x, obj.points[0].y);
           for (let i = 1; i < obj.points.length; i++) {
@@ -793,6 +976,7 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
         color: currentColor,
         strokeWidth: brushSize,
         points: allPoints,
+        order: getNextOrder(),
       };
       
       setObjects(prev => [...prev, newObject]);
@@ -811,6 +995,7 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
       }
       
       // For lines, preserve direction - don't normalize coordinates
+      const nextOrder = getNextOrder();
       const newObject: ShapeObject = currentTool === 'line' ? {
         id: crypto.randomUUID(),
         type: currentTool,
@@ -820,8 +1005,9 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
         height: point.y - startPos.y,
         color: currentColor,
         strokeWidth: brushSize,
-        fillColor: currentFillColor || undefined,
-        fillOpacity: currentFillColor ? currentFillOpacity : undefined,
+        fillColor: currentFillColor,
+        fillOpacity: currentFillOpacity,
+        order: nextOrder,
       } : {
         id: crypto.randomUUID(),
         type: currentTool,
@@ -831,8 +1017,9 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
         height,
         color: currentColor,
         strokeWidth: brushSize,
-        fillColor: currentFillColor || undefined,
-        fillOpacity: currentFillColor ? currentFillOpacity : undefined,
+        fillColor: currentFillColor,
+        fillOpacity: currentFillOpacity,
+        order: nextOrder,
       };
       
       setObjects(prev => [...prev, newObject]);
@@ -856,6 +1043,7 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
   const handleClearAll = () => {
     setObjects([]);
     setSelectedObjectId(null);
+    setGeneratedSvg('');
     saveToHistory();
   };
 
@@ -868,6 +1056,7 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
           id: crypto.randomUUID(),
           x: objToDuplicate.x + 20,
           y: objToDuplicate.y + 20,
+          order: getNextOrder(),
           // For path, also shift all points
           ...(objToDuplicate.type === 'path' && objToDuplicate.points ? {
             points: objToDuplicate.points.map(p => ({
@@ -943,24 +1132,413 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
     }
   };
 
+  // Helper function to clear all state
+  const clearAllState = () => {
+    setObjects([]);
+    setSelectedObjectId(null);
+    setHistory([{ objects: [] }]);
+    setHistoryStep(0);
+    setGeneratedSvg('');
+    setAiPrompt('');
+    setShowAIPanel(false);
+    setSvgLayers([]);
+    setShowLayersPanel(false);
+    setCurrentTool('select');
+    setIsDrawing(false);
+    setStartPos(null);
+    setCurrentPath([]);
+    
+    // Clear canvas
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  };
+
   const handleClose = () => {
     if (objects.length > 0) {
-      const confirmed = window.confirm('У вас є незбережені зміни. Ви впевнені, що хочете закрити без збереження?');
-      if (!confirmed) return;
+      setConfirmDialog({
+        open: true,
+        title: '💾 Незбережені зміни',
+        message: `На полотні є ${objects.length} об'єкт(ів). Ви впевнені, що хочете закрити без збереження?`,
+        onConfirm: () => {
+          setConfirmDialog(prev => ({ ...prev, open: false }));
+          clearAllState();
+          onClose();
+        },
+      });
+      return;
     }
+    
+    clearAllState();
     onClose();
   };
+
+  const handleGenerateAI = async () => {
+    if (!aiPrompt.trim()) {
+      setAlertDialog({
+        open: true,
+        title: '⚠️ Порожній запит',
+        message: 'Будь ласка, введіть опис картинки',
+        severity: 'warning',
+      });
+      return;
+    }
+
+    // Warn user if there are existing objects
+    if (objects.length > 0) {
+      setConfirmDialog({
+        open: true,
+        title: '🎨 Генерація нової картинки',
+        message: `На полотні є ${objects.length} об'єкт(ів). Генерація нової картинки видалить їх.\n\nПродовжити?`,
+        onConfirm: () => {
+          setConfirmDialog(prev => ({ ...prev, open: false }));
+          startAIGeneration();
+        },
+      });
+      return;
+    }
+
+    startAIGeneration();
+  };
+
+  const startAIGeneration = async () => {
+    setIsGeneratingAI(true);
+
+    try {
+      console.log('🎨 Starting SVG generation via Gemini...', {
+        prompt: aiPrompt.substring(0, 50) + '...',
+        complexity: svgComplexity,
+        style: svgStyle
+      });
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      const response = await fetch('/api/images/generate-svg', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: aiPrompt,
+          width: 1000,
+          height: 1000,
+          complexity: svgComplexity,
+          style: svgStyle,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.svg) {
+        // Validate SVG size before setting
+        const svgSizeKB = data.svg.length / 1024;
+        if (svgSizeKB > 500) {
+          throw new Error(`Згенерований SVG занадто великий (${svgSizeKB.toFixed(0)}KB). Спробуйте простіший опис.`);
+        }
+
+        console.log('✅ SVG generated successfully via Gemini', {
+          svgLength: data.svg.length,
+          sizeKB: svgSizeKB.toFixed(2)
+        });
+        
+        // Clear previous objects and SVG before adding new ones
+        setObjects([]);
+        setGeneratedSvg('');
+        setSvgLayers([]);
+        setSelectedObjectId(null);
+        
+        // Immediately convert SVG to objects (no intermediate SVG layers step)
+        try {
+          const layers = svgLayerService.parseSvgIntoLayers(data.svg);
+          const newObjects = svgToObjectsService.convertAllLayersToObjects(layers, 0);
+          
+          if (newObjects.length > 0) {
+            setObjects(newObjects);
+            saveToHistory();
+            console.log(`✅ Auto-converted SVG to ${newObjects.length} objects`);
+          }
+        } catch (error) {
+          console.error('Failed to convert SVG to objects:', error);
+          setAlertDialog({
+            open: true,
+            title: '⚠️ Помилка конвертації',
+            message: 'Згенеровано SVG, але не вдалося конвертувати в об\'єкти',
+            severity: 'error',
+          });
+        }
+      } else {
+        throw new Error(data.error || 'Не вдалося згенерувати SVG');
+      }
+    } catch (error) {
+      console.error('❌ SVG generation error:', error);
+      
+      let errorMessage = 'Не вдалося згенерувати SVG через AI.';
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Генерація займає занадто багато часу. Спробуйте простіший опис.';
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          errorMessage = 'Проблема з підключенням до інтернету. Перевірте з\'єднання.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      }
+      
+      setAlertDialog({
+        open: true,
+        title: '❌ Помилка генерації',
+        message: errorMessage + '\n\nПорада: спробуйте змінити опис або налаштування складності.',
+        severity: 'error',
+      });
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  const handleClearAISvg = () => {
+    setConfirmDialog({
+      open: true,
+      title: '🗑️ Очистити запит',
+      message: 'Ви впевнені, що хочете очистити поле запиту?',
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, open: false }));
+        setAiPrompt('');
+        setGeneratedSvg('');
+        setSvgLayers([]);
+      },
+    });
+  };
+
+  // Layer management handlers
+  const handleLayerMoveUp = useCallback((layerId: string) => {
+    const updated = svgLayerService.moveLayerUp(svgLayers, layerId);
+    setSvgLayers(updated.layers);
+    
+    // Reconstruct and update SVG
+    if (generatedSvg) {
+      const newSvg = svgLayerService.reconstructSvg(generatedSvg, updated.layers);
+      setGeneratedSvg(newSvg);
+    }
+  }, [svgLayers, generatedSvg]);
+
+  const handleLayerMoveDown = useCallback((layerId: string) => {
+    const updated = svgLayerService.moveLayerDown(svgLayers, layerId);
+    setSvgLayers(updated.layers);
+    
+    // Reconstruct and update SVG
+    if (generatedSvg) {
+      const newSvg = svgLayerService.reconstructSvg(generatedSvg, updated.layers);
+      setGeneratedSvg(newSvg);
+    }
+  }, [svgLayers, generatedSvg]);
+
+  const handleLayerToggleVisibility = useCallback((layerId: string) => {
+    const updated = svgLayerService.toggleLayerVisibility(svgLayers, layerId);
+    setSvgLayers(updated.layers);
+    
+    // Reconstruct and update SVG
+    if (generatedSvg) {
+      const newSvg = svgLayerService.reconstructSvg(generatedSvg, updated.layers);
+      setGeneratedSvg(newSvg);
+    }
+  }, [svgLayers, generatedSvg]);
+
+  const handleLayerRemove = useCallback((layerId: string) => {
+    const updated = svgLayerService.removeLayer(svgLayers, layerId);
+    setSvgLayers(updated.layers);
+    
+    // Reconstruct and update SVG
+    if (generatedSvg) {
+      const newSvg = svgLayerService.reconstructSvg(generatedSvg, updated.layers);
+      setGeneratedSvg(newSvg);
+    }
+  }, [svgLayers, generatedSvg]);
+
+  // Conversion handlers
+  const handleConvertLayerToObjects = useCallback((layerId: string) => {
+    const layer = svgLayers.find(l => l.id === layerId);
+    if (!layer) return;
+
+    try {
+      const startOrder = getNextOrder();
+      const newObjects = svgToObjectsService.convertSvgLayerToObjects(layer, startOrder);
+      
+      if (newObjects.length > 0) {
+        setObjects(prev => [...prev, ...newObjects]);
+        
+        // Remove layer from SVG
+        handleLayerRemove(layerId);
+        
+        // Save to history
+        setHistory(prev => [...prev.slice(0, historyStep + 1), { objects: [...objects, ...newObjects] }]);
+        setHistoryStep(prev => prev + 1);
+        
+        console.log(`✅ Converted layer "${layer.name}" to ${newObjects.length} objects`);
+      }
+        } catch (error) {
+          console.error('Failed to convert layer:', error);
+          setAlertDialog({
+            open: true,
+            title: '❌ Помилка',
+            message: 'Не вдалося конвертувати шар в об\'єкти',
+            severity: 'error',
+          });
+        }
+  }, [svgLayers, objects, historyStep, handleLayerRemove, getNextOrder]);
+
+  const handleConvertAllLayersToObjects = useCallback(() => {
+    try {
+      const startOrder = getNextOrder();
+      const newObjects = svgToObjectsService.convertAllLayersToObjects(svgLayers, startOrder);
+      
+      if (newObjects.length > 0) {
+        setObjects(prev => [...prev, ...newObjects]);
+        
+        // Clear SVG and layers
+        setGeneratedSvg('');
+        setSvgLayers([]);
+        setShowLayersPanel(false);
+        
+        // Save to history
+        setHistory(prev => [...prev.slice(0, historyStep + 1), { objects: [...objects, ...newObjects] }]);
+        setHistoryStep(prev => prev + 1);
+        
+        console.log(`✅ Converted all layers to ${newObjects.length} objects`);
+      }
+      } catch (error) {
+        console.error('Failed to convert layers:', error);
+        setAlertDialog({
+          open: true,
+          title: '❌ Помилка',
+          message: 'Не вдалося конвертувати шари в об\'єкти',
+          severity: 'error',
+        });
+      }
+  }, [svgLayers, objects, historyStep, getNextOrder]);
+
+  // Object ordering handlers
+  const handleMoveObjectUp = useCallback((objectId: string) => {
+    const sortedObjects = [...objects].sort((a, b) => a.order - b.order);
+    const index = sortedObjects.findIndex(obj => obj.id === objectId);
+    
+    if (index === -1 || index === sortedObjects.length - 1) return;
+    
+    // Swap orders
+    const newObjects = objects.map(obj => {
+      if (obj.id === sortedObjects[index].id) {
+        return { ...obj, order: sortedObjects[index + 1].order };
+      }
+      if (obj.id === sortedObjects[index + 1].id) {
+        return { ...obj, order: sortedObjects[index].order };
+      }
+      return obj;
+    });
+    
+    setObjects(newObjects);
+    saveToHistory();
+  }, [objects, saveToHistory]);
+
+  const handleMoveObjectDown = useCallback((objectId: string) => {
+    const sortedObjects = [...objects].sort((a, b) => a.order - b.order);
+    const index = sortedObjects.findIndex(obj => obj.id === objectId);
+    
+    if (index === -1 || index === 0) return;
+    
+    // Swap orders
+    const newObjects = objects.map(obj => {
+      if (obj.id === sortedObjects[index].id) {
+        return { ...obj, order: sortedObjects[index - 1].order };
+      }
+      if (obj.id === sortedObjects[index - 1].id) {
+        return { ...obj, order: sortedObjects[index].order };
+      }
+      return obj;
+    });
+    
+    setObjects(newObjects);
+    saveToHistory();
+  }, [objects, saveToHistory]);
+
+  const handleMoveObjectToFront = useCallback((objectId: string) => {
+    const maxOrder = Math.max(...objects.map(obj => obj.order));
+    const newObjects = objects.map(obj => {
+      if (obj.id === objectId) {
+        return { ...obj, order: maxOrder + 1 };
+      }
+      return obj;
+    });
+    
+    setObjects(newObjects);
+    saveToHistory();
+  }, [objects, saveToHistory]);
+
+  const handleMoveObjectToBack = useCallback((objectId: string) => {
+    const minOrder = Math.min(...objects.map(obj => obj.order));
+    const newObjects = objects.map(obj => {
+      if (obj.id === objectId) {
+        return { ...obj, order: minOrder - 1 };
+      }
+      return obj;
+    });
+    
+    setObjects(newObjects);
+    saveToHistory();
+  }, [objects, saveToHistory]);
 
   const handleConfirm = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     try {
+      // Wait for SVG to fully load before converting
+      if (generatedSvg && isSvgLoading) {
+        console.log('⏳ Waiting for SVG to load...');
+        await new Promise<void>((resolve) => {
+          const checkLoading = () => {
+            if (!isSvgLoading) {
+              resolve();
+            } else {
+              setTimeout(checkLoading, 100);
+            }
+          };
+          checkLoading();
+        });
+      }
+
+      // Force redraw to ensure everything is rendered
+      if (generatedSvg) {
+        const ctx = canvas.getContext('2d');
+        if (ctx && svgImageRef.current && svgImageRef.current.complete) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(svgImageRef.current, 0, 0, canvas.width, canvas.height);
+          objects.forEach((obj) => {
+            drawObject(ctx, obj, obj.id === selectedObjectId);
+          });
+        }
+      }
+
+      console.log('📸 Converting canvas to PNG...');
+      
       // Convert canvas to PNG for image data
       const dataUrl = await toPng(canvas, {
         width: 1000,
         height: 1000,
-        backgroundColor: '#FFFEF8',
+        backgroundColor: '#FFFFFF',
         pixelRatio: 1,
       });
       
@@ -971,6 +1549,8 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
       // Create FormData to send file
       const formData = new FormData();
       formData.append('image', blob, `custom-shape-${Date.now()}.png`);
+      
+      console.log('☁️ Uploading image...');
       
       // Send to API endpoint
       const uploadResponse = await fetch('/api/upload-custom-shape', {
@@ -984,6 +1564,8 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
       
       const { filePath } = await uploadResponse.json();
       
+      console.log('✅ Image uploaded successfully:', filePath);
+      
       // Create SVG wrapper with viewBox for proper scaling (no fixed width/height)
       const svgWrapper = `<svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
         <image href="${filePath}" x="0" y="0" width="1000" height="1000" />
@@ -991,10 +1573,18 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
       
       // Return SVG wrapper instead of just file path
       onSave(svgWrapper);
+      
+      // Clear all state after successful save
+      clearAllState();
       onClose();
     } catch (error) {
-      console.error('Canvas conversion failed:', error);
-      alert('Не вдалося зберегти картинку. Спробуйте ще раз.');
+      console.error('❌ Canvas conversion failed:', error);
+      setAlertDialog({
+        open: true,
+        title: '❌ Помилка збереження',
+        message: 'Не вдалося зберегти картинку. Спробуйте ще раз.',
+        severity: 'error',
+      });
     }
   };
 
@@ -1016,17 +1606,40 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
         <Box display="flex" alignItems="center" justifyContent="space-between">
         <Box display="flex" alignItems="center" gap={1}>
           <Typography variant="h6">🎨 Конструктор Картинок</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Намалюй картинку для розмальовки
-          </Typography>
           </Box>
           <Box display="flex" gap={1}>
-            <Chip 
-              label={`Об'єктів: ${objects.length}`} 
-              size="small" 
-              color="primary" 
-              variant="outlined" 
-            />
+            <Button
+              variant={showAIPanel ? 'contained' : 'outlined'}
+              size="small"
+              startIcon={<Sparkles size={16} />}
+              onClick={() => setShowAIPanel(!showAIPanel)}
+            >
+              AI Генерація
+            </Button>
+            <Button
+              variant={showLayersPanel ? 'contained' : 'outlined'}
+              size="small"
+              startIcon={<Layers size={16} />}
+              onClick={() => setShowLayersPanel(!showLayersPanel)}
+            >
+              Шари об'єктів ({objects.length})
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              disabled
+              sx={{
+                minWidth: 'auto',
+                pointerEvents: 'none',
+                '&.Mui-disabled': {
+                  color: 'primary.main',
+                  borderColor: 'primary.main',
+                  opacity: 1,
+                },
+              }}
+            >
+              Об'єктів: {objects.length}
+            </Button>
             {selectedObject && (
               <Chip 
                 label={`Вибрано: ${selectedObject.type}`} 
@@ -1039,9 +1652,410 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
       </DialogTitle>
       
       <DialogContent sx={{ p: 0 }}>
-        <Box sx={{ p: 2, width: 1000 + 32 }}>
+        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {/* AI Generation Panel */}
+          {showAIPanel && (
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 2.5, 
+                mb: 2,
+                width: 1000,
+                bgcolor: '#f8f9fa',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+              }}
+            >
+              {/* Header */}
+              <Box display="flex" alignItems="center" gap={1.5} mb={2}>
+                <Sparkles size={20} style={{ color: '#6366f1' }} />
+                <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+                  AI Генератор
+                </Typography>
+              </Box>
+              
+              {/* Settings */}
+              <Grid container spacing={2} mb={2}>
+                {/* Complexity */}
+                <Grid item xs={6}>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: 'text.secondary', 
+                      fontWeight: 600,
+                      display: 'block',
+                      mb: 0.5,
+                      fontSize: '0.6rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    Складність
+                  </Typography>
+                  <ToggleButtonGroup
+                    value={svgComplexity}
+                    exclusive
+                    onChange={(_, value) => value && setSvgComplexity(value)}
+                    disabled={isGeneratingAI}
+                    fullWidth
+                    size="small"
+                    sx={{
+                      '& .MuiToggleButton-root': {
+                        bgcolor: 'white',
+                        color: 'text.secondary',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                        py: 0.5,
+                        '&:hover': {
+                          bgcolor: '#f1f5f9',
+                          borderColor: '#6366f1',
+                        },
+                        '&.Mui-selected': {
+                          bgcolor: '#6366f1',
+                          color: 'white',
+                          borderColor: '#6366f1',
+                          '&:hover': {
+                            bgcolor: '#4f46e5',
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton value="simple">Проста</ToggleButton>
+                    <ToggleButton value="medium">Середня</ToggleButton>
+                    <ToggleButton value="detailed">Детальна</ToggleButton>
+                  </ToggleButtonGroup>
+                </Grid>
+
+                {/* Style */}
+                <Grid item xs={6}>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: 'text.secondary', 
+                      fontWeight: 600,
+                      display: 'block',
+                      mb: 0.5,
+                      fontSize: '0.6rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    Стиль
+                  </Typography>
+                  <ToggleButtonGroup
+                    value={svgStyle}
+                    exclusive
+                    onChange={(_, value) => value && setSvgStyle(value)}
+                    disabled={isGeneratingAI}
+                    fullWidth
+                    size="small"
+                    sx={{
+                      '& .MuiToggleButton-root': {
+                        bgcolor: 'white',
+                        color: 'text.secondary',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                        py: 0.5,
+                        '&:hover': {
+                          bgcolor: '#f1f5f9',
+                          borderColor: '#6366f1',
+                        },
+                        '&.Mui-selected': {
+                          bgcolor: '#6366f1',
+                          color: 'white',
+                          borderColor: '#6366f1',
+                          '&:hover': {
+                            bgcolor: '#4f46e5',
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton value="outline">Контур</ToggleButton>
+                    <ToggleButton value="cartoon">Мультяшний</ToggleButton>
+                    <ToggleButton value="geometric">Геометрія</ToggleButton>
+                    <ToggleButton value="realistic">Реалістичний</ToggleButton>
+                  </ToggleButtonGroup>
+                </Grid>
+              </Grid>
+
+              {/* Prompt Input */}
+              <Box display="flex" gap={1} alignItems="stretch">
+                <TextField
+                  fullWidth
+                  placeholder="Опишіть картинку... (напр: динозавр для розмальовки)"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  disabled={isGeneratingAI}
+                  size="small"
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'white',
+                      fontSize: '0.875rem',
+                      height: '36.5px',
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      padding: '8.5px 14px',
+                    },
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleGenerateAI}
+                  disabled={isGeneratingAI || !aiPrompt.trim()}
+                  startIcon={isGeneratingAI ? <CircularProgress size={16} color="inherit" /> : <Sparkles size={16} />}
+                  sx={{
+                    bgcolor: '#6366f1',
+                    minWidth: 120,
+                    height: '36.5px',
+                    textTransform: 'none',
+                    whiteSpace: 'nowrap',
+                    '&:hover': {
+                      bgcolor: '#4f46e5',
+                    },
+                  }}
+                >
+                  {isGeneratingAI ? 'Генерація...' : 'Згенерувати'}
+                </Button>
+              </Box>
+              
+              {generatedSvg && (
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={handleClearAISvg}
+                  disabled={isGeneratingAI}
+                  startIcon={<Eraser size={14} />}
+                  sx={{
+                    mt: 1,
+                    color: 'text.secondary',
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  Очистити
+                </Button>
+              )}
+              
+              {/* Success Message */}
+              {generatedSvg && (
+                <Box mt={2}>
+                  <Box
+                    sx={{
+                      bgcolor: '#f0fdf4',
+                      border: '1px solid #86efac',
+                      borderRadius: 1,
+                      p: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontSize: '1rem' }}>✅</Typography>
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        color: '#166534',
+                        fontWeight: 500,
+                      }}
+                    >
+                      SVG згенеровано успішно
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+            </Paper>
+          )}
+
+          {/* Objects Layers Panel */}
+          {showLayersPanel && objects.length > 0 && (
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                mb: 2,
+                width: 1000,
+                bgcolor: '#f8f9fa',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+              }}
+            >
+              {/* Header */}
+              <Box display="flex" alignItems="center" gap={1.5} mb={2}>
+                <Layers size={20} style={{ color: '#6366f1' }} />
+                <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+                  Шари об'єктів
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Змініть порядок об'єктів для контролю накладання
+                </Typography>
+              </Box>
+
+              {/* Objects List */}
+              <Box
+                sx={{
+                  bgcolor: 'white',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  overflow: 'hidden',
+                  maxHeight: 400,
+                  overflowY: 'auto',
+                }}
+              >
+                {[...objects].sort((a, b) => b.order - a.order).map((obj, index, sortedArr) => (
+                  <Box
+                    key={obj.id}
+                    onClick={() => setSelectedObjectId(obj.id)}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      p: 1,
+                      borderBottom: index < sortedArr.length - 1 ? '1px solid' : 'none',
+                      borderColor: 'divider',
+                      bgcolor: obj.id === selectedObjectId ? '#e0e7ff' : 'white',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        bgcolor: obj.id === selectedObjectId ? '#e0e7ff' : '#f8f9fa',
+                      },
+                    }}
+                  >
+                    {/* Object Type Icon */}
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: '#e0e7ff',
+                        borderRadius: 1,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ fontSize: '1.2rem' }}>
+                        {obj.type === 'circle' ? '⭕' : 
+                         obj.type === 'square' ? '⬜' : 
+                         obj.type === 'triangle' ? '🔺' : 
+                         obj.type === 'line' ? '➖' : 
+                         obj.type === 'path' ? '✏️' : '📄'}
+                      </Typography>
+                    </Box>
+
+                    {/* Object Name */}
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="body2" fontWeight={500}>
+                        {obj.originalSvgType ? `${obj.originalSvgType} (AI)` : obj.type === 'path' && obj.points ? 'Малюнок' : obj.type}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Order: {obj.order}
+                      </Typography>
+                    </Box>
+
+                    {/* Object Controls */}
+                    <Box display="flex" gap={0.5} onClick={(e) => e.stopPropagation()}>
+                      <Tooltip title="На передній план">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleMoveObjectToFront(obj.id)}
+                          sx={{
+                            '&:hover': {
+                              bgcolor: '#f1f5f9',
+                            },
+                          }}
+                        >
+                          <Typography variant="caption" sx={{ fontSize: '0.9rem' }}>⬆️⬆️</Typography>
+                        </IconButton>
+                      </Tooltip>
+                      
+                      <Tooltip title="Підняти">
+                        <span>
+                          <IconButton
+                            size="small"
+                            disabled={index === 0}
+                            onClick={() => handleMoveObjectUp(obj.id)}
+                            sx={{
+                              '&:hover': {
+                                bgcolor: '#f1f5f9',
+                              },
+                            }}
+                          >
+                            <ArrowUp size={14} />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      
+                      <Tooltip title="Опустити">
+                        <span>
+                          <IconButton
+                            size="small"
+                            disabled={index === sortedArr.length - 1}
+                            onClick={() => handleMoveObjectDown(obj.id)}
+                            sx={{
+                              '&:hover': {
+                                bgcolor: '#f1f5f9',
+                              },
+                            }}
+                          >
+                            <ArrowDown size={14} />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      
+                      <Tooltip title="На задній план">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleMoveObjectToBack(obj.id)}
+                          sx={{
+                            '&:hover': {
+                              bgcolor: '#f1f5f9',
+                            },
+                          }}
+                        >
+                          <Typography variant="caption" sx={{ fontSize: '0.9rem' }}>⬇️⬇️</Typography>
+                        </IconButton>
+                      </Tooltip>
+                      
+                      <Tooltip title="Видалити">
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setObjects(prev => prev.filter(o => o.id !== obj.id));
+                            if (selectedObjectId === obj.id) setSelectedObjectId(null);
+                            saveToHistory();
+                          }}
+                          sx={{
+                            color: '#ef4444',
+                            '&:hover': {
+                              bgcolor: '#fee2e2',
+                            },
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+
+              {/* Help Text */}
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
+                💡 Порада: Об'єкти зверху списку відображаються на передньому плані
+              </Typography>
+            </Paper>
+          )}
+
           {/* Toolbar */}
-          <Paper sx={{ p: 2, mb: 2 }}>
+          <Paper sx={{ p: 2, mb: 2, width: 1000 }}>
             <Grid container spacing={2} alignItems="center">
               {/* Tools */}
               <Grid item>
@@ -1082,7 +2096,7 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
                 <Typography variant="caption" display="block" mb={0.5} fontWeight="bold">
                   {selectedObject ? 'Колір контуру:' : 'Колір:'}
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
                   {COLORS.map((color) => (
                     <Box
                       key={color}
@@ -1103,7 +2117,78 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
                       }}
                     />
                   ))}
+                  <Tooltip title="Більше кольорів">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => setStrokeColorAnchor(e.currentTarget)}
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        border: '2px solid #E0E0E0',
+                        borderRadius: 1,
+                        '&:hover': {
+                          border: '2px solid #2196F3',
+                        },
+                      }}
+                    >
+                      <Palette size={16} />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
+                
+                {/* Stroke Color Picker Popover */}
+                <Popover
+                  open={Boolean(strokeColorAnchor)}
+                  anchorEl={strokeColorAnchor}
+                  onClose={() => setStrokeColorAnchor(null)}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                  }}
+                >
+                  <Box sx={{ p: 2, width: 280 }}>
+                    <Typography variant="subtitle2" mb={1} fontWeight="bold">
+                      Виберіть колір контуру
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(5, 1fr)',
+                        gap: 0.5,
+                      }}
+                    >
+                      {EXTENDED_COLORS.map((color) => (
+                        <Tooltip key={color} title={color}>
+                          <Box
+                            onClick={() => {
+                              handleUpdateSelectedColor(color);
+                              setStrokeColorAnchor(null);
+                            }}
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              bgcolor: color,
+                              borderRadius: 1,
+                              cursor: 'pointer',
+                              border: (selectedObject ? selectedObject.color : currentColor) === color
+                                ? '3px solid #2196F3'
+                                : '1px solid #E0E0E0',
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                transform: 'scale(1.1)',
+                                boxShadow: 2,
+                              },
+                            }}
+                          />
+                        </Tooltip>
+                      ))}
+                    </Box>
+                  </Box>
+                </Popover>
               </Grid>
 
               <Divider orientation="vertical" flexItem />
@@ -1158,7 +2243,78 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
                       }}
                     />
                   ))}
+                  <Tooltip title="Більше кольорів">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => setFillColorAnchor(e.currentTarget)}
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        border: '2px solid #E0E0E0',
+                        borderRadius: 1,
+                        '&:hover': {
+                          border: '2px solid #2196F3',
+                        },
+                      }}
+                    >
+                      <Palette size={16} />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
+                
+                {/* Fill Color Picker Popover */}
+                <Popover
+                  open={Boolean(fillColorAnchor)}
+                  anchorEl={fillColorAnchor}
+                  onClose={() => setFillColorAnchor(null)}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                  }}
+                >
+                  <Box sx={{ p: 2, width: 280 }}>
+                    <Typography variant="subtitle2" mb={1} fontWeight="bold">
+                      Виберіть колір заливки
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(5, 1fr)',
+                        gap: 0.5,
+                      }}
+                    >
+                      {EXTENDED_COLORS.map((color) => (
+                        <Tooltip key={color} title={color}>
+                          <Box
+                            onClick={() => {
+                              handleUpdateSelectedFill(color, currentFillOpacity);
+                              setFillColorAnchor(null);
+                            }}
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              bgcolor: color,
+                              borderRadius: 1,
+                              cursor: 'pointer',
+                              border: (selectedObject ? selectedObject.fillColor : currentFillColor) === color
+                                ? '3px solid #2196F3'
+                                : '1px solid #E0E0E0',
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                transform: 'scale(1.1)',
+                                boxShadow: 2,
+                              },
+                            }}
+                          />
+                        </Tooltip>
+                      ))}
+                    </Box>
+                  </Box>
+                </Popover>
               </Grid>
 
               <Divider orientation="vertical" flexItem />
@@ -1281,7 +2437,7 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
               width: 1000,
               height: 1000,
               mx: 'auto',
-              bgcolor: '#FFFEF8',
+              bgcolor: '#FFFFFF',
               border: '2px solid',
               borderColor: 'divider',
               overflow: 'hidden',
@@ -1318,9 +2474,95 @@ const ShapeConstructor: React.FC<ShapeConstructorProps> = ({ open, onClose, onSa
           startIcon={<Check />}
           onClick={handleConfirm}
         >
-          Підтвердити
+          Зберегти
         </Button>
       </DialogActions>
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+            {confirmDialog.title}
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+            {confirmDialog.message}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button 
+            onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+            color="inherit"
+          >
+            Скасувати
+          </Button>
+          <Button
+            onClick={confirmDialog.onConfirm}
+            variant="contained"
+            color="primary"
+            autoFocus
+          >
+            Продовжити
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Alert Dialog */}
+      <Dialog
+        open={alertDialog.open}
+        onClose={() => setAlertDialog(prev => ({ ...prev, open: false }))}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box display="flex" alignItems="center" gap={1}>
+            {alertDialog.severity === 'error' && (
+              <Box sx={{ color: 'error.main', display: 'flex' }}>
+                <Typography variant="h5">❌</Typography>
+              </Box>
+            )}
+            {alertDialog.severity === 'warning' && (
+              <Box sx={{ color: 'warning.main', display: 'flex' }}>
+                <Typography variant="h5">⚠️</Typography>
+              </Box>
+            )}
+            {alertDialog.severity === 'success' && (
+              <Box sx={{ color: 'success.main', display: 'flex' }}>
+                <Typography variant="h5">✅</Typography>
+              </Box>
+            )}
+            {alertDialog.severity === 'info' && (
+              <Box sx={{ color: 'info.main', display: 'flex' }}>
+                <Typography variant="h5">ℹ️</Typography>
+              </Box>
+            )}
+            <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+              {alertDialog.title}
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+            {alertDialog.message}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setAlertDialog(prev => ({ ...prev, open: false }))}
+            variant="contained"
+            color={alertDialog.severity === 'error' ? 'error' : 'primary'}
+            autoFocus
+          >
+            Зрозуміло
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Dialog>
   );
 };

@@ -506,13 +506,3 @@ export const AGE_STYLE_LABELS: Record<AgeStyleName, string> = {
   'middle': '10-13 yrs',
   'teen': '14-18 yrs',
 };
-
-// Export all styles
-export {
-  TODDLER_STYLE,
-  PRESCHOOL_STYLE,
-  ELEMENTARY_STYLE,
-  MIDDLE_STYLE,
-  TEEN_STYLE,
-};
-
