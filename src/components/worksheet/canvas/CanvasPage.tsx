@@ -162,7 +162,8 @@ const CanvasPage: React.FC<CanvasPageProps> = ({
     'memory-cards', 'sorting-game', 'sequence-builder', 'shape-tracer', 
     'emotion-recognizer', 'sound-matcher', 'simple-puzzle', 'pattern-builder', 
     'cause-effect', 'reward-collector', 'voice-recorder', 'magnetic-playground',
-    'coloring-canvas', 'sticker-scene', 'glow-highlight', 'animated-mascot',
+    // 'coloring-canvas', // DISABLED
+    'sticker-scene', 'glow-highlight', 'animated-mascot',
     'sparkle-reward', 'flashcards', 'word-builder', 'open-question', 
     'drawing-canvas', 'dialog-roleplay', 'video-chat', 'progress-tracker',
     'scene-explorer', 'simple-drag-and-drop', 'match-pairs'
@@ -1377,24 +1378,25 @@ function renderElement(
           onFocus={() => onSelect(element.id)}
         />
       );
-    case 'coloring-canvas':
-      return (
-        <ColoringCanvas
-          svgContent={element.properties.svgContent}
-          svgPath={element.properties.svgPath}
-          colors={element.properties.colors}
-          brushSize={element.properties.brushSize || 2}
-          ageGroup={ageGroup}
-          isSelected={isSelected}
-          onEdit={(properties) => {
-            onEdit(element.id, { ...element.properties, ...properties });
-          }}
-          onFocus={() => onSelect(element.id)}
-          onComplete={(imageData) => {
-            console.log('Coloring completed!', imageData);
-          }}
-        />
-      );
+    // DISABLED: Coloring canvas feature
+    // case 'coloring-canvas':
+    //   return (
+    //     <ColoringCanvas
+    //       svgContent={element.properties.svgContent}
+    //       svgPath={element.properties.svgPath}
+    //       colors={element.properties.colors}
+    //       brushSize={element.properties.brushSize || 2}
+    //       ageGroup={ageGroup}
+    //       isSelected={isSelected}
+    //       onEdit={(properties) => {
+    //         onEdit(element.id, { ...element.properties, ...properties });
+    //       }}
+    //       onFocus={() => onSelect(element.id)}
+    //       onComplete={(imageData) => {
+    //         console.log('Coloring completed!', imageData);
+    //       }}
+    //     />
+    //   );
 
     case 'sticker-scene':
       return (
@@ -2090,16 +2092,17 @@ function getDefaultProperties(type: string) {
         difficulty: 'easy',
         ageStyle: 'elementary', // Default age style
       };
-    case 'coloring-canvas':
-      return {
-        colors: [
-          '#FF6B9D', '#FFA07A', '#FFD700', '#98FB98', 
-          '#87CEEB', '#DDA0DD', '#F0E68C', '#FFA500',
-          '#FF69B4', '#7B68EE', '#48D1CC', '#F08080'
-        ],
-        brushSize: 2,
-        svgContent: undefined, // Will use default flower SVG
-      };
+    // DISABLED: Coloring canvas feature
+    // case 'coloring-canvas':
+    //   return {
+    //     colors: [
+    //       '#FF6B9D', '#FFA07A', '#FFD700', '#98FB98', 
+    //       '#87CEEB', '#DDA0DD', '#F0E68C', '#FFA500',
+    //       '#FF69B4', '#7B68EE', '#48D1CC', '#F08080'
+    //     ],
+    //     brushSize: 2,
+    //     svgContent: undefined, // Will use default flower SVG
+    //   };
 
     case 'sticker-scene':
       return {

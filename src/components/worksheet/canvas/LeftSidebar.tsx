@@ -260,13 +260,14 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           color: '#FF6B9D',
           description: 'Interactive image with sounds and animations' 
         },
-        { 
-          id: 'coloring-canvas', 
-          name: '🎨 Coloring Canvas', 
-          icon: Paintbrush, 
-          color: '#FF6B9D',
-          description: 'Color pictures with big brushes and bright colors' 
-        },
+        // DISABLED: Coloring canvas feature
+        // { 
+        //   id: 'coloring-canvas', 
+        //   name: '🎨 Coloring Canvas', 
+        //   icon: Paintbrush, 
+        //   color: '#FF6B9D',
+        //   description: 'Color pictures with big brushes and bright colors' 
+        // },
         { 
           id: 'sticker-scene', 
           name: '🎭 Sticker Scene', 
