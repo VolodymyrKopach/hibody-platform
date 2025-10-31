@@ -1,6 +1,7 @@
 /**
  * Universal Age-Based Styles for ALL Interactive Components
  * These styles ensure consistency across tap-image, drag-drop, counter, etc.
+ * Updated: 2025-10-31 - Fixed export configuration
  */
 
 import { InteractiveAgeStyle, AgeStyleName } from '@/types/interactive-age-styles';

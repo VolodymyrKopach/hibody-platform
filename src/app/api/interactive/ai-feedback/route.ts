@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenAI } from '@google/genai';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 export async function POST(request: NextRequest) {
   try {
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
+    }
+
     const body = await request.json();
     const {
       question,
@@ -25,7 +27,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Construct prompt based on feedback type
-    let systemPrompt = '';
     let feedbackGuidance = '';
 
     switch (feedbackType) {
@@ -42,7 +43,11 @@ export async function POST(request: NextRequest) {
         break;
     }
 
-    systemPrompt = `You are an encouraging, supportive educational assistant providing feedback on student answers.
+    const keywordsContext = expectedKeywords.length > 0
+      ? `\n\nExpected keywords or concepts: ${expectedKeywords.join(', ')}`
+      : '';
+
+    const systemPrompt = `You are an encouraging, supportive educational assistant providing feedback on student answers.
 
 Age Group: ${ageGroup || 'General'}
 Feedback Style: ${feedbackType}
@@ -55,60 +60,64 @@ Structure your response as JSON with the following fields:
   "praise": "<what the student did well>",
   "suggestions": "<gentle suggestions for improvement, if any>",
   "overall": "<overall encouraging message>"
-}`;
+}
 
-    const keywordsContext = expectedKeywords.length > 0
-      ? `\n\nExpected keywords or concepts: ${expectedKeywords.join(', ')}`
-      : '';
-
-    // Call Claude API
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 500,
-      temperature: 0.7,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: `Question: "${question}"
+Question: "${question}"
 
 Student's Answer: "${answer}"${keywordsContext}
 
-Please provide feedback on this answer.`,
+Please provide feedback on this answer as a JSON object.`;
+
+    console.log('🤖 [AI Feedback] Generating feedback with Gemini...');
+
+    const client = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+    // Call Gemini API
+    const response = await client.models.generateContent({
+      model: 'gemini-2.5-flash-lite-preview-06-17',
+      contents: systemPrompt,
+      config: {
+        thinkingConfig: {
+          thinkingBudget: 0, // Disable thinking for faster feedback
         },
-      ],
+        temperature: 0.7,
+        maxOutputTokens: 500,
+      }
     });
 
-    // Extract feedback from response
-    const content = response.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude');
+    const content = response.text;
+
+    if (!content) {
+      throw new Error('No content in Gemini response');
     }
 
+    // Extract feedback from response
     let feedback;
     try {
       // Try to parse as JSON
-      feedback = JSON.parse(content.text);
+      feedback = JSON.parse(content);
     } catch (parseError) {
       // If not JSON, create structured feedback from text
       feedback = {
         score: 4,
         praise: 'Great effort!',
-        suggestions: content.text,
+        suggestions: content,
         overall: 'Keep up the good work!',
       };
     }
+
+    console.log('✅ [AI Feedback] Feedback generated successfully');
 
     return NextResponse.json({
       success: true,
       feedback,
       usage: {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
+        model: 'gemini-2.5-flash-lite',
+        estimatedTokens: Math.ceil(content.length / 4),
       },
     });
   } catch (error: any) {
-    console.error('[AI Feedback] Error:', error);
+    console.error('❌ [AI Feedback] Error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -118,4 +127,3 @@ Please provide feedback on this answer.`,
     );
   }
 }
-
